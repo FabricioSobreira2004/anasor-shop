@@ -39,6 +39,16 @@
   /* border-radius assimétrico: cria uma forma tipo "gota/vaso",
      remete à forma orgânica de uma peça torneada à mão */
 
+  /* --espaco-secao: respiro vertical ÚNICO para as seções da Home
+     (Queridinhos, Escolha do Ateliê, Café da Tarde, Edição Surpresa,
+     Seleção Especial, Crochê, Quem Somos). Antes cada uma tinha o seu
+     próprio valor (4.5rem, 4rem, 3rem...) sem motivo — a diferença não
+     comunicava nada, só quebrava o ritmo visual ao descer a página.
+     Uma variável só = ritmo uniforme garantido, e se precisar ajustar
+     o respiro da Home inteira no futuro, muda-se em UM lugar. */
+  --espaco-secao: 4rem;
+  --espaco-secao-mobile: 2.5rem;
+
   /* ------------------------------------------------------------
      TEXTURAS E MARCA D'ÁGUA (SVG embutido como "data URI")
      ------------------------------------------------------------
@@ -1396,6 +1406,31 @@ nav {
   flex-wrap: wrap;
 }
 
+/* "ENCOMENDE SUA PEÇA ÚNICA" — menção discreta (ver comentário grande
+   no HTML, junto do <p>). De propósito BEM pequena/sutil: um detalhe
+   elegante no rodapé desta seção, não um banner — por isso fonte
+   pequena, sem fundo/borda própria, só um respiro acima dela. */
+.encomenda-discreta {
+  margin-top: 1.75rem;
+  font-size: 0.85rem;
+  color: var(--cor-secundaria);
+  /* verde-oliva: o mesmo tom discreto já usado no "contato rápido" do
+     banner (.banner-contato-rapido__item, mais acima) — reforça
+     "isto é um detalhe", não uma 2ª chamada pra ação competindo com
+     os cards de categoria acima dela. */
+}
+
+.encomenda-discreta a {
+  color: var(--cor-destaque);
+  font-weight: 600;
+  transition: color 0.2s ease;
+}
+
+.encomenda-discreta a:hover {
+  color: var(--cor-destaque-escuro);
+  text-decoration: underline;
+}
+
 .categoria-card {
   position: relative;
   width: 320px;
@@ -1668,7 +1703,9 @@ nav {
    QUERIDINHOS DO ATELIÊ / GRID DE PRODUTOS
    ============================================ */
 .queridinhos {
-  padding: 4rem 5%;
+  padding: var(--espaco-secao) 5%;
+  /* era "4rem 5%" escrito à mão — agora usa o token --espaco-secao
+     (:root), o mesmo valor aplicado em TODAS as seções da Home. */
 
   /* DUAS imagens de fundo empilhadas: a marca d'água do vaso (na
      frente) + a textura de grão (atrás), as duas sobre a cor.
@@ -1871,7 +1908,9 @@ nav {
      (index.html, junto de "produto-destaque reveal"). */
   background-color: var(--cor-texto);
   color: var(--cor-fundo);
-  padding: 4.5rem 5%;
+  padding: var(--espaco-secao) 5%;
+  /* era "4.5rem 5%" — unificado com --espaco-secao (:root), o mesmo
+     respiro vertical usado em todas as seções da Home. */
 
   /* mesma marca d'água clara do <footer> (monograma "AS"), na mesma
      opacidade baixa já embutida no SVG — assina a seção como "do
@@ -2112,13 +2151,13 @@ nav {
    que o fundo da seção (ainda lê como "moldura", não como "cortada")
    e contorno em --cor-ouro translúcido, no lugar do bege sólido —
    liga a moldura ao resto do tema dourado da seção (etiqueta, preço).
-   ESTENDIDA pra .selecao-especial também (pedido item 3: "reaproveite
-   a técnica de moldura do hero do Vaso") — mesmo fundo escuro, mesma
-   régua dourada, então a MESMA regra serve sem duplicar nada; só o
-   giro 360° (ativarGiro360, main.js) fica exclusivo de
-   .produto-destaque, por não ser chamado pra esta seção nova. */
-.produto-destaque .foto-emoldurada,
-.selecao-especial .foto-emoldurada {
+   NÃO estendida mais pra .selecao-especial (recoloração pra bege, ver
+   comentário grande em ".selecao-especial"): aquela seção agora É um
+   fundo claro, então a moldura PADRÃO de .foto-emoldurada (branca +
+   contorno bege) já contrasta sozinha — é literalmente o "contorno
+   suave pra destacar do fundo" pedido pros cards sobre bege, sem
+   precisar de uma 2ª regra. */
+.produto-destaque .foto-emoldurada {
   background-color: #4A392C;
   border-color: rgba(184, 135, 62, 0.35);
   outline-color: rgba(184, 135, 62, 0.5);
@@ -2351,7 +2390,8 @@ nav {
    breakpoint (768px) do resto do site. */
 @media (max-width: 768px) {
   .produto-destaque {
-    padding: 3rem 6%;
+    padding: var(--espaco-secao-mobile) 6%;
+    /* era "3rem 6%" — unificado com --espaco-secao-mobile (:root) */
   }
   /* A altura das faixas de transição (.transicao-topo/.transicao-base)
      encolhe no mobile pra qualquer seção que as use — ver a regra
@@ -2408,55 +2448,76 @@ nav {
    na paleta). Leva a MESMA marca d'água clara do hero (monograma
    "AS") — assina a seção como "do ateliê", igual ao resto do site. */
 .selecao-especial {
-  /* 4.5rem -> 3rem (achado da auditoria, item 5: "grande demais...
-     compacte, sem ocupar uma tela inteira") — mesmo valor que esta
-     seção já usava no mobile; não precisa de 2 valores diferentes só
-     pra desktop/mobile aqui. */
-  padding: 3rem 5%;
+  /* RECOLORIDA p/ bege (--cor-fundo-alt): antes esta seção nascia no
+     MESMO marrom escuro de "Edição Surpresa", que vem logo ANTES dela
+     — duas seções marrons escuras seguidas (e as duas bem altas)
+     quebravam a alternância bege/marrom que o resto da Home segue
+     (Queridinhos bege > Escolha do Ateliê marrom > Café da Tarde
+     bege > Edição Surpresa marrom > ... aqui devia voltar pro bege).
+     Mesma cor/textura de fundo que .queridinhos usa (--cor-fundo-alt +
+     --marca-vaso + --textura-grao) — reaproveita o padrão já pronto em
+     vez de inventar um novo. */
+  padding: var(--espaco-secao) 5%;
+  /* era "3rem 5%" (mais compacto que as outras seções, compensando o
+     fundo escuro/gradiente que pedia menos altura) — unificada com
+     --espaco-secao (:root) agora que o fundo não é mais escuro; a
+     altura total segue bem abaixo da meta de 900px mesmo assim (ver
+     relatório final). */
   text-align: center;
-  color: var(--cor-fundo);
+  color: var(--cor-texto);
+  /* era var(--cor-fundo) (creme, pensado pra ler sobre o marrom
+     escuro) — neste fundo bege, a mesma cor creme ficaria quase
+     invisível; troca pra --cor-texto (marrom escuro), a cor padrão de
+     texto do site sobre fundo claro. */
 
-  /* CORREÇÃO (watermark "sumido"): a marca d'água já estava declarada
-     aqui, mas na ORDEM ERRADA. Em CSS, quando se empilham vários
-     background-image, o PRIMEIRO da lista fica por CIMA dos
-     seguintes — e o gradiente (duas cores 100% opacas, sem alpha
-     nenhum) tampava inteiramente o monograma logo atrás dele, por
-     mais que o SVG estivesse correto. A correção é só trocar a ORDEM:
-     o monograma (SVG com fundo transparente, só o traço "AS" tem
-     opacidade) vai primeiro/por cima, o gradiente fica atrás — agora
-     o monograma aparece tingido pelo gradiente por trás dele, igual
-     ao efeito already usado em .produto-destaque (que funciona porque
-     lá só existe UM background-image, sem essa disputa de camadas).
-     background-repeat/background-size têm que seguir a MESMA ordem
-     (são posicionais, um valor por camada). */
-  background-image:
-    var(--marca-monograma-clara),
-    linear-gradient(160deg, var(--cor-texto) 0%, #2b1f17 100%);
-  background-repeat: repeat, no-repeat;
-  background-size: 240px, cover;
+  background-color: var(--cor-fundo-alt);
+  background-image: var(--marca-vaso), var(--textura-grao);
+  background-repeat: repeat, repeat;
+  background-size: 220px, 140px;
 
-  /* cor de SAÍDA da faixa .transicao-base (ver a classe utilitária em
-     style.css, bem mais acima) — mira #quem-somos, a seção clara que
-     vem logo depois desta na página. */
+  /* cor de SAÍDA da faixa .transicao-base — mira o Crochê, a seção
+     clara que vem logo depois desta na página (fundo --cor-fundo,
+     um bege mais claro que o --cor-fundo-alt desta seção: a faixa
+     suaviza essa emenda em vez de deixar um corte seco entre os 2
+     tons de bege). */
   --transicao-base-cor: var(--cor-fundo);
   --transicao-base-cor-fraca: rgba(251, 246, 239, 0.35); /* --cor-fundo a 35% */
 
-  /* cor de ENTRADA da faixa .transicao-topo — ADICIONADA (achado da
-     auditoria, item 5): mira #2b1f17, o tom EXATO do stop final
-     (100%) do gradiente de .edicao-surpresa, a seção escura logo
-     acima — não var(--cor-texto) (o INÍCIO do gradiente dela), que é
-     mais claro e deixava uma linha visível na emenda (ver o
-     comentário completo no HTML, junto da classe nova). */
+  /* cor de ENTRADA da faixa .transicao-topo — mira #2b1f17, o tom
+     EXATO do stop final (100%) do gradiente de .edicao-surpresa, a
+     seção escura logo ACIMA desta. Isto NÃO muda com a recoloração:
+     mesmo esta seção agora nascendo bege, a faixa continua suavizando
+     a emenda contra o marrom escuro de quem vem antes dela — é o selo
+     de transição que resolve exatamente a virada escuro->bege pedida. */
   --transicao-topo-cor: #2b1f17;
   --transicao-topo-cor-fraca: rgba(43, 31, 23, 0.35); /* #2b1f17 a 35% */
 }
 
 .selecao-especial__titulo {
-  color: var(--cor-fundo);
+  color: var(--cor-texto);
+  /* era var(--cor-fundo) (creme, pra ler sobre o marrom escuro) — veja
+     o comentário completo da recoloração em ".selecao-especial" acima;
+     h1-h4 já são --cor-texto por padrão (style.css, lá no topo), mas
+     esta regra precisa declarar de novo porque SOBRESCREVIA com
+     --cor-fundo antes — sem isso o h2 herdaria a cor antiga. */
   font-size: 1.75rem;
   max-width: 520px;
   /* 3rem -> 1.75rem (achado da auditoria, item 5) */
   margin: 0 auto 1.75rem;
+}
+
+/* Etiqueta "✦ Seleção Especial": a regra COMPARTILHADA logo abaixo
+   (.produto-destaque__etiqueta, .selecao-especial__etiqueta) usa
+   --cor-ouro + glow dourado — pensados pra um fundo marrom escuro
+   (~4:1 de contraste lá). Sobre o bege desta seção agora o mesmo
+   dourado cai pra ~3:1 (abaixo do mínimo AA pra texto normal) e o
+   glow perde o sentido (não "brilha" contra um fundo já claro) — por
+   isso este override, só para esta seção: troca pro terracota
+   (--cor-destaque), a MESMA cor usada em título/selo de qualquer
+   outra seção clara do site, e desliga o text-shadow herdado. */
+.selecao-especial__etiqueta {
+  color: var(--cor-destaque);
+  text-shadow: none;
 }
 
 .selecao-especial__grid {
@@ -2504,8 +2565,9 @@ nav {
    "Seleção Especial" — ver carrosselCardHTML, main.js). SEM
    giro360__frame de propósito (pedido: "SEM o efeito arraste para
    girar — esse fica exclusivo daquela seção") — moldura escura
-   reaproveitada (ver ".produto-destaque .foto-emoldurada,
-   .selecao-especial .foto-emoldurada" mais acima). .foto-emoldurada
+   reaproveitada em ".produto-destaque .foto-emoldurada" (mais acima)
+   pras seções de fundo escuro; a de Seleção Especial usa a moldura
+   PADRÃO agora (fundo bege, ver comentário lá). .foto-emoldurada
    não define tamanho/encaixe de propósito (cada contexto traz o seu —
    ver o comentário dela) — aqui: */
 .carrossel-card__foto {
@@ -2777,6 +2839,15 @@ nav {
   background-color: var(--cor-secundaria);
 }
 
+/* Bolinha INATIVA sobre fundo BEGE: a regra padrão acima (creme a 40%)
+   foi pensada pro gradiente escuro de Edição Surpresa — sobre o bege
+   de Seleção Especial (recoloração, ver ".selecao-especial") a mesma
+   bolinha quase some (creme claro sobre bege claro). Troca só aqui pra
+   --cor-texto translúcido, visível nos dois fundos claros do site. */
+.selecao-especial .carrossel-card__dot::after {
+  background-color: rgba(62, 46, 34, 0.3); /* --cor-texto a 30% */
+}
+
 .carrossel-card__dot.is-ativo::after {
   background-color: var(--cor-destaque);
   transform: translate(-50%, -50%) scale(1.3);
@@ -2790,7 +2861,7 @@ nav {
 
 @media (max-width: 768px) {
   .selecao-especial {
-    padding: 3rem 6%;
+    padding: var(--espaco-secao-mobile) 6%;
   }
   .selecao-especial__titulo {
     font-size: 1.4rem;
@@ -2813,9 +2884,11 @@ nav {
    as duas fica idêntica sem precisar de transicao-base aqui (ver
    comentário no HTML). */
 .edicao-surpresa {
-  /* 4.5rem -> 3rem (achado da auditoria, item 5) — mesmo motivo/valor
-     de .selecao-especial, logo acima neste arquivo. */
-  padding: 3rem 5%;
+  /* era "3rem 5%" — unificado com --espaco-secao (:root), o mesmo
+     respiro vertical de todas as seções da Home (ver comentário da
+     variável, em :root). Com o valor mais alto a seção ainda fica bem
+     abaixo da meta de 1000px (ver relatório final). */
+  padding: var(--espaco-secao) 5%;
   text-align: center;
   color: var(--cor-fundo);
 
@@ -2958,7 +3031,7 @@ nav {
 
 @media (max-width: 768px) {
   .edicao-surpresa {
-    padding: 3rem 6%;
+    padding: var(--espaco-secao-mobile) 6%;
   }
   .edicao-surpresa__titulo {
     font-size: 1.4rem;
@@ -3486,7 +3559,8 @@ nav {
   align-items: center;
   max-width: 1100px;
   margin: 0 auto;
-  padding: 4rem 5%;
+  padding: var(--espaco-secao) 5%;
+  /* era "4rem 5%" — unificado com --espaco-secao (:root) */
 
   /* MARCA D'ÁGUA: monograma "AS" ao fundo desta seção. Não há
      background-color aqui, então o grão do body continua aparecendo
@@ -4557,6 +4631,23 @@ footer {
     grid-template-columns: 1fr;
     /* colunas viram uma só: imagem/texto e info/formulário empilhados */
     gap: 2rem;
+  }
+
+  .queridinhos {
+    padding: var(--espaco-secao-mobile) 5%;
+    /* era herdado do desktop (--espaco-secao, 4rem) em TODAS as
+       seções que usam esta classe (Queridinhos, Café da Tarde, Crochê
+       na Home, e a vitrine de ceramica.html) — no celular, menos
+       respiro no topo/base evita espaço vazio desproporcional ao
+       lado da grade de produtos, que já é compacta numa coluna só. */
+  }
+
+  .quem-somos {
+    padding: var(--espaco-secao-mobile) 5%;
+    /* era só herdado do desktop (--espaco-secao, 4rem) — no celular,
+       com a seção já empilhada e a galeria "Conheça Nosso Ateliê" logo
+       abaixo somando bastante altura, o respiro extra do topo/base só
+       engordava ainda mais o scroll sem necessidade. */
   }
 
   .quem-somos img {
