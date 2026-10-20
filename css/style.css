@@ -1,0 +1,5168 @@
+/* ============================================
+   VARIÁVEIS DE COR E ESTILO (design tokens)
+   Colocar cores aqui evita repetir o mesmo código
+   de cor várias vezes; se quiser mudar o tom depois,
+   muda só aqui e reflete no site inteiro
+   ============================================ */
+:root {
+  --cor-fundo: #FBF6EF;          /* areia clara, fundo principal */
+  --cor-fundo-alt: #EFE3D0;      /* bege mais encorpado, pra seções alternadas */
+  --cor-texto: #3E2E22;          /* marrom terracota escuro, cor de argila queimada */
+  --cor-destaque: #9E4F2E;       /* terracota queimado: mais escuro e saturado que o
+                                    tom antigo (#B5754C). O terracota claro dava só
+                                    ~3,7:1 de contraste com texto branco (reprova no
+                                    WCAG AA); este dá ~5,8:1 (aprova AA para texto
+                                    normal). Usado em botões e links importantes. */
+  --cor-destaque-escuro: #7F3D22;/* ~20% mais escuro que o novo --cor-destaque, para
+                                    o hover dos botões continuar perceptível. */
+  --cor-secundaria: #5E6B45;     /* verde-oliva mais fechado/encorpado: o oliva antigo
+                                    (#6B7355) parecia "lavado" ao lado do terracota
+                                    mais forte. Contraste com texto branco ~5,7:1. */
+  --cor-secundaria-escuro: #4C5738; /* ~20% mais escuro que --cor-secundaria — mesmo
+                                    cálculo (cada canal x0,8) do par destaque/
+                                    destaque-escuro acima. Usada como "degrau"/base
+                                    do botão 3D "Adicionar ao Carrinho" (.btn-comprar). */
+  --cor-ouro: #B8873E;           /* dourado/mostarda queimado — remete a esmaltes
+                                    metálicos de cerâmica. É um ACENTO: usado só em
+                                    trechos especiais e curtos (palavra em itálico do
+                                    título do banner, o número do contador de peças,
+                                    o "Mais Tesouros do Ateliê", o número do selo de
+                                    %). NUNCA em botões nem em texto corrido — sobre
+                                    o fundo claro o contraste dele é ~3:1 (ok pra
+                                    destaque grande/curto, não pra leitura longa). */
+  --cor-card: #FFFFFF;           /* branco levemente quebrado, fundo dos cards */
+
+  --fonte-titulo: 'Fraunces', serif;   /* fonte com curvas orgânicas, para títulos */
+  --fonte-texto: 'Jost', sans-serif;   /* fonte limpa, para textos corridos */
+
+  --raio-organico: 60% 40% 55% 45% / 45% 55% 40% 60%;
+  /* border-radius assimétrico: cria uma forma tipo "gota/vaso",
+     remete à forma orgânica de uma peça torneada à mão */
+
+  /* ------------------------------------------------------------
+     TEXTURAS E MARCA D'ÁGUA (SVG embutido como "data URI")
+     ------------------------------------------------------------
+     Por que SVG embutido no CSS em vez de um arquivo .png?
+       - 0 requisições de rede: o desenho viaja dentro do próprio
+         CSS (cada um aqui tem menos de 1 KB);
+       - vetor: não borra em telas de alta densidade nem ao ampliar;
+       - a cor/opacidade ficam escritas no próprio SVG.
+     "data:image/svg+xml,<svg...>" = a imagem é o texto do SVG.
+     Alguns caracteres precisam ser "escapados" pra caber dentro de
+     url("..."): < vira %3C, > vira %3E, # vira %23, e usamos aspas
+     simples dentro do SVG pra não conflitar com as aspas do url().
+
+     --textura-grao: ruído fino (grão de papel/argila). O
+       <feTurbulence type='fractalNoise'> é um gerador de ruído do
+       próprio navegador; <feColorMatrix saturate='0'> tira a cor
+       (deixa cinza); opacity='0.05' deixa quase invisível.
+     --marca-monograma: monograma "AS" em serifa itálica (parecido
+       com a Fraunces do logo), só contorno (fill='none' + stroke).
+       Vai no topo da página, em "Quem Somos" e (versão clara) no rodapé.
+     --marca-monograma-clara: mesmo "AS", mas com o traço na cor
+       CLARA (--cor-fundo) — pro rodapé, que tem fundo escuro; o
+       monograma escuro sumiria lá.
+     --marca-vaso: silhueta de vaso em traço fino. Vai em .categorias
+       e .queridinhos (áreas de produto).
+     --marca-flor: um raminho botânico em traço fino (esboço de flor
+       silvestre: bloom aberto de 5 pétalas assimétricas + caule
+       curvo + 1 botão + 2 folhas), no mesmo estilo de line art dos
+       outros. Vai em .topo, .contato e .croche-vitrine.
+     As marcas escuras usam stroke='%233E2E22' = a mesma cor de
+     --cor-texto (#3E2E22). Opacidade das marcas subiu de 0.05 para
+     0.10 (ainda fundo, mas agora perceptível). O grão segue em 0.05. */
+  --textura-grao: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23g)' opacity='0.05'/%3E%3C/svg%3E");
+
+  /* --textura-pergaminho: MESMA técnica do --textura-grao acima
+     (feTurbulence = gerador de ruído do próprio navegador, sem
+     nenhuma imagem carregada) — só que aqui o feColorMatrix, em vez
+     de "dessaturar" (deixar cinza), TINGE o ruído num sepia/marrom
+     (linhas R/G/B da matriz puxando pra tons terrosos) e prende a
+     opacidade final na própria matriz (linha do alfa em 0.16) — dá o
+     efeito de fibra de papel envelhecido, usado só no bloco de texto
+     "pergaminho" da seção Seleção Especial (pedido item 3: "textura
+     via SVG ou CSS... ruído sutil"). Ladrilha em 150px — grão fino,
+     do tamanho certo pra um bloco de texto pequeno (o --textura-grao
+     comum ladrilha a página inteira, resolução baixa demais aqui). */
+  --textura-pergaminho: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='150'%3E%3Cfilter id='p'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0.45 0 0 0 0.30  0.32 0 0 0 0.22  0.18 0 0 0 0.10  0 0 0 0.16 0'/%3E%3C/filter%3E%3Crect width='150' height='150' filter='url(%23p)'/%3E%3C/svg%3E");
+
+  --marca-monograma: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Ctext x='120' y='158' text-anchor='middle' font-family='Fraunces, Georgia, serif' font-style='italic' font-size='150' fill='none' stroke='%233E2E22' stroke-width='2' opacity='0.1'%3EAS%3C/text%3E%3C/svg%3E");
+
+  --marca-monograma-clara: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Ctext x='120' y='158' text-anchor='middle' font-family='Fraunces, Georgia, serif' font-style='italic' font-size='150' fill='none' stroke='%23FBF6EF' stroke-width='2' opacity='0.08'%3EAS%3C/text%3E%3C/svg%3E");
+
+  /* --marca-monograma-fraca: o MESMO "AS", só que com opacidade bem
+     menor (0.035 em vez de 0.1) — usada na galeria "Conheça Nosso
+     Ateliê" (dentro de .quem-somos): ali a marca d'água cruzava por
+     cima das FOTOS (que já têm suas próprias cores/detalhes) e
+     competia com elas. Como a opacidade vem GRAVADA dentro do próprio
+     SVG (não dá pra baixar com um "opacity" do CSS sem também apagar
+     o conteúdo real da seção, que não é fundo), a solução foi criar
+     uma 2ª cópia do mesmo SVG só com esse número trocado. */
+  --marca-monograma-fraca: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Ctext x='120' y='158' text-anchor='middle' font-family='Fraunces, Georgia, serif' font-style='italic' font-size='150' fill='none' stroke='%233E2E22' stroke-width='2' opacity='0.035'%3EAS%3C/text%3E%3C/svg%3E");
+
+  --marca-vaso: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240' fill='none' stroke='%233E2E22' stroke-width='2' opacity='0.1'%3E%3Cellipse cx='120' cy='60' rx='26' ry='6'/%3E%3Cpath d='M96 62 C90 78 92 84 110 100 C86 120 74 146 74 168 C74 198 96 212 120 212 C144 212 166 198 166 168 C166 146 154 120 130 100 C148 84 150 78 144 62'/%3E%3C/svg%3E");
+
+  --marca-flor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240' viewBox='0 0 240 240' fill='none' stroke='%233E2E22' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' opacity='0.1'%3E%3Cpath d='M140 96 C144 132 128 152 134 180 C138 202 128 216 120 228'/%3E%3Cpath d='M138 74 C120 74 106 60 112 44 C126 40 140 54 138 74'/%3E%3Cpath d='M140 70 C130 52 128 30 140 20 C152 30 152 54 140 70'/%3E%3Cpath d='M144 70 C158 52 180 46 192 54 C186 70 162 78 144 70'/%3E%3Cpath d='M146 76 C166 76 182 86 180 102 C164 106 144 94 146 76'/%3E%3Cpath d='M140 80 C132 96 116 106 102 104 C104 88 122 76 140 80'/%3E%3Cellipse cx='141' cy='71' rx='7' ry='6'/%3E%3Cpath d='M133 152 C121 146 116 132 124 122 C134 128 137 142 133 152'/%3E%3Cpath d='M133 182 C147 180 158 168 158 154 C144 156 132 170 133 182'/%3E%3Cpath d='M129 128 C123 120 123 108 131 104 C137 110 137 122 129 128'/%3E%3C/svg%3E");
+}
+
+/* ============================================
+   RESET BÁSICO
+   Navegadores diferentes têm margens/paddings padrão
+   diferentes; zerar isso garante que o layout fique
+   igual em qualquer navegador
+   ============================================ */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  /* box-sizing: border-box faz padding e borda contarem DENTRO
+     da largura do elemento, evitando contas de tamanho confusas */
+}
+
+/* ============================================
+   SCROLL SUAVE + COMPENSAÇÃO DO HEADER FIXO
+   ============================================ */
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+    /* Rolagem animada NATIVA (só CSS) para qualquer "pulo" de âncora:
+       links #secao do header, botão "Ver Produtos" do banner e até o
+       "localizar na página" do navegador. Preferi isto a um handler
+       de clique em JS porque:
+         - pega TODAS as formas de navegar até a âncora, não só cliques;
+         - é o próprio navegador rolando, sem risco de travar/engasgar.
+       Fica dentro do @media porque quem ligou "reduzir movimento" no
+       sistema operacional não deve receber a animação. */
+  }
+}
+
+section[id] {
+  scroll-margin-top: 90px;
+  /* O header é sticky (position: sticky; top: 0). Sem esta regra, ao
+     pular para uma seção ela encostaria em y=0 e o header ficaria
+     POR CIMA do título dela. scroll-margin-top reserva ~90px (altura
+     do header + uma folga) SÓ para o cálculo de onde parar a rolagem.
+     Resolve no CSS — não precisa de JS pra medir o header e ajustar. */
+}
+
+/* ============================================
+   SCROLL REVEAL — elementos surgem ao entrar na tela
+   ============================================
+   O estado inicial "escondido" (opacity 0 + deslocado) só é
+   aplicado quando:
+     1. o <html> tem a classe .js-reveal — adicionada por um
+        <script> no <head> de cada página, que confirma que o
+        JavaScript rodou logo no começo. Sem JS -> sem a classe ->
+        o conteúdo aparece normal (nunca fica invisível "preso").
+     2. E o usuário NÃO ligou "reduzir movimento" no sistema
+        (@media prefers-reduced-motion: no-preference).
+   O JS (IntersectionObserver, em main.js) adiciona .is-revealed
+   quando o elemento entra na tela -> a transição abaixo faz o
+   fade + slide. Depois de animar, o JS remove as classes .reveal
+   pra o elemento voltar ao seu comportamento normal (importante
+   nos cards, que têm transition próprio no hover). */
+@media (prefers-reduced-motion: no-preference) {
+  .js-reveal .reveal {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+  }
+
+  .js-reveal .reveal.is-revealed {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+body {
+  font-family: var(--fonte-texto);
+  color: var(--cor-texto);
+  line-height: 1.6;
+  /* line-height 1.6 dá "respiro" entre linhas de texto, melhora leitura */
+
+  /* fundo = cor sólida + textura de grão POR CIMA dela.
+     Quando há cor E imagem, a imagem fica na frente da cor.
+     background-repeat: repeat -> o quadradinho de 140px do SVG é
+     "ladrilhado" (tiled) por toda a página. As seções que têm cor
+     de fundo própria (ex.: --cor-fundo-alt) recebem a mesma textura
+     individualmente, mais abaixo. */
+  background-color: var(--cor-fundo);
+  background-image: var(--textura-grao);
+  background-repeat: repeat;
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--fonte-titulo);
+  font-weight: 600;
+  color: var(--cor-texto);
+
+  /* OPTICAL SIZING (eixo "opsz" da Fraunces)
+     ----------------------------------------
+     Fraunces e uma "variable font": alem de peso e italico, ela
+     tem um eixo "opsz" (optical size) que MUDA O DESENHO das
+     letras conforme o tamanho em que o texto vai aparecer:
+       - opsz baixo (~9)  -> letras mais firmes, pouco contraste
+                             entre traco fino e grosso (bom pra
+                             textos pequenos, mais legiveis)
+       - opsz alto (~144) -> letras delicadas, muito contraste,
+                             terminais em "gota" (o visual
+                             "display"/editorial, elegante, pra
+                             titulos grandes)
+     A importacao antiga do Google Fonts pedia so "ital,wght", sem
+     "opsz" -> o navegador recebia UMA instancia congelada num
+     opsz neutro (~mediano) e os titulos ficavam com cara de
+     serifa generica. A nova URL adiciona "opsz" com a faixa
+     9..144, e "font-optical-sizing: auto" (padrao do CSS, aqui
+     explicito) manda o navegador escolher o opsz a partir do
+     tamanho renderizado -> titulos grandes ganham o corte
+     elegante da Fraunces. */
+  font-optical-sizing: auto;
+}
+
+/* Palavra de destaque dentro de um titulo grande: italico + peso
+   mais leve (400 vs. 600 do resto) faz a Fraunces italica
+   "aparecer" — e onde o corte artistico da fonte brilha. */
+.titulo-enfase {
+  font-style: italic;
+  font-weight: 400;
+  color: var(--cor-ouro);
+  /* a palavra em itálico do título do banner ("Beleza e Textura" /
+     "Aconchego Feito à Mão") ganha o dourado — é um dos 4 pontos do
+     sistema de acento --cor-ouro (ver :root). O resto do <h1> segue
+     na cor de texto normal. */
+}
+
+/* ============================================
+   NÚMERO EM DOURADO  (acento --cor-ouro)
+   Classe genérica pra "só o número" ficar dourado dentro de um texto
+   que continua na cor normal. Usada em:
+     - #contador-pecas: o "+N" de "peças exclusivas disponíveis"
+       (js/main.js, textoContadorPorCategoria)
+     - .preco-selo-off: o "N" de "N% OFF" (js/main.js, renderBlocoPreco)
+   Só a COR muda; tamanho/peso vêm do contexto onde o span está.
+   ============================================ */
+.num-ouro {
+  color: var(--cor-ouro);
+}
+
+/* No selo "N% OFF" o fundo é --cor-destaque (terracota): o dourado
+   ali tem contraste baixo (~2:1) com o fundo. Deixamos o número
+   mais ENCORPADO (700) pra ele "aparecer" como um relevo metálico,
+   não sumir. Se ainda assim ficar sutil demais na prática, as
+   alternativas são: manter o número branco só no selo, ou clarear
+   --cor-ouro. */
+.preco-selo-off .num-ouro {
+  font-weight: 700;
+}
+
+a {
+  text-decoration: none;
+  /* tira o sublinhado padrão dos links, vamos estilizar do nosso jeito */
+  color: inherit;
+  /* faz o link herdar a cor do texto ao redor, em vez do azul padrão */
+}
+
+img {
+  max-width: 100%;
+  display: block;
+  /* max-width 100% impede que imagem "estoure" o container;
+     display: block remove um espacinho fantasma que <img> deixa por padrão */
+}
+
+ul {
+  list-style: none;
+  /* remove as bolinhas padrão de lista */
+}
+
+button {
+  font-family: var(--fonte-texto);
+  cursor: pointer;
+  /* cursor pointer mostra a "mãozinha" ao passar o mouse, sinaliza que é clicável */
+  border: none;
+}
+
+/* ============================================
+   BARRA DE ANÚNCIO (topo da Home)
+   Fica ACIMA do header. Mostra 3 mensagens curtas que se
+   alternam com fade (o JavaScript troca o texto; a transição
+   de opacity abaixo é o que suaviza a troca).
+   ============================================ */
+.barra-anuncio {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* centraliza a mensagem na horizontal e na vertical */
+  text-align: center;
+
+  height: 38px;
+  /* altura compacta (~36-40px) pra não competir com o header logo abaixo */
+  padding: 0 1rem;
+  overflow: hidden;
+  /* mensagem grande não estica a barra */
+
+  background-color: var(--cor-destaque);
+  color: #FFF;
+  font-size: 0.82rem;
+  letter-spacing: 0.02em;
+}
+
+.barra-anuncio__texto {
+  transition: opacity 0.4s ease;
+  /* o JS adiciona .is-trocando -> opacity vai a 0 (fade-out);
+     troca o texto; remove a classe -> volta a 1 (fade-in) */
+}
+
+.barra-anuncio__texto.is-trocando {
+  opacity: 0;
+}
+
+/* ============================================
+   HEADER / NAVEGAÇÃO
+   ============================================ */
+header {
+  position: sticky;
+  top: 0;
+  /* sticky faz o header "grudar" no topo ao rolar a página,
+     facilita acesso ao menu e ao carrinho a qualquer momento */
+  background-color: var(--cor-fundo);
+  z-index: 100;
+  /* z-index alto garante que o header fique por cima de outros elementos ao rolar */
+  box-shadow: 0 2px 8px rgba(62, 46, 34, 0.08);
+  /* sombra suave, sutilmente separa o header do conteúdo abaixo */
+
+  transition: transform 0.3s ease;
+  /* usada SÓ no mobile: o js/main.js adiciona/tira a classe
+     .header--oculto (translateY(-100%)) pra o header "sumir" ao rolar
+     pra baixo e "voltar" ao rolar pra cima. No desktop nada mexe no
+     transform, então esta transição fica inerte lá. */
+}
+
+nav {
+  position: relative;
+  /* relative serve de âncora para o menu mobile (.nav-links.active),
+     que abre "absolute" logo abaixo da barra de navegação */
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  /* flex + space-between distribui logo, menu e carrinho nas pontas,
+     com espaço flexível entre eles */
+  padding: 0.95rem 5%;
+  /* CORREÇÃO DA ALTURA DO HEADER (desktop): era 1.2rem no vertical.
+     Diagnóstico: header.offsetHeight estava em ~77-79px em TODAS as
+     páginas (index e produto) — a causa NÃO era o "Quem Somos"
+     quebrando (o white-space:nowrap já resolveu isso), e sim a soma
+     de: (a) 1.2rem*2 = 38.4px de padding aqui + (b) a <.logo>, que
+     herdava line-height "normal" da Fraunces itálica (=~38px pra 24px
+     de fonte, um valor alto), o elemento mais alto da barra. Baixando
+     este padding pra 0.95rem + fixando line-height:1.2 na .logo +
+     enxugando um tico o input de busca e o botão "Carrinho" (regras
+     abaixo), o header volta pra ~64px. */
+  max-width: 1200px;
+  margin: 0 auto;
+  /* margin 0 auto centraliza o conteúdo quando a tela é muito larga */
+}
+
+.logo {
+  font-family: var(--fonte-titulo);
+  font-size: 1.5rem;
+  font-style: italic;
+  font-optical-sizing: auto;   /* mesmo motivo do h1..h4 acima */
+  line-height: 1.2;
+  /* a Fraunces itálica tem métricas verticais generosas: com
+     line-height "normal" a caixa da logo ficava ~38px pra 24px de
+     fonte, sendo o elemento mais ALTO do header (ver comentário em
+     "nav"). 1.2 é folgado pra uma linha só e enxuga ~10px do header. */
+  color: var(--cor-destaque);
+  /* fallback: se o navegador não suportar background-clip:text (ver
+     abaixo), o texto fica nesta cor sólida em vez de invisível */
+
+  margin-right: 1.5rem;
+  /* Garante um respiro mínimo entre a logo e o "Home" (1o item do
+     menu), independente da sobra de espaço da <nav>. Na index.html,
+     o campo de busca (.busca) tem flex-grow e "engole" toda sobra de
+     espaço da justify-content:space-between antes dela chegar aqui —
+     sem esta margem, a logo encostava direto no "Home". */
+
+  /* ============================================
+     ANIMAÇÃO DA LOGO: brilho deslizante + respiração
+     ============================================
+     Duas animações rodando ao mesmo tempo, em loop contínuo — cada
+     uma declarada no "animation" (shorthand) separada por vírgula.
+     Elas NÃO conflitam porque cada uma anima uma propriedade CSS
+     diferente:
+       - logo-brilho     anima "background-position"
+       - logo-respiracao anima "letter-spacing"
+     O navegador aplica as duas independentemente a cada frame (é
+     como ter duas linhas de "animation" tocando ao mesmo tempo); só
+     haveria conflito se as DUAS tentassem controlar a MESMA
+     propriedade (aí a última da lista venceria). Uma 3a variação
+     (flutuação vertical, via transform: translateY) foi testada mas
+     ficou de fora por escolha — só as 2 abaixo entraram pra valer. */
+  background-image: linear-gradient(
+    115deg,
+    var(--cor-destaque) 45%,
+    #FFF 50%,
+    var(--cor-destaque) 55%
+  );
+  background-size: 300% 100%;
+  /* 300%: gradiente 3x mais largo que a caixa de texto — é o que dá
+     "espaço" pra faixa de luz se mover de fora-esquerda a
+     fora-direita sem aparecer inteira o tempo todo */
+  -webkit-background-clip: text;
+  background-clip: text;
+  /* recorta o background exatamente no formato das letras — em vez
+     de um retângulo de luz, só as próprias letras "brilham" */
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  /* o texto em si fica transparente: quem "pinta" as letras agora é
+     o gradiente recortado acima. A versão -webkit- é a propriedade
+     que Safari/WebKit reconhecem (sem ela, alguns ignoram
+     color: transparent e o texto some por completo) */
+
+  animation:
+    logo-brilho 5.5s ease-in-out infinite,
+    logo-respiracao 4s ease-in-out infinite;
+}
+
+@keyframes logo-brilho {
+  0%, 60%  { background-position: -60% 0; }  /* brilho "esperando" fora, à esquerda */
+  80%      { background-position: 160% 0; }  /* atravessa rápido pra fora, à direita */
+  100%     { background-position: 160% 0; }  /* some ali até o ciclo recomeçar */
+  /* ciclo de 5.5s passando a maior parte do tempo com o brilho fora
+     da área visível (0%–60% e 80%–100%); ele só atravessa de fato
+     entre 60% e 80% do ciclo (~1,1s) — daí o efeito "a cada 5-6
+     segundos" em vez de um brilho contínuo */
+}
+
+@keyframes logo-respiracao {
+  0%, 100% { letter-spacing: 0; }
+  50%      { letter-spacing: 0.03em; }
+  /* vai e volta bem pouco (0 a 0.03em) — não é pra "esticar" a
+     palavra visivelmente, só dar uma vibração orgânica. O easing
+     ease-in-out (declarado no "animation" acima) acelera e
+     desacelera nas pontas, lembrando o ritmo de inspirar/expirar */
+}
+
+/* quem pediu "reduzir movimento": desliga as duas animações (a logo
+   fica parada, com a cor sólida normal) — mesmo padrão já usado no
+   resto do site (reveal, skeleton, toast...) */
+@media (prefers-reduced-motion: reduce) {
+  .logo {
+    animation: none;
+    background-image: none;
+    color: var(--cor-destaque);
+    -webkit-text-fill-color: var(--cor-destaque);
+    /* desfaz o truque do background-clip:text: sem a animação do
+       brilho, o texto ficaria "congelado" transparente — aqui ele
+       volta a ser preenchido pela cor sólida normal */
+  }
+}
+
+.nav-links {
+  display: flex;
+  gap: 1.5rem;
+  /* gap cria espaço uniforme entre os itens do menu, sem precisar de
+     margin em cada <li>. Era 2rem — reduzi pra 1.5rem pra os 5 itens
+     caberem numa linha só em telas de desktop menores (junto do
+     white-space:nowrap e do flex-shrink:0 abaixo). */
+  flex-shrink: 0;
+  /* o menu é navegação essencial: NÃO deve espremer quando a <nav>
+     fica apertada. Quem cede espaço é o campo de busca (tem
+     flex-shrink:1 + min-width:0). Sem isto, o <li> "Quem Somos"
+     encolhia e o texto quebrava em 2 linhas, engrossando o header. */
+
+  margin-right: 1.5rem;
+  /* Mesma lógica/valor do margin-right da .logo (ver comentário lá
+     em cima): a <nav> usa justify-content:space-between, mas na
+     index.html/ceramica.html o campo .busca tem flex-grow e "engole"
+     toda sobra de espaço ANTES dela virar gap entre os itens — sem
+     esta margem, "Contato" (último link do menu) encostava direto na
+     caixa de busca. 1.5rem (não o 2rem do gap INTERNO entre os links)
+     porque aqui é só um respiro entre BLOCOS diferentes da nav, não
+     entre itens de uma mesma lista — mesmo raciocínio já usado no
+     espaço logo-para-menu. */
+}
+
+.nav-links a {
+  font-size: 0.95rem;
+  letter-spacing: 0.03em;
+  /* letter-spacing sutil dá um ar mais "elegante" ao menu */
+  white-space: nowrap;
+  /* "Quem Somos" (o único item com 2 palavras) NÃO quebra em 2 linhas
+     — era isso que empurrava a altura do header no desktop. */
+  transition: color 0.2s ease;
+  /* transition faz a mudança de cor no hover ser suave, não abrupta */
+}
+
+.nav-links a:hover {
+  color: var(--cor-destaque);
+}
+
+/* ============================================
+   DROPDOWN DE SUBCATEGORIAS ("Cerâmica")
+   O <li> ganha a classe .tem-dropdown e um <ul class="dropdown">
+   pelo js/main.js (montarDropdownCeramica). Aqui só o visual:
+   escondido, aparece no hover/foco do <li> pai.
+   ============================================ */
+.nav-links .tem-dropdown {
+  position: relative;   /* âncora pro .dropdown "absolute" */
+}
+
+.dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  min-width: 190px;
+  margin: 0;
+  padding: 0.4rem 0;
+  list-style: none;
+
+  background-color: var(--cor-fundo);
+  border-radius: 8px;
+  box-shadow: 0 8px 20px rgba(62, 46, 34, 0.15);
+
+  /* escondido: sem opacidade e um tico deslocado pra baixo.
+     visibility:hidden também tira os links da ordem de tabulação. */
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(4px);
+  transition: opacity 0.18s ease, transform 0.18s ease, visibility 0.18s ease;
+  z-index: 120;
+}
+
+/* "ponte" invisível entre o link e o menu: cobre o vãozinho pra o
+   mouse não "sair" do :hover ao descer pro dropdown */
+.dropdown::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -0.6rem;
+  height: 0.6rem;
+}
+
+/* abre no hover do <li> OU quando o foco (teclado) entra nele */
+.nav-links .tem-dropdown:hover .dropdown,
+.nav-links .tem-dropdown:focus-within .dropdown {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.dropdown li {
+  margin: 0;
+}
+
+.dropdown a {
+  display: block;
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  white-space: nowrap;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.dropdown a:hover {
+  background-color: var(--cor-fundo-alt);
+  color: var(--cor-destaque);
+}
+
+/* ============================================
+   BREADCRUMB  (Home > Cerâmica > ...)
+   Componente COMPARTILHADO: produto.html e ceramica.html usam o
+   mesmo HTML (<nav class="breadcrumb">) e a mesma função JS
+   (renderBreadcrumb, em main.js). Por isso o estilo mora aqui, na
+   folha compartilhada — antes estava em produto.css, mas agora
+   que duas páginas usam, não faz sentido ficar numa folha de
+   uma página só.
+   ============================================ */
+.breadcrumb {
+  max-width: 1200px;
+  margin: 0 auto 1.5rem;
+  padding: 1rem 5%;
+  /* padding vertical em cima E embaixo (antes só em cima) + um
+     fundo levemente diferente dão "peso" visual à barra, em vez
+     dela sumir contra o fundo da página */
+  background-color: var(--cor-fundo-alt);
+
+  display: flex;
+  flex-wrap: wrap;
+  /* flex-wrap segura o breadcrumb no mobile: se o nome for longo,
+     os itens quebram pra linha de baixo em vez de estourar a tela */
+  align-items: center;
+  gap: 0.5rem;
+
+  font-size: 1rem;
+  color: var(--cor-texto);
+}
+
+.breadcrumb a {
+  color: var(--cor-destaque);
+  /* Home e Cerâmica: cor de destaque = "isto é clicável" */
+}
+
+.breadcrumb a:hover {
+  text-decoration: underline;
+}
+
+.breadcrumb__sep {
+  display: inline-flex;
+  align-items: center;
+  color: var(--cor-secundaria);
+  /* o separador (chevron) fica mais discreto que os links */
+}
+
+.breadcrumb__sep svg {
+  width: 1em;
+  height: 1em;
+  /* 1em = acompanha o font-size do breadcrumb */
+}
+
+.breadcrumb [aria-current="page"] {
+  font-weight: 600;
+  color: var(--cor-texto);
+  /* a página ATUAL: mais forte e na cor do texto (não é link),
+     deixa claro "você está aqui" */
+}
+
+.nav-icons a {
+  background-color: var(--cor-destaque);
+  color: #FFF;
+  padding: 0.45rem 1.1rem;
+  /* 0.45rem no vertical (era 0.5): alinha a altura do "Carrinho" com
+     os outros controles do header enxuto. 1.1rem no horizontal
+     compensa, mantendo a pílula com boa presença. */
+  border-radius: 30px;
+  /* border-radius alto cria formato de "pílula", comum em botões de CTA */
+  font-size: 0.9rem;
+  white-space: nowrap;
+  /* ACHADO ao testar o header em largura de tablet (pedido da tarefa
+     de espaçamento do header): entre ~768px e 1024px — a faixa toda
+     onde o menu horizontal (desktop) ainda aparece, antes do
+     hambúrguer — o texto "🛒 Carrinho" (ou "🛒 Carrinho (N)" com
+     itens no carrinho) ficava espremido pela falta de espaço e
+     quebrava em 2 linhas, virando uma "pílula" alta e deformada. Já
+     acontecia ANTES desta tarefa (testado removendo os 2 margin-right
+     novos acima — o resultado era o mesmo), não foi causado por eles;
+     só apareceu porque agora testamos telas médias de propósito.
+     white-space:nowrap proíbe esse texto de quebrar — quem cede
+     espaço em vez disso é o próprio menu (os links, que já quebram
+     palavra por palavra sem problema) ou a caixa de busca (que
+     encolhe até o mínimo de 160px) — testado nas larguras 768/820/
+     900/1024px, sem gerar scroll horizontal em nenhuma delas. */
+  transition: background-color 0.2s ease;
+}
+
+.nav-icons a:hover {
+  background-color: var(--cor-destaque-escuro);
+}
+
+/* ============================================
+   BUSCA (campo no header — index.html e ceramica.html)
+   ============================================ */
+.busca {
+  display: flex;
+  flex: 1 1 160px;
+  /* flex: cresce/encolhe no espaço que sobra na <nav>. O 3o valor
+     (160px) é a largura "ideal"; min-width:0 abaixo deixa encolher
+     abaixo disso se a nav ficar apertada (sem min-width:0, um flex
+     item não encolhe além do conteúdo e estoura o layout). */
+  min-width: 0;
+  max-width: 260px;
+
+  margin-right: 1.5rem;
+  /* mesmo motivo do margin-right em .nav-links, aqui do outro lado da
+     busca: sem isso, a caixa de busca encostava direto no botão
+     "Carrinho" (.nav-icons) — o flex-grow dela consome toda sobra de
+     espaço da <nav> antes de virar respiro entre os elementos. */
+}
+
+.busca input {
+  width: 100%;
+  padding: 0.45rem 0.9rem;
+  /* 0.45rem no vertical (era 0.5): junto do resto, mantém o input
+     abaixo da altura da linha da logo, pra não voltar a "engrossar"
+     o header. Área de toque no mobile é ajustada na media query. */
+  font: inherit;
+  font-size: 0.9rem;
+  line-height: 1.2;
+  /* "font: inherit" acima trazia o line-height 1.6 do body — o que
+     fazia o input ser o elemento mais alto do header (~39px) e
+     desalinhado com a pílula "Carrinho". 1.2 iguala a altura dos dois
+     e encolhe mais o header. */
+  color: var(--cor-texto);
+  background-color: var(--cor-card);
+  border: 1px solid #D8C7B0;
+  border-radius: 30px;   /* mesma "pílula" dos botões do site */
+}
+
+.busca input::placeholder {
+  color: #9a8b78;
+}
+
+.busca input:focus {
+  outline: 2px solid var(--cor-destaque);
+  outline-offset: 1px;
+  border-color: transparent;
+}
+
+/* ============================================
+   BOTÃO HAMBÚRGUER
+   Fica escondido no desktop; a media query lá no
+   final do arquivo mostra ele em telas pequenas
+   ============================================ */
+.menu-toggle {
+  display: none;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 44px;
+  height: 44px;
+  /* ÁREA DE TOQUE: 44x44 é a recomendação de tamanho mínimo pra
+     elementos tocáveis (WCAG). O ÍCONE (as 3 barrinhas) continua do
+     mesmo tamanho de sempre (26x18) — o padding abaixo é que "abre"
+     a caixa clicável ao redor dele sem esticar o desenho visualmente.
+     Com box-sizing:border-box (regra global no topo do arquivo),
+     width/height JÁ incluem o padding, então a área de CONTEÚDO
+     (onde as barras vivem, via justify-content:space-between) fecha
+     em exatamente 44-9*2=26px de largura e 44-13*2=18px de altura —
+     os mesmos números de antes. */
+  padding: 13px 9px;
+  margin-left: 0.75rem;
+  /* Sem isso, o botão ficava colado a 1px do botão "Carrinho" ao
+     lado — o espaço "sobrando" da <nav> (justify-content:
+     space-between) não se distribui igualmente entre logo/carrinho/
+     hambúrguer nessa configuração de flex-wrap; esta margem garante
+     um respiro mínimo independente dessa conta. */
+  background: none;
+  border: none;
+}
+
+.menu-toggle span {
+  display: block;
+  width: 100%;
+  height: 2px;
+  background-color: var(--cor-texto);
+  border-radius: 2px;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+  /* a transição deixa suave a virada das barras pro formato de "X" */
+}
+
+/* quando o JS adiciona .active, as 3 barras viram um "X":
+   a de cima desce e gira, a do meio some, a de baixo sobe e gira */
+.menu-toggle.active span:nth-child(1) {
+  transform: translateY(8px) rotate(45deg);
+}
+
+.menu-toggle.active span:nth-child(2) {
+  opacity: 0;
+}
+
+.menu-toggle.active span:nth-child(3) {
+  transform: translateY(-8px) rotate(-45deg);
+}
+
+/* ============================================
+   TOPO (área ao redor do banner)
+   Div que envolve só o .banner-principal. Serve pra receber a
+   marca d'água ATRÁS/AO REDOR do banner: como o banner tem
+   width:90% + margin:auto, sobra uma faixa de fundo em cima e nas
+   laterais dele — é aí que a marca aparece. O banner em si
+   (overflow:hidden + imagem opaca) cobre a marca na sua área, então
+   ela nunca fica em cima da foto.
+   ============================================ */
+.topo {
+  padding: 2.5rem 0 1.5rem;
+  /* o respiro em cima do banner passou a ser padding DESTE elemento
+     (antes era margin-top do próprio banner). Com padding, o fundo do
+     .topo — a marca d'água — pinta nessa faixa acima do banner também;
+     com margin, não pintaria (margin é sempre transparente). */
+  background-image: var(--marca-flor);
+  /* antes era o monograma "AS"; trocado pela silhueta de flor
+     (--marca-flor), na mesma opacidade (0.1) e estilo de traço fino.
+     O "AS" segue no Quem Somos e no rodapé. */
+  background-repeat: repeat;
+  background-size: 200px;
+}
+
+/* ============================================
+   BANNER PRINCIPAL (HERO)
+   ============================================ */
+.banner-principal {
+  position: relative;
+  /* relative é necessário para o texto (banner-texto) se
+     posicionar "absolute" em relação a esta section */
+
+  width: 90%;
+  max-width: 1400px;
+  margin: 0 auto;
+  /* width:90% garante margem lateral visível SEMPRE (5% de cada lado);
+     max-width:1400px impede o banner de crescer demais em telas largas;
+     margin:auto centraliza. O respiro vertical agora vem do padding
+     do .topo (ver acima). Antes usávamos "padding: 0 5%", mas com o
+     recorte arredondado + overflow:hidden abaixo o padding deixaria
+     uma faixa vazia dentro dos cantos. */
+
+  border-radius: 16px;
+  overflow: hidden;
+  /* overflow:hidden faz a imagem e o "véu" respeitarem os cantos
+     arredondados. O .banner-texto cabe folgado dentro do banner,
+     então não corre risco de ser cortado.
+     TAMBÉM é o que "corta" a folga da imagem usada no parallax. */
+
+  box-shadow: 0 20px 40px rgba(62, 46, 34, 0.12);
+  /* rgba(62,46,34,...) = --cor-texto em rgba (não dá pra usar a
+     variável CSS dentro de rgba() diretamente, por isso o valor
+     escrito à mão — mesmo esquema já usado no véu de gradiente logo
+     abaixo). Sombra grande e bem suave (opacidade só 0.12): dá
+     profundidade e "descola" o banner do fundo bege claro da página,
+     sem virar uma sombra pesada/dura. overflow:hidden (acima) não
+     corta esta sombra — ele só recorta o CONTEÚDO do elemento
+     (a <img> e o véu), a sombra é desenhada por fora da caixa. */
+
+  height: 600px;
+  /* altura FIXA do banner visível. A <img> abaixo é um pouco mais
+     alta que isso e desliza dentro (parallax), sobrando espaço só
+     pra clipar — sem essa altura fixa, o banner cresceria junto
+     com a imagem maior. */
+}
+
+.banner-principal img {
+  display: block;
+  width: 100%;
+  height: 680px;
+  /* 80px a MAIS que o container (600px): sobra 40px pra cima e 40px
+     pra baixo. O JS do parallax move a imagem nesse limite de ±40px
+     conforme o scroll; o overflow:hidden do pai corta o que passa. */
+  margin-top: -40px;
+  /* centraliza a folga: -40px puxa a imagem pra cima, deixando 40px
+     escondidos em cima e 40px embaixo (posição "neutra" do parallax). */
+  object-fit: cover;
+  /* object-fit: cover preenche todo o espaço sem distorcer a imagem,
+     cortando as bordas se precisar (como no Instagram) */
+  will-change: transform;
+  /* dica pro navegador: essa imagem vai animar via transform ao
+     rolar -> ele a coloca numa camada própria de composição, o que
+     deixa o parallax fluido (sem repaint a cada frame). */
+
+  transition: opacity 0.3s ease;
+  /* SÓ "opacity" aqui (não "transform"!) — o "transform" desta <img>
+     é controlado pelo parallax via JS a cada frame de scroll; se ele
+     também tivesse transition, cada atualização do parallax ficaria
+     "atrasada"/com lag correndo atrás do valor certo. A troca de
+     slide do carrossel usa só esta opacity (classe .is-trocando
+     abaixo), então os dois convivem sem se atrapalhar. */
+}
+
+/* CARROSSEL: fade de troca de slide — a MESMA classe/técnica em 2
+   elementos (a foto e o cartão de texto), ligada/desligada pelo JS
+   (js/main.js, renderizarSlide()) nos 300ms em que o conteúdo troca
+   por baixo. Ver comentário lá pra entender o "porquê" do timing. */
+.banner-principal img.is-trocando,
+.banner-texto.is-trocando {
+  opacity: 0;
+}
+
+/* ---------------------------------------------------------------
+   VÉU DE GRADIENTE (correção do "texto fantasma")
+   A imagem img/banner-principal.jpeg veio da loja antiga com o
+   título JÁ "queimado" nos pixels ("CERÂMICA ARTESANAL...",
+   "Arte Feita à Mão / para o seu Dia a Dia"), que fica na faixa
+   esquerda da foto, de cima quase até embaixo.
+   Este ::before cobre essa faixa inteira com um degradê que vai do
+   fundo SÓLIDO (esquerda, cobrindo TODO o texto queimado, em toda a
+   altura) ao totalmente TRANSPARENTE (direita, onde a foto aparece
+   limpa). É o véu que esconde o texto — por isso o card por cima
+   pode voltar a ser pequeno/compacto.
+   --------------------------------------------------------------- */
+.banner-principal::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;              /* acima da <img>, abaixo do .banner-texto */
+  pointer-events: none;    /* não intercepta cliques */
+  background: linear-gradient(
+    to right,
+    var(--cor-fundo) 0%,
+    var(--cor-fundo) 34%,   /* sólido até 34%: o texto queimado vai só
+                               até ~29% da largura, então fica todo coberto */
+    rgba(251, 246, 239, 0) 60%
+    /* rgba(251,246,239,0) = a MESMA cor de --cor-fundo (#FBF6EF) com
+       opacidade 0. Escrita à mão porque não dá pra pôr uma variável
+       CSS dentro de rgba() aqui. */
+  );
+}
+
+.banner-texto {
+  position: absolute;
+  left: 7%;
+  top: 50%;
+  transform: translateY(-50%);
+  /* card compacto, centralizado na vertical. Não precisa mais ser
+     alto pra "tapar" o texto queimado — quem faz isso agora é o véu
+     de gradiente (::before) acima. */
+  z-index: 2;              /* fica acima do véu de gradiente */
+  max-width: 430px;
+
+  background-color: var(--cor-fundo);
+  /* fundo 100% opaco (var(--cor-fundo), sem rgba/transparência) */
+  box-shadow: 0 10px 30px rgba(62, 46, 34, 0.15);
+  /* sombra suave "levanta" o card da foto */
+  padding: 2.25rem;
+  border-radius: 12px;
+
+  transition: opacity 0.3s ease;
+  /* fade de troca de slide do carrossel — ver .is-trocando abaixo,
+     junto da <img> (mesma técnica, mesma duração, pra foto e cartão
+     trocarem JUNTOS, em sincronia) */
+}
+
+.banner-texto__eyebrow {
+  font-family: var(--fonte-texto);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--cor-destaque);
+  margin-bottom: 0.6rem;
+  /* "assinatura" do ateliê antes do título: maiúsculas + letras bem
+     espaçadas (em vez de fonte maior ou negrito no h1) é o jeito
+     clássico de dar destaque discreto, sem competir com o <h1> —
+     que continua sendo o elemento visualmente mais forte do cartão */
+}
+
+.banner-texto h1 {
+  font-size: 2.2rem;
+  margin-bottom: 0.8rem;
+  line-height: 1.2;
+}
+
+.banner-texto p {
+  font-size: 1rem;
+  margin-bottom: 1.5rem;
+  color: #5A4A3A;
+}
+
+.banner-texto__contador {
+  /* puxa pra mais perto do parágrafo acima (que já leva margin-bottom
+     de 1.5rem) e abre um respiro um pouco menor até os botões */
+  margin-top: -1rem;
+  margin-bottom: 1.5rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--cor-secundaria);
+  /* fica vazio (sem min-height reservado) até o JS preencher — como
+     o texto é curto e sempre aparece antes de qualquer interação do
+     usuário, não há "pulo" de layout perceptível */
+}
+
+.banner-texto__botoes {
+  display: flex;
+  flex-wrap: wrap;
+  /* flex-wrap: no mobile, se os 2 botões não couberem lado a lado,
+     o 2o simplesmente cai pra uma nova linha (empilha) sozinho —
+     sem precisar de media query pra isso */
+  gap: 0.8rem;
+}
+
+.banner-contato-rapido {
+  position: absolute;
+  left: 7%;
+  top: auto;
+  bottom: 2.25rem;
+  /* POSIÇÃO (desktop): logo ABAIXO do cartão de texto (.banner-texto),
+     no mesmo espaço vazio à esquerda, perto da BASE do cartão — não
+     solto lá no rodapé do banner nem lá no topo (onde estava antes).
+     Conta: banner tem altura fixa 600px; o cartão é centralizado
+     (top:50%) e tem ~360px, então a base dele fica por volta dos 480px.
+     bottom:2.25rem (~36px) coloca este bloco (~74px de altura) com o
+     topo em ~490px — encostando na base do cartão. Continua sobre a
+     faixa clara do véu (::before), legível sem fundo próprio. No MOBILE
+     nada disso vale (a media query esconde o bloco — lá o cartão vai
+     pro rodapé do banner). */
+  z-index: 2;
+  /* mesma camada do .banner-texto (também z-index:2) — acima do véu
+     de gradiente (::before, z-index:1), senão o véu cobriria o texto */
+  max-width: 430px;
+  /* mesmo teto de largura do .banner-texto: mantém os dois elementos
+     alinhados e garante que o texto não avance pra fora da faixa
+     clara coberta pelo véu (entrando na foto, onde ficaria ilegível) */
+
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.2rem;
+}
+
+.banner-contato-rapido__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  color: var(--cor-secundaria);
+  /* tom secundário (verde-oliva da paleta), não o terracota do
+     cartão — é assim que fica "discreto": mesma família de cores do
+     site, mas sem ser a cor de destaque/ação */
+  padding: 0.35rem 0;
+  /* área de toque: sem padding, a altura clicável era só a da linha
+     de texto (~19px no celular) — bem abaixo do recomendado pra
+     toque. Não dá pra chegar aos 44px inteiros aqui sem estourar a
+     altura do banner no celular (3 itens empilhados já disputam
+     espaço com o cartão principal), mas este respiro já quase
+     dobra a área clicável de cada item, uma melhora real sem
+     comprometer o layout. */
+  transition: color 0.2s ease;
+}
+
+.banner-contato-rapido__item:hover {
+  color: var(--cor-destaque);
+}
+
+.banner-contato-rapido__icone {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+}
+
+/* ============================================
+   CONTROLES DO CARROSSEL (setas + bolinhas)
+   ============================================ */
+.banner-seta {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 3;
+  /* acima do cartão de texto (z-index:2) e do véu (z-index:1) — as
+     setas precisam ser clicáveis mesmo por cima de qualquer um dos
+     dois (a da direita, por exemplo, geralmente cai sobre a foto) */
+
+  width: 42px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 50%;
+
+  background-color: rgba(251, 246, 239, 0.85);
+  /* rgba(251,246,239,...) = --cor-fundo com opacidade (não dá pra
+     usar var() dentro de rgba() — mesmo motivo já explicado no véu
+     de gradiente acima) — um círculo claro sobre a foto, legível em
+     qualquer um dos 2 slides */
+  color: var(--cor-texto);
+  box-shadow: 0 4px 12px rgba(62, 46, 34, 0.18);
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.banner-seta:hover {
+  background-color: var(--cor-fundo);
+  transform: translateY(-50%) scale(1.08);
+}
+
+.banner-seta svg {
+  width: 20px;
+  height: 20px;
+}
+
+.banner-seta--anterior {
+  left: 1rem;
+}
+
+.banner-seta--proxima {
+  right: 1rem;
+}
+
+.banner-indicadores {
+  display: flex;
+  justify-content: center;
+  gap: 0.6rem;
+  margin-top: 1.2rem;
+  /* fica FORA de .banner-principal (ver comentário no HTML) — este
+     margin-top é o respiro entre o banner e a fileira de bolinhas */
+}
+
+.banner-indicador {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  /* ÁREA DE TOQUE de 44x44 (recomendação mínima pra elementos
+     tocáveis) — bem maior que a bolinha em SI, que continua
+     pequena/discreta via ::after abaixo. É o mesmo truque do
+     .menu-toggle logo acima: aumentar a caixa CLICÁVEL sem aumentar
+     o desenho visual. */
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+}
+
+.banner-indicador::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background-color: var(--cor-fundo-alt);
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.banner-indicador:hover::after {
+  background-color: var(--cor-secundaria);
+}
+
+.banner-indicador.is-ativo::after {
+  background-color: var(--cor-destaque);
+  transform: translate(-50%, -50%) scale(1.3);
+  /* a bolinha do slide ativo fica maior e na cor de destaque —
+     mesmo par "cor + tamanho" usado em vários indicadores de
+     carrossel por aí, fácil de reconhecer à primeira vista */
+}
+
+/* quem pediu "reduzir movimento": troca de slide sem fade (aparece
+   direto) e sem o "crescer" da bolinha ativa — mesmo padrão já usado
+   no resto do site. A troca AUTOMÁTICA em si já é desligada no JS
+   (js/main.js, iniciarAutoplay()); isto aqui cobre só a parte visual
+   das trocas MANUAIS (seta/bolinha), que continuam funcionando. */
+@media (prefers-reduced-motion: reduce) {
+  .banner-principal img,
+  .banner-texto,
+  .banner-seta,
+  .banner-indicador::after {
+    transition: none;
+  }
+}
+
+.btn-principal {
+  display: inline-block;
+  position: relative;
+  /* position:relative ancora o ::before (posicionado "absolute" logo
+     abaixo) ao próprio botão, em vez de flutuar solto na página */
+  overflow: hidden;
+  /* corta o retângulo do brilho (::before) na FORMA do botão — como o
+     botão já é uma "pílula" (border-radius:30px), o brilho sai
+     arredondado igual, sem precisar repetir o border-radius nele */
+  background-color: var(--cor-destaque);
+  color: #FFF;
+  padding: 0.9rem 2rem;
+  border-radius: 30px;
+  font-size: 0.95rem;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.btn-principal:hover {
+  background-color: var(--cor-destaque-escuro);
+  transform: translateY(-2px);
+  /* leve deslocamento pra cima no hover dá sensação de "botão respondendo" ao toque */
+}
+
+/* ---- BRILHO NO HOVER: reflexo que desliza só quando o mouse passa ----
+   Diferente do brilho da logo (que roda sozinho em loop via
+   @keyframes), aqui NÃO existe @keyframes nenhum — é só uma
+   TRANSITION do "transform" amarrada ao estado :hover. Sem hover, o
+   navegador não tem motivo pra mexer nessa propriedade, então o
+   brilho fica parado (escondido à esquerda) até alguém interagir; ao
+   tirar o mouse, ele desliza de volta pro início (mesma transição, em
+   reverso) em vez de simplesmente sumir — reforça a sensação de
+   "reflexo de luz", não de elemento que aparece/desaparece.
+   pointer-events:none garante que esta camada nunca "rouba" o clique
+   do link por baixo dela. */
+.btn-principal::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    115deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.5) 50%,
+    transparent 70%
+  );
+  transform: translateX(-120%);
+  /* -120%: o retângulo do brilho começa TODO fora do botão, à
+     esquerda (120%, não 100%, pra garantir folga mesmo com o ângulo
+     de 115deg do gradiente) */
+  transition: transform 0.5s ease;
+  pointer-events: none;
+}
+
+.btn-principal:hover::before {
+  transform: translateX(120%);
+  /* atravessa o botão inteiro e sai pelo lado direito — um único
+     "passe" de luz por hover, não um loop */
+}
+
+.btn-fantasma {
+  /* Botão "fantasma": mesmo padrão visual do .btn-whatsapp já usado
+     em produto.html (css/produto.css) — contorno na cor secundária,
+     fundo transparente. Reproduzido aqui (não importado de lá) porque
+     produto.css não é carregado na Home; mantém as duas páginas
+     visualmente consistentes sem duplicar <link> de CSS que essa
+     página não usa mais nada além dele. */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.9rem 2rem;
+
+  border: 1.5px solid var(--cor-secundaria);
+  border-radius: 30px;
+  color: var(--cor-secundaria);
+
+  font-family: var(--fonte-texto);
+  font-size: 0.95rem;
+  transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
+}
+
+.btn-fantasma:hover {
+  background-color: var(--cor-secundaria);
+  color: #FFF;
+  transform: translateY(-2px);
+  /* mesmo "pulinho" do .btn-principal no hover, pra os dois botões
+     lado a lado reagirem de forma consistente ao mouse */
+}
+
+/* ============================================
+   SELOS DE CONFIANÇA
+   Grade de 4 "cards" (não mais ícone+texto em linha corrida) — ver
+   .selo abaixo pro card em si.
+   ============================================ */
+.selos-confianca {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  /* 4 colunas fixas no desktop (pedido explícito: "4 selos em linha").
+     minmax(0,1fr) — não minmax(140px,1fr) — evita que colunas
+     estreitem o card por baixo do conteúdo e estourem a grade */
+  gap: 1.5rem;
+  max-width: 1100px;
+
+  /* ESPAÇAMENTO: 2rem acima (pra o bloco emoldurado não colar na
+     vitrine) e 4rem abaixo — este era o problema: a seção estava
+     "grudada" na "Fale com a Gente" logo abaixo. */
+  margin: 2rem auto 4rem;
+  padding: 3.5rem 5%;
+
+  /* MOLDURA DO CONJUNTO: uma borda fininha (--cor-destaque a ~18%) +
+     cantos arredondados + uma sombra bem suave por fora. Não é em
+     cada .selo (esses já têm cara própria) — é no CONTÊINER dos 4,
+     pra eles lerem como UM bloco só, "emoldurado". */
+  border: 1px solid rgba(158, 79, 46, 0.18);
+  border-radius: 24px;
+  box-shadow: 0 10px 30px rgba(62, 46, 34, 0.06);
+
+  /* FUNDO: cor bege própria da seção + marca d'água de VASO ladrilhada
+     (a MESMA de .categorias e .queridinhos — a silhueta já vem com
+     opacity 0.1 embutida no SVG) + a textura de grão por cima da cor.
+     Em lista separada por vírgula, a 1ª camada (o vaso) fica na frente.
+     Preenche o "vazio" ao redor dos cards sem poluir, e dá
+     consistência com o resto da Home. border-radius acima recorta
+     essas camadas nos cantos arredondados. */
+  background-color: var(--cor-fundo-alt);
+  background-image: var(--marca-vaso), var(--textura-grao);
+  background-repeat: repeat, repeat;
+  background-size: 200px, 140px;
+}
+
+.selo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.9rem;
+  padding: 1.8rem 1rem;
+
+  background-color: var(--cor-card);
+  border-radius: 16px;
+  /* mesmo raio do .produto-card — os selos agora seguem a MESMA
+     linguagem visual dos cards de produto, só que menores */
+  box-shadow: 0 4px 14px rgba(62, 46, 34, 0.08);
+  /* sombra sutil "sempre ligada": é o que dá o efeito de card
+     flutuando sobre o fundo bege, mesmo parado (sem precisar de
+     borda visível) */
+
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  /* mesma dupla de propriedades (não "top"/"margin") que .produto-card
+     anima no hover — roda no compositor da GPU, hover mais fluido */
+}
+
+.selo:hover {
+  transform: translateY(-6px);
+  /* elevação mais discreta que o -8px do .produto-card: aqui é só um
+     "selo de confiança", não precisa chamar tanta atenção quanto um
+     produto que se quer vender */
+  box-shadow: 0 14px 28px rgba(62, 46, 34, 0.16);
+}
+
+.selo__icone-fundo {
+  width: 56px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background-color: var(--cor-fundo-alt);
+  /* círculo suave atrás do ícone — mesma cor de fundo da SEÇÃO, então
+     quando o card (branco) está por cima, o círculo "recorta" um
+     pedacinho daquele bege de volta, dando profundidade sem introduzir
+     uma cor nova fora da paleta do :root */
+  flex-shrink: 0;
+}
+
+.selo__icone {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  /* flex-shrink:0 impede o ícone de "achatar" se o texto for longo */
+  color: var(--cor-destaque);
+  /* os SVGs da Lucide usam stroke="currentColor", então mudar a cor
+     do texto (color) muda a cor do traço do ícone */
+}
+
+.selo__texto {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--cor-texto);
+  /* texto ABAIXO do ícone (antes era ao lado, num <span> inline) —
+     layout em coluna (.selo é flex-direction:column) já cuida disso,
+     este seletor só ajusta a tipografia */
+}
+
+/* ============================================
+   CATEGORIAS
+   ============================================ */
+.categorias {
+  padding: 4rem 5%;
+  text-align: center;
+  max-width: 1200px;
+  margin: 0 auto;
+
+  /* MARCA D'ÁGUA: silhueta de VASO ladrilhada ao fundo desta seção
+     (antes era o monograma; o monograma migrou pro topo/quem-somos/
+     rodapé). Esta seção não tem background-color, então o que se vê é:
+     cor + grão do body (por baixo) + o vaso por cima.
+     background-repeat: repeat -> o tile de 240px se repete;
+     background-size deixa cada vaso com ~200px (menor no mobile, ver
+     media query no fim do arquivo).
+     Como o SVG tem opacity 0.1 e os cards de categoria são imagens
+     opacas, a marca só aparece no "vazio" ao redor deles, sem
+     atrapalhar a leitura. */
+  background-image: var(--marca-vaso);
+  background-repeat: repeat;
+  background-size: 200px;
+}
+
+.categorias h2 {
+  font-size: 1.8rem;
+  margin-bottom: 2.5rem;
+}
+
+/* ============================================
+   TÍTULOS DE SEÇÃO — acabamento
+   Espaçamento sutil entre letras + uma linhinha decorativa
+   centralizada embaixo, pra reforçar a hierarquia visual e dar
+   um ar mais "editorial" aos títulos ("O que você procura?",
+   "Queridinhos do Ateliê", "Pratos Artísticos"...).
+   ============================================ */
+.categorias h2,
+.queridinhos h1,
+.queridinhos h2,
+.contato h2,
+.quem-somos-texto h2,
+.politicas h1 {
+  letter-spacing: 0.02em;
+}
+
+/* a linhinha só nos títulos CENTRALIZADOS — o "Quem Somos" fica
+   alinhado à esquerda no layout de 2 colunas, então fica de fora */
+.categorias h2::after,
+.queridinhos h1::after,
+.queridinhos h2::after,
+.contato h2::after,
+.politicas h1::after {
+  content: "";
+  display: block;
+  width: 40px;
+  height: 2px;
+  background-color: var(--cor-destaque);
+  margin: 0.9rem auto 0;   /* auto nas laterais = centralizada sob o texto */
+}
+
+.categoria-cards {
+  display: flex;
+  gap: 2rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.categoria-card {
+  position: relative;
+  width: 320px;
+  display: flex;
+  flex-direction: column;
+  /* coluna: foto (ou placeholder) em cima, botão embaixo — em vez do
+     texto flutuando ABSOLUTO por cima da imagem (ver comentário no
+     HTML sobre por que isso mudou) */
+  overflow: hidden;
+  border-radius: var(--raio-organico);
+  /* usa a forma orgânica definida no :root, o "toque de assinatura" do design */
+  transition: border-radius 0.4s ease, transform 0.3s ease;
+  /* anima tanto a forma quanto a posição, criando um efeito sutil de "respirar" */
+}
+
+.categoria-card img {
+  height: 380px;
+  flex-shrink: 0;
+  /* flex-shrink:0: a foto nunca deve encolher pra abrir espaço pro
+     botão — quem se ajusta é a altura TOTAL do card, que cresce pra
+     caber os dois */
+  object-fit: cover;
+}
+
+.categoria-card:hover {
+  transform: scale(1.02);
+  border-radius: 24px;
+  /* no hover a forma "relaxa" pra um formato mais convencional,
+     um pequeno momento de interação sem exagerar */
+}
+
+/* ============================================
+   BOTÃO ABAIXO DA FOTO (nome da categoria + seta)
+   Mesmo padrão visual do .btn-principal (pílula, fundo
+   --cor-destaque, texto branco) — SEM ser um <button>/<a> próprio:
+   é um <div>, porque o card inteiro (o <a class="categoria-card">
+   que o envolve) já é o link clicável; teria um <a> dentro de outro
+   <a>, o que não é válido em HTML.
+   ============================================ */
+.categoria-card__botao {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin: 1.2rem auto;
+  /* margin auto nas laterais centraliza o "botão" (que não estica a
+     largura toda do card) horizontalmente */
+  padding: 0.7rem 1.6rem;
+  background-color: var(--cor-destaque);
+  border-radius: 30px;
+  /* mesma "pílula" do .btn-principal */
+
+  /* EFEITO 3D "GUMOSO" (pedido) — mesma técnica exata dos botões de
+     compra (.btn-comprar-agora, mais abaixo neste arquivo): um
+     box-shadow SÓLIDO (sem blur, offset-x:0) na cor --cor-destaque-
+     escuro, simulando o "degrau"/base da pílula vista de lado.
+     Não dá pra copiar as classes .btn-comprar* direto aqui porque
+     ESTE "botão" é um <div> dentro de um <a> maior (.categoria-card é
+     o link de verdade, clicável em qualquer ponto do card — ver
+     comentário no HTML) — não um <button>/<a> próprio com seu
+     :hover/:active independentes. Por isso as transições de
+     hover/active, logo abaixo, disparam a partir do ESTADO DO CARD
+     (.categoria-card:hover / :active), não deste elemento sozinho —
+     mesmo esquema que a seta ao lado (.categoria-card__seta) já usa
+     pra deslizar no hover. */
+  transition: transform 0.1s ease-out, box-shadow 0.1s ease-out;
+  box-shadow: 0 5px 0 var(--cor-destaque-escuro);
+}
+
+.categoria-card:hover .categoria-card__botao {
+  /* mesmo "sobe 2px + degrau cresce 2px" do hover dos botões de
+     compra — reforça que a pílula é clicável assim que o mouse entra
+     em QUALQUER parte do card (não só nela) */
+  transform: translateY(-2px);
+  box-shadow: 0 7px 0 var(--cor-destaque-escuro);
+}
+
+.categoria-card:active .categoria-card__botao {
+  /* "afundar": desce a altura do degrau e o degrau some (offset 0) —
+     o <a> INTEIRO (.categoria-card) recebe :active ao ser tocado/
+     clicado em qualquer ponto, então a pílula reage junto, mesmo sem
+     ser ela mesma o elemento tocado. */
+  transform: translateY(5px);
+  box-shadow: 0 0 0 var(--cor-destaque-escuro);
+}
+
+/* respeita "reduzir movimento" — mesmo cuidado já tomado nos botões
+   .btn-comprar/.btn-comprar-agora (mais abaixo neste arquivo) */
+@media (prefers-reduced-motion: reduce) {
+  .categoria-card__botao,
+  .categoria-card:hover .categoria-card__botao,
+  .categoria-card:active .categoria-card__botao {
+    transition: none;
+    transform: none;
+  }
+}
+
+.categoria-card__botao h3 {
+  /* o <h3> aqui dentro segue sendo um título de verdade (bom pra
+     leitores de tela e SEO — "Cerâmica"/"Crochê" continuam sendo
+     cabeçalhos), só que visualmente estilizado como o texto de um
+     botão: fonte Jost (não a Fraunces padrão dos títulos do site),
+     branco, sem o peso 600 que h1-h4 herdam por padrão. */
+  font-family: var(--fonte-texto);
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #FFF;
+}
+
+.categoria-card__seta {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  color: #FFF;
+  transition: transform 0.3s ease;
+  /* só declara QUE vai animar "transform" — o valor final (o
+     deslocamento em si) mora na regra de hover logo abaixo */
+}
+
+.categoria-card:hover .categoria-card__seta {
+  transform: translateX(4px);
+  /* o hover está no CARD INTEIRO (.categoria-card, o <a> que envolve
+     tudo), não no botão — passar o mouse em QUALQUER parte do card
+     (a foto, o espaço vazio, o botão) já desliza a seta. É o efeito
+     clássico de "call to action": um pequeno empurrão visual na
+     direção do clique, sem exagerar (4px, 0.3s). */
+}
+
+/* ============================================
+   CARD DE SUBCATEGORIA (visão geral de ceramica.html)
+   Por que NÃO reaproveitar .categoria-card aqui?
+   O .categoria-card usa --raio-organico (forma de "gota", cantos bem
+   assimétricos) — funciona pro nome curto num "botão" central
+   (Cerâmica/Crochê), mas nomes mais longos ("Pratos Artísticos")
+   ficariam apertados nessa forma mais estreita/orgânica. Aqui a
+   solução continua sendo um cartão de cantos normais (16px, iguais
+   aos .produto-card logo abaixo no site); o "orgânico" pedido no
+   redesign entra pela FOTO (agora um círculo, em vez do retângulo
+   antigo) — um círculo não tem "cantos" pra apertar nome nenhum,
+   então o nome/contagem continuam livres, ABAIXO dele, sem risco de
+   quebrar com textos longos.
+   ============================================ */
+.subcategoria-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  /* NÃO empilha mais foto-full-width + texto colado: agora é uma
+     coluna centralizada (foto circular, depois texto), pedido
+     explicitamente como composição "mais orgânica que o retângulo". */
+  width: 320px;
+  background-color: var(--cor-card);
+  border-radius: 16px;
+  overflow: hidden;
+  /* overflow:hidden aqui não serve mais pra recortar uma foto
+     (o círculo já se recorta sozinho, ver .subcategoria-card__foto)
+     — serve pra criar um novo bloco de formatação, pra o margin-top
+     da foto (abaixo) não "vazar" e colapsar com a margem do próprio
+     card (empurrando a vizinhança em vez de abrir respiro por dentro). */
+  text-align: center;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.subcategoria-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 16px 32px rgba(62, 46, 34, 0.22);
+  /* mesmo hover reforçado do .produto-card, pra os dois tipos de
+     card reagirem igual ao mouse */
+}
+
+/* ---- FOTO CIRCULAR COM MOLDURA ----
+   Círculo centralizado no topo do card, com um "passe-partout" +
+   dois anéis sólidos (dourado por fora do respiro, terracota por
+   fora dele) feitos em CAMADAS DE box-shadow SEM blur — a mesma
+   linguagem "sólida"/gummy já usada nos degraus 3D dos botões do
+   site (.btn-comprar/.btn-comprar-agora, ver mais abaixo no arquivo),
+   só que em anéis concêntricos em vez de um degrau embaixo. Optei por
+   var(--cor-ouro) e var(--cor-destaque) — as duas cores que o :root
+   já reserva pra "acento"/destaque — em vez dos tons #B5754C/#B8873E
+   citados no pedido: são os valores ANTIGOS dessas variáveis (ver
+   comentário no :root — o terracota mudou por causa de contraste
+   WCAG); usar var(...) mantém a moldura sincronizada com a paleta
+   real do site, inclusive se ela mudar de novo no futuro. */
+.subcategoria-card__foto {
+  position: relative;
+  width: 62%;
+  max-width: 190px;
+  /* % (não px fixo) pra a moldura acompanhar a largura do CARD, que
+     no mobile encolhe pra caber em 2 colunas — sem isso o círculo
+     ficaria grande demais e estufaria o grid (ver auditoria mobile
+     no media query lá embaixo). max-width trava o tamanho "ideal" no
+     desktop, onde o card tem sempre 320px fixos. */
+  aspect-ratio: 1 / 1;
+  margin: 1.7rem auto 0;
+  border-radius: 50%;
+  overflow: hidden;
+  /* recorta as fotos empilhadas dentro no formato circular */
+  box-shadow:
+    0 0 0 4px var(--cor-fundo),
+    /* respiro claro entre a foto e o anel — "descola" a moldura da
+       imagem, como a margem branca de uma foto revelada/emoldurada */
+    0 0 0 7px var(--cor-ouro),
+    /* 1º anel: dourado — a "moldura" pedida */
+    0 0 0 9px var(--cor-destaque),
+    /* 2º anel: terracota, mais fino — dá profundidade em camadas sem
+       recorrer a blur (que destoaria do resto do site) */
+    0 10px 18px rgba(62, 46, 34, 0.18);
+    /* sombra suave por baixo, só pra descolar o conjunto do fundo do
+       card — esta sim com blur, é a única "atmosférica" da pilha */
+}
+
+.subcategoria-card__foto img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity 0.9s ease;
+  /* as fotos de uma mesma subcategoria ficam EMPILHADAS, todas no
+     mesmo lugar (position:absolute + inset:0); só a que tem .is-ativa
+     fica visível — trocar essa classe (ver iniciarRotacaoFotos, em
+     js/ceramica.js) é o que gera o fade cruzado, 100% em CSS. */
+}
+
+.subcategoria-card__foto img.is-ativa {
+  opacity: 1;
+}
+
+.subcategoria-card__info {
+  padding: 1rem 1rem 1.3rem;
+}
+
+.subcategoria-card__info h3 {
+  font-size: 1.15rem;
+  margin-bottom: 0.3rem;
+}
+
+.subcategoria-card__info p {
+  /* "X peças disponíveis": trocado de um texto cinza/informativo pra
+     algo com mais "presença de esmalte" — Fraunces itálica (a mesma
+     fonte de título do site, com mais personalidade que a Jost do
+     corpo) na cor --cor-ouro. O :root já documenta --cor-ouro como
+     apropriada pra "trechos especiais e curtos" (dá ~3:1 de contraste,
+     não serve pra texto corrido, mas serve pra uma linha curta como
+     esta — mesmo uso já dado ao contador de peças do banner). */
+  font-family: var(--fonte-titulo);
+  font-style: italic;
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--cor-ouro);
+  /* relevo/3D em text-shadow de 2 camadas: um brilho claro por cima
+     (luz "batendo" no relevo) + uma sombra quente por baixo (o
+     "entalhe") — não é a MESMA técnica do logo do header (aquele usa
+     um gradiente animado recortado no texto via background-clip:text,
+     não dá pra empilhar com box-shadow/text-shadow), mas persegue o
+     mesmo espírito vivo/artesanal pedido, com a ferramenta certa pra
+     texto estático. */
+  text-shadow:
+    0 -1px 0 rgba(255, 255, 255, 0.6),
+    0 1px 1px rgba(127, 61, 34, 0.35);
+    /* 0 -1px branco = brilho; 0 1px marrom (mesmo tom de
+       --cor-destaque-escuro) = sombra — juntos simulam letras em
+       leve relevo, tipo um carimbo/etiqueta de ateliê */
+}
+
+/* ============================================
+   QUERIDINHOS DO ATELIÊ / GRID DE PRODUTOS
+   ============================================ */
+.queridinhos {
+  padding: 4rem 5%;
+
+  /* DUAS imagens de fundo empilhadas: a marca d'água do vaso (na
+     frente) + a textura de grão (atrás), as duas sobre a cor.
+     Em listas separadas por vírgula, a PRIMEIRA fica por cima.
+     Cada camada tem seu próprio repeat e size, na mesma ordem. */
+  background-color: var(--cor-fundo-alt);
+  background-image: var(--marca-vaso), var(--textura-grao);
+  background-repeat: repeat, repeat;
+  background-size: 220px, 140px;
+}
+
+/* a vitrine de crochê usa o fundo claro pra alternar com a de cerâmica
+   (duas seções seguidas com o mesmo bege escuro ficariam "coladas").
+   Troca a COR e, na 1ª camada de background, troca o VASO pela FLOR —
+   a marca d'água reservada pras seções de crochê. Mantém o grão como
+   2ª camada. O background-repeat/size herdados de .queridinhos
+   (repeat, repeat / 220px, 140px) continuam valendo. */
+.croche-vitrine {
+  background-color: var(--cor-fundo);
+  background-image: var(--marca-flor), var(--textura-grao);
+}
+
+/* "Cerâmica no Seu Café da Tarde" (index.html) — herda TODO o visual
+   de .queridinhos (mesmo fundo bege, mesma marca d'água de vaso, MESMO
+   carrossel) — só adiciona a transição de ENTRADA (pedido item 1),
+   fundindo com a cor de "Escolha do Ateliê" (--cor-texto) que vem
+   logo acima dela. MESMA técnica/variáveis que .produto-destaque usa
+   pra sua própria entrada (ver bloco .transicao-topo/.transicao-base,
+   mais abaixo) — só troca QUAL cor funde, cada seção com a cor de
+   quem fica IMEDIATAMENTE acima dela. */
+.cafe-da-tarde {
+  --transicao-topo-cor: var(--cor-texto);
+  --transicao-topo-cor-fraca: rgba(62, 46, 34, 0.35); /* --cor-texto a 35% */
+}
+
+.queridinhos h1,
+.queridinhos h2 {
+  /* mesmo tratamento para o <h2> da vitrine da Home e para o <h1>
+     das páginas de categoria (ceramica.html), sem repetir regra */
+  text-align: center;
+  font-size: 1.8rem;
+  margin-bottom: 2.5rem;
+}
+
+.produtos-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  /* auto-fit + minmax cria colunas responsivas automaticamente:
+     o navegador calcula quantas colunas cabem, sem precisarmos
+     escrever media queries pra cada tamanho de tela */
+  gap: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* ============================================
+   FILTROS (só em ceramica.html, acima do grid)
+   ============================================ */
+.filtros {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem 1.5rem;
+  /* lado a lado no desktop; flex-wrap deixa quebrar linha se faltar
+     espaço. No mobile viram uma coluna (media query no fim do arquivo). */
+  max-width: 1200px;
+  margin: 0 auto 2.5rem;
+}
+
+.filtro {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  /* rótulo em cima, <select> embaixo — <label> envolvendo tudo já
+     liga o texto ao controle (clicar no rótulo foca o select) */
+  font-size: 0.85rem;
+}
+
+.filtro__rotulo {
+  color: var(--cor-secundaria);
+  letter-spacing: 0.02em;
+}
+
+.filtro select {
+  font: inherit;
+  font-size: 0.9rem;
+  color: var(--cor-texto);
+  background-color: var(--cor-card);
+  border: 1px solid #D8C7B0;
+  border-radius: 8px;
+  padding: 0.5rem 0.7rem;
+  cursor: pointer;
+}
+
+.filtro select:focus {
+  outline: 2px solid var(--cor-destaque);
+  outline-offset: 1px;
+}
+
+/* mensagem quando a busca/filtros não devolvem nada.
+   grid-column: 1 / -1 faz o <p> ocupar TODDAS as colunas da grade
+   (senão ele ficaria espremido só na 1a coluna) */
+.vitrine-vazia {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 3rem 1rem;
+  font-family: var(--fonte-titulo);
+  font-size: 1.1rem;
+  color: var(--cor-secundaria);
+}
+
+/* subtítulo de cada grupo de subcategoria em ceramica.html.
+   Mais específico que ".queridinhos h2" (que centraliza) pra
+   alinhar à esquerda e separar os blocos. O 1o não leva margem
+   no topo (já vem logo depois do <h1>/filtros). */
+.queridinhos .subcategoria-titulo {
+  text-align: left;
+  font-size: 1.35rem;
+  margin: 3rem 0 1.5rem;
+  padding-bottom: 0.6rem;
+  border-bottom: 1px solid var(--cor-fundo-alt);
+}
+
+.queridinhos .subcategoria-titulo:first-child {
+  margin-top: 0;
+}
+
+/* ============================================================
+   PEÇA EM DESTAQUE (Home) — "vitrine de honra" de UM produto só
+   Montada por montarProdutoDestaque() (js/main.js) a partir de
+   produtos.js — ver comentário grande lá explicando ID_PRODUTO_DESTAQUE.
+
+   INVERSÃO DE COR: MESMA técnica do <footer> (fundo --cor-texto,
+   texto --cor-fundo) — mas como o <footer> só tem texto/links, e aqui
+   também tem TÍTULO (h2), PREÇO e DESTAQUES coloridos (.realce), foi
+   preciso conferir cada um: os tons de "destaque" do resto do site
+   (--cor-destaque terracota, --cor-secundaria oliva) foram desenhados
+   pra CONTRASTAR com fundo CLARO — contra este fundo ESCURO alguns
+   ficam quase ilegíveis (terracota sobre marrom escuro dá ~2,2:1 de
+   contraste, bem abaixo do mínimo de acessibilidade). Por isso os
+   overrides abaixo trocam esses tons por --cor-ouro (que já era usado
+   pra "destaque curto", e tem contraste melhor no escuro, ~4:1) —
+   comentado ponto a ponto onde isso acontece. Componentes com fundo
+   PRÓPRIO (.selo-escassez, os botões .btn-comprar*) não precisaram de
+   nenhum ajuste — eles já carregam contraste suficiente sozinhos.
+   ============================================================ */
+.produto-destaque {
+  /* position:relative NÃO precisa mais ser declarado aqui: quem cuida
+     disso agora são as classes .transicao-topo/.transicao-base (ver
+     bloco delas, mais abaixo) — esta seção leva as duas no HTML
+     (index.html, junto de "produto-destaque reveal"). */
+  background-color: var(--cor-texto);
+  color: var(--cor-fundo);
+  padding: 4.5rem 5%;
+
+  /* mesma marca d'água clara do <footer> (monograma "AS"), na mesma
+     opacidade baixa já embutida no SVG — assina a seção como "do
+     ateliê" sem competir com a foto do produto. */
+  background-image: var(--marca-monograma-clara);
+  background-repeat: repeat;
+  background-size: 240px;
+}
+
+/* ============================================================
+   TRANSIÇÃO SUAVE ENTRE SEÇÕES — classes utilitárias reutilizáveis
+   ============================================================
+   Duas classes que QUALQUER seção pode receber pra suavizar o corte
+   reto contra uma vizinha de cor diferente: .transicao-topo (funde
+   com a seção DE CIMA) e .transicao-base (funde com a seção DE
+   BAIXO) — uma seção pode levar as duas ao mesmo tempo (é o caso de
+   .produto-destaque, ver mais abaixo), ou só uma (caso de
+   #produtos-relacionados, em produto.html).
+
+   PADRONIZADO NESTA REVISÃO: as duas nasceram com curvas diferentes
+   (alturas e opacidades distintas) — pedido explícito era usar
+   "exatamente a mesma técnica de gradiente (mesma altura, mesma curva
+   de opacidade)" nas duas, então a forma do degradê agora é ÚNICA
+   (1.5rem, stop intermediário a 35%/65% em ~35% de opacidade,
+   terminando sólido) — só a COR muda conforme a seção, via as 4
+   variáveis abaixo, que cada seção declara pra si mesma.
+
+   COMO USAR: no elemento que ganha a classe, declarar:
+     --transicao-topo-cor / --transicao-topo-cor-fraca   (p/ .transicao-topo)
+     --transicao-base-cor / --transicao-base-cor-fraca   (p/ .transicao-base)
+   "-cor" é a cor SÓLIDA da seção vizinha (pra colar sem emenda visível
+   bem na borda); "-cor-fraca" é a MESMA cor, só que numa versão
+   translúcida (~35% de alpha), usada no stop do meio — é o que faz o
+   esmaecer parecer gradual em vez de um salto seco de opacidade na
+   metade do caminho. Sem var() dentro de rgba() com alpha parcial
+   (não dá — precisaria de color-mix(), que ainda não tem suporte
+   universal), essa versão fraca precisa ser escrita à mão em rgba()
+   junto da declaração de cada seção — daí a instrução acima.
+
+   UNIDADE: "rem", não px fixo nem vh/%. vh prenderia a altura da
+   faixa à da JANELA (um celular deitado encolheria a faixa por um
+   motivo que não tem nada a ver com ela); "%" nem chega a funcionar —
+   altura em % de um elemento absoluto resolve contra a altura do
+   containing block, que aqui tem altura automática (baseada no
+   conteúdo), e "%" de uma altura automática é inválido pela spec do
+   CSS. "rem" escala com zoom/preferência de fonte (relativa de
+   verdade) e já é a unidade padrão do resto do espaçamento do site. */
+.transicao-topo,
+.transicao-base {
+  position: relative;
+  /* ancora o próprio ::before/::after — cada classe já cuida disso
+     sozinha, quem a usa não precisa lembrar de declarar
+     position:relative à parte. */
+}
+
+.transicao-topo::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 1.5rem;
+  background-image: linear-gradient(
+    to bottom,
+    var(--transicao-topo-cor, transparent),
+    var(--transicao-topo-cor-fraca, transparent) 35%,
+    transparent
+  );
+  /* fallback "transparent": se alguém esquecer de declarar as
+     variáveis de cor, a faixa não desenha nada visível em vez de
+     quebrar ou mostrar uma cor errada — falha "silenciosa" e segura */
+  pointer-events: none;
+}
+
+.transicao-base::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1.5rem;
+  background-image: linear-gradient(
+    to bottom,
+    transparent,
+    var(--transicao-base-cor-fraca, transparent) 65%,
+    var(--transicao-base-cor, transparent)
+  );
+  pointer-events: none;
+}
+
+/* .produto-destaque usa só a de ENTRADA agora: vinda de #ceramica
+   ("Queridinhos do Ateliê", bege --cor-fundo-alt). A classe
+   .transicao-base SAIU do HTML desta seção (ver o comentário grande
+   em index.html, junto da <section>): quem vem logo depois dela hoje
+   é #selecao-especial, que nasce no MESMO --cor-texto — sem contraste
+   nenhum na emenda, um degradê ali não faria nada visível. A
+   transição de saída pro claro (Quem Somos) migrou pra dentro de
+   #selecao-especial, que tem suas PRÓPRIAS variáveis logo abaixo. */
+.produto-destaque {
+  --transicao-topo-cor: var(--cor-fundo-alt);
+  --transicao-topo-cor-fraca: rgba(239, 227, 208, 0.35); /* --cor-fundo-alt a 35% */
+}
+
+/* Faixa mais fina no mobile — pra QUALQUER seção que use
+   .transicao-topo/.transicao-base, não só .produto-destaque (regra
+   GENÉRICA de propósito, pra a nova seção de produto.html que passou
+   a usar as mesmas classes herdar o ajuste automaticamente, sem
+   precisar repetir esta media query lá). 1.5rem -> 1rem: a mesma
+   proporção (⅔) que o resto do espaçamento vertical do site reduz
+   nesse breakpoint. */
+@media (max-width: 768px) {
+  .transicao-topo::before,
+  .transicao-base::after {
+    height: 1rem;
+  }
+}
+
+.produto-destaque__grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3.5rem;
+  align-items: center;
+  /* center (não start): a coluna de texto varia de altura conforme a
+     descrição; centralizar a foto contra ela lê mais "vitrine", em
+     vez de "documento técnico" (que pediria alinhamento pelo topo,
+     como na página de produto). */
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+/* --- coluna esquerda: galeria (giro 360° + mini-álbum) ---
+   .produto-destaque__galeria virou só um wrapper de LAYOUT (sem CSS
+   próprio) desde que a miniatura entrou: quem ancora a dica "Arraste
+   para girar" (position:relative) agora é
+   .produto-destaque__foto-principal-wrap, mais abaixo — não esta div
+   inteira, que passou a conter foto+miniatura lado a lado (ver
+   comentário no HTML sobre por quê). */
+
+/* Linha "2 fotos lado a lado" (pedido item 1) — a foto principal
+   (giro 360°, arrastável) cresce pra ocupar o espaço disponível
+   (flex:1 no wrap dela, logo abaixo) e a miniatura fica com um
+   tamanho FIXO ao lado, como uma "foto extra" do álbum, não uma 2ª
+   foto do mesmo tamanho competindo pela atenção — a principal
+   continua sendo a protagonista visual. */
+.produto-destaque__fotos {
+  display: flex;
+  align-items: flex-end;
+  /* flex-end (não center): alinha a base da miniatura com a base da
+     foto principal — como as duas têm proporções diferentes (a
+     miniatura é mais quadrada), alinhar pela base fica mais "arrumado"
+     que centralizar, que deixaria um desnível estranho nas bordas
+     inferiores das duas fotos */
+  gap: 1rem;
+}
+
+.produto-destaque__foto-principal-wrap {
+  position: relative;
+  /* ancora a dica "Arraste para girar" (ver comentário no HTML) */
+  flex: 1;
+  min-width: 0;
+  /* min-width:0 é o "clássico" de flex-item que tem uma <img> dentro
+     — sem isso, a largura mínima intrínseca da imagem pode empurrar a
+     miniatura pra fora da linha em telas mais estreitas antes mesmo
+     do breakpoint mobile entrar em ação */
+}
+
+.produto-destaque__foto-principal {
+  width: 100%;
+  /* já era 100% (herdado de .giro360__frame) — declarado de novo
+     aqui só deixa explícito que a foto ocupa o wrap INTEIRO agora
+     que ele não é mais a única coisa na linha */
+}
+
+/* MINIATURA clicável — a "2ª foto" do mini-álbum. Fica FORA de
+   .foto-emoldurada (aquela moldura é pesada — 14px de padding + 6px
+   de borda — pensada pra uma foto grande de destaque; numa miniatura
+   pequena ela engoliria a imagem). Em vez disso, um tratamento mais
+   leve na MESMA linguagem visual (moldura em --cor-ouro, a cor de
+   acento já usada na etiqueta/preço/selo desta seção escura). */
+.produto-destaque__miniatura {
+  flex-shrink: 0;
+  width: 92px;
+  aspect-ratio: 3 / 4;
+  /* retrato — mesma proporção "de peça de cerâmica alta" da foto
+     principal (object-fit:contain nela já lida com qualquer proporção
+     real, mas a MOLDURA da miniatura fica mais elegante já nascendo
+     no formato mais comum das fotos do catálogo) */
+  padding: 0;
+  border: none;
+  border-radius: 10px;
+  overflow: hidden;
+  cursor: pointer;
+  background: none;
+
+  /* moldura + sombra em camadas — dourado translúcido (liga com o
+     tema da seção) + sombra em preto puro (mesmo motivo do
+     .foto-emoldurada escuro logo abaixo: sombra na MESMA família de
+     marrom do fundo não criaria profundidade nenhuma) */
+  box-shadow:
+    0 0 0 2px rgba(184, 135, 62, 0.45),
+    0 8px 18px rgba(0, 0, 0, 0.35);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.produto-destaque__miniatura img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* cover (não contain, como na principal): a miniatura é só um
+     "gatilho"/prévia — pode recortar a peça sem problema, ela nunca é
+     a versão "definitiva" que a pessoa está avaliando pra comprar */
+}
+
+.produto-destaque__miniatura:hover,
+.produto-destaque__miniatura:focus-visible {
+  transform: translateY(-4px);
+  box-shadow:
+    0 0 0 2px var(--cor-ouro),
+    0 12px 24px rgba(0, 0, 0, 0.4);
+  /* no hover/foco o anel dourado fica OPACO (não mais translúcido) —
+     reforço claro de "isto é clicável", sem precisar de texto extra */
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .produto-destaque__miniatura {
+    transition: none;
+  }
+  .produto-destaque__miniatura:hover,
+  .produto-destaque__miniatura:focus-visible {
+    transform: none;
+  }
+}
+
+/* moldura ajustada pro fundo escuro: o passe-partout claro
+   (--cor-card + --cor-fundo-alt) da versão padrão de .foto-emoldurada
+   SUMIRIA de contraste aqui — troca pra um marrom um pouco mais claro
+   que o fundo da seção (ainda lê como "moldura", não como "cortada")
+   e contorno em --cor-ouro translúcido, no lugar do bege sólido —
+   liga a moldura ao resto do tema dourado da seção (etiqueta, preço).
+   ESTENDIDA pra .selecao-especial também (pedido item 3: "reaproveite
+   a técnica de moldura do hero do Vaso") — mesmo fundo escuro, mesma
+   régua dourada, então a MESMA regra serve sem duplicar nada; só o
+   giro 360° (ativarGiro360, main.js) fica exclusivo de
+   .produto-destaque, por não ser chamado pra esta seção nova. */
+.produto-destaque .foto-emoldurada,
+.selecao-especial .foto-emoldurada {
+  background-color: #4A392C;
+  border-color: rgba(184, 135, 62, 0.35);
+  outline-color: rgba(184, 135, 62, 0.5);
+  box-shadow:
+    0 3px 8px rgba(0, 0, 0, 0.4),
+    0 20px 46px rgba(0, 0, 0, 0.3);
+  /* sombra em preto puro (não no marrom --cor-texto de sempre): sobre
+     um fundo JÁ marrom escuro, uma sombra na MESMA família de cor
+     não criaria profundidade nenhuma — preto garante que ainda se
+     perceba a "borda" da moldura contra o fundo da seção. */
+}
+
+/* ============================================================
+   GIRO 360° — arrastar/deslizar a foto pra "girar" a peça (só na
+   "Peça em Destaque" da Home). A LÓGICA do arraste/loop está toda em
+   ativarGiro360() (js/main.js) — aqui é só a aparência.
+   ============================================================ */
+.giro360__frame {
+  display: block;
+  width: 100%;
+  max-height: 480px;
+  object-fit: contain;
+  /* contain, não cover: peça de cerâmica não pode ser cortada — mesma
+     escolha da galeria em produto.html (que não é carregada aqui, daí
+     este tamanho/encaixe precisar ser redeclarado). */
+
+  cursor: grab;
+  /* touch-action:none = "eu mesmo trato o toque aqui dentro": sem
+     isto, arrastar o dedo sobre a foto no celular rolaria a PÁGINA
+     (o gesto padrão do navegador pra um <img>) em vez de girar a
+     peça — mesmo com o preventDefault() no JS, esta linha é quem
+     evita o "puxão" inicial da rolagem antes do JS conseguir reagir. */
+  touch-action: none;
+  /* impede selecionar a imagem/texto ao redor durante um arraste
+     rápido (comportamento padrão do navegador ao "arrastar" sobre
+     qualquer conteúdo, não só imagens) */
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* enquanto o mouse/dedo está pressionado (ver a classe is-arrastando,
+   ligada/desligada por ativarGiro360()): cursor de "segurando", pra
+   reforçar visualmente que a peça está sendo girada agora mesmo. */
+.giro360__frame.is-arrastando {
+  cursor: grabbing;
+}
+
+/* DICA "Arraste para girar" — sobreposta ao centro da foto, some na
+   1ª interação (ver esconderDica() em main.js). pointer-events:none
+   pra nunca "roubar" o mousedown/touchstart que começa o arraste —
+   o clique atravessa a dica e chega direto na foto por baixo dela. */
+.giro360__dica {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 1rem 1.4rem;
+  border-radius: 14px;
+  background-color: rgba(0, 0, 0, 0.55);
+  color: var(--cor-fundo);
+  font-size: 0.85rem;
+  white-space: nowrap;
+  pointer-events: none;
+  transition: opacity 0.4s ease;
+}
+.giro360__dica svg {
+  width: 28px;
+  height: 28px;
+  /* o "balanço" (vai-e-vem) sugere o gesto de girar/arrastar pros
+     dois lados — mesma ideia do chevron que desliza na dica do
+     carrossel mobile (.carrossel-hint), só que girando em vez de
+     deslizando, pra combinar com o ícone "rotate-3d". */
+  animation: giro360-dica-balanco 1.8s ease-in-out infinite;
+}
+.giro360__dica.is-oculta {
+  opacity: 0;
+}
+
+@keyframes giro360-dica-balanco {
+  0%, 100% { transform: rotate(-14deg); }
+  50%      { transform: rotate(14deg); }
+}
+
+/* respeita "reduzir movimento": ícone parado (a dica ainda aparece e
+   some no primeiro toque, só sem a animação) */
+@media (prefers-reduced-motion: reduce) {
+  .giro360__dica svg {
+    animation: none;
+  }
+}
+
+/* --- coluna direita: texto ---
+   ESTENDIDA pra .selecao-especial__etiqueta também (pedido item 3:
+   "mesmo tratamento de destaque/brilho dourado já usado no selo
+   Escolha do Ateliê") — em vez de copiar as declarações pra uma 2ª
+   classe, a mesma regra atende as duas: zero duplicação de CSS. */
+.produto-destaque__etiqueta,
+.selecao-especial__etiqueta {
+  color: var(--cor-ouro);
+  font-family: var(--fonte-texto);
+  /* 600 -> 700 e 0.08em -> 0.14em (pedido: "mais peso/letter-spacing")
+     — uma etiqueta de CURADORIA (não é um título, é um "selo" que diz
+     "a Anasor escolheu esta peça") precisa se destacar mais do corpo
+     do texto normal, mesmo sendo curta. */
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  /* 0.8rem -> 0.95rem: pedido explícito de aumentar o tamanho */
+  font-size: 0.95rem;
+  margin-bottom: 0.9rem;
+
+  /* GLOW sutil em dourado (pedido: "leve brilho/glow na cor de ouro") —
+     um text-shadow SEM offset (0 0), só raio de espalhamento, cria um
+     halo em vez de uma sombra projetada. Fica estático (sem @keyframes
+     de pulso): a seção já tem BASTANTE movimento — giro 360°, o pulso
+     do selo "Peça única" — um 3º elemento animado competiria por
+     atenção em vez de complementar; o brilho aqui é sobre DESTAQUE
+     VISUAL constante, não sobre chamar o olho com movimento. */
+  text-shadow: 0 0 14px rgba(184, 135, 62, 0.55);
+}
+
+.produto-destaque__titulo {
+  /* h1-h4 são --cor-texto por padrão (style.css, lá em cima) — aqui
+     ISSO seria texto invisível (mesma cor do próprio fundo da seção).
+     Precisa do override explícito: herdar a cor do body/section não
+     basta, porque a regra "h1,h2,h3,h4{color:...}" mira o elemento
+     DIRETAMENTE (vence qualquer cor herdada de ancestral). */
+  color: var(--cor-fundo);
+  font-size: 2rem;
+  margin-bottom: 1rem;
+}
+
+.produto-destaque__descricao {
+  margin-bottom: 1.5rem;
+  line-height: 1.7;
+  /* a cor vem por HERANÇA do "color: var(--cor-fundo)" do .produto-destaque
+     — <p> não tem uma regra própria de cor te sobrescrevendo, ao
+     contrário do <h2> acima. */
+}
+
+/* .realce / .realce--ouro (destaques dentro da descrição da peça, ver
+   produtos.js): a versão padrão (produto.html) usa --cor-destaque
+   (terracota) pro realce comum — aqui os DOIS viram --cor-ouro (ver
+   explicação de contraste no comentário grande do topo do bloco). */
+.produto-destaque__descricao .realce,
+.produto-destaque__descricao .realce--ouro {
+  font-weight: 600;
+  color: var(--cor-ouro);
+}
+
+/* .preco / .preco__atual (renderBlocoPreco, main.js) também usam
+   --cor-destaque por padrão — mesmo ajuste, viram dourado aqui.
+   .preco__antigo (o valor riscado) usa --cor-secundaria por padrão,
+   que tem o MESMO problema de contraste no escuro — vira um branco
+   semitransparente: continua "apagado" (papel secundário, igual era)
+   mas permanece legível. */
+.produto-destaque .preco,
+.produto-destaque .preco__atual {
+  color: var(--cor-ouro);
+  font-size: 1.4rem;
+}
+.produto-destaque .preco__antigo {
+  color: rgba(251, 246, 239, 0.55);
+}
+
+/* Fileira dos 2 "avisos de confiança" (pedido item 1: reforçar mais
+   1-2 pontos de destaque) — .selo-escassez ("Peça única", já existia)
+   + o novo chip "Feito à Mão" lado a lado, com quebra pra 2 linhas se
+   não couberem (mobile/telas estreitas). */
+.produto-destaque__badges {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+  margin: -0.4rem 0 1.6rem;
+  /* MESMA margem que .selo-escassez tinha sozinho (ver style.css,
+     mais abaixo) — center a herda daqui agora que está dentro de um
+     flex container; zerada nela mesma logo abaixo pra não dobrar. */
+}
+
+.produto-destaque__badges .selo-escassez {
+  margin: 0;
+  /* zera a margem própria do .selo-escassez (ela existe pra quando
+     ele aparece SOZINHO, em produto.html) — aqui quem cuida do
+     espaçamento é o .produto-destaque__badges pai */
+}
+
+/* Chip "Feito à Mão" — mesma linguagem visual do .selo-escassez
+   (fundo próprio claro, --cor-fundo-alt, então carrega contraste
+   suficiente sozinho sobre o fundo escuro da seção — mesmo raciocínio
+   já documentado no comentário grande do topo deste bloco), só mais
+   COMPACTO: é um reforço secundário, não precisa do mesmo peso visual
+   do selo principal. */
+.produto-destaque__chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.5rem 0.9rem;
+  border-radius: 20px;
+  background-color: var(--cor-fundo-alt);
+  border: 1px solid rgba(184, 135, 62, 0.35);
+  color: var(--cor-texto);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.produto-destaque__acoes {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  /* wrap: no mobile, se os 2 botões não couberem lado a lado, o 2º
+     desce em vez de espremer/estourar a coluna */
+}
+
+.produto-destaque__acoes .btn-comprar,
+.produto-destaque__acoes .btn-comprar-agora {
+  /* zera o margin-top:auto/0.6rem que os dois trazem de style.css —
+     lá eles servem pra EMPILHAR verticalmente dentro de um card
+     flex-column; aqui os botões ficam LADO A LADO (flex row), e esse
+     margin-top desalinharia um botão do outro no eixo vertical. O
+     espaçamento entre eles já vem do "gap" acima. */
+  margin-top: 0;
+}
+
+/* Mobile: empilha as 2 colunas (foto em cima, texto embaixo) — mesmo
+   breakpoint (768px) do resto do site. */
+@media (max-width: 768px) {
+  .produto-destaque {
+    padding: 3rem 6%;
+  }
+  /* A altura das faixas de transição (.transicao-topo/.transicao-base)
+     encolhe no mobile pra qualquer seção que as use — ver a regra
+     genérica logo depois do bloco de definição delas, mais acima
+     neste arquivo (não fica aqui dentro: senão o ajuste só valeria
+     pra .produto-destaque, e a NOVA seção que passou a usar as mesmas
+     classes, em produto.html, ficaria sem o ajuste proporcional). */
+  .produto-destaque__grid {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+  .giro360__frame {
+    max-height: 320px;
+  }
+
+  /* MINI-ÁLBUM NO MOBILE (pedido: "garanta que empilhe de forma
+     elegante, não esprema as duas fotos lado a lado"). Entre as 2
+     opções que o pedido ofereceu (carrossel de scroll horizontal OU
+     empilhar verticalmente), escolhi EMPILHAR: só são 2 fotos — um
+     carrossel (setas, dots, scroll-snap) é aparato demais pra
+     navegar entre duas imagens, e empilhado com a miniatura
+     centralizada abaixo da foto principal já fica limpo e óbvio de
+     usar (não precisa arrastar/deslizar pra descobrir que ela existe,
+     como aconteceria escondida fora da viewport num carrossel). */
+  .produto-destaque__fotos {
+    flex-direction: column;
+    align-items: center;
+  }
+  .produto-destaque__foto-principal-wrap {
+    width: 100%;
+  }
+  .produto-destaque__miniatura {
+    /* 92px -> 120px: empilhada embaixo (não mais competindo por
+       largura com a foto principal ao lado), sobra espaço pra ela
+       ficar um pouco mais generosa e continuar fácil de tocar */
+    width: 120px;
+  }
+
+  .produto-destaque__titulo {
+    font-size: 1.6rem;
+  }
+}
+
+/* ============================================================
+   SELEÇÃO ESPECIAL (Home) — pedido item 3
+   ============================================================
+   Fundo escuro em GRADIENTE (não sólido, diferente de
+   .produto-destaque) — "variação sutil pra não ficar idêntica" ao
+   hero logo acima: nasce no MESMO --cor-texto (por isso a emenda
+   entre as duas seções não precisa de faixa de transição, ver
+   .produto-destaque mais acima) e escurece um pouco em direção à
+   própria base, um marrom mais profundo (#2B1F17, sem variável
+   própria — é só um tom mais escuro do MESMO marrom, não uma cor nova
+   na paleta). Leva a MESMA marca d'água clara do hero (monograma
+   "AS") — assina a seção como "do ateliê", igual ao resto do site. */
+.selecao-especial {
+  padding: 4.5rem 5%;
+  text-align: center;
+  color: var(--cor-fundo);
+
+  /* CORREÇÃO (watermark "sumido"): a marca d'água já estava declarada
+     aqui, mas na ORDEM ERRADA. Em CSS, quando se empilham vários
+     background-image, o PRIMEIRO da lista fica por CIMA dos
+     seguintes — e o gradiente (duas cores 100% opacas, sem alpha
+     nenhum) tampava inteiramente o monograma logo atrás dele, por
+     mais que o SVG estivesse correto. A correção é só trocar a ORDEM:
+     o monograma (SVG com fundo transparente, só o traço "AS" tem
+     opacidade) vai primeiro/por cima, o gradiente fica atrás — agora
+     o monograma aparece tingido pelo gradiente por trás dele, igual
+     ao efeito already usado em .produto-destaque (que funciona porque
+     lá só existe UM background-image, sem essa disputa de camadas).
+     background-repeat/background-size têm que seguir a MESMA ordem
+     (são posicionais, um valor por camada). */
+  background-image:
+    var(--marca-monograma-clara),
+    linear-gradient(160deg, var(--cor-texto) 0%, #2b1f17 100%);
+  background-repeat: repeat, no-repeat;
+  background-size: 240px, cover;
+
+  /* cor de SAÍDA da faixa .transicao-base (ver a classe utilitária em
+     style.css, bem mais acima) — mira #quem-somos, a seção clara que
+     vem logo depois desta na página. */
+  --transicao-base-cor: var(--cor-fundo);
+  --transicao-base-cor-fraca: rgba(251, 246, 239, 0.35); /* --cor-fundo a 35% */
+}
+
+.selecao-especial__titulo {
+  color: var(--cor-fundo);
+  font-size: 1.75rem;
+  max-width: 520px;
+  margin: 0 auto 3rem;
+}
+
+.selecao-especial__grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3rem;
+  max-width: 980px;
+  margin: 0 auto;
+}
+
+.selecao-especial__card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  /* CORREÇÃO (cards desalinhados): height:100% faz o card preencher
+     toda a altura da CÉLULA do grid — que, por padrão (align-items:
+     stretch, o valor padrão de .selecao-especial__grid, nunca
+     sobrescrito), já é igual para as duas colunas: a mais alta das
+     duas "estica" a célula da outra. Sem isto, cada card só ocupava a
+     própria altura de CONTEÚDO, então uma frase mais curta num card
+     deixava ele mais baixo que o outro — os dois pareciam
+     "flutuar" em alturas diferentes mesmo lado a lado. */
+  height: 100%;
+}
+
+/* .selecao-especial__foto-wrap: NOVO (pedido item 2, setas) — ancora
+   as setas (position:absolute) no tamanho EXATO da foto, não do card
+   inteiro (que também tem dots/pergaminho abaixo) — MESMO motivo do
+   .galeria__principal-wrap em produto.html (ver comentário lá). O
+   max-width/margin que antes viviam direto na <img> mudaram pra cá:
+   é o wrap que agora centraliza e reserva o respiro embaixo. */
+.selecao-especial__foto-wrap {
+  position: relative;
+  width: 100%;
+  max-width: 260px;
+  margin: 0 auto 1.75rem;
+}
+
+.selecao-especial__foto {
+  /* SEM giro360__frame de propósito (pedido: "SEM o efeito arraste
+     para girar — esse fica exclusivo daquela seção") — é uma <img>
+     estática comum, só com a moldura escura reaproveitada (ver
+     ".produto-destaque .foto-emoldurada, .selecao-especial
+     .foto-emoldurada" mais acima). .foto-emoldurada não define
+     tamanho/encaixe de propósito (cada contexto traz o seu — ver o
+     comentário dela) — aqui: */
+  width: 100%;
+  max-height: 320px;
+  object-fit: contain;
+  /* contain, não cover: mesma regra de sempre no site — uma peça de
+     cerâmica não pode ser cortada pela moldura */
+  display: block;
+}
+
+/* ---- SETAS do carrossel de cada card (pedido item 2) ----
+   MESMO visual/estrutura de .galeria__seta (produto.css) — círculo
+   translúcido com sombra, ícone escuro — só reescopado como classe
+   PRÓPRIA (mesmo motivo de .galeria__seta já não reaproveitar
+   .banner-seta direto: contextos de tamanho diferentes). */
+.selecao-especial__seta {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(251, 246, 239, 0.85); /* --cor-fundo, quase opaca */
+  color: var(--cor-texto);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+  transition: background-color 0.2s ease, transform 0.2s ease;
+  z-index: 2;
+}
+
+.selecao-especial__seta svg {
+  width: 18px;
+  height: 18px;
+}
+
+.selecao-especial__seta:hover {
+  background-color: var(--cor-fundo);
+  transform: translateY(-50%) scale(1.08);
+}
+
+.selecao-especial__seta--anterior {
+  left: -6px;
+}
+
+.selecao-especial__seta--proxima {
+  right: -6px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .selecao-especial__seta {
+    transition: none;
+  }
+}
+
+/* ---- "PERGAMINHO" por trás do texto (pedido item 3) ----
+   Papel envelhecido: cor de base creme/dourada (#EAD9AE — um tom
+   NOVO, mas só aqui, pensado como "página antiga", não pra reusar
+   noutro lugar do site) + a textura de ruído sepia (--textura-
+   pergaminho, :root) + duas manchas radiais bem sutis simulando
+   marcas de umidade/idade do papel. Cantos com raios DESIGUAIS (não
+   um valor só) e uma leve rotação (-0.5deg): em vez de um "blob"
+   orgânico (--raio-organico, que já tem outro significado no site —
+   a forma de vaso), aqui a assimetria é sutil o bastante pra ler como
+   "página meio torta, feita à mão", sem virar uma forma abstrata. */
+.selecao-especial__pergaminho {
+  position: relative;
+  width: 100%;
+  max-width: 340px;
+  padding: 1.75rem 1.5rem;
+  text-align: left;
+
+  /* CORREÇÃO (cards desalinhados), parte 2: flex:1 faz o pergaminho
+     esticar e ocupar todo o espaço que sobrar dentro do card (que
+     agora tem height:100%, ver .selecao-especial__card) — e
+     display:flex column + o "margin-top:auto" no botão (mais abaixo)
+     empurram preço+botão sempre pro RODAPÉ do pergaminho, não importa
+     se a frase de um card é mais longa que a do outro. Resultado: as
+     fotos alinham no topo (mesma altura fixa) E os botões alinham
+     embaixo (mesma altura entre os dois cards), sem "degraus".
+     min-height:0 é o ajuste clássico de flex-item-com-scroll-ausente:
+     sem ele, um flex item às vezes recusa encolher abaixo do próprio
+     conteúdo e pode estourar a altura do pai. */
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+
+  background-color: #ead9ae;
+  background-image:
+    var(--textura-pergaminho),
+    radial-gradient(ellipse at 18% 25%, rgba(139, 111, 60, 0.14), transparent 55%),
+    radial-gradient(ellipse at 82% 78%, rgba(139, 111, 60, 0.12), transparent 55%);
+  background-repeat: repeat, no-repeat, no-repeat;
+
+  border-radius: 3px 18px 6px 20px / 16px 4px 20px 5px;
+  /* sombra em preto puro (mesmo motivo do .foto-emoldurada escuro,
+     mais acima: sobre um fundo já marrom escuro, uma sombra na MESMA
+     família de cor não criaria profundidade nenhuma) + uma sombra
+     INTERNA (inset) sutil, cor terrosa — reforça a leitura de "papel
+     com relevo/textura", não uma caixa lisa. */
+  box-shadow:
+    0 12px 26px rgba(0, 0, 0, 0.35),
+    inset 0 0 34px rgba(120, 92, 48, 0.16);
+  transform: rotate(-0.5deg);
+}
+
+/* Texto DENTRO do pergaminho usa a paleta de FUNDO CLARO do site
+   (--cor-texto, a mesma dos parágrafos normais em qualquer página) —
+   NÃO a paleta dourada/clara que o resto desta seção escura usa. É o
+   cuidado de contraste pedido explicitamente ("atenção especial ao
+   contraste da fonte sobre esse fundo mais claro, dentro da seção de
+   fundo escuro"): o pergaminho é uma "ilha clara" dentro de uma seção
+   escura, então o texto nele precisa ler como se estivesse sobre
+   fundo claro — porque está. */
+.selecao-especial__titulo-peca {
+  color: var(--cor-texto);
+  font-size: 1.15rem;
+  margin-bottom: 0.6rem;
+}
+
+.selecao-especial__frase {
+  /* CORREÇÃO (toque de cor, pedido item 2): era #4A3826 (marrom
+     neutro, quase sem diferença de saturação pro resto do texto).
+     Trocado por --cor-secundaria (verde-oliva) — a MESMA cor que o
+     site já usa como 2ª cor de destaque em outros lugares, então não
+     é uma cor nova inventada só pra cá. Não usei --cor-destaque (o
+     terracota): esse já é a cor do PREÇO logo abaixo (.preco), e
+     repetir a mesma cor na frase tiraria a hierarquia visual entre
+     "texto de venda" e "o número que importa". Contraste sobre o
+     creme #EAD9AE de fundo: ~6.3:1 — acima do mínimo AA (4.5:1). */
+  color: var(--cor-secundaria);
+  /* CORREÇÃO (fonte pequena demais): 0.92rem → 1.05rem. Continua
+     menor que o título da peça (1.15rem, .selecao-especial__titulo-
+     peca) — mantém a hierarquia visual — mas sai da faixa "letrinha
+     miúda" e vira confortável de ler de novo sem precisar aproximar a
+     tela, principalmente no card de texto mais longo. */
+  font-size: 1.05rem;
+  line-height: 1.6;
+  margin-bottom: 1.1rem;
+}
+
+.selecao-especial__preco {
+  margin-bottom: 1.25rem;
+  /* .preco/.preco--promo (style.css) já vêm prontos daqui — cor
+     --cor-destaque (terracota), a MESMA usada em qualquer preço sobre
+     fundo claro do site. Nenhum override de cor necessário: o
+     pergaminho É um fundo claro, então o preço já nasce legível. */
+}
+
+/* botão fica sempre por ÚLTIMO dentro do pergaminho, MESMO se a frase
+   for curta: margin-top:auto (dentro do pergaminho, agora
+   display:flex column — ver .selecao-especial__pergaminho) empurra o
+   que vier depois dele pro fim do espaço disponível. Escopado a
+   ".selecao-especial__pergaminho" (não .btn-comprar-agora sozinho)
+   pra não afetar esse mesmo botão em outros lugares do site (barra-
+   compra flutuante, produto.html etc.), que não são flex column. */
+.selecao-especial__pergaminho .btn-comprar-agora {
+  margin-top: auto;
+}
+
+/* ---- BOLINHAS (dots) do carrossel de cada card ----
+   MESMA estrutura/comportamento de .banner-indicador (style.css) e
+   .galeria__dot (produto.css) — área de toque 44×44 com uma bolinha
+   visual pequena (9px) centralizada via ::after, só que com cores
+   PRÓPRIAS: a bolinha inativa daqueles dois carrosséis usa
+   --cor-fundo-alt, pensada pra ficar sobre fundo CLARO — aqui o
+   carrossel vive sobre o gradiente escuro desta seção, então a
+   bolinha inativa usa --cor-fundo (creme claro, com opacidade
+   reduzida) pra não desaparecer contra o fundo marrom. Ativa/hover
+   continuam com --cor-destaque/--cor-secundaria, que já têm bom
+   contraste tanto em fundo claro quanto escuro. */
+.selecao-especial__dots {
+  display: flex;
+  justify-content: center;
+  gap: 0.4rem;
+  margin: -0.5rem 0 1rem;
+  /* margin-top negativo: compensa o respiro que .selecao-especial__foto
+     já deixa embaixo dela (margin-bottom:1.75rem) — sem isso as
+     bolinhas ficariam longe demais da foto que elas controlam. */
+}
+
+.selecao-especial__dot {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+}
+
+.selecao-especial__dot::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background-color: rgba(251, 246, 239, 0.4); /* --cor-fundo a 40% */
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.selecao-especial__dot:hover::after {
+  background-color: var(--cor-secundaria);
+}
+
+.selecao-especial__dot.is-ativo::after {
+  background-color: var(--cor-destaque);
+  transform: translate(-50%, -50%) scale(1.3);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .selecao-especial__dot::after {
+    transition: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .selecao-especial {
+    padding: 3rem 6%;
+  }
+  .selecao-especial__titulo {
+    font-size: 1.4rem;
+    margin-bottom: 2rem;
+  }
+  .selecao-especial__grid {
+    /* pedido: "os 2 cards empilham bem em mobile" */
+    grid-template-columns: 1fr;
+    gap: 2.75rem;
+  }
+}
+
+/* ============================================================
+   ✦ EDIÇÃO SURPRESA (Home) — as 2 canecas "Surpresa" do catálogo
+   ============================================================
+   Fundo ESCURO, MESMO gradiente + marca d'água de .selecao-especial
+   (não só "parecido": os MESMOS valores) — pedido explícito era "na
+   linha visual das outras seções premium do site" e, ao colocar esta
+   seção logo ANTES de #selecao-especial (mesmo tom), a emenda entre
+   as duas fica idêntica sem precisar de transicao-base aqui (ver
+   comentário no HTML). */
+.edicao-surpresa {
+  padding: 4.5rem 5%;
+  text-align: center;
+  color: var(--cor-fundo);
+
+  background-image:
+    var(--marca-monograma-clara),
+    linear-gradient(160deg, var(--cor-texto) 0%, #2b1f17 100%);
+  background-repeat: repeat, no-repeat;
+  background-size: 240px, cover;
+
+  --transicao-topo-cor: var(--cor-fundo-alt);
+  --transicao-topo-cor-fraca: rgba(239, 227, 208, 0.35); /* --cor-fundo-alt a 35% */
+}
+
+.edicao-surpresa__titulo {
+  color: var(--cor-fundo);
+  font-size: 1.75rem;
+  max-width: 560px;
+  margin: 0.5rem auto 0.75rem;
+}
+
+.edicao-surpresa__subtitulo {
+  color: var(--cor-fundo);
+  opacity: 0.85;
+  max-width: 480px;
+  margin: 0 auto 3rem;
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+.edicao-surpresa__grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3rem;
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.edicao-surpresa__card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* ---- VÍDEO (retrabalhado — antes era foto + blur no hover/toque) ----
+   position:relative ancora a dica de texto (.edicao-surpresa__dica,
+   agora uma FAIXA no RODAPÉ do vídeo, não mais um overlay cobrindo
+   tudo — ver comentário dela mais abaixo). overflow:hidden garante
+   que a moldura (.foto-emoldurada) recorte o vídeo nas bordas certas.
+   cursor NÃO é mais "pointer": o card não depende de clique/toque pra
+   nada agora — o vídeo já toca sozinho (ver IntersectionObserver no
+   JS) — então não faz sentido sinalizar "isto é clicável". */
+.edicao-surpresa__foto-wrap {
+  position: relative;
+  width: 100%;
+  max-width: 240px;
+  overflow: hidden;
+  margin-bottom: 1.25rem;
+}
+
+.edicao-surpresa__video {
+  width: 100%;
+  max-height: 300px;
+  object-fit: contain;
+  display: block;
+  background: #000; /* mesmo motivo do .produto-video__player (produto.css):
+                        evita "flash" branco antes do poster carregar */
+}
+
+/* Dica de texto SOBRE o vídeo ("Observe o fundo da caneca") — pedido
+   explícito: "leve overlay... sem cobrir o vídeo a ponto de atrapalhar
+   a visualização do efeito". Por isso NÃO é mais inset:0 (cobrindo o
+   quadro inteiro, como na versão com blur, onde cobrir tudo não
+   atrapalhava porque o conteúdo por baixo já estava borrado) — agora é
+   só uma FAIXA fina colada no RODAPÉ do vídeo (bottom:0, altura
+   automática pelo padding), deixando o resto do quadro — onde o
+   bichinho aparece — livre. O degradê (transparent -> preto) por trás
+   do texto substitui o "brightness(0.75)" que a foto borrada tinha:
+   sem ele, texto branco por cima de um vídeo claro perderia contraste
+   em vários momentos do loop (quando o líquido ainda não cobriu o
+   fundo, por exemplo). SEM opacity/transition mais: a versão anterior
+   escondia a dica ao revelar; aqui ela fica sempre visível — é uma
+   legenda permanente do vídeo, não um convite que desaparece depois
+   de uma interação que não existe mais. pointer-events:none: mesmo
+   sem listener de clique no card, mantém o hábito do site de não
+   deixar texto decorativo interceptar cliques (ex.: no botão "Comprar
+   Agora" logo abaixo, se algum dia o layout mudar). */
+.edicao-surpresa__dica {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 1.5rem 0.75rem 0.6rem;
+  background-image: linear-gradient(to top, rgba(0, 0, 0, 0.65), transparent);
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-align: center;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+  pointer-events: none;
+}
+
+.edicao-surpresa__dica span {
+  font-size: 1.1rem;
+}
+
+/* ---- SELO "Edição Limitada — só 2 no mundo" ----
+   Reforça a exclusividade de um jeito mais FORTE que o selo-escassez
+   genérico do site ("peça única — quando vender, não haverá outra
+   igual", usado em TODA peça) — aqui a mensagem é mais específica: não
+   é só que ESTA peça é única, é que só existem 2 MODELOS deste tipo
+   em todo o catálogo. Pílula com fundo semi-transparente dourado +
+   borda, pra destacar sobre o fundo escuro sem outro bloco/caixa
+   pesado. */
+.edicao-surpresa__selo {
+  display: inline-block;
+  margin: 0 0 0.75rem;
+  padding: 0.35rem 0.9rem;
+  border-radius: 999px;
+  border: 1px solid rgba(212, 165, 116, 0.5);
+  background-color: rgba(212, 165, 116, 0.14);
+  color: var(--cor-ouro);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.edicao-surpresa__titulo-peca {
+  color: var(--cor-fundo);
+  font-size: 1.15rem;
+  margin-bottom: 0.6rem;
+}
+
+.edicao-surpresa__preco {
+  justify-content: center;
+  margin-bottom: 1.1rem;
+}
+
+/* .preco/.preco__atual (renderBlocoPreco, main.js) usam --cor-destaque
+   (terracota) por padrão — baixo contraste sobre fundo escuro. MESMO
+   ajuste já usado em .produto-destaque (ver comentário completo lá,
+   mais acima): vira dourado aqui, preço riscado vira branco
+   semitransparente (continua "apagado" mas legível). Necessário aqui
+   porque, diferente de .selecao-especial (preço mora DENTRO do
+   pergaminho claro), o preço desta seção fica direto sobre o fundo
+   escuro. */
+.edicao-surpresa .preco,
+.edicao-surpresa .preco__atual {
+  color: var(--cor-ouro);
+}
+.edicao-surpresa .preco__antigo {
+  color: rgba(251, 246, 239, 0.55);
+}
+
+@media (max-width: 768px) {
+  .edicao-surpresa {
+    padding: 3rem 6%;
+  }
+  .edicao-surpresa__titulo {
+    font-size: 1.4rem;
+  }
+  .edicao-surpresa__subtitulo {
+    margin-bottom: 2rem;
+  }
+  .edicao-surpresa__grid {
+    grid-template-columns: 1fr;
+    gap: 2.75rem;
+  }
+}
+
+.produto-card {
+  background-color: var(--cor-card);
+  border-radius: 16px;
+  overflow: hidden;
+  text-align: center;
+  padding-bottom: 1.5rem;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  /* 0.3s (era 0.25s) deixa o "levantar" um tico mais fluido */
+
+  display: flex;
+  flex-direction: column;
+  /* ALINHAMENTO DOS BOTÕES: o CSS Grid da .produtos-grid já iguala a
+     ALTURA de todo card numa mesma fileira ao maior deles (padrão do
+     grid) — mas isso sozinho não alinha os BOTÕES, porque um nome de
+     produto mais curto (1 linha de <h3>) deixa sobra de espaço vazio
+     abaixo do botão, e um nome mais longo (2 linhas) empurra o botão
+     pra baixo: cada card sobra/empurra por uma quantidade diferente,
+     então os botões ficam em alturas diferentes mesmo com os CARDS
+     do mesmo tamanho. Virando flex-column, ".btn-comprar" (ver
+     margin-top:auto nele, mais abaixo) consome TODA a sobra de
+     espaço ACIMA dele — empurrando o par de botões pro rodapé do
+     card, sempre na mesma altura entre os cards de uma fileira,
+     não importa quantas linhas o nome ocupou. */
+}
+
+.produto-card:hover {
+  transform: translateY(-8px);        /* era -6px: sobe mais, movimento mais notável */
+  box-shadow: 0 16px 32px rgba(62, 46, 34, 0.22);
+  /* blur maior (32px) e opacidade maior (0.22, era 0.12): a sombra
+     de "card levantado da página" fica de fato perceptível */
+}
+
+.produto-card__link {
+  /* o <a> que embrulha imagem + nome + preço dentro do card.
+     display:block faz ele ocupar toda a largura do card (área
+     clicável maior). Cor e ausência de sublinhado já vêm da
+     regra global de <a> lá no topo deste arquivo. */
+  display: block;
+}
+
+.produto-card img {
+  width: 100%;
+  height: 240px;
+  object-fit: cover;
+  margin-bottom: 1rem;
+}
+
+.produto-card h3 {
+  font-size: 1.05rem;
+  padding: 0 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.preco {
+  color: var(--cor-destaque);
+  font-weight: 600;
+  font-size: 1.1rem;
+  margin-bottom: 1rem;
+}
+
+/* ============================================
+   PREÇO PROMOCIONAL ("de/por" + selo "X% OFF")
+   Montado pelo renderBlocoPreco() em js/main.js — usado tanto nos
+   cards da vitrine quanto na página da peça (produto.html). Só
+   aparece quando o produto tem "precoOriginal" em js/produtos.js.
+   Vive aqui (folha compartilhada) por ser usado em mais de uma tela.
+   ============================================ */
+.preco--promo {
+  display: flex;
+  flex-wrap: wrap;
+  /* wrap: em card estreito / celular, o selo desce pra 2a linha em
+     vez de espremer os preços */
+  align-items: baseline;
+  justify-content: center;
+  /* .produto-card é text-align:center; mantemos o mesmo eixo aqui.
+     Na página da peça, uma regra em produto.css joga pra esquerda. */
+  gap: 0.5rem;
+}
+
+.preco__antigo {
+  /* o <s> já vem riscado pelo navegador; aqui só deixamos ele
+     menor e na cor de apoio pra não competir com o preço real */
+  color: var(--cor-secundaria);
+  font-weight: 400;
+  font-size: 0.9rem;
+  text-decoration: line-through;
+  /* redundante com a tag <s>, mas explícito: garante o risco mesmo
+     se algum reset de CSS tirar o line-through padrão do <s> */
+}
+
+.preco__atual {
+  /* o valor que vale: herda a cor de destaque e o peso de .preco */
+  color: var(--cor-destaque);
+  font-weight: 700;
+}
+
+.preco-selo-off {
+  /* selo pequeno "25% OFF". Fundo sólido na cor de destaque, texto
+     branco — mesma linguagem visual dos botões/pílulas do site.
+     Só entra nos CARDS (renderBlocoPreco recebe comSelo:true lá);
+     na página da peça o "de/por" já basta. */
+  display: inline-block;
+  background-color: var(--cor-destaque);
+  color: #FFF;
+  font-family: var(--fonte-texto);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  line-height: 1;
+  padding: 0.25rem 0.5rem;
+  border-radius: 20px;
+}
+
+.btn-comprar,
+.btn-comprar-agora {
+  align-self: center;
+  /* .produto-card é flex-column com align-items:stretch (o PADRÃO —
+     não mudamos isso, é o que faz .produto-card__link continuar
+     esticando 100% da largura do card, igual já era num bloco normal
+     antes). Só os BOTÕES precisam voltar a ter a largura do próprio
+     texto (não esticados feito um retângulo cheio) — daí este
+     align-self:center, só neles, sobrescrevendo o stretch herdado. */
+  padding: 0.7rem 1.5rem;
+  border-radius: 30px;
+  font-size: 0.9rem;
+  color: #FFF;
+
+  /* --- DESTAQUE DOS BOTÕES DE COMPRA (site inteiro) --- */
+  position: relative;
+  /* ancora o ::before do "gloss" ao próprio botão */
+  overflow: hidden;
+  /* recorta o reflexo do ::before na forma da pílula (border-radius:30px),
+     sem precisar repetir o raio nele. NÃO afeta o anel de foco do
+     teclado — outline é pintado fora do overflow. NÃO afeta o
+     box-shadow "degrau" abaixo, mesmo sendo do PRÓPRIO elemento: por
+     especificação, box-shadow nunca é recortado pelo overflow do
+     elemento que o projeta (overflow só recorta conteúdo/filhos) —
+     por isso o degrau 3D consegue "vazar" pra fora do botão
+     normalmente, mesmo com overflow:hidden aqui. */
+  transition: transform 0.1s ease-out, box-shadow 0.1s ease-out;
+  /* 0.1s (bem mais rápido que os 0.2-0.25s de antes): um botão
+     "gomoso" precisa responder quase no mesmo frame do clique/toque —
+     transição longa demais faria o afundar parecer "manteiga
+     derretendo" em vez de um clique seco e satisfatório. */
+
+  /* --- 3D "GOMOSO" (estilo Duolingo) ---
+     Técnica: um box-shadow SÓLIDO (sem blur, offset-x:0) desenhado
+     alguns pixels ABAIXO do botão, na MESMA cor só que mais escura —
+     como se o botão fosse a "tampa" de uma caixa e a sombra sólida
+     fosse a "base"/degrau dela, vista de lado. Como o browser desenha
+     o box-shadow respeitando o border-radius do elemento, o degrau
+     nasce com a MESMA curvatura da pílula — não precisa desenhar a
+     base à parte.
+     A cor exata do degrau é definida em CADA botão (.btn-comprar e
+     .btn-comprar-agora, mais abaixo), porque cada um usa uma cor de
+     base diferente (verde-oliva x terracota) — aqui em cima fica só o
+     que é comum aos dois: o "motor" da transição. */
+}
+
+/* GLOSS NO HOVER — reflexo diagonal que cruza o botão UMA vez por
+   passagem do mouse. É a mesma técnica do botão "Ver Produtos" do
+   banner (.btn-principal::before): sem @keyframes, só uma transition
+   de "transform" amarrada ao :hover — sem hover, o reflexo fica
+   estacionado fora do botão, à esquerda. pointer-events:none garante
+   que essa camada nunca "roube" o clique do botão embaixo dela. */
+.btn-comprar::before,
+.btn-comprar-agora::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    115deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.45) 50%,
+    transparent 70%
+  );
+  transform: translateX(-120%);
+  /* -120% (não -100%): começa TODO fora do botão à esquerda, com folga
+     pro ângulo de 115deg do gradiente */
+  transition: transform 0.5s ease;
+  pointer-events: none;
+}
+
+.btn-comprar:hover::before,
+.btn-comprar-agora:hover::before {
+  transform: translateX(120%);
+  /* atravessa e sai pela direita: um único "passe" de luz por hover */
+}
+
+/* HOVER (desktop) — pequeno "salto" de expectativa: o botão sobe 2px
+   (translateY negativo) e o degrau CRESCE de 5px pra 7px — offset do
+   box-shadow acompanha o offset do transform, então o "chão" visto
+   (fundo do degrau) fica na MESMA altura de antes; só o botão em si
+   parece ter ficado um pouco mais alto/pronto pra ser apertado. Não
+   troca a COR de fundo (diferente da versão anterior): o degrau só
+   funciona como leitura de "base mais escura" se o topo continuar
+   com a cor viva — se os dois ficassem iguais no hover, a peça
+   "achataria" visualmente bem no momento em que o usuário mais olha
+   pra ela. */
+.btn-comprar:hover,
+.btn-comprar-agora:hover {
+  transform: translateY(-2px);
+}
+
+/* TOQUE / CLIQUE — o coração do efeito "gomoso": o botão desce
+   EXATAMENTE a altura do degrau (translateY 5px, igual ao offset do
+   box-shadow de repouso) e o degrau encolhe até sumir (offset 0) —
+   junto, os dois criam a ilusão de que o botão "afundou" até encostar
+   na própria base, como uma tecla física sendo pressionada. Cada
+   classe define a COR do seu próprio degrau logo abaixo (a sombra
+   sólida precisa ser da cor escura de CADA botão, não dá pra
+   compartilhar aqui). */
+.btn-comprar:active,
+.btn-comprar-agora:active {
+  transform: translateY(5px);
+}
+
+/* respeita "reduzir movimento" do sistema: sem o reflexo deslizante,
+   sem o salto no hover e sem o afundar no toque (a troca de sombra,
+   discreta, ainda avisa que o clique registrou) */
+@media (prefers-reduced-motion: reduce) {
+  .btn-comprar::before,
+  .btn-comprar-agora::before {
+    transition: none;
+  }
+  .btn-comprar:hover,
+  .btn-comprar-agora:hover,
+  .btn-comprar:active,
+  .btn-comprar-agora:active {
+    transform: none;
+  }
+}
+
+.btn-comprar {
+  background-color: var(--cor-secundaria);
+  margin-top: auto;
+  /* a peça que falta pro alinhamento: empurra este botão (e o que
+     vem depois dele, .btn-comprar-agora) pro fundo do card — ver a
+     explicação completa em .produto-card acima */
+
+  /* DEGRAU 3D (repouso) — sombra sólida (blur:0) 5px abaixo, na cor
+     --cor-secundaria-escuro (~20% mais escura que o verde-oliva do
+     próprio botão — ver definição em :root). offset-x:0 e blur:0 são
+     o que torna essa sombra uma "fatia sólida" em vez de um borrão:
+     sem blur, ela vira um degrau com aresta nítida, não uma sombra
+     "atmosférica" como as do resto do site. */
+  box-shadow: 0 5px 0 var(--cor-secundaria-escuro);
+}
+
+.btn-comprar:hover {
+  /* mesma cor do degrau, só que 2px mais alto — ver comentário do
+     .btn-comprar:hover, .btn-comprar-agora:hover acima */
+  box-shadow: 0 7px 0 var(--cor-secundaria-escuro);
+}
+
+.btn-comprar:active {
+  /* offset 0 = degrau "engolido": some visualmente porque o botão
+     desceu translateY(5px) até ocupar o espaço que era dele */
+  box-shadow: 0 0 0 var(--cor-secundaria-escuro);
+}
+
+.btn-comprar-agora {
+  background-color: var(--cor-destaque);
+  /* --cor-destaque (terracota, mesma do .btn-principal) em vez do
+     --cor-secundaria do "Adicionar ao Carrinho" — mais chamativo de
+     propósito: é a ação de "compra rápida", deve puxar mais o olho
+     que a ação secundária ao lado dela */
+  margin-top: 0.6rem;
+  /* respiro fixo até o botão de cima — SEM ser "auto" (esse já está
+     em .btn-comprar): só ELE precisa consumir a sobra de espaço pra
+     empurrar o PAR inteiro pro rodapé; este aqui só precisa de um
+     gap normal até o vizinho */
+
+  /* DEGRAU 3D (repouso) — mesma técnica do .btn-comprar, na cor
+     --cor-destaque-escuro (já existia no :root, ~20% mais escura que
+     --cor-destaque — antes usada só no hover; agora vira a cor fixa
+     do degrau). */
+  box-shadow: 0 5px 0 var(--cor-destaque-escuro);
+}
+
+.btn-comprar-agora:hover {
+  box-shadow: 0 7px 0 var(--cor-destaque-escuro);
+}
+
+.btn-comprar-agora:active {
+  /* !important AQUI (exceção deliberada — o resto do arquivo evita):
+     o "Comprar Agora" dentro de um card, no mobile, tem uma
+     @keyframes rodando por cima (btn-agora-pulso, o "glow" pulsante —
+     ver mais abaixo) animando este MESMO box-shadow. Na ordem de
+     cascata do CSS, uma animação sempre vence uma regra normal (mesmo
+     com pseudo-classe), então SEM o !important o toque nesse botão
+     específico não mostraria o afundamento — a animação continuaria
+     ditando a sombra por cima do :active. !important é a única
+     origem que fica ACIMA de animações na cascata, então é o jeito
+     correto (não uma "gambiarra") de garantir que o feedback de
+     toque sempre apareça, pulso rodando ou não. */
+  box-shadow: 0 0 0 var(--cor-destaque-escuro) !important;
+}
+
+/* ============================================
+   LOADING SKELETON (cards fantasma enquanto carrega)
+   Mostrado pelo js/main.js dentro de cada .produtos-grid ANTES dos
+   cards reais. Objetivo: comunicar "carregando" e já reservar o
+   espaço, pra não haver "pulo" de layout quando os cards chegam.
+   ============================================ */
+.produto-card--skeleton {
+  /* herda .produto-card (fundo branco, raio, padding-bottom) */
+  pointer-events: none;   /* não é clicável */
+}
+
+.produto-card--skeleton:hover {
+  /* desliga o "levantar" do card real: um fantasma não reage ao mouse */
+  transform: none;
+  box-shadow: none;
+}
+
+.skeleton {
+  background-color: var(--cor-fundo-alt);
+  /* PULSE (opacidade sobe/desce) em vez de SHIMMER (um brilho que
+     desliza). O pulse é mais simples, mais leve (anima só opacity, que
+     o navegador resolve no compositor) e já comunica "carregando". */
+  animation: skeleton-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes skeleton-pulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.45; }
+}
+
+/* cada bloco imita, em tamanho/posição, uma parte do card real */
+.skeleton--img {
+  width: 100%;
+  height: 240px;            /* = altura da <img> real (.produto-card img) */
+  margin-bottom: 1rem;
+}
+
+.skeleton--linha {
+  height: 0.9rem;
+  border-radius: 4px;
+  margin: 0.5rem 1rem;      /* imita o <h3> / .preco */
+}
+
+.skeleton--curta {
+  width: 45%;
+  margin-left: auto;
+  margin-right: auto;       /* linha curta e centralizada, como o preço */
+}
+
+.skeleton--botao {
+  height: 2.4rem;
+  width: 60%;
+  border-radius: 30px;      /* mesma "pílula" do .btn-comprar */
+  margin: 1rem auto 0;
+}
+
+/* quem pediu "reduzir movimento": sem pulsar, só um cinza estático */
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    animation: none;
+    opacity: 0.7;
+  }
+}
+
+/* ============================================
+   TOAST DE NOTIFICAÇÃO
+   Elemento único criado pelo js/main.js. Escorrega de baixo ao
+   adicionar um produto ao carrinho e some sozinho em ~3s.
+   ============================================ */
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 1.5rem;
+  z-index: 300;             /* acima de tudo, inclusive do "voltar ao topo" */
+
+  max-width: min(92vw, 420px);
+  padding: 0.9rem 1.4rem;
+  border-radius: 12px;
+
+  background-color: var(--cor-secundaria);
+  color: #FFF;
+  font-size: 0.9rem;
+  text-align: center;
+  box-shadow: 0 8px 24px rgba(62, 46, 34, 0.28);
+
+  pointer-events: none;    /* é só aviso — nunca bloqueia cliques na página */
+
+  /* ESCONDIDO: transparente e 1.5rem mais pra baixo. O translateX(-50%)
+     é o truque pra centralizar na horizontal (o left:50% põe a BORDA
+     esquerda no meio; o -50% puxa metade da largura de volta). */
+  opacity: 0;
+  transform: translate(-50%, 1.5rem);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.toast.is-visivel {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toast {
+    transform: translate(-50%, 0);   /* sem o "slide", só o fade */
+    transition: opacity 0.2s ease;
+  }
+}
+
+/* ============================================================
+   .foto-emoldurada — MOLDURA DE QUADRO (componente reutilizável)
+   ============================================================
+   Efeito de "obra emoldurada": borda DUPLA (moldura externa grossa +
+   linha fina interna via outline com offset negativo, encostando na
+   foto) + sombra DUPLA (uma curta/escura de contato + uma longa/suave
+   de "quadro pendurado"). Tudo em tons da paleta, baixa opacidade.
+
+   Estava só no .galeria__principal (css/produto.css). Foi extraído
+   pra cá (style.css é carregado em TODAS as páginas) pra ser usado
+   também pela foto do "Quem Somos" — sem duplicar o CSS.
+
+   NÃO define width/height/object-fit/border-radius-da-foto de
+   propósito: cada uso traz os seus (produto = object-fit:contain;
+   quem-somos = cover). box-sizing:border-box (global) garante que o
+   padding + border cabem DENTRO da largura, sem estourar o layout. */
+.foto-emoldurada {
+  padding: 14px;
+  background-color: var(--cor-card);
+  /* o "passe-partout": faixa clara entre a moldura e a foto */
+  border: 6px solid var(--cor-fundo-alt);
+  border-radius: 6px;
+  outline: 1px solid rgba(62, 46, 34, 0.18);
+  outline-offset: -8px;
+  /* offset negativo -> a linha fica DENTRO da moldura, ao redor da
+     foto: é a "segunda borda" da borda dupla */
+  box-shadow:
+    0 3px 8px rgba(62, 46, 34, 0.3),
+    0 20px 46px rgba(62, 46, 34, 0.16);
+}
+
+/* ============================================================
+   .selo-escassez — "Peça única, quando vender não haverá outra igual"
+   MOVIDO de css/produto.css (mesma razão do .foto-emoldurada aqui em
+   cima): a seção "Peça em Destaque" da Home (index.html) passou a
+   usar o mesmo selo — style.css é a única folha carregada nas duas
+   páginas. Montado por renderSeloEscassez() (agora em js/main.js).
+
+   Visual: um BADGE (não o textinho itálico discreto de antes) — fundo
+   levemente destacado (--cor-fundo-alt), fonte um tico maior que o
+   corpo, e um pulso lento e contínuo (um "glow" que expande e some).
+   Ainda assim contido — nada de vermelho, caixa alta ou borda grossa.
+   Por ter fundo/cor PRÓPRIOS (não herda do contexto ao redor), o selo
+   funciona igual tanto na página de produto (fundo claro) quanto
+   dentro do cartão escuro da "Peça em Destaque" — não precisou de
+   nenhum ajuste de cor pro fundo escuro, diferente de .preco/.realce
+   (ver os overrides deles dentro de .produto-destaque, mais abaixo).
+   ============================================================ */
+.selo-escassez {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+
+  /* -0.4rem encosta um pouco no bloco de preço acima; 1.6rem de
+     respiro até os botões de ação abaixo */
+  margin: -0.4rem 0 1.6rem;
+
+  padding: 0.7rem 0.95rem;
+  border-radius: 12px;
+  background-color: var(--cor-fundo-alt);
+  border: 1px solid rgba(158, 79, 46, 0.22);
+  /* rgba de --cor-destaque (#9E4F2E) a ~22%: uma linha quente de
+     contorno, sem o peso da cor cheia */
+
+  color: var(--cor-texto);
+  font-size: 0.95rem;
+  line-height: 1.35;
+
+  /* PULSO sutil e contínuo: só a sombra (glow) anima — nada de
+     "pular" layout. 3.4s bem devagar = presença, não alarme. */
+  animation: selo-escassez-pulso 3.4s ease-in-out infinite;
+}
+
+.selo-escassez strong {
+  color: var(--cor-destaque);
+  /* "Peça única" ganha a cor de destaque; o resto da frase fica no
+     texto normal, pra não virar um bloco todo colorido */
+}
+
+.selo-escassez__icone {
+  font-size: 1.15rem;
+  line-height: 1;
+  flex-shrink: 0;
+  /* não encolhe se a frase quebrar em 2 linhas no celular */
+}
+
+@keyframes selo-escassez-pulso {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(158, 79, 46, 0); }
+  50%      { box-shadow: 0 0 0 7px rgba(158, 79, 46, 0.07); }
+}
+
+/* Respeita "reduzir movimento" do sistema: sem o pulso.
+   (mesmo padrão do resto do site) */
+@media (prefers-reduced-motion: reduce) {
+  .selo-escassez { animation: none; }
+}
+
+/* ============================================
+   QUEM SOMOS
+   ============================================ */
+.quem-somos {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  /* duas colunas iguais: imagem de um lado, texto do outro */
+  gap: 3rem;
+  align-items: center;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 4rem 5%;
+
+  /* MARCA D'ÁGUA: monograma "AS" ao fundo desta seção. Não há
+     background-color aqui, então o grão do body continua aparecendo
+     por baixo e o "AS" entra por cima. A foto (opaca, com raio
+     orgânico) cobre a marca do lado dela; do lado do texto a marca
+     fica bem atrás, sem prejudicar a leitura (opacity 0.1). */
+  background-image: var(--marca-monograma);
+  background-repeat: repeat;
+  background-size: 220px;
+}
+
+.quem-somos img {
+  width: 100%;
+  height: 420px;
+  object-fit: cover;
+  border-radius: var(--raio-organico);
+  /* forma orgânica de assinatura do site — mas quando a img também
+     tem .foto-emoldurada, a regra abaixo (mais específica) troca por
+     cantos quase retos, que é o que a moldura pede */
+}
+
+.quem-somos img.foto-emoldurada {
+  border-radius: 6px;
+  /* especificidade 0-0-2-1 > "..quem-somos img" (0-0-1-1): vence o
+     --raio-organico acima sem depender de ordem no arquivo. A
+     .foto-emoldurada já traz border-radius:6px, mas ".quem-somos img"
+     a sobrescreveria por ser element+class — daí este reforço aqui. */
+}
+
+.quem-somos-texto h2 {
+  font-size: 1.8rem;
+  margin-bottom: 1.2rem;
+}
+
+.quem-somos-texto p {
+  margin-bottom: 1rem;
+  color: #5A4A3A;
+}
+
+/* ============================================================
+   TEXTO/LEGENDA PROVISÓRIOS (só aparecem em MODO_DEV)
+   ============================================================
+   .conteudo-provisorio (borda tracejada + fundo levemente tingido) e
+   .dev-aviso (a notinha "[Texto provisório...]") sinalizam trechos
+   escritos por nós como RASCUNHO — usados hoje no texto do "Quem
+   Somos" e nas legendas da galeria do ateliê (ver index.html/main.js).
+   As DUAS classes só têm efeito quando o <html> tem a classe
+   "modo-dev" (main.js: MODO_DEV, detecta hostname local) — no site
+   publicado de verdade, estas regras nunca disparam, e um cliente
+   nunca vê nem a borda nem o aviso. Reusa --cor-ouro (o tom de
+   "atenção/curadoria" já usado no site, ex.: etiqueta "Escolha do
+   Ateliê") em vez de inventar uma cor nova só pra isto. */
+.modo-dev .conteudo-provisorio {
+  border: 2px dashed rgba(184, 135, 62, 0.55);
+  border-radius: 10px;
+  padding: 1.1rem 1.2rem 0.2rem;
+  background-color: rgba(184, 135, 62, 0.06);
+}
+
+.dev-aviso {
+  display: none;
+}
+.modo-dev .dev-aviso {
+  display: inline-flex;
+  align-items: center;
+  font-family: var(--fonte-texto);
+  font-style: normal;
+  font-weight: 600;
+  font-size: 0.72rem;
+  letter-spacing: 0.02em;
+  color: var(--cor-ouro);
+  background-color: rgba(184, 135, 62, 0.14);
+  border: 1px dashed rgba(184, 135, 62, 0.5);
+  padding: 0.3rem 0.7rem;
+  border-radius: 20px;
+  margin-bottom: 0.8rem;
+}
+
+/* ============================================================
+   GALERIA "CONHEÇA NOSSO ATELIÊ" — dentro de .quem-somos (mesma
+   seção, continuação do assunto — ver comentário no HTML).
+   Montada por js/main.js a partir do array fotosAtelie, no formato
+   EDITORIAL (uma foto grande + legenda por linha, alternando lados
+   tipo reportagem de revista) — substituiu a masonry de círculos
+   recortados da versão anterior.
+   ============================================================ */
+.atelie-galeria-bloco {
+  /* .quem-somos é um grid de 2 colunas (foto | texto) — sem isto,
+     este bloco tentaria caber numa das duas colunas estreitas em vez
+     de ocupar a largura toda numa fileira nova. "1 / -1" = "da 1ª à
+     última linha de grade", não importa quantas colunas existam. */
+  grid-column: 1 / -1;
+  margin-top: 3rem;
+  padding-top: 3rem;
+  border-top: 1px solid rgba(62, 46, 34, 0.12);
+  /* O link "Nosso Ateliê" do header (index.html) mira o id="atelie"
+     deste bloco, não o id="quem-somos" da <section> pai — assim o
+     scroll para direto nas FOTOS do ateliê, não no título "Quem
+     Somos" lá em cima. Mas a regra global "section[id] { scroll-
+     margin-top: 90px }" (topo deste arquivo) só vale pra <section>;
+     este é um <div>, então repete aqui a mesma compensação, senão o
+     header sticky ficaria por cima do subtítulo ao chegar por esse link. */
+  scroll-margin-top: 90px;
+  /* linha bem sutil separando "o texto" de "as fotos" — mesmo tom já
+     usado noutras divisórias finas do site (ex.: .subcategoria-titulo) */
+
+  /* marca d'água ENFRAQUECIDA (--marca-monograma-fraca, ver :root)
+     só aqui dentro: o "AS" na intensidade normal (0.1 de opacidade)
+     cruzava por cima das fotos e competia com elas — nesta área
+     específica ela cede lugar ao conteúdo visual das fotos. */
+  background-image: var(--marca-monograma-fraca), var(--textura-grao);
+  background-repeat: repeat, repeat;
+  background-size: 220px, 140px;
+}
+
+.atelie-galeria-subtitulo {
+  /* flex (não só text-align:center): o ícone da câmera precisa ficar
+     ALINHADO ao lado do texto, não empilhado acima dele */
+  display: flex;
+  flex-wrap: wrap;
+  /* wrap + o ::after com flex-basis:100% (abaixo) é o que permite a
+     linha decorativa cair NUMA LINHA NOVA, embaixo do ícone+texto,
+     em vez de tentar entrar como um 3º item ao lado deles */
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  text-align: center;
+  font-family: var(--fonte-titulo);
+  font-style: italic;
+  font-size: 1.6rem;
+  /* subiu de 1.15rem pra 1.6rem — o pedido foi "mais peso visual";
+     esse tamanho já fica na mesma faixa dos h2 de seção (1.8rem),
+     sem competir com eles */
+  color: var(--cor-secundaria);
+  margin-bottom: 2rem;
+}
+
+.atelie-galeria-subtitulo__icone {
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  color: var(--cor-ouro);
+  /* --cor-ouro (não --cor-secundaria, a cor do texto ao lado): o
+     ícone é um "acento" pontual — mesma lógica de uso do dourado em
+     todo o resto do site (etiquetas, números de desconto) */
+}
+
+/* a linha decorativa fina: MESMO padrão visual de .categorias h2::after
+   etc. (40px x 2px, --cor-destaque) — não entrou na lista compartilhada
+   deles porque aqui precisa do flex-basis:100% (ver comentário acima) */
+.atelie-galeria-subtitulo::after {
+  content: "";
+  display: block;
+  flex-basis: 100%;
+  width: 40px;
+  height: 2px;
+  background-color: var(--cor-destaque);
+  margin: 1rem auto 0;
+}
+
+.atelie-galeria {
+  display: flex;
+  flex-direction: column;
+  gap: 3.5rem;
+  /* max-width menor que a seção inteira: numa foto+texto lado a lado
+     bem larga, a coluna de TEXTO ficaria com linhas compridas demais
+     pra ler confortavelmente — 980px mantém um "corpo de reportagem"
+     arrumado mesmo em telas bem largas. */
+  max-width: 980px;
+  margin: 0 auto;
+}
+
+.atelie-linha {
+  display: flex;
+  align-items: center;
+  gap: 3rem;
+}
+
+/* O ZIGUE-ZAGUE: no HTML a ordem é SEMPRE foto->texto (ver main.js —
+   importa pra leitura por leitor de tela); aqui no CSS a gente só
+   INVERTE A APRESENTAÇÃO visual das linhas pares, sem tocar na ordem
+   real dos elementos. */
+.atelie-linha:nth-child(even) {
+  flex-direction: row-reverse;
+}
+
+.atelie-linha__foto,
+.atelie-linha__texto {
+  flex: 1 1 50%;
+  min-width: 0;
+  /* min-width:0 é o mesmo remédio já usado noutros lugares do site
+     (ex.: checkout) pro conteúdo (a <img>) não forçar a coluna a
+     crescer além do espaço que o flex reservou pra ela */
+}
+
+.atelie-linha__foto img.foto-emoldurada {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  /* aspect-ratio FIXO (não a proporção "crua" de cada foto): as 7
+     fotos que sobraram têm formatos bem variados entre si (algumas
+     bem verticais, outras quase quadradas) — deixar cada uma com sua
+     própria proporção deixaria as linhas com alturas desiguais e
+     quebraria o ritmo "reportagem" pedido. Um 4:3 comum pras 7
+     mantém a leitura visual constante ao rolar a seção; object-fit:
+     cover escolhe o recorte central de cada foto pra caber nesse
+     retângulo. */
+}
+
+.atelie-linha__legenda {
+  font-family: var(--fonte-titulo);
+  font-style: italic;
+  font-size: 1.15rem;
+  line-height: 1.65;
+  color: var(--cor-texto);
+  /* itálico serifado = a MESMA fonte de título do site, só que numa
+     variação mais "de leitura corrida" — dá o tom de legenda de
+     revista, diferente do corpo de texto normal (Jost) usado no
+     "Quem Somos" ao lado */
+}
+
+/* Mobile: empilha (foto em cima, texto embaixo) — SEM zigue-zague,
+   que só faz sentido tendo 2 colunas lado a lado. As duas regras
+   (ímpar E par) precisam terminar em "column" aqui: sem repetir o
+   :nth-child(even), ele continuaria sobrescrevendo pra row-reverse
+   (que em coluna vira column-reverse — texto ACIMA da foto), efeito
+   que ninguém pediu no mobile. */
+@media (max-width: 768px) {
+  .atelie-galeria-bloco {
+    margin-top: 2rem;
+    padding-top: 2rem;
+  }
+  .atelie-galeria-subtitulo {
+    font-size: 1.3rem;
+  }
+  .atelie-galeria {
+    gap: 2.25rem;
+  }
+  .atelie-linha,
+  .atelie-linha:nth-child(even) {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1.1rem;
+  }
+}
+
+/* ============================================
+   CONTATO
+   ============================================ */
+.contato {
+  padding: 4rem 5%;
+
+  /* DUAS camadas de fundo sobre a cor: a marca d'água da FLOR (na
+     frente) + a textura de grão (atrás) — mesmo esquema de
+     .queridinhos. A flor entra aqui porque "Fale com a gente" é
+     uma seção de "conversa/atenção", combina com a marca leve.
+     Listas por vírgula: a 1ª imagem fica por cima; cada camada tem
+     seu próprio repeat e size, na mesma ordem. */
+  background-color: var(--cor-fundo-alt);
+  background-image: var(--marca-flor), var(--textura-grao);
+  background-repeat: repeat, repeat;
+  background-size: 220px, 140px;
+}
+
+.contato h2 {
+  text-align: center;
+  font-size: 1.8rem;
+  margin-bottom: 0.5rem;
+}
+
+.contato .subtitulo {
+  text-align: center;
+  margin-bottom: 2.5rem;
+  color: #5A4A3A;
+}
+
+.contato-conteudo {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3rem;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.contato-info p {
+  margin-bottom: 0.9rem;
+}
+
+.contato-info a:hover {
+  color: var(--cor-destaque);
+}
+
+.contato-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.contato-form input,
+.contato-form textarea {
+  font-family: var(--fonte-texto);
+  font-size: 0.95rem;
+  color: var(--cor-texto);
+  padding: 0.8rem 1rem;
+  border: 1px solid #D8C7B0;
+  border-radius: 10px;
+  background-color: var(--cor-card);
+}
+
+.contato-form textarea {
+  resize: vertical;
+  /* deixa o usuário esticar só na vertical, não bagunça o layout na horizontal */
+  min-height: 120px;
+}
+
+.contato-form button {
+  align-self: flex-start;
+  background-color: var(--cor-destaque);
+  color: #FFF;
+  padding: 0.9rem 2rem;
+  border-radius: 30px;
+  font-size: 0.95rem;
+  transition: background-color 0.2s ease;
+}
+
+.contato-form button:hover {
+  background-color: var(--cor-destaque-escuro);
+}
+
+/* enquanto o form nao esta 100% valido, o botao fica desabilitado */
+.contato-form button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ---- validacao em tempo real ---- */
+/* cada campo do form agora e envolvido por um .campo (input +
+   <span> de erro). O <span> fica logo abaixo do input. */
+.campo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.campo__erro {
+  font-size: 0.8rem;
+  color: var(--cor-destaque-escuro);
+  /* terracota escuro da paleta como "atencao" — nao inventamos um
+     vermelho novo. Contraste alto o suficiente pra ler. */
+  min-height: 1.1em;
+  /* reserva a altura de uma linha mesmo vazio: o erro
+     aparecer/sumir nao "empurra" o resto do form (evita CLS) */
+}
+
+.contato-form input.invalido,
+.contato-form textarea.invalido {
+  border-color: var(--cor-destaque-escuro);
+  /* borda tambem muda de cor no campo com erro */
+}
+
+/* ============================================
+   MINI-CARRINHO (painel lateral)
+   O .mini-carrinho-overlay e o .mini-carrinho sao criados pelo
+   js/main.js e anexados ao <body> (nao ha HTML deles em pagina
+   nenhuma — mesmo motivo do "voltar ao topo" e do toast: e o
+   mesmo componente nas 3 paginas).
+   ============================================ */
+.mini-carrinho-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 400;
+  background-color: rgba(62, 46, 34, 0.45);
+  /* = --cor-texto (#3E2E22 = rgb 62,46,34) com opacidade — escurece
+     o fundo pra focar no painel; clicar aqui fecha */
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.mini-carrinho-overlay.is-aberto {
+  opacity: 1;
+  visibility: visible;
+}
+
+.mini-carrinho {
+  position: fixed;
+  top: 0;
+  right: 0;
+  z-index: 401;
+  height: 100%;
+  width: min(400px, 90vw);
+  display: flex;
+  flex-direction: column;
+
+  background-color: var(--cor-fundo);
+  box-shadow: -8px 0 30px rgba(62, 46, 34, 0.25);
+
+  /* escondido: empurrado 100% pra fora, na direita. visibility
+     tira do fluxo pro leitor de tela; transitionar visibility faz
+     a troca esperar a animacao de translateX terminar. */
+  transform: translateX(100%);
+  visibility: hidden;
+  transition: transform 0.3s ease, visibility 0.3s ease;
+}
+
+.mini-carrinho.is-aberto {
+  transform: translateX(0);   /* desliza pra dentro */
+  visibility: visible;
+}
+
+.mini-carrinho__topo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.2rem 1.4rem;
+  border-bottom: 1px solid var(--cor-fundo-alt);
+}
+
+.mini-carrinho__topo h2 {
+  font-size: 1.2rem;
+}
+
+.mini-carrinho__fechar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  /* área de toque de 44x44: antes o "×" (font-size:1.7rem, sem
+     padding/dimensão própria) tinha uma caixa clicável de uns
+     16x27px — pequena demais pra fechar o painel com o dedo. O
+     glifo continua do mesmo tamanho (1.7rem), só ganhou uma caixa
+     ao redor, centralizada via flex. */
+  margin: -0.6rem -0.6rem -0.6rem 0;
+  /* compensa visualmente o espaço extra que a caixa 44x44 abriria
+     no cabeçalho do painel (.mini-carrinho__topo), puxando o botão
+     de volta pra mais perto do canto — sem isso o "×" pareceria
+     deslocado pra dentro/pra baixo em relação ao título ao lado */
+  background: none;
+  border: none;
+  font-size: 1.7rem;
+  line-height: 1;
+  color: var(--cor-texto);
+  cursor: pointer;
+}
+
+.mini-carrinho__lista {
+  list-style: none;
+  margin: 0;
+  padding: 0.5rem 0;
+  flex: 1;             /* ocupa o espaco entre topo e rodape */
+  overflow-y: auto;    /* rola so a lista se tiver muitos itens */
+}
+
+.mini-carrinho__vazio {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  text-align: center;
+  color: var(--cor-secundaria);
+}
+
+.mini-item {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 0.8rem 1.4rem;
+}
+
+.mini-item__foto {
+  width: 56px;
+  height: 56px;
+  flex-shrink: 0;
+  object-fit: cover;
+  border-radius: 8px;
+  background-color: var(--cor-fundo-alt);
+}
+
+.mini-item__info {
+  flex: 1;
+  min-width: 0;   /* deixa o texto encolher/quebrar em vez de estourar */
+}
+
+.mini-item__nome {
+  font-size: 0.9rem;
+  margin-bottom: 0.15rem;
+}
+
+.mini-item__preco {
+  font-size: 0.8rem;
+  color: var(--cor-secundaria);
+}
+
+.mini-item__preco strong {
+  color: var(--cor-destaque);
+}
+
+.mini-item__remover {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  margin: -0.4rem;
+  /* área de toque de 44x44 (era ~12x21px, o tamanho do próprio "×")
+     — a margem negativa compensa a caixa maior pra ela não empurrar
+     a foto/o texto do item pra mais longe nem alargar a linha do
+     carrinho; o glifo continua do mesmo tamanho, centralizado */
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  font-size: 1.3rem;
+  line-height: 1;
+  color: var(--cor-secundaria);
+  cursor: pointer;
+}
+
+.mini-item__remover:hover {
+  color: var(--cor-destaque-escuro);
+}
+
+.mini-carrinho__rodape {
+  border-top: 1px solid var(--cor-fundo-alt);
+  padding: 1.2rem 1.4rem;
+}
+
+.mini-carrinho__total {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 1rem;
+  font-family: var(--fonte-titulo);
+}
+
+.mini-carrinho__total strong {
+  font-size: 1.3rem;
+  color: var(--cor-destaque);
+}
+
+.btn-finalizar {
+  width: 100%;
+  padding: 0.9rem;
+  border: none;
+  border-radius: 30px;
+  background-color: var(--cor-destaque);
+  color: #FFF;
+  font-family: var(--fonte-texto);
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+.btn-finalizar:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  /* só fica desabilitado com o carrinho VAZIO agora (não dá pra
+     finalizar nada) — ver renderMiniCarrinho() em js/main.js. Com
+     itens, leva pra checkout.html. */
+}
+
+.mini-carrinho__aviso {
+  margin-top: 0.6rem;
+  font-size: 0.75rem;
+  text-align: center;
+  color: var(--cor-secundaria);
+}
+
+/* ============================================
+   PÁGINA DE POLÍTICAS
+   ============================================ */
+.politicas {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 3rem 5% 4.5rem;
+
+  /* mesma marca d'água do monograma "AS" usada em Quem Somos: aqui
+     combina com o tom "institucional" do conteúdo (políticas, FAQ) */
+  background-image: var(--marca-monograma);
+  background-repeat: repeat;
+  background-size: 220px;
+}
+
+.politicas h1 {
+  text-align: center;
+  font-size: 2rem;
+  margin-bottom: 3rem;
+}
+
+.politica-bloco {
+  margin-bottom: 2.5rem;
+}
+
+.politica-bloco h2 {
+  font-size: 1.3rem;
+  margin-bottom: 0.8rem;
+}
+
+.politica-bloco p {
+  color: #5A4A3A;
+  margin-bottom: 0.8rem;
+}
+
+.politica-bloco p:last-child {
+  margin-bottom: 0;
+}
+
+/* ------------------------------------------------------------
+   ACORDEÃO (Perguntas Frequentes)
+   ------------------------------------------------------------
+   Cada pergunta/resposta é um .faq-item. O JS (em politicas.html)
+   só liga/desliga a classe "aberto" nele — todo o efeito visual
+   (abrir/fechar a resposta, girar a seta) é resolvido aqui, com
+   CSS puro reagindo a essa classe.
+   ------------------------------------------------------------ */
+.faq-item {
+  border-bottom: 1px solid var(--cor-fundo-alt);
+}
+
+.faq-item:first-child {
+  border-top: 1px solid var(--cor-fundo-alt);
+}
+
+.faq-pergunta {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+
+  background: none;
+  border: none;
+  padding: 1.1rem 0.2rem;
+  text-align: left;
+
+  font: inherit;
+  font-family: var(--fonte-titulo);
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--cor-texto);
+}
+
+.faq-pergunta:hover {
+  color: var(--cor-destaque);
+}
+
+.faq-pergunta:focus-visible {
+  outline: 2px solid var(--cor-destaque);
+  outline-offset: 2px;
+}
+
+.faq-icone {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  color: var(--cor-destaque);
+  transition: transform 0.25s ease;
+  /* a rotação em si acontece na regra ".faq-item.aberto .faq-icone"
+     logo abaixo — aqui só declaramos QUE ela vai ser animada */
+}
+
+.faq-item.aberto .faq-icone {
+  transform: rotate(180deg);
+  /* seta que apontava "pra baixo" (fechado) vira "pra cima" (aberto) */
+}
+
+/* TRUQUE DE CSS pra animar "altura automática" sem JavaScript medindo
+   pixels: .faq-resposta é um grid de 1 linha só, que começa com
+   altura "0fr" (zero frações -> ocupa 0 de altura) e, com a classe
+   "aberto", passa pra "1fr" (ocupa a altura que o conteúdo pede).
+   Como grid-template-rows aceita transition, o navegador anima essa
+   troca sozinho. overflow:hidden no filho (.faq-resposta__interno)
+   é o que corta o conteúdo enquanto a "linha" ainda está fechada. */
+.faq-resposta {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.3s ease;
+}
+
+.faq-item.aberto .faq-resposta {
+  grid-template-rows: 1fr;
+}
+
+.faq-resposta__interno {
+  overflow: hidden;
+}
+
+.faq-resposta p {
+  padding: 0 0.2rem 1.1rem;
+  color: #5A4A3A;
+}
+
+/* quem pediu "reduzir movimento": abre/fecha na hora, sem animação */
+@media (prefers-reduced-motion: reduce) {
+  .faq-resposta,
+  .faq-icone {
+    transition: none;
+  }
+}
+
+/* ============================================
+   FOOTER
+   ============================================ */
+footer {
+  background-color: var(--cor-texto);
+  color: var(--cor-fundo);
+  /* invertemos as cores aqui (fundo escuro, texto claro) pra
+     marcar visualmente o fim da página */
+  padding: 3rem 5% 1.5rem;
+
+  /* MARCA D'ÁGUA: monograma "AS" — aqui na versão CLARA
+     (--marca-monograma-clara, traço na cor --cor-fundo), porque o
+     fundo do rodapé é escuro e o monograma escuro sumiria. Fica
+     atrás dos textos do rodapé; opacidade 0.08 (claro sobre escuro
+     "pesa" um pouco mais que escuro sobre claro). */
+  background-image: var(--marca-monograma-clara);
+  background-repeat: repeat;
+  background-size: 240px;
+}
+
+.footer-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 2rem;
+  max-width: 1200px;
+  margin: 0 auto 2rem;
+}
+
+.footer-container h3,
+.footer-container h4 {
+  color: #FFF;
+  margin-bottom: 1rem;
+}
+
+.footer-links ul li {
+  margin-bottom: 0.5rem;
+}
+
+/* CORREÇÃO (Contato desalinhado): .footer-contato nunca tinha regra
+   PRÓPRIA — os dois <p> (WhatsApp/e-mail) caíam na margem padrão do
+   navegador pra <p> (~1em cada, top E embaixo), bem MAIOR e menos
+   previsível que o ritmo de 0.5rem que ".footer-links li" usa ao
+   lado — por isso a coluna de Contato "flutuava" mais espaçada que a
+   de Links, quebrando o alinhamento visual entre as colunas do
+   rodapé. margin aqui iguala esse ritmo; line-height:1.5 dá mais
+   respiro vertical DENTRO de cada linha (o emoji, um pouco mais alto
+   que o texto normal, tinha menos folga ao redor sem isso). */
+.footer-contato p {
+  margin: 0 0 0.6rem;
+  line-height: 1.5;
+}
+
+.footer-contato p:last-child {
+  margin-bottom: 0;
+}
+
+.footer-links a,
+.footer-social a {
+  color: var(--cor-fundo-alt);
+  transition: color 0.2s ease;
+}
+
+.footer-links a:hover,
+.footer-social a:hover {
+  color: var(--cor-destaque);
+}
+
+.footer-copyright {
+  text-align: center;
+  font-size: 0.85rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(255,255,255,0.15);
+  /* borda bem sutil separa o copyright do resto do footer, sem pesar visualmente */
+}
+
+/* ============================================
+   BOTÃO "VOLTAR AO TOPO"
+   O <button> é criado e inserido pelo js/main.js (não há HTML dele
+   em nenhuma página — ver o comentário no JS explicando o porquê).
+   Aqui fica só a aparência e a animação de fade.
+   ============================================ */
+.voltar-topo {
+  position: fixed;
+  right: 1.5rem;
+  bottom: 1.5rem;
+  z-index: 200;             /* acima do header (z-index: 100) */
+
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: none;
+  border-radius: 50%;       /* círculo */
+  background-color: var(--cor-destaque);
+  color: #FFF;              /* a seta usa stroke="currentColor" */
+  box-shadow: 0 6px 16px rgba(62, 46, 34, 0.25);
+  cursor: pointer;
+
+  /* ESTADO ESCONDIDO (padrão). Usamos opacity + visibility em vez de
+     display:none para poder ANIMAR o fade. visibility:hidden também
+     tira o botão da ordem de tabulação enquanto ele está oculto. */
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(8px);
+  transition: opacity 0.25s ease, visibility 0.25s ease,
+              transform 0.25s ease, background-color 0.2s ease;
+}
+
+/* o js/main.js adiciona .is-visivel quando o scroll passa de 400px */
+.voltar-topo.is-visivel {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.voltar-topo:hover {
+  background-color: var(--cor-destaque-escuro);
+  transform: translateY(-2px);   /* mesmo "pulinho" no hover dos outros botões */
+}
+
+.voltar-topo svg {
+  width: 22px;
+  height: 22px;
+}
+
+/* ============================================
+   RESPONSIVIDADE — TELAS MENORES (celular)
+   Media queries aplicam regras SÓ quando a tela
+   é igual ou menor que o valor definido
+   ============================================ */
+@media (max-width: 768px) {
+  section[id] {
+    scroll-margin-top: 76px;
+    /* header um pouco mais baixo no celular -> folga menor */
+  }
+
+  .voltar-topo {
+    right: 1rem;
+    bottom: 1rem;
+    width: 44px;
+    height: 44px;
+    /* 44x44 (mínimo recomendado pra toque); era 42x42 no celular —
+       bem próximo, mas por 2px não batia a recomendação */
+  }
+
+  .voltar-topo svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .toast {
+    bottom: 4.5rem;
+    /* sobe o toast pra ele não ficar em cima do botão "voltar ao
+       topo" (que no celular fica bem no canto inferior) */
+  }
+
+  .mini-carrinho {
+    width: 100%;
+    /* no celular o painel ocupa a tela inteira em vez de só a
+       lateral direita */
+  }
+
+  .menu-toggle {
+    display: flex;
+    /* o botão hambúrguer só existe no celular */
+  }
+
+  nav {
+    flex-wrap: wrap;
+    /* deixa a busca "pular" pra uma segunda linha, ocupando a
+       largura toda, em vez de espremer logo + carrinho + hambúrguer */
+    row-gap: 0.8rem;
+  }
+
+  .logo {
+    margin-right: 0;
+    /* zera o margin-right de 1.5rem do desktop: aquela margem existe
+       só pra abrir espaço entre a logo e o PRIMEIRO ITEM DO MENU
+       HORIZONTAL (.nav-links) — que no celular está com
+       display:none, nem ocupa espaço. */
+    font-size: 1.15rem;
+    /* AUDITORIA DE RESPONSIVIDADE: mesmo SEM nenhuma margem extra,
+       logo (172px no tamanho desktop) + botão "Carrinho" (129px) +
+       hambúrguer (44px, já no tamanho de toque corrigido nesta
+       auditoria) somam mais do que os ~334px disponíveis numa tela
+       de 375-428px — sobrava só espaço pro hambúrguer "pular" pra
+       uma 2a linha junto da busca, quebrando o layout esperado do
+       header. Reduzir a logo (1.5rem -> 1.15rem, ~23% menor) é o
+       ajuste de menor impacto visual que abre espaço suficiente pra
+       tudo caber numa linha só — comum em headers responsivos
+       (a logo "cede" espaço pros controles funcionais do header). */
+  }
+
+  .busca {
+    order: 5;             /* manda a busca pro fim -> vira a 2a linha */
+    flex-basis: 100%;     /* ocupa a largura toda dessa linha */
+    max-width: none;
+    margin-right: 0;
+    /* zera o margin-right de 1.5rem do desktop: aqui a busca já ocupa
+       flex-basis:100% (a linha toda) — mantida a margem, ela estouraria
+       a largura do container e causaria scroll horizontal indesejado */
+  }
+
+  .filtros {
+    flex-direction: column;
+    /* filtros empilhados verticalmente no celular */
+    gap: 0.8rem;
+  }
+
+  .filtro select {
+    width: 100%;   /* cada select ocupa a largura toda */
+    padding: 0.65rem 0.7rem;
+    /* área de toque: os 0.5rem verticais do desktop davam ~40px de
+       altura — um pouco abaixo dos 44px recomendados pra toque */
+  }
+
+  .nav-icons a {
+    padding: 0.75rem 1rem;
+    /* área de toque: os 0.5rem verticais do desktop davam ~36px de
+       altura — abaixo do recomendado pra toque; aqui no celular,
+       onde é tocado com o dedo (não clicado com mouse), sobe pra
+       ~44px */
+  }
+
+  .nav-links {
+    display: none;
+    /* esconde o menu horizontal; ele volta a aparecer quando o JS
+       adiciona a classe .active (na regra abaixo) */
+  }
+
+  .nav-links.active {
+    display: flex;
+    flex-direction: column;
+    /* empilha os links, como um menu suspenso */
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    /* cola logo abaixo da <nav> e ocupa a largura toda */
+    margin-right: 0;
+    /* zera o margin-right de 1.5rem do desktop: com left:0 E right:0
+       juntos, um margin-right sobrando encolheria o menu suspenso
+       2,4rem a menos que a largura da tela, deixando uma faixa vazia
+       esquisita do lado direito dele */
+    background-color: var(--cor-fundo);
+    padding: 1rem 5% 1.5rem;
+    gap: 0.4rem;
+    /* era 1.2rem: o gap entre os <li> agora soma com o padding do
+       próprio link (ver .nav-links.active a abaixo) — reduzido pra
+       o menu suspenso não ficar longo demais no total */
+    box-shadow: 0 8px 12px rgba(62, 46, 34, 0.1);
+
+    /* TETO DE ALTURA + ROLAGEM INTERNA (correção do bug do menu
+       tampando o banner): sem isto, o menu aberto tinha a altura da
+       soma de todos os itens (~400px com o submenu de subcategorias
+       aberto) e cobria o banner inteiro da Home. Agora ele nunca
+       passa de ~65% da altura da tela; se um dia tiver muitos itens,
+       ROLA dentro de si mesmo em vez de esticar página abaixo.
+       calc(65vh - 2rem) desconta um respiro pra sobrar sempre uma
+       faixa do banner visível embaixo do menu aberto. */
+    max-height: calc(65vh - 2rem);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch; /* rolagem com inércia no iOS */
+  }
+
+  .nav-links.active a {
+    display: block;
+    padding: 0.7rem 0;
+    /* área de toque: um <a> "inline" comum só é alto quanto a
+       própria linha de texto (~22px aqui) — abaixo do recomendado
+       pra toque. display:block faz o padding vertical realmente
+       contar na altura clicável (padding em elemento inline não
+       "empurra" o layout ao redor do jeito esperado); ~0.7rem de
+       cada lado fecha perto dos 44px totais. */
+  }
+
+  /* SUBMENU DE SUBCATEGORIAS ESCONDIDO NO HAMBÚRGUER.
+     Antes, no celular, o <ul class="dropdown"> de "Cerâmica" (Pratos
+     Artísticos / Vasos Escultóricos) ficava SEMPRE expandido dentro
+     do menu aberto — eram ~2 itens extras que engordavam o menu e
+     ajudavam a tampar o banner. O pedido foi "abrir só a lista de
+     links": então no mobile o menu mostra só os 5 links principais.
+     As subcategorias continuam acessíveis: (1) no desktop, no hover
+     de "Cerâmica"; (2) no celular, dentro da própria ceramica.html,
+     que já organiza a vitrine em blocos por subcategoria (com
+     título visível em cada bloco). */
+  .nav-links.active .dropdown {
+    display: none;
+  }
+
+  .quem-somos,
+  .contato-conteudo {
+    grid-template-columns: 1fr;
+    /* colunas viram uma só: imagem/texto e info/formulário empilhados */
+    gap: 2rem;
+  }
+
+  .quem-somos img {
+    height: 280px;
+  }
+
+  .barra-anuncio {
+    height: auto;
+    min-height: 34px;
+    padding: 0.35rem 0.75rem;
+    font-size: 0.72rem;
+    line-height: 1.3;
+    /* no celular a mensagem mais longa não cabe em uma linha de 38px;
+       aqui deixamos a altura crescer e o texto quebrar em 2 linhas */
+
+    position: static;
+    /* EXPLÍCITO de propósito (correção do item 7): a barra de anúncio
+       deve ROLAR junto com a página no celular, nunca ficar grudada
+       no topo ocupando tela. Hoje ela já não tem position:sticky/fixed
+       em lugar nenhum — mas deixamos este `static` escrito aqui pra
+       travar essa garantia: se alguém adicionar um `position: sticky`
+       na regra base de .barra-anuncio no futuro, esta media query
+       continua anulando isso no mobile. O ÚNICO elemento sticky no
+       topo segue sendo o <header> (com o menu principal). */
+  }
+
+  .selos-confianca {
+    grid-template-columns: repeat(2, 1fr);
+    /* 2 colunas -> os 4 cards formam um bloco 2x2 no celular
+       (pedido explícito), em vez de 4 colunas espremidas */
+    gap: 1.2rem;
+    padding: 2.5rem 5%;
+    /* no celular a moldura fica um pouco mais justa e o respiro
+       antes da "Fale com a Gente" um pouco menor */
+    margin: 1.5rem auto 3rem;
+    border-radius: 20px;
+    /* marca d'água do vaso menor no celular (mesmo tratamento que
+       .queridinhos/.contato têm logo abaixo) */
+    background-size: 150px, 140px;
+  }
+
+  .selo {
+    padding: 1.4rem 0.8rem;
+  }
+
+  /* marca d'água menor no celular: os motivos ("AS", vaso, flor)
+     encolhem proporcionalmente pra não ficarem grandes demais numa
+     tela estreita (a textura de grão, por ser fina, não muda).
+     .topo está mais abaixo, junto com o padding mobile dele. */
+  .categorias {
+    background-size: 140px;
+  }
+
+  .queridinhos,
+  .croche-vitrine,
+  .contato {
+    background-size: 150px, 140px;
+  }
+
+  .quem-somos {
+    background-size: 150px;
+  }
+
+  .politicas {
+    background-size: 150px;
+    padding: 2rem 5% 3rem;
+  }
+
+  .politicas h1 {
+    font-size: 1.6rem;
+    margin-bottom: 2rem;
+  }
+
+  .faq-pergunta {
+    font-size: 0.95rem;
+    padding: 1rem 0.1rem;
+  }
+
+  footer {
+    background-size: 160px;
+  }
+
+  .topo {
+    padding: 1.25rem 0 1rem;
+    /* menos respiro no topo: a tela do celular é mais curta */
+    background-size: 130px;
+  }
+
+  .banner-principal {
+    width: 94%;
+    /* margem lateral menor que os 5% do desktop (aqui ~3% de cada
+       lado), para aproveitar melhor a largura pequena do celular */
+    border-radius: 12px;
+    height: 460px;
+    /* NOVA ABORDAGEM (mobile): o cartão de texto não fica mais
+       centralizado cobrindo o meio da foto — ele desce e cola no
+       RODAPÉ do banner (regra .banner-texto abaixo), compacto. Com o
+       eyebrow escondido, fontes/margens menores e os 2 botões numa
+       linha só (padding reduzido), o cartão fica em ~170px — então o
+       banner de 460px deixa a MAIOR PARTE da foto (a metade de cima,
+       ~280px ≈ 60%) visível. A linha de contato flutuante
+       (.banner-contato-rapido) some no mobile — ver lá embaixo.
+       Testado em 375 / 390 / 428px. */
+  }
+
+  .banner-principal img {
+    height: 460px;
+    /* acompanha a nova altura do container acima */
+    margin-top: 0;   /* zera a folga do parallax (desativado no mobile) */
+    will-change: auto;
+  }
+
+  /* --- VÉU DE CLAREAMENTO bem mais fraco no mobile ---
+     No desktop o ::before cobre a faixa esquerda da foto com
+     --cor-fundo SÓLIDO (0%→34%) pra tapar o texto "queimado" na
+     imagem antiga + dar fundo claro à linha de contato lateral.
+     No MOBILE nada disso se aplica: o cartão (.banner-texto) tem
+     fundo 100% opaco próprio (legibilidade garantida por ele) e a
+     linha de contato lateral nem aparece aqui. O véu forte só
+     estava "lavando" a foto. Aqui ele vira uma bruma bem leve:
+     só o cantinho superior-esquerdo (onde ficaria o resquício do
+     texto queimado, já fora de foco) recebe um respingo translúcido;
+     o resto da foto aparece nítido. */
+  .banner-principal::before {
+    background: linear-gradient(
+      to right,
+      rgba(251, 246, 239, 0.3) 0%,
+      rgba(251, 246, 239, 0.08) 18%,
+      rgba(251, 246, 239, 0) 36%
+    );
+  }
+
+  /* --- CARTÃO DO BANNER: colado no rodapé, estreito e compacto --- */
+  .banner-texto {
+    /* cancela o posicionamento "centralizado na vertical" do desktop
+       (top:50% + translateY(-50%)) e ancora o cartão embaixo */
+    top: auto;
+    bottom: 0.75rem;
+    transform: none;
+
+    /* estreito e centralizado (o pedido: max-width 88%, não quase
+       largura total). left/right:0 + margin auto centram a caixa de
+       88% dentro do banner. */
+    left: 0;
+    right: 0;
+    margin: 0 auto;
+    max-width: 88%;
+
+    padding: 0.75rem 0.9rem;   /* era 1.1rem 1.15rem: menos respiro interno */
+  }
+
+  .banner-texto__eyebrow {
+    display: none;
+    /* "ATELIÊ ANASOR SOBREIRA" some no mobile: é a informação menos
+       essencial do cartão (a marca já está na logo do header e no
+       rodapé) e sua remoção tira uma linha inteira + margens, ajudando
+       o cartão a ficar na faixa mínima embaixo. */
+  }
+
+  .banner-texto h1 {
+    font-size: 1.1rem;    /* era 1.3rem */
+    line-height: 1.1;
+    margin-bottom: 0.25rem;
+  }
+
+  .banner-texto p {
+    font-size: 0.78rem;      /* era 0.88rem */
+    margin-bottom: 0.4rem;   /* era 0.7rem */
+  }
+
+  .banner-texto__contador {
+    margin-top: 0;           /* era -0.2rem; sem o "puxão", fica mais previsível */
+    margin-bottom: 0.45rem;  /* era 0.75rem */
+    font-size: 0.72rem;
+  }
+
+  .banner-texto__botoes {
+    gap: 0.5rem;
+    flex-wrap: nowrap;
+    /* força os 2 botões na MESMA linha no mobile (o padrão .banner-texto__botoes
+       é flex-wrap:wrap). Junto do padding menor abaixo, eles cabem
+       lado a lado até em 375px — o que economiza ~45px de altura do
+       cartão vs. empilhados. */
+  }
+
+  .banner-texto__botoes .btn-principal,
+  .banner-texto__botoes .btn-fantasma {
+    padding: 0.6rem 1rem;   /* era 0.9rem 2rem: encolhe pros 2 caberem numa linha */
+    font-size: 0.8rem;
+    flex: 1;                /* dividem a largura do cartão igualmente */
+    text-align: center;
+    white-space: nowrap;
+  }
+
+  .banner-contato-rapido {
+    display: none;
+    /* SOME no mobile: (1) a MESMA informação (WhatsApp / e-mail /
+       Instagram) já está no rodapé da página, e o próprio cartão tem
+       o botão "Falar no WhatsApp"; (2) ela e o cartão agora disputam
+       a mesma faixa inferior do banner — tirá-la é o jeito limpo de
+       evitar sobreposição e liberar a foto. No desktop continua
+       aparecendo normalmente. */
+  }
+
+  .banner-seta {
+    display: none;
+    /* no celular a navegação do carrossel é o gesto de deslizar + as
+       bolinhas (.banner-indicadores, fora do banner). As setas
+       laterais só ocupariam espaço sobre a foto agora tão valorizada. */
+  }
+
+  .banner-indicadores {
+    margin-top: 1rem;
+  }
+
+  /* ============================================================
+     CARDS DE CATEGORIA NO MOBILE — 2 colunas, imagem em CÍRCULO
+     Antes empilhavam (width:100%), ficando dois cards gigantes um
+     embaixo do outro. Agora ficam SEMPRE lado a lado.
+     ============================================================ */
+  .categoria-cards {
+    display: grid;
+    grid-template-columns: 1fr 1fr;   /* 2 colunas iguais */
+    gap: 0.75rem;                     /* gap menor: telas estreitas */
+    /* o flex + flex-wrap + justify-content:center do desktop deixam
+       de valer aqui; o grid é mais previsível pra 2 colunas fixas */
+  }
+
+  .categoria-card {
+    width: auto;
+    /* cancela o width:320px do desktop — quem manda na largura agora
+       é a coluna (1fr) do grid */
+    overflow: visible;
+    /* cancela o overflow:hidden do desktop: aqui a "moldura" curva
+       saiu (a forma está na <img> abaixo) e a sombra da animação de
+       respiração não pode ser recortada */
+    border-radius: 0;
+    /* idem: o card em si não tem mais forma; ela vive na imagem */
+  }
+
+  .categoria-card img {
+    width: 100%;
+    height: auto;              /* cancela os 380px fixos do desktop */
+    aspect-ratio: 1 / 1;       /* quadrado... */
+    border-radius: 50%;        /* ...que o raio 50% transforma em CÍRCULO
+                                  perfeito — mais previsível que a forma
+                                  orgânica (--raio-organico) quando o
+                                  card fica bem estreito */
+    /* object-fit: cover herdado do desktop já garante o recorte
+       central da foto dentro do círculo, sem distorcer */
+
+    /* RESPIRAÇÃO: um halo bem discreto que cresce e some em ~3s, em
+       loop. Anima só box-shadow (o navegador resolve no compositor,
+       não força relayout). rgba(158,79,46,…) = --cor-destaque a ~12%. */
+    animation: categoria-respira 3s ease-in-out infinite;
+  }
+
+  /* o "botão" (nome + seta) abaixo do círculo: menor pra caber nas
+     2 colunas estreitas sem quebrar linha */
+  .categoria-card__botao {
+    margin: 0.7rem auto 0;
+    padding: 0.5rem 0.9rem;
+    gap: 0.3rem;
+    /* degrau 3D proporcionalmente menor (5px -> 3px) — numa pílula
+       já reduzida pra caber em 2 colunas, o degrau "cheio" do desktop
+       ficaria grande demais em relação ao próprio botão */
+    box-shadow: 0 3px 0 var(--cor-destaque-escuro);
+  }
+  .categoria-card:hover .categoria-card__botao {
+    box-shadow: 0 4px 0 var(--cor-destaque-escuro);
+  }
+  .categoria-card:active .categoria-card__botao {
+    transform: translateY(3px);
+    box-shadow: 0 0 0 var(--cor-destaque-escuro);
+  }
+  .categoria-card__botao h3 {
+    font-size: 0.82rem;
+  }
+  .categoria-card__seta {
+    width: 14px;
+    height: 14px;
+  }
+
+  .subcategoria-card {
+    width: 100%;
+    /* preenche a COLUNA do grid 2x1fr acima (não "empilha" mais — o
+       comentário antigo aqui datava de antes de .categoria-cards virar
+       grid de 2 colunas no mobile; corrigido nesta revisão). A foto
+       circular (.subcategoria-card__foto) usa % própria, então ela
+       encolhe sozinha junto com a coluna — sem precisar de um valor
+       de círculo específico pra mobile aqui. */
+  }
+
+  /* Nome/contagem um pouco menores nas 2 colunas estreitas do
+     celular — evita "Pratos Artísticos"/"Vasos Escultóricos"
+     apertarem demais contra o padding do card. As MOLDURAS (anéis de
+     box-shadow) continuam com a mesma espessura em px: numa foto já
+     pequena (~100-110px de diâmetro nessa largura de coluna), afinar
+     ainda mais os anéis os deixaria imperceptíveis — melhor manter a
+     moldura "cheia" e só reduzir o texto. */
+  .subcategoria-card__info h3 {
+    font-size: 1rem;
+  }
+  .subcategoria-card__info p {
+    font-size: 0.85rem;
+  }
+
+  .breadcrumb {
+    font-size: 0.9rem;
+    padding: 0.8rem 5%;
+    margin-bottom: 1rem;
+    /* flex-wrap (definido na regra base) já cuida da quebra de linha */
+  }
+
+  .btn-comprar,
+  .btn-comprar-agora {
+    padding: 0.85rem 1.5rem;
+    /* área de toque: os 0.7rem verticais do desktop davam ~42px de
+       altura — bem perto, mas ainda abaixo dos 44px recomendados */
+  }
+
+  /* ============================================================
+     HEADER AUTO-HIDE (só mobile) — item 2
+     O js/main.js adiciona .header--oculto ao rolar pra BAIXO e tira
+     ao rolar pra CIMA (ou no topo da página / com o menu aberto). O
+     transition:transform 0.3s está na regra base do header, então o
+     esconder/aparecer desliza suave. Como o header é position:sticky
+     (em flow), mover só o transform NÃO empurra o conteúdo — ele só
+     "desaparece pra cima" revelando o que está atrás. */
+  header.header--oculto {
+    transform: translateY(-100%);
+  }
+
+  /* ============================================================
+     CARROSSEL DE PRODUTOS (Home) — versão MOBILE
+     A MESMA .produtos-grid vira um trilho horizontal com scroll-snap.
+     O gesto de deslizar é 100% nativo (CSS); o JS só acende o "dot"
+     certo e habilita/desabilita as setas conforme o scroll.
+
+     Estrutura (montada pelo js/main.js em montarSlidesCarrossel):
+       .carrossel-viewport      -> "moldura" que envolve a grade (e,
+                                    no desktop, as setas — ver o bloco
+                                    @media (min-width:769px) mais abaixo)
+         .produtos-grid           -> o trilho (scroll-snap-type: x)
+           .carrossel-slide         -> 1 "página" = N cards lado a lado
+             .produto-card x N       (2 no mobile, 4 no desktop)
+
+     AQUI é só a versão MOBILE (2 cards por página, setas escondidas —
+     no celular a navegação é o dedo + os dots). A versão DESKTOP (4
+     cards, setas elaboradas, dots maiores) é um bloco SEPARADO, no
+     @media (min-width:769px) mais abaixo — duplica um pouco a
+     "mecânica" (flex/scroll-snap), de propósito: são visualmente
+     produtos BEM diferentes (barra esticada x cartão flutuante com
+     setas), e manter cada um no seu media query evita que um ajuste
+     num quebre o outro sem querer.
+
+     ESCOPO: só as grades da HOME têm o atributo [data-grade-produtos]
+     (index.html). A listagem da ceramica.html também usa .produtos-grid
+     dentro de .queridinhos, mas SEM esse atributo — então o seletor
+     abaixo (.produtos-grid[data-grade-produtos]) deixa a ceramica.html
+     intacta em qualquer largura de tela. */
+  .produtos-grid[data-grade-produtos] {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 1rem;
+    /* rola na horizontal, "trava" em cada slide */
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    /* um respiro em cima/embaixo pra sombra do card não ser cortada */
+    padding: 0.5rem 0 0.75rem;
+
+    /* esconde a barra de rolagem (o controle são os dots) */
+    scrollbar-width: none;              /* Firefox */
+    -webkit-overflow-scrolling: touch;  /* inércia no iOS */
+  }
+  .produtos-grid[data-grade-produtos]::-webkit-scrollbar {
+    display: none;                      /* Chrome/Safari */
+  }
+
+  .produtos-grid[data-grade-produtos] > .carrossel-slide {
+    display: grid;
+    grid-template-columns: 1fr 1fr;   /* 2 cards por página */
+    gap: 1rem;
+    flex: 0 0 100%;                   /* cada slide = largura da tela */
+    scroll-snap-align: start;
+    scroll-snap-stop: always;         /* não "pula" slides num swipe forte */
+  }
+
+  /* mensagem de "nenhuma peça" (busca sem resultado): sem slides, é um
+     <p> solto no trilho flex — deixa ele ocupar a largura toda */
+  .produtos-grid[data-grade-produtos] > .vitrine-vazia {
+    flex: 0 0 100%;
+  }
+
+  /* DOTS (indicadores) — criados/atualizados pelo js/main.js */
+  .carrossel-dots {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-top: 1.25rem;
+  }
+  .carrossel-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    /* era var(--cor-fundo-alt) — MESMA cor do fundo da seção
+       .queridinhos, então os dots inativos ficavam INVISÍVEIS (parte
+       do "não aparece" que o item 3 pediu pra corrigir). Agora é
+       --cor-destaque bem translúcido: visível sobre o bege, e forma
+       um par claro "apagado / aceso" com o dot ativo (sólido). */
+    background-color: rgba(158, 79, 46, 0.28);
+    transition: background-color 0.2s ease, transform 0.2s ease;
+  }
+  .carrossel-dot.is-ativo {
+    background-color: var(--cor-destaque);
+    transform: scale(1.35);
+  }
+
+  /* DICA "ARRASTE" — item 3
+     Criada pelo js/main.js só na 1ª vez (flag no localStorage), some
+     na 1ª rolagem do carrossel OU depois de ~6s. O chevron faz um
+     vaivém curto (keyframe carrossel-hint-desliza) sugerindo o gesto.
+     Fica logo abaixo dos cards, acima dos dots. */
+  .carrossel-hint {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.3rem;
+    margin-top: 0.85rem;
+
+    color: var(--cor-secundaria);
+    font-size: 0.8rem;
+    font-style: italic;
+
+    /* a transição anima o "sumir" (js adiciona .is-oculta): o
+       max-height + margin a 0 fazem os dots subirem suave no lugar */
+    max-height: 2rem;
+    overflow: hidden;
+    transition: opacity 0.5s ease, max-height 0.5s ease, margin-top 0.5s ease;
+  }
+  .carrossel-hint.is-oculta {
+    opacity: 0;
+    max-height: 0;
+    margin-top: 0;
+    pointer-events: none;
+  }
+  .carrossel-hint svg {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+    animation: carrossel-hint-desliza 1.4s ease-in-out infinite;
+  }
+
+  /* PULSO CONTÍNUO NO "COMPRAR AGORA" — item 1
+     Só no mobile e só neste botão (o CTA principal). No desktop ele
+     já tem hover (gloss + sombra); repetir um pulso lá seria excesso.
+     Fica só no contexto de CARD (.produto-card): o "Comprar Agora"
+     da barra flutuante de produto.html já é chamativo por ser fixo.
+     Anima só box-shadow (glow) -> compositor, sem relayout. O
+     "Adicionar ao Carrinho" NÃO recebe nada, de propósito, pra o
+     olho ir pro CTA. */
+  .produto-card .btn-comprar-agora {
+    animation: btn-agora-pulso 2s ease-in-out infinite;
+  }
+
+  /* TAMANHO DOS BOTÕES NO CARD (mobile) — item 2
+     Estavam grandes demais e encostando na borda do card (o
+     .produto-card não tem padding lateral). Agora: no máximo 90% da
+     largura do card, centralizados (align-self:center herdado), com
+     folga visível nos dois lados; padding/fonte menores pra ficarem
+     proporcionais ao card estreito do carrossel (2 por "página"). */
+  .produto-card .btn-comprar,
+  .produto-card .btn-comprar-agora {
+    width: 100%;
+    max-width: 90%;
+    box-sizing: border-box;
+    padding: 0.72rem 0.9rem;
+    font-size: 0.82rem;
+  }
+
+  /* SETAS DE NAVEGAÇÃO — só existem visualmente no desktop (ver
+     @media min-width:769px mais abaixo). No mobile a navegação é o
+     dedo (+ os dots); as setas ficam no DOM (js/main.js cria os
+     mesmos 2 <button> nos dois tamanhos, pra não duplicar lógica de
+     criação), só escondidas aqui — e ESCONDIDAS DENTRO deste media
+     query, não numa regra solta depois dele: é a mesma lição do bug
+     dos dots (comentário grande logo abaixo) — uma regra "sem media
+     query" depois de um @media com a mesma especificidade venceria
+     em QUALQUER largura, escondendo as setas também no desktop. */
+  .carrossel-seta {
+    display: none;
+  }
+}
+
+/* ============================================================
+   CARROSSEL DE PRODUTOS (Home) — versão DESKTOP (> 768px)
+   ============================================================
+   Estrutura desenhada pelo js/main.js:
+
+     <div class="carrossel-viewport">           <- position:relative,
+                                                    ancora as setas e
+                                                    centraliza tudo
+       <button class="carrossel-seta carrossel-seta--anterior">
+       <div class="produtos-grid" data-grade-produtos>  <- rola
+         <div class="carrossel-slide"> .produto-card x4 </div>
+         <div class="carrossel-slide"> .produto-card x4 </div>
+         ...
+       </div>
+       <button class="carrossel-seta carrossel-seta--proxima">
+     </div>
+     <div class="carrossel-dots">...</div>      <- FORA do viewport,
+                                                    filho direto da
+                                                    <section> (mesmo
+                                                    lugar de sempre)
+
+   4 cards por slide (cardsPorSlideCarrossel() no JS), setas circulares
+   flutuando ao lado do cartão de produtos (não da seção inteira — o
+   <h2> do título fica de fora, só o viewport é o "ponto zero" do
+   position:absolute das setas), dots um pouco maiores com transição
+   suave, e tudo centralizado dentro do max-width padrão do site.
+
+   SEM LOOP, de propósito: dar a volta do último slide pro primeiro
+   exigiria duplicar cards nas pontas pra o scroll-snap não "pular"
+   visivelmente — a setas simplesmente desabilitam (opacidade menor +
+   cursor padrão) no primeiro/último slide, via :disabled.
+   ============================================================ */
+@media (min-width: 769px) {
+  /* no mobile o wrapper nem existe visualmente (é só flex inline);
+     no desktop ele vira o "porta-retrato" que ancora as setas e
+     centraliza o conjunto de cards dentro do max-width do site. */
+  .carrossel-viewport {
+    position: relative;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  /* A regra .produtos-grid[data-grade-produtos] "crua" (sem media
+     query, lá em cima no arquivo) é a versão de GRID normal — a
+     mesma mecânica de trilho horizontal com scroll-snap do mobile
+     precisa ser repetida aqui pro desktop, só que com um GAP maior
+     (2rem em vez de 1rem: telas grandes pedem mais respiro entre os
+     cards pra não parecer espremido). Fica dentro deste @media, não
+     "solta", pela mesma razão do aviso lá em cima sobre o bug antigo
+     dos dots: uma regra fora de media query venceria em QUALQUER
+     largura e quebraria o trilho do mobile. */
+  .produtos-grid[data-grade-produtos] {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 2rem;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    padding: 0.5rem 0 0.75rem;
+    scrollbar-width: none;
+    width: 100%;
+    /* já herda max-width/margin do .carrossel-viewport — width:100%
+       evita que o max-width:1200px "cru" da regra sem media query
+       (lá em cima) force uma segunda centralização redundante */
+    max-width: none;
+  }
+  .produtos-grid[data-grade-produtos]::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* A DICA "arraste" (.carrossel-hint) é gated no JS pra nunca ser
+     CRIADA no desktop (ver montarDicaDeslize em main.js) — mas se a
+     janela for redimensionada de mobile pra desktop DEPOIS que a
+     dica já apareceu, o elemento antigo continua no DOM (o resize só
+     reconstrói os cards de dentro da grade, não os irmãos dela). Esta
+     regra garante que, mesmo nesse caso, ela suma visualmente no
+     desktop — sem repetir o bug antigo de regra "solta" fora de
+     media query, porque está devidamente dentro deste @media. */
+  .carrossel-hint {
+    display: none;
+  }
+
+  .produtos-grid[data-grade-produtos] > .carrossel-slide {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);  /* 4 cards por página */
+    gap: 2rem;
+    flex: 0 0 100%;
+    scroll-snap-align: start;
+    scroll-snap-stop: always;  /* não deixa "pular" slide num scroll rápido */
+  }
+
+  .produtos-grid[data-grade-produtos] > .vitrine-vazia {
+    flex: 0 0 100%;
+  }
+
+  /* rolagem suave ao clicar nas setas (scrollBy com behavior:'smooth'
+     no JS já pede isso, mas declarar aqui garante o comportamento
+     mesmo se algum navegador só respeitar a propriedade CSS) —
+     respeitando quem pediu menos movimento na tela */
+  @media (prefers-reduced-motion: no-preference) {
+    .produtos-grid[data-grade-produtos] {
+      scroll-behavior: smooth;
+    }
+  }
+
+  /* SETAS — botões circulares flutuando ligeiramente PRA FORA do
+     cartão de produtos (metade do botão pra fora da borda), ancoradas
+     no .carrossel-viewport (que só envolve o cartão, não o <h2> da
+     seção) e centralizadas verticalmente nele. */
+  .carrossel-seta {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    top: 50%;
+    z-index: 2;
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    border: none;
+    background-color: var(--cor-card);
+    color: var(--cor-destaque);
+    box-shadow: 0 4px 14px rgba(62, 46, 34, 0.16);
+    cursor: pointer;
+    transition: background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+  }
+  .carrossel-seta svg {
+    width: 24px;
+    height: 24px;
+  }
+  /* -26px = metade da largura do botão (52px): fica "pendurado" na
+     borda do cartão, metade dentro metade fora — nem colado na borda
+     dos cards, nem solto longe deles */
+  .carrossel-seta--anterior {
+    left: -26px;
+    transform: translateY(-50%);
+  }
+  .carrossel-seta--proxima {
+    right: -26px;
+    transform: translateY(-50%);
+  }
+  .carrossel-seta:hover:not(:disabled) {
+    background-color: var(--cor-destaque);
+    color: #FFFFFF;
+    box-shadow: 0 6px 18px rgba(62, 46, 34, 0.24);
+  }
+  /* sem loop: na ponta a seta correspondente desabilita visualmente
+     em vez de continuar clicável sem efeito nenhum */
+  .carrossel-seta:disabled {
+    opacity: 0.35;
+    cursor: default;
+  }
+  /* grades com 0-1 slide (ex.: filtro de busca sobrou 1 card só) não
+     têm o que paginar — js/main.js marca as setas com [hidden] */
+  .carrossel-seta[hidden] {
+    display: none;
+  }
+
+  /* DOTS — a regra de LAYOUT (.carrossel-dots) só existe dentro do
+     @media (max-width:768px) lá em cima, então precisa ser repetida
+     aqui pro desktop (senão os dots ficam com display:block "cru" e
+     colapsam a 0px de altura — os <span> são inline por padrão). O
+     visual dos pontos em si (.carrossel-dot) é que muda de verdade:
+     um pouco maiores que no mobile (10px x 8px), e o ativo agora é
+     uma "pílula" alongada em vez de só crescer — a MUDANÇA DE LARGURA
+     + COR anima suave em 0.3s (item 3), em vez de trocar instantâneo
+     como no mobile (lá é só um scale, mais sutil de propósito pro
+     espaço pequeno da tela). */
+  .carrossel-dots {
+    display: flex;
+    justify-content: center;
+    gap: 0.6rem;
+    margin-top: 1.5rem;
+  }
+  .carrossel-dot {
+    width: 10px;
+    height: 10px;
+    /* border-radius e background-color também precisam ser repetidos
+       aqui: assim como o display:flex de .carrossel-dots, essas 2
+       propriedades só existiam dentro do @media(max-width:768px) —
+       sem elas o dot desktop ficava com o border-radius:0 (quadrado)
+       e fundo transparente do navegador (invisível!) do estado
+       "cru" fora de qualquer media query. */
+    border-radius: 50%;
+    background-color: rgba(158, 79, 46, 0.28);
+    transform: none; /* desliga o scale do mobile: aqui quem cresce é a largura */
+    transition: width 0.3s ease, background-color 0.3s ease;
+  }
+  .carrossel-dot.is-ativo {
+    width: 28px;
+    border-radius: 5px;
+    background-color: var(--cor-destaque);
+    transform: none;
+  }
+}
+
+/* ============================================================
+   RESPIRAÇÃO DO CÍRCULO DE CATEGORIA (só usada no mobile — ver
+   .categoria-card img dentro do @media (max-width: 768px))
+   Halo que expande e recolhe de leve, em ~3s, pra dar "vida" ao
+   card sem chamar atenção. Fica FORA de qualquer @media porque
+   @keyframes não deve ser aninhado; quem liga o efeito é a regra
+   "animation:" lá no mobile.
+   ============================================================ */
+@keyframes categoria-respira {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(158, 79, 46, 0); }
+  50%      { box-shadow: 0 0 14px 3px rgba(158, 79, 46, 0.12); }
+}
+
+/* quem pediu "reduzir movimento" no sistema: sem o pulso.
+   Media query COMBINADA (não aninhada) — só zera a animação na
+   faixa mobile, onde ela existe. */
+@media (max-width: 768px) and (prefers-reduced-motion: reduce) {
+  .categoria-card img {
+    animation: none;
+  }
+}
+
+/* ============================================================
+   ANIMAÇÕES DO CARROSSEL MOBILE (keyframes fora de @media)
+   ============================================================ */
+
+/* item 1 — "glow" pulsante do "Comprar Agora" no mobile: um halo
+   cresce e some num ciclo de 2s, POR CIMA do degrau 3D sólido.
+   rgba(158,79,46,…) = --cor-destaque (#9E4F2E) com opacidade
+   variando — halo terracota discreto.
+
+   IMPORTANTE: uma @keyframes que anima "box-shadow" sobrescreve a
+   propriedade INTEIRA a cada quadro — ela não faz merge com o
+   box-shadow "de repouso" declarado em .btn-comprar-agora (o degrau
+   3D sólido). Por isso o degrau (0 5px 0 var(--cor-destaque-escuro))
+   é REPETIDO aqui, em todo quadro do keyframe, SEMPRE como a 1ª
+   camada da lista: assim o pulso só acrescenta/retira o halo
+   desfocado por CIMA de um degrau que nunca desaparece (var()
+   funciona normalmente dentro de @keyframes, igual em qualquer outra
+   declaração). */
+@keyframes btn-agora-pulso {
+  0%, 100% {
+    box-shadow:
+      0 5px 0 var(--cor-destaque-escuro),
+      0 0 0 0 rgba(158, 79, 46, 0);
+  }
+  50% {
+    box-shadow:
+      0 5px 0 var(--cor-destaque-escuro),
+      0 4px 18px 2px rgba(158, 79, 46, 0.38);
+  }
+}
+
+/* item 3 — vaivém do chevron da dica "arraste": desliza ~3px pra cada
+   lado e pisca de leve, sugerindo o gesto de deslizar. */
+@keyframes carrossel-hint-desliza {
+  0%, 100% { transform: translateX(-3px); opacity: 0.45; }
+  50%      { transform: translateX(3px);  opacity: 1; }
+}
+
+/* "reduzir movimento": desliga o pulso do botão e o vaivém do
+   chevron (a dica ainda aparece e some, só não fica animando). */
+@media (max-width: 768px) and (prefers-reduced-motion: reduce) {
+  .produto-card .btn-comprar-agora {
+    animation: none;
+  }
+  .carrossel-hint svg {
+    animation: none;
+  }
+}
+
+/* ============================================================
+   LINK DISCRETO PRA POLÍTICAS — pontos de confiança
+   ============================================================
+   Usado em 2 lugares que vivem em páginas DIFERENTES (por isso mora
+   aqui em style.css, a única folha carregada nas duas): perto de
+   "Dimensões/Cuidados" em produto.html (js/produto.js) e perto do
+   botão de finalizar em checkout.html. Os dois pedem a MESMA coisa —
+   um link "reforça segurança/tira dúvida sobre troca", sem competir
+   visualmente com preço, botão de compra ou botão de finalizar ao
+   lado. Por isso: fonte pequena, cor --cor-secundaria (a mesma "cor de
+   apoio" já usada em labels/notas do site, não uma cor nova), sem
+   fundo nem borda — só ganha destaque (sublinhado) no hover/foco, pra
+   ainda ficar claramente CLICÁVEL sem gritar. */
+.checkout-link-politicas {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.9rem;
+  font-size: 0.82rem;
+  color: var(--cor-secundaria);
+  text-decoration: none;
+}
+
+.checkout-link-politicas svg {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+  /* stroke="currentColor" nos ícones inline (mesma técnica Lucide do
+     resto do site) -> herda a cor --cor-secundaria do texto ao lado,
+     sem CSS extra por ícone */
+}
+
+.checkout-link-politicas:hover,
+.checkout-link-politicas:focus-visible {
+  color: var(--cor-destaque);
+  text-decoration: underline;
+  /* só no hover/foco o link "acorda" pra --cor-destaque — em repouso
+     ele precisa continuar discreto, esse é o pedido explícito */
+}

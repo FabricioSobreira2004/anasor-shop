@@ -1,0 +1,24 @@
+{
+  "name": "anasor-shop-backend",
+  "version": "0.2.0",
+  "private": true,
+  "description": "Backend da loja Anasor Sobreira — catálogo + estrutura de checkout/pagamento (Mercado Pago) em modo stub, sem credenciais ainda. Ver server.js para o que falta.",
+  "main": "server.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node --env-file-if-exists=.env server.js",
+    "dev": "node --watch --env-file-if-exists=.env server.js"
+  },
+  "keywords": [
+    "anasor",
+    "ceramica",
+    "croche",
+    "loja"
+  ],
+  "license": "UNLICENSED",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
+    "mercadopago": "^3.6.1"
+  }
+}

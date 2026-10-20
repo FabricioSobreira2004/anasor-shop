@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Cerâmica | Anasor Sobreira</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,ital,wght@9..144,0,400..700;9..144,1,400..700&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+    <!-- Mesma folha de estilo da Home: o design (cores, fontes, cards)
+         é reaproveitado inteiro, sem CSS novo pra esta página -->
+    <link rel="stylesheet" href="css/style.css?v=29">
+
+    <!-- Marca no <html> que o JS rodou logo no início (ver comentário
+         igual na index.html): o "scroll reveal" só esconde elementos
+         quando esta classe existe -> sem JS, conteúdo aparece normal. -->
+    <script>document.documentElement.classList.add('js-reveal');</script>
+
+</head>
+
+<body>
+
+    <!-- ===== HEADER (idêntico ao da Home) ===== -->
+    <header> <!-- <header> é uma tag semântica: indica
+        que esse bloco é o cabeçalho do site -->
+
+        <nav> <!-- <nav> indica que esse bloco é a navegação principal
+            (ajuda acessibilidade e SEO) -->
+
+            <!-- A logo agora é um link pra index.html: comportamento
+                 esperado pelo usuário (clicar na marca = voltar pra Home). -->
+            <a href="index.html" class="logo"> Anasor Sobreira  </a>
+            <!-- Nome/fica visível em todas as páginas -->
+
+
+
+            <ul class="nav-links">
+                <!-- "Home" é o primeiro item, antes de "Cerâmica" (mesma
+                     ideia da logo: link explícito de volta pra index.html).
+                     "Cerâmica" aponta direto pra ceramica.html (estamos nela
+                     agora, então o link só recarega esta página). As outras
+                     seções só existem na Home -> index.html#... -->
+                <!-- "Nosso Ateliê": mesma lógica do link em index.html (ver
+                     comentário lá) — aqui, fora da Home, precisa do
+                     "index.html" na frente pra primeiro navegar pra Home e
+                     só então rolar até "#atelie" (o navegador resolve os
+                     dois passos sozinho, sem JS extra). -->
+                <li><a href="index.html#atelie">Nosso Ateliê</a></li>
+                <li><a href="index.html">Home</a></li>
+                <li><a href="ceramica.html">Cerâmica</a></li>
+                <li><a href="index.html#croche">Crochê</a></li>
+                <li><a href="index.html#quem-somos">Quem Somos</a></li>
+                <li><a href="index.html#contato">Contato</a></li>
+            </ul>
+
+            <!-- Mesmo campo de busca da Home (o JS em main.js escuta o
+                 evento "input" de #busca e filtra a vitrine em tempo real) -->
+            <form class="busca" role="search">
+                <input type="search" id="busca" placeholder="Buscar peça..." aria-label="Buscar peças">
+            </form>
+
+            <div class="nav-icons">
+                <a href="checkout.html">🛒 Carrinho</a>
+                <!-- Fallback (sem JS / clique com o botão do meio): o clique de verdade
+                     é interceptado pelo js/main.js e abre o mini-carrinho; ele
+                     mesmo leva pra cá (checkout.html) pelo botão "Finalizar Compra". -->
+
+            </div>
+
+            <button class="menu-toggle" aria-label="Abrir menu" aria-expanded="false">
+                <!-- Botão "hambúrguer": só aparece no celular (controlado pelo CSS).
+                     As 3 <span> são as 3 barrinhas; o JS adiciona a classe .active
+                     que as transforma num "X" quando o menu abre -->
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+
+        </nav>
+    </header>
+
+    <main>
+        <!-- BREADCRUMB — mesmo componente do produto.html: mesma classe
+             .breadcrumb (estilo em style.css) e mesma funcao JS
+             (renderBreadcrumb, em main.js). Fica como 1o filho do <main>
+             (fora da <section> com padding), igual em produto.html, pra
+             nao levar padding lateral em dobro. O js/ceramica.js
+             preenche: "Home > Cerâmica" na visao geral, ou
+             "Home > Cerâmica > <Subcategoria>" na listagem. -->
+        <nav id="breadcrumb" class="breadcrumb" aria-label="Você está aqui" hidden></nav>
+
+        <!-- Reaproveita a classe .queridinhos (mesmo respiro e fundo da
+             vitrine da Home). O <h1> ganha o estilo centralizado da
+             regra ".queridinhos h1, .queridinhos h2" em style.css. -->
+        <section class="queridinhos" id="ceramica">
+
+            <!-- ESTA PAGINA TEM 2 MODOS, decididos pelo js/ceramica.js
+                 a partir do parametro ?sub= da URL:
+
+                   ceramica.html            -> VISAO GERAL: um card por
+                                               subcategoria (imagem + nome)
+                   ceramica.html?sub=vasos-esculturicos
+                                            -> LISTAGEM: so os produtos
+                                               daquela subcategoria
+
+                 Usamos ?sub= (e nao um .html por subcategoria) pra manter
+                 tudo ESCALAVEL: adiciono produtos em produtos.js com a
+                 subcategoria certa e o dropdown do menu, o card aqui e a
+                 listagem filtrada aparecem sozinhos — nenhum arquivo novo.
+
+                 Os elementos abaixo comecam "neutros" (titulo generico,
+                 voltar/filtros escondidos, conteudo vazio); o
+                 js/ceramica.js preenche/mostra conforme o modo. -->
+
+            <h1 id="ceramica-titulo" class="reveal">Cerâmica</h1>
+
+            <!-- FILTROS: escondidos por padrao (a visao geral nao tem
+                 lista de produtos pra filtrar). O ceramica.js mostra no
+                 modo LISTAGEM. Os <select> sao lidos pelo main.js E pelo
+                 ceramica.js (guardam a escolha em "criterios"). -->
+            <div class="filtros" id="ceramica-filtros" hidden>
+                <label class="filtro">
+                    <span class="filtro__rotulo">Faixa de preço</span>
+                    <select id="filtro-preco">
+                        <option value="todas">Todas</option>
+                        <option value="ate-180">Até R$ 180</option>
+                        <option value="180-220">R$ 180 a R$ 220</option>
+                        <option value="acima-220">Acima de R$ 220</option>
+                    </select>
+                </label>
+
+                <label class="filtro">
+                    <span class="filtro__rotulo">Ordenar por</span>
+                    <select id="ordenar">
+                        <option value="relevancia">Padrão</option>
+                        <option value="preco-asc">Menor preço</option>
+                        <option value="preco-desc">Maior preço</option>
+                        <option value="nome-az">Nome (A-Z)</option>
+                    </select>
+                </label>
+            </div>
+
+            <!-- VAZIO de proposito: o js/ceramica.js injeta aqui os
+                 cards de subcategoria (visao geral) ou a .produtos-grid
+                 com os cards de peca (listagem). O molde do card de peca
+                 e criarCardProduto do main.js — o mesmo da Home. -->
+            <div id="ceramica-conteudo"></div>
+        </section>
+    </main>
+
+    <!-- ===== FOOTER (idêntico ao da Home) ===== -->
+    <footer>
+        <div class="footer-container">
+            <div class="footer-sobre">
+                <h3> Anasor Sobreira</h3>
+                <p>Cerâmica e crochê artesanais, feitos à mão com carinho no nosso ateliê.</p>
+            </div>
+
+            <div class="footer-links">
+                <h4> Links Rápidos </h4>
+                <ul>
+                    <!-- "Cerâmica" -> ceramica.html; o resto aponta pra Home -->
+                    <li><a href="ceramica.html"> Cerâmica </a></li>
+                    <li><a href="index.html#croche"> Crochê </a></li>
+                    <li><a href="index.html#quem-somos"> Quem Somos </a></li>
+                    <li><a href="politicas.html"> Políticas </a></li>
+                </ul>
+            </div>
+
+            <div class="footer-contato">
+                <h4>Contato</h4>
+                <p>📱 WhatsApp: (21) 98722-2679 </p>
+                <p>📧 ceramicaeclocheanasor@gmail.com</p>
+            </div>
+
+             <div class="footer-social">
+      <h4>Redes Sociais</h4>
+      <a href="https://www.instagram.com/sobreiraanasor" target="_blank" rel="noopener">Instagram</a>
+    </div>
+
+  </div>
+
+  <div class="footer-copyright">
+    <p>&copy; 2026 Anasor Sobreira. Todos os direitos reservados.</p>
+    <!-- &copy; é o código especial HTML para o símbolo © -->
+  </div>
+
+    <!--Rodape da pagina esse footer-->
+    </footer>
+
+      <!-- Mesma dupla de scripts da Home e na mesma ordem:
+           produtos.js define a lista; main.js a percorre e monta os cards. -->
+      <!-- produtos.js (lista) -> main.js (funcoes comuns: slugificar,
+           filtrarProdutos, criarCardProduto...) -> ceramica.js (usa
+           essas funcoes pra montar a visao geral OU a listagem por ?sub) -->
+      <script src="js/produtos.js?v=29"></script>
+      <script src="js/main.js?v=29"></script>
+      <script src="js/ceramica.js?v=29"></script>
+
+</body>
+
+</html>

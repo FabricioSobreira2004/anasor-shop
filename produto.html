@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Título "genérico" de partida. Quando o produto é encontrado,
+         o js/produto.js troca este texto pelo nome da peça
+         (document.title = "<nome> | Anasor Sobreira"). -->
+    <title>Produto | Anasor Sobreira</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,ital,wght@9..144,0,400..700;9..144,1,400..700&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+    <!-- style.css PRIMEIRO: define as variáveis de cor/fonte em :root -->
+    <link rel="stylesheet" href="css/style.css?v=29">
+    <!-- produto.css DEPOIS: só o layout exclusivo desta página,
+         usando as mesmas variáveis (nenhuma cor nova) -->
+    <link rel="stylesheet" href="css/produto.css?v=29">
+
+    <!-- Marca no <html> que o JS rodou logo no início (ver comentário
+         igual na index.html): o "scroll reveal" só esconde elementos
+         quando esta classe existe -> sem JS, conteúdo aparece normal. -->
+    <script>document.documentElement.classList.add('js-reveal');</script>
+
+</head>
+
+<body>
+
+    <!-- ===== HEADER (idêntico ao da Home) ===== -->
+    <header> <!-- <header> é uma tag semântica: indica
+        que esse bloco é o cabeçalho do site -->
+
+        <nav> <!-- <nav> indica que esse bloco é a navegação principal
+            (ajuda acessibilidade e SEO) -->
+
+            <!-- A logo agora é um link pra index.html: comportamento
+                 esperado pelo usuário (clicar na marca = voltar pra Home). -->
+            <a href="index.html" class="logo"> Anasor Sobreira  </a>
+            <!-- Nome/fica visível em todas as páginas -->
+
+
+
+            <ul class="nav-links">
+                <!-- "Home" é o primeiro item, antes de "Cerâmica" (mesma
+                     ideia da logo: link explícito de volta pra index.html).
+                     "Cerâmica" aponta direto pra ceramica.html (a página com
+                     os produtos). As outras seções só existem na Home, por
+                     isso apontam pra index.html#... -->
+                <!-- "Nosso Ateliê": mesma lógica do link em index.html (ver
+                     comentário lá) — aqui, fora da Home, precisa do
+                     "index.html" na frente pra primeiro navegar pra Home e
+                     só então rolar até "#atelie" (o navegador resolve os
+                     dois passos sozinho, sem JS extra). -->
+                <li><a href="index.html#atelie">Nosso Ateliê</a></li>
+                <li><a href="index.html">Home</a></li>
+                <li><a href="ceramica.html">Cerâmica</a></li>
+                <li><a href="index.html#croche">Crochê</a></li>
+                <li><a href="index.html#quem-somos">Quem Somos</a></li>
+                <li><a href="index.html#contato">Contato</a></li>
+            </ul>
+
+            <div class="nav-icons">
+                <a href="checkout.html">🛒 Carrinho</a>
+                <!-- Fallback (sem JS / clique com o botão do meio): o clique de verdade
+                     é interceptado pelo js/main.js e abre o mini-carrinho; ele
+                     mesmo leva pra cá (checkout.html) pelo botão "Finalizar Compra". -->
+
+            </div>
+
+            <button class="menu-toggle" aria-label="Abrir menu" aria-expanded="false">
+                <!-- Botão "hambúrguer": só aparece no celular (controlado pelo CSS).
+                     As 3 <span> são as 3 barrinhas; o JS adiciona a classe .active
+                     que as transforma num "X" quando o menu abre -->
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+
+        </nav>
+    </header>
+
+    <main>
+        <!-- TODOS os blocos abaixo começam com o atributo "hidden"
+             (equivale a display:none). O js/produto.js decide o que
+             revelar:
+               - achou o produto  -> mostra breadcrumb + #produto-detalhe
+                                     + #produtos-relacionados (todos
+                                     preenchidos via JS a partir de produtos.js)
+               - não achou / sem id -> mostra só #produto-nao-encontrado
+             Começar tudo escondido evita "piscar" blocos vazios antes
+             do JavaScript rodar. -->
+
+        <!-- Breadcrumb ("trilha de migalhas"): mostra onde o usuário
+             está na hierarquia do site e dá links de volta. É um <nav>
+             porque semanticamente é navegação secundária; o aria-label
+             ajuda leitores de tela a diferenciá-lo do menu principal. -->
+        <nav id="breadcrumb" class="breadcrumb" aria-label="Você está aqui" hidden></nav>
+
+        <div id="produto-detalhe" class="produto-detalhe" hidden></div>
+
+        <div id="produto-nao-encontrado" class="produto-aviso" hidden>
+            <p>Produto não encontrado.</p>
+            <a href="index.html" class="btn-principal">Voltar para a Home</a>
+        </div>
+
+        <!-- "Produtos relacionados": reaproveita a classe .queridinhos
+             (mesmo fundo/respiro da vitrine da Home). O JS injeta aqui
+             um <h2> e uma .produtos-grid com 3 cards da MESMA categoria,
+             usando a MESMA função criarCardProduto do main.js.
+
+             "transicao-topo": suaviza o corte com a seção de detalhes
+             do produto ACIMA (fundo claro --cor-fundo) — esta seção tem
+             fundo bege mais escuro (--cor-fundo-alt, herdado de
+             .queridinhos). MESMA classe utilitária usada nas transições
+             da Home (ver comentário completo em css/style.css, junto da
+             definição de .transicao-topo/.transicao-base) — nada de
+             código novo, só a cor certa pra ESTE par de seções,
+             declarada logo abaixo em css/produto.css. Só ".transicao-
+             topo" (não "-base" também): não há necessidade de suavizar
+             a saída no FIM desta seção — é a última da página, sem
+             vizinha embaixo. -->
+        <section id="produtos-relacionados" class="queridinhos transicao-topo" hidden></section>
+    </main>
+
+    <!-- ===== FOOTER (idêntico ao da Home) ===== -->
+    <footer>
+        <div class="footer-container">
+            <div class="footer-sobre">
+                <h3> Anasor Sobreira</h3>
+                <p>Cerâmica e crochê artesanais, feitos à mão com carinho no nosso ateliê.</p>
+            </div>
+
+            <div class="footer-links">
+                <h4> Links Rápidos </h4>
+                <ul>
+                    <!-- "Cerâmica" -> ceramica.html; o resto vive na Home -->
+                    <li><a href="ceramica.html"> Cerâmica </a></li>
+                    <li><a href="index.html#croche"> Crochê </a></li>
+                    <li><a href="index.html#quem-somos"> Quem Somos </a></li>
+                    <li><a href="politicas.html"> Políticas </a></li>
+                </ul>
+            </div>
+
+            <div class="footer-contato">
+                <h4>Contato</h4>
+                <p>📱 WhatsApp: (21) 98722-2679 </p>
+                <p>📧 ceramicaeclocheanasor@gmail.com</p>
+            </div>
+
+             <div class="footer-social">
+      <h4>Redes Sociais</h4>
+      <a href="https://www.instagram.com/sobreiraanasor" target="_blank" rel="noopener">Instagram</a>
+    </div>
+
+  </div>
+
+  <div class="footer-copyright">
+    <p>&copy; 2026 Anasor Sobreira. Todos os direitos reservados.</p>
+    <!-- &copy; é o código especial HTML para o símbolo © -->
+  </div>
+
+    <!--Rodape da pagina esse footer-->
+    </footer>
+
+      <!-- Ordem dos scripts (todos "clássicos", então cada um enxerga o
+           que o anterior declarou no escopo global):
+             1) produtos.js  -> cria a lista "produtos"
+             2) main.js      -> define formatarPreco(), o menu e o carrinho
+             3) produto.js   -> usa "produtos" + formatarPreco() pra montar
+                                esta página específica -->
+      <script src="js/produtos.js?v=29"></script>
+      <script src="js/main.js?v=29"></script>
+      <script src="js/produto.js?v=29"></script>
+
+</body>
+
+</html>

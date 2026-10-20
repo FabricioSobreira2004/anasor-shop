@@ -1,0 +1,15 @@
+# dependências Node (recriadas com "npm install")
+node_modules/
+
+# segredos — tokens do Mercado Pago, chaves de ambiente
+.env
+.env.local
+backend/.env
+
+# logs
+*.log
+npm-debug.log*
+
+# arquivos de sistema do Windows/OneDrive
+Thumbs.db
+desktop.ini

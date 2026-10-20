@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Pedido Confirmado | Anasor Sobreira</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,ital,wght@9..144,0,400..700;9..144,1,400..700&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="css/style.css?v=29">
+    <link rel="stylesheet" href="css/checkout.css?v=29">
+
+    <script>document.documentElement.classList.add('js-reveal');</script>
+
+</head>
+
+<!-- data-limpar-carrinho="1": chegar AQUI significa (no fluxo real,
+     depois que o Mercado Pago estiver configurado) que o pagamento foi
+     aprovado — js/pedido-status.js esvazia o carrinho quando vê este
+     atributo. Ver o comentário completo em js/pedido-status.js. -->
+<body data-limpar-carrinho="1">
+
+    <!-- ===== HEADER (idêntico ao das outras páginas) ===== -->
+    <header>
+        <nav>
+            <a href="index.html" class="logo"> Anasor Sobreira  </a>
+
+            <ul class="nav-links">
+                <!-- "Nosso Ateliê": mesma lógica do link em index.html (ver
+                     comentário lá) — aqui, fora da Home, precisa do
+                     "index.html" na frente pra primeiro navegar pra Home e
+                     só então rolar até "#atelie" (o navegador resolve os
+                     dois passos sozinho, sem JS extra). -->
+                <li><a href="index.html#atelie">Nosso Ateliê</a></li>
+                <li><a href="index.html">Home</a></li>
+                <li><a href="ceramica.html">Cerâmica</a></li>
+                <li><a href="index.html#croche">Crochê</a></li>
+                <li><a href="index.html#quem-somos">Quem Somos</a></li>
+                <li><a href="index.html#contato">Contato</a></li>
+            </ul>
+
+            <div class="nav-icons">
+                <a href="checkout.html">🛒 Carrinho</a>
+            </div>
+
+            <button class="menu-toggle" aria-label="Abrir menu" aria-expanded="false">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </nav>
+    </header>
+
+    <main>
+        <section class="pedido-status pedido-status--sucesso">
+            <div class="pedido-status__icone" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M20 6 9 17l-5-5"/>
+                </svg>
+            </div>
+
+            <h1>Pedido confirmado!</h1>
+            <p>
+                Recebemos a confirmação do seu pagamento — pedido
+                <span class="pedido-status__numero" id="pedido-numero"></span>.
+                Já vamos começar a preparar sua peça com todo o carinho.
+            </p>
+            <p>Em breve você recebe um e-mail com os detalhes e o acompanhamento do envio.</p>
+
+            <div class="pedido-status__acoes">
+                <a href="ceramica.html" class="btn-principal">Continuar Comprando</a>
+                <a href="index.html" class="btn-fantasma">Voltar à Home</a>
+            </div>
+
+            <!-- HOJE esta página só é alcançada por um link FAKE (o
+                 Mercado Pago não está configurado ainda — ver TODO em
+                 backend/server.js). Quando estiver, o MP passa a
+                 redirecionar pra cá sozinho DEPOIS de confirmar o
+                 pagamento — e a confirmação "de verdade" (que atualiza
+                 o pedido no banco) vem do WEBHOOK
+                 (POST /api/webhook/mercadopago), não desta página: um
+                 comprador pode fechar a aba antes de chegar aqui, e o
+                 pedido ainda precisa ser marcado como pago. -->
+            <p class="pedido-status__aviso">
+                Dúvidas sobre o pedido? Fale com a gente pelo WhatsApp: (21) 98722-2679.
+            </p>
+        </section>
+    </main>
+
+    <!-- ===== FOOTER (idêntico ao das outras páginas) ===== -->
+    <footer>
+        <div class="footer-container">
+            <div class="footer-sobre">
+                <h3> Anasor Sobreira</h3>
+                <p>Cerâmica e crochê artesanais, feitos à mão com carinho no nosso ateliê.</p>
+            </div>
+
+            <div class="footer-links">
+                <h4> Links Rápidos </h4>
+                <ul>
+                    <li><a href="ceramica.html"> Cerâmica </a></li>
+                    <li><a href="index.html#croche"> Crochê </a></li>
+                    <li><a href="index.html#quem-somos"> Quem Somos </a></li>
+                    <li><a href="politicas.html"> Políticas </a></li>
+                </ul>
+            </div>
+
+            <div class="footer-contato">
+                <h4>Contato</h4>
+                <p>📱 WhatsApp: (21) 98722-2679 </p>
+                <p>📧 ceramicaeclocheanasor@gmail.com</p>
+            </div>
+
+            <div class="footer-social">
+                <h4>Redes Sociais</h4>
+                <a href="https://www.instagram.com/sobreiraanasor" target="_blank" rel="noopener">Instagram</a>
+            </div>
+        </div>
+
+        <div class="footer-copyright">
+            <p>&copy; 2026 Anasor Sobreira. Todos os direitos reservados.</p>
+        </div>
+    </footer>
+
+    <script src="js/produtos.js?v=29"></script>
+    <script src="js/main.js?v=29"></script>
+    <script src="js/pedido-status.js?v=29"></script>
+
+</body>
+
+</html>

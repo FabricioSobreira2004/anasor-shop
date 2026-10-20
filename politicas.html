@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Políticas | Anasor Sobreira</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,ital,wght@9..144,0,400..700;9..144,1,400..700&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+    <!-- Mesma folha de estilo das outras páginas: cores, fontes e
+         marca d'água (variáveis em :root) são todas reaproveitadas,
+         sem CSS novo além das regras específicas desta página. -->
+    <link rel="stylesheet" href="css/style.css?v=29">
+
+    <!-- Marca no <html> que o JS rodou logo no início (mesmo comentário
+         das outras páginas): o "scroll reveal" só esconde elementos
+         quando esta classe existe -> sem JS, conteúdo aparece normal. -->
+    <script>document.documentElement.classList.add('js-reveal');</script>
+
+</head>
+
+<body>
+
+    <!-- ===== HEADER (idêntico ao das outras páginas) ===== -->
+    <header>
+
+        <nav>
+
+            <!-- A logo agora é um link pra index.html: comportamento
+                 esperado pelo usuário (clicar na marca = voltar pra Home). -->
+            <a href="index.html" class="logo"> Anasor Sobreira  </a>
+
+            <ul class="nav-links">
+                <!-- "Home" é o primeiro item, antes de "Cerâmica" (mesma
+                     ideia da logo: link explícito de volta pra index.html).
+                     Esta página não tem seção própria no menu principal,
+                     então os demais links seguem apontando pra Home/
+                     Cerâmica, igual em ceramica.html e produto.html. -->
+                <!-- "Nosso Ateliê": mesma lógica do link em index.html (ver
+                     comentário lá) — aqui, fora da Home, precisa do
+                     "index.html" na frente pra primeiro navegar pra Home e
+                     só então rolar até "#atelie" (o navegador resolve os
+                     dois passos sozinho, sem JS extra). -->
+                <li><a href="index.html#atelie">Nosso Ateliê</a></li>
+                <li><a href="index.html">Home</a></li>
+                <li><a href="ceramica.html">Cerâmica</a></li>
+                <li><a href="index.html#croche">Crochê</a></li>
+                <li><a href="index.html#quem-somos">Quem Somos</a></li>
+                <li><a href="index.html#contato">Contato</a></li>
+            </ul>
+
+            <div class="nav-icons">
+                <a href="checkout.html">🛒 Carrinho</a>
+            </div>
+
+            <button class="menu-toggle" aria-label="Abrir menu" aria-expanded="false">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+
+        </nav>
+    </header>
+
+    <main>
+        <section class="politicas">
+
+            <h1 class="reveal">Políticas</h1>
+
+            <div class="politica-bloco reveal">
+                <h2>Como Comprar</h2>
+                <p>
+                    Comprar uma peça da Anasor Sobreira é simples: escolha a peça que
+                    mais combina com você navegando por nossas categorias de Cerâmica
+                    e Crochê, adicione ao carrinho, revise seu pedido e finalize
+                    preenchendo seus dados de entrega e pagamento. Como cada peça é
+                    única e feita à mão, produzimos e embalamos com todo cuidado
+                    antes do envio.
+                </p>
+            </div>
+
+            <div class="politica-bloco reveal">
+                <h2>Prazo de Envio</h2>
+                <p>
+                    Por serem peças artesanais, o tempo de produção pode variar
+                    conforme a complexidade da peça. Enviamos em até 7 dias úteis
+                    após a confirmação do pagamento, para todo o Brasil, via
+                    Correios. O prazo de entrega varia conforme sua região.
+                </p>
+            </div>
+
+            <div class="politica-bloco reveal">
+                <h2>Trocas e Devoluções</h2>
+                <p>
+                    Você tem direito de se arrepender da compra em até 7 dias
+                    corridos a partir do recebimento da peça, conforme o Código de
+                    Defesa do Consumidor — sem precisar justificar o motivo. Nesse
+                    caso, devolvemos o valor pago.
+                </p>
+                <p>
+                    Como cada peça é única e feita à mão, não trabalhamos com troca
+                    por uma peça "idêntica" (não existe estoque de reposição igual).
+                    Se a peça chegar com avaria de transporte ou defeito real de
+                    fabricação, entre em contato conosco pelo WhatsApp em até 7 dias
+                    do recebimento para resolvermos juntos, com reparo, troca ou
+                    reembolso.
+                </p>
+            </div>
+
+            <div class="politica-bloco reveal">
+                <h2>Cuidados com a Peça</h2>
+                <p>
+                    Cada peça de cerâmica é única e pode apresentar pequenas
+                    variações de cor, textura e formato em relação às fotos — isso
+                    é parte da autenticidade do trabalho manual. Recomendamos lavar
+                    as peças à mão, com água morna e sabão neutro, evitando louça e
+                    mudanças bruscas de temperatura. Para peças de crochê, lavagem à
+                    mão e secagem à sombra ajudam a preservar as fibras.
+                </p>
+            </div>
+
+            <!-- ============================================
+                 PERGUNTAS FREQUENTES — ACORDEÃO
+                 Cada pergunta é um botão (elemento button, fica
+                 clicável e focável pelo teclado de graça, sem
+                 precisar de JS extra pra isso) dentro de um
+                 .faq-item. O JS (lá embaixo, perto do fim da página)
+                 escuta o clique em cada botão e alterna a classe
+                 "aberto" no .faq-item correspondente; todo o efeito
+                 visual (abrir/fechar a resposta + girar a seta) é
+                 feito em CSS a partir dessa classe.
+                 ============================================ -->
+            <div class="politica-bloco reveal">
+                <h2>Perguntas Frequentes</h2>
+
+                <div class="faq">
+
+                    <div class="faq-item">
+                        <button class="faq-pergunta" type="button" aria-expanded="false">
+                            <span>Todas as peças são realmente únicas?</span>
+                            <!-- Ícone "chevron-down" da Lucide, colado aqui como SVG
+                                 inline (mesmo esquema dos selos de confiança lá na
+                                 Home): stroke="currentColor" herda a cor do texto/
+                                 botão, e o CSS gira este SVG 180° quando o
+                                 .faq-item pai ganha a classe "aberto". -->
+                            <svg class="faq-icone" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="m6 9 6 6 6-6"/>
+                            </svg>
+                        </button>
+                        <div class="faq-resposta">
+                            <div class="faq-resposta__interno">
+                                <p>
+                                    Sim! Cada peça é modelada e pintada (ou tricotada) à
+                                    mão, então pequenas variações entre uma peça e outra
+                                    fazem parte do processo artesanal.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <button class="faq-pergunta" type="button" aria-expanded="false">
+                            <span>Posso encomendar uma peça personalizada?</span>
+                            <svg class="faq-icone" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="m6 9 6 6 6-6"/>
+                            </svg>
+                        </button>
+                        <div class="faq-resposta">
+                            <div class="faq-resposta__interno">
+                                <p>
+                                    Sim! Encomendas personalizadas são feitas mediante
+                                    combinação direta pelo WhatsApp, onde alinhamos
+                                    detalhes, prazo e valor com você.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <button class="faq-pergunta" type="button" aria-expanded="false">
+                            <span>Quais formas de pagamento vocês aceitam?</span>
+                            <svg class="faq-icone" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="m6 9 6 6 6-6"/>
+                            </svg>
+                        </button>
+                        <div class="faq-resposta">
+                            <div class="faq-resposta__interno">
+                                <p>Aceitamos Pix, cartão de crédito e cartão de débito.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <button class="faq-pergunta" type="button" aria-expanded="false">
+                            <span>Vocês entregam para todo o Brasil?</span>
+                            <svg class="faq-icone" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="m6 9 6 6 6-6"/>
+                            </svg>
+                        </button>
+                        <div class="faq-resposta">
+                            <div class="faq-resposta__interno">
+                                <p>Sim, enviamos para todo o território nacional.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        </section>
+    </main>
+
+    <!-- ===== FOOTER (idêntico ao das outras páginas) ===== -->
+    <footer>
+        <div class="footer-container">
+            <div class="footer-sobre">
+                <h3> Anasor Sobreira</h3>
+                <p>Cerâmica e crochê artesanais, feitos à mão com carinho no nosso ateliê.</p>
+            </div>
+
+            <div class="footer-links">
+                <h4> Links Rápidos </h4>
+                <ul>
+                    <li><a href="ceramica.html"> Cerâmica </a></li>
+                    <li><a href="index.html#croche"> Crochê </a></li>
+                    <li><a href="index.html#quem-somos"> Quem Somos </a></li>
+                    <li><a href="politicas.html"> Políticas </a></li>
+                </ul>
+            </div>
+
+            <div class="footer-contato">
+                <h4>Contato</h4>
+                <p>📱 WhatsApp: (21) 98722-2679 </p>
+                <p>📧 ceramicaeclocheanasor@gmail.com</p>
+            </div>
+
+             <div class="footer-social">
+      <h4>Redes Sociais</h4>
+      <a href="https://www.instagram.com/sobreiraanasor" target="_blank" rel="noopener">Instagram</a>
+    </div>
+
+  </div>
+
+  <div class="footer-copyright">
+    <p>&copy; 2026 Anasor Sobreira. Todos os direitos reservados.</p>
+  </div>
+
+    </footer>
+
+      <script src="js/produtos.js?v=29"></script>
+      <script src="js/main.js?v=29"></script>
+
+      <!-- ============================================
+           ACORDEÃO DAS PERGUNTAS FREQUENTES
+           ============================================
+           Lógica, passo a passo:
+
+           1) Pega TODOS os botões de pergunta (".faq-pergunta") da
+              página numa lista.
+
+           2) Para CADA botão, liga um "escutador" de clique. Quando o
+              usuário clica:
+
+              a) Sobe até o .faq-item que envolve aquele botão
+                 (.closest() procura o ancestral mais próximo com essa
+                 classe) e guarda se ele JÁ estava aberto, ANTES de
+                 mexer em qualquer coisa.
+
+              b) Fecha qualquer outro item que esteja aberto no
+                 momento — isso dá o comportamento clássico de
+                 acordeão, "só uma resposta visível por vez". Fechar
+                 = tirar a classe "aberto" do .faq-item + marcar
+                 aria-expanded="false" no botão dele (accessibilidade:
+                 leitores de tela usam esse atributo pra saber se o
+                 conteúdo está expandido).
+
+              c) Se o item clicado NÃO estava aberto (guardado no
+                 passo "a"), abre ele: adiciona a classe "aberto" +
+                 aria-expanded="true". Se ele JÁ estava aberto, o
+                 passo "b" (que fecha "qualquer item aberto") já
+                 cuidou de fechá-lo, então não faz nada aqui — esse é
+                 o efeito de "clicar de novo fecha".
+
+           Todo o visual (a resposta escondida crescendo até a altura
+           natural, a seta girando 180°) mora no CSS: aqui só ligamos/
+           desligamos a classe "aberto", que dispara as transições
+           definidas em css/style.css (seção "PÁGINA DE POLÍTICAS"). -->
+      <script>
+        const botoesFaq = document.querySelectorAll('.faq-pergunta');
+
+        botoesFaq.forEach((botao) => {
+          botao.addEventListener('click', () => {
+            const item = botao.closest('.faq-item');
+            const jaEstavaAberto = item.classList.contains('aberto');
+
+            // fecha todos os itens abertos (garante só 1 resposta visível)
+            document.querySelectorAll('.faq-item.aberto').forEach((outroItem) => {
+              outroItem.classList.remove('aberto');
+              outroItem.querySelector('.faq-pergunta').setAttribute('aria-expanded', 'false');
+            });
+
+            // reabre o item clicado só se ele estava FECHADO antes do clique
+            if (!jaEstavaAberto) {
+              item.classList.add('aberto');
+              botao.setAttribute('aria-expanded', 'true');
+            }
+          });
+        });
+      </script>
+
+</body>
+
+</html>

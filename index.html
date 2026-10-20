@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Faz a página se adaptar à largura da tela do dispositivo 
+   (essencial pra responsividade no celular) -->
+
+   <title> Anasor Sobreira | Cerâmica e Crochê Artesanal </title>
+
+   <link rel="preconnect" href="https://fonts.googleapis.com">
+ <!-- Preconnect avisa o navegador com antecedência que vamos buscar algo nesse domínio, 
+  acelera o carregamento da fonte -->
+
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,ital,wght@9..144,0,400..700;9..144,1,400..700&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<!-- Importa as duas fontes que vamos usar
+ : Fraunces (títulos) e Jost (texto) -->
+
+   <link rel="stylesheet" href="css/style.css?v=29">
+
+   <!-- Marca no <html> que o JS rodou logo no início. O CSS do
+        "scroll reveal" só esconde os elementos (opacity 0) quando
+        esta classe existe -> se o JavaScript falhar/estiver
+        desligado, o conteúdo aparece normalmente, nunca fica
+        invisível preso. -->
+   <script>document.documentElement.classList.add('js-reveal');</script>
+
+</head>
+
+<body>
+
+    <!-- ===== BARRA DE ANÚNCIO ===== -->
+    <!-- aria-hidden="true": é conteúdo de marketing que se troca sozinho
+         a cada 4s; se fosse anunciado por leitores de tela viraria ruído.
+         As mesmas informações estão na seção .selos-confianca, essa sim
+         acessível. O texto é preenchido/trocado pelo js/main.js. -->
+    <div class="barra-anuncio" aria-hidden="true">
+        <p class="barra-anuncio__texto" id="barra-anuncio-texto"></p>
+    </div>
+
+    <header> <!-- <header> é uma tag semântica: indica
+        que esse bloco é o cabeçalho do site -->
+
+        <nav> <!-- <nav> indica que esse bloco é a navegação principal 
+            (ajuda acessibilidade e SEO) -->
+
+            <!-- A logo agora é um link pra index.html: comportamento
+                 esperado pelo usuário (clicar na marca = voltar pra Home).
+                 Aqui na própria Home isso só recarrega a página, sem problema. -->
+            <a href="index.html" class="logo"> Anasor Sobreira  </a>
+            <!-- Nome/fica visível em todas as páginas -->
+
+
+
+            <ul class="nav-links">
+                <!-- "Nosso Ateliê": primeiro item, antes até de "Home", a
+                     pedido — leva direto pro id="atelie" (o bloco de fotos
+                     dentro de #quem-somos, mais abaixo neste arquivo).
+                     Aqui na Home é só uma âncora "#atelie" (scroll suave via
+                     CSS — scroll-behavior:smooth, ver style.css); nas OUTRAS
+                     páginas (ceramica.html, produto.html etc.) o mesmo link
+                     vira "index.html#atelie", pra navegador ir pra Home E já
+                     rolar até lá — o próprio navegador resolve isso sozinho,
+                     sem JS extra. -->
+                <li><a href="#atelie">Nosso Ateliê</a></li>
+
+                <!-- "Home" vem em seguida, antes de "Cerâmica" (mesma ideia
+                     da logo: link explícito de volta pra index.html, presente
+                     em todas as páginas). "Cerâmica" aponta direto pra
+                     ceramica.html (a página dedicada, com TODDOS os produtos
+                     de cerâmica), e não mais pra uma âncora dentro da
+                     próppria Home. -->
+                <li><a href="index.html">Home</a></li>
+                <li><a href="ceramica.html">Cerâmica</a></li>
+                <li><a href="#croche">Crochê</a></li>
+                <li><a href="#quem-somos">Quem Somos</a></li>
+                <li><a href="#contato">Contato</a></li>
+            </ul>
+
+            <!-- Busca: o JS (main.js) escuta o evento "input" deste campo
+                 (#busca) e filtra a vitrine em tempo real. role="search"
+                 no <form> e aria-label no <input> ajudam leitores de tela. -->
+            <form class="busca" role="search">
+                <input type="search" id="busca" placeholder="Buscar peça..." aria-label="Buscar peças">
+            </form>
+
+            <div class="nav-icons">
+                <a href="checkout.html">🛒 Carrinho</a>
+                <!-- Fallback (sem JS / clique com o botão do meio): o clique de verdade
+                     é interceptado pelo js/main.js e abre o mini-carrinho; ele
+                     mesmo leva pra cá (checkout.html) pelo botão "Finalizar Compra". -->
+
+            </div>
+
+            <button class="menu-toggle" aria-label="Abrir menu" aria-expanded="false">
+                <!-- Botão "hambúrguer": só aparece no celular (controlado pelo CSS).
+                     As 3 <span> são as 3 barrinhas; o JS adiciona a classe .active
+                     que as transforma num "X" quando o menu abre -->
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+
+        </nav>
+    </header>
+
+     <main>
+        <!-- .topo envolve só o banner. Serve pra marca d'água do
+             monograma "AS" aparecer na faixa de fundo ao redor do
+             banner (topo e laterais), sem ficar em cima da foto. -->
+        <div class="topo">
+        <section class="banner-principal" aria-roledescription="carrossel" aria-label="Destaques do ateliê">
+
+            <!-- ===== CARROSSEL DO BANNER =====
+                 Os slides (foto + eyebrow + título + subtítulo +
+                 contador + botão principal) NÃO estão escritos aqui —
+                 vêm inteiros do array "bannersHero", em js/main.js
+                 (mesma ideia de "fonte única da verdade" já usada pro
+                 array "produtos"). O JS REAPROVEITA esta MESMA <img> e
+                 este MESMO cartão de texto pros 2 slides (só troca
+                 src/textos a cada vez), em vez de duplicar a seção
+                 inteira por slide — assim o parallax (que guarda uma
+                 referência a ESTA <img> — ver js/main.js) e o resto do
+                 CSS não precisam mudar nada.
+                 Por isso a <img> e os campos de texto abaixo nascem
+                 vazios: o JS preenche com o slide 0 assim que a
+                 página carrega. -->
+            <img id="banner-imagem" src="" alt="" loading="eager">
+                 <!-- alt e src ficam vazios no HTML de propósito — o JS
+                      preenche a partir do slide ativo. loading="eager"
+                      continua valendo (o banner é a 1a coisa visível
+                      sem rolar). -->
+
+            <div class="banner-texto" id="banner-texto">
+                <!-- EYEBROW: rótulo pequeno acima do <h1>, funciona como
+                     uma "assinatura" do ateliê antes do título principal.
+                     Maiúsculas + letter-spacing largo (em vez de negrito
+                     ou fonte maior) é o jeito mais discreto de dar
+                     destaque sem competir com o <h1> pela atenção. -->
+                <p class="banner-texto__eyebrow" id="banner-eyebrow"></p>
+
+                <h1 id="banner-titulo"></h1>
+                <!-- "Beleza e Textura" (e o equivalente do slide de Crochê)
+                     em Fraunces itálica 400 (.titulo-enfase): é onde o
+                     corte artístico da fonte variável aparece -->
+
+                <p id="banner-subtitulo"></p>
+
+                <!-- CONTADOR DE PEÇAS: continua calculado a partir do
+                     array "produtos" (produtos.js), nunca digitado —
+                     mas agora FILTRADO pela categoria do slide ativo
+                     (campo "categoriaContador" de cada slide em
+                     bannersHero, em js/main.js), então o slide de
+                     Crochê mostra quantas peças de CROCHÊ existem, não
+                     o total do catálogo inteiro. -->
+                <p class="banner-texto__contador" id="contador-pecas"></p>
+
+                <!-- Dois botões lado a lado: o principal (sólido, texto e
+                     link trocam por slide — ver bannersHero) continua
+                     sendo a ação primária; o botão "fantasma" (contorno,
+                     mesmo padrão visual do .btn-whatsapp de produto.html)
+                     é FIXO em todos os slides — não faz parte de
+                     bannersHero de propósito, é a mesma ação de contato
+                     não importa qual categoria está em destaque. -->
+                <div class="banner-texto__botoes">
+                    <a href="#" id="banner-btn-principal" class="btn-principal"></a>
+
+                    <a
+                        href="https://wa.me/5521987222679?text=Ol%C3%A1!%20Vim%20pelo%20site%20e%20gostaria%20de%20saber%20mais%20sobre%20as%20pe%C3%A7as%20da%20Anasor%20Sobreira."
+                        class="btn-fantasma"
+                        target="_blank"
+                        rel="noopener"
+                    >
+                        Falar no WhatsApp
+                    </a>
+                </div>
+            </div>
+
+            <!-- LINHA DE CONTATO RÁPIDO: também FIXA em todos os slides
+                 (não muda com o carrossel) — fica FORA do cartão
+                 (.banner-texto — que fecha logo acima), mas ainda
+                 dentro do .banner-principal, na mesma faixa clara à
+                 esquerda da foto (a área que o véu de gradiente
+                 ::before cobre com --cor-fundo sólido, pra esconder o
+                 texto queimado da imagem original — ver comentário lá
+                 em cima). Por isso não precisa de fundo/sombra
+                 próprios: já nasce sobre um fundo claro e legível.
+                 Fonte pequena + cor --cor-secundaria (não a
+                 --cor-destaque usada no cartão) mantêm isso como um
+                 reforço discreto de contato, não um novo elemento de
+                 destaque competindo com o CTA principal.
+                 max-width igual ao do .banner-texto: se os dois itens
+                 não couberem lado a lado nessa largura, o flex-wrap
+                 do CSS empilha um embaixo do outro sozinho — mesmo
+                 comportamento já usado nos botões do cartão acima. -->
+            <div class="banner-contato-rapido">
+                <a href="tel:+5521987222679" class="banner-contato-rapido__item">
+                    <svg class="banner-contato-rapido__icone" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M13.832 16.568a1 1 0 0 0 1.213-.303l.355-.465A2 2 0 0 1 17 15h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2A18 18 0 0 1 2 4a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v3a2 2 0 0 1-.8 1.6l-.468.351a1 1 0 0 0-.292 1.233 14 14 0 0 0 6.392 6.384"/>
+                    </svg>
+                    (21) 98722-2679
+                </a>
+                <a href="mailto:ceramicaeclocheanasor@gmail.com" class="banner-contato-rapido__item">
+                    <svg class="banner-contato-rapido__icone" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <rect width="20" height="16" x="2" y="4" rx="2"/>
+                        <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+                    </svg>
+                    ceramicaeclocheanasor@gmail.com
+                </a>
+
+                <!-- 3o item: Instagram. Mesma classe .banner-contato-rapido__item
+                     dos outros dois (telefone/e-mail) — herda tamanho de
+                     fonte, cor e espaçamento automaticamente, sem CSS novo.
+                     target="_blank" + rel="noopener": abre em nova aba sem
+                     dar à página aberta acesso à referência window.opener
+                     desta (boa prática de segurança em links externos). -->
+                <a href="https://www.instagram.com/sobreiraanasor" class="banner-contato-rapido__item" target="_blank" rel="noopener">
+                    <svg class="banner-contato-rapido__icone" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <rect width="20" height="20" x="2" y="2" rx="5" ry="5"/>
+                        <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
+                        <line x1="17.5" x2="17.5" y1="6.5" y2="6.5"/>
+                    </svg>
+                    @sobreiraanasor
+                </a>
+            </div>
+
+            <!-- SETAS DO CARROSSEL: escondidas no celular (ver media
+                 query em style.css) — lá a tela já fica apertada com o
+                 cartão de texto quase do tamanho do banner inteiro; as
+                 bolinhas (fora do banner, logo abaixo) bastam como
+                 controle manual nesse tamanho de tela. -->
+            <button type="button" class="banner-seta banner-seta--anterior" aria-label="Slide anterior">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="m15 18-6-6 6-6"/>
+                </svg>
+            </button>
+            <button type="button" class="banner-seta banner-seta--proxima" aria-label="Próximo slide">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="m9 18 6-6-6-6"/>
+                </svg>
+            </button>
+
+        </section>
+
+        <!-- BOLINHAS INDICADORAS: ficam FORA de .banner-principal
+             (que tem overflow:hidden + altura FIXA — no celular o
+             cartão de texto já quase preenche essa altura toda, não
+             sobraria espaço "de graça" ali dentro sem sobrepor algo).
+             Aqui, dentro de .topo mas abaixo do banner, elas têm seu
+             próprio espaço garantido em qualquer largura de tela.
+             Geradas via JS (uma por item de bannersHero) — não
+             escritas à mão, pra nunca ficarem dessincronizadas do
+             número real de slides. -->
+        <div class="banner-indicadores" role="group" aria-label="Selecionar slide"></div>
+        </div>
+
+    <section class="categorias" id="categorias">
+
+        <!-- Texto primeiro, emoji no final — mesmo padrão de
+             "Queridinhos do Ateliê ❤️" e "Crochê Artesanal 🧶" logo
+             abaixo, pra manter a voz consistente entre os títulos
+             de seção da Home. -->
+        <h2 class="reveal"> Explore Nossas Coleções 🤎 </h2>
+
+        <!-- Cada card é 1 <a> só (o card INTEIRO é clicável, não só o
+             botão visual). O nome da categoria não fica mais escrito
+             POR CIMA da foto (position:absolute) — antes, quando a
+             peça na foto não deixava um canto "vazio" o suficiente,
+             o texto ficava difícil de ler (ou, com nomes maiores,
+             era cortado pelo recorte curvo do --raio-organico — o
+             mesmo problema que o .subcategoria-card, mais abaixo
+             neste arquivo, já tinha resolvido do mesmo jeito: nome
+             FORA da imagem). Agora o nome mora dentro de
+             .categoria-card__botao, um "botão" visual (pílula, mesmo
+             estilo do .btn-principal) abaixo da foto — sempre
+             legível, em qualquer foto. -->
+        <div class="categoria-cards">
+            <a href="ceramica.html" class="categoria-card reveal">
+                <img src="img/categoria-ceramica.jpg" alt="Categoria Cerâmica" loading="lazy">
+                <div class="categoria-card__botao">
+                    <h3>Cerâmica</h3>
+                    <!-- Ícone "arrow-right" da Lucide: a seta que desliza no
+                         hover do card (ver .categoria-card:hover .categoria-card__seta
+                         no CSS) — reforça visualmente "isso é clicável". -->
+                    <svg class="categoria-card__seta" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M5 12h14"/>
+                        <path d="m12 5 7 7-7 7"/>
+                    </svg>
+                </div>
+            </a>
+
+            <!-- Card de Crochê: agora com foto real (antes era um
+                 placeholder de cor sólida — a img/categoria-croche.png
+                 antiga era uma foto de banco, pessoa na praia, sem
+                 relação com crochê). Estrutura IDÊNTICA à do card de
+                 Cerâmica ao lado: mesma classe .categoria-card, <img>
+                 no mesmo formato, mesmo botão abaixo com nome + seta
+                 animada. Por isso a classe .categoria-card--sem-foto
+                 (e o .categoria-card__placeholder que ela usava) saiu
+                 daqui — não faz mais sentido sem foto nenhuma. -->
+            <a href="croche.html" class="categoria-card reveal">
+                <img src="img/categoria-croche.jpg" alt="Categoria Crochê" loading="lazy">
+                <div class="categoria-card__botao">
+                    <h3>Crochê</h3>
+                    <svg class="categoria-card__seta" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M5 12h14"/>
+                        <path d="m12 5 7 7-7 7"/>
+                    </svg>
+                </div>
+            </a>
+        </div>
+    </section>
+
+      <!-- ===== CERÂMICA / QUERIDINHOS DO ATELIÊ ===== -->
+<section class="queridinhos" id="ceramica">
+        <h2 class="reveal">Queridinhos do Ateliê ❤️</h2>
+        <!-- Vitrine dos produtos mais populares/em destaque -->
+
+    <div class="produtos-grid" data-grade-produtos="queridinhos" data-manual>
+          <!-- Esta grade começa VAZIA de propósito, mas agora é CURADA (pedido:
+               reduzir de "quase o catálogo inteiro" pra 12 peças fixas) — não é
+               mais "toda categoria cerâmica" (por isso data-grade-produtos deixou
+               de valer "ceramica": esse valor especial é o que fazia
+               aplicarEExibir(), js/main.js, tratar esta grade como "toda a
+               categoria"). data-manual avisa aplicarEExibir() pra IGNORAR esta
+               grade (mesmo mecanismo de #produtos-relacionados em produto.html);
+               quem a povoa agora é montarVitrineCurada(), a partir da lista fixa
+               IDS_QUERIDINHOS_ATELIE (js/main.js). -->
+    </div>
+
+    </section>
+
+      <!-- ===== PEÇA EM DESTAQUE (vitrine de honra) =====
+           Seção vazia de propósito, IGUAL ao padrão de #produtos-relacionados
+           em produto.html: o js/main.js (função montarProdutoDestaque(),
+           mais abaixo no arquivo) lê UM produto específico em produtos.js
+           e monta tudo aqui — nome, descrição, preço, fotos, botões — sem
+           nada disso duplicado neste HTML. QUAL peça aparece é controlado
+           por UMA constante no JS (ID_PRODUTO_DESTAQUE): pra trocar de
+           peça no futuro, basta mudar aquele número, nada aqui muda.
+
+           "transicao-topo": suaviza o corte vindo de Queridinhos do
+           Ateliê (bege) — segue igual a antes. SEM "transicao-base"
+           aqui: quem vem logo depois agora é "Cerâmica no Seu Café da
+           Tarde" (nova seção, mesmo bege de Queridinhos) — mas a
+           transição pra ELA mora do OUTRO lado da emenda (na própria
+           seção de café da tarde, como "transicao-topo" dela, MESMO
+           padrão de como esta própria seção resolve sua entrada vinda
+           de Queridinhos). Ver o comentário na seção de café da tarde,
+           logo abaixo. -->
+<section class="produto-destaque reveal transicao-topo" id="produto-destaque" hidden></section>
+
+      <!-- ===== CERÂMICA NO SEU CAFÉ DA TARDE 🤎 (NOVA) =====
+           MESMO formato/estrutura de "Queridinhos do Ateliê" (mesma
+           classe .queridinhos, mesmo carrossel .produtos-grid) — só
+           muda a LISTA de peças (IDS_CAFE_DA_TARDE, js/main.js) e o
+           título. Populada por montarVitrineCurada(), a MESMA função
+           usada em Queridinhos (ver comentário lá em cima) — nenhum
+           código novo de renderização, só mais uma lista de ids.
+
+           "transicao-topo": pedido explícito item 1 — faltava a
+           transição em gradiente entre "Escolha do Ateliê" (escura) e
+           a seção seguinte. Mesma técnica/variáveis que
+           .produto-destaque já usa pra suavizar SUA PRÓPRIA entrada
+           (fundindo com a cor de CIMA), só que aqui fundindo com
+           --cor-texto (a cor de "Escolha do Ateliê") em vez de
+           --cor-fundo-alt — ver a regra .cafe-da-tarde no CSS. -->
+<section class="queridinhos cafe-da-tarde reveal transicao-topo" id="cafe-da-tarde">
+        <h2 class="reveal">Cerâmica no Seu Café da Tarde 🤎</h2>
+
+    <div class="produtos-grid" data-grade-produtos="cafe-da-tarde" data-manual></div>
+
+    </section>
+
+      <!-- ===== ✦ EDIÇÃO SURPRESA (NOVA) =====
+           Seção vazia de propósito (MESMO padrão de #produto-destaque/
+           #selecao-especial): js/main.js (função montarEdicaoSurpresa())
+           monta os 2 cards a partir de IDS_EDICAO_SURPRESA — as únicas
+           2 "canecas surpresa" do catálogo (Cachorrinho e Gatinho).
+
+           Fundo ESCURO, MESMO gradiente de #selecao-especial (não só
+           "parecido" — os MESMOS tons --cor-texto→#2b1f17, ver CSS)
+           de propósito: assim a emenda com a seção seguinte
+           (#selecao-especial, que nasce exatamente nesse mesmo tom)
+           fica idêntica na cor, sem precisar de transicao-base aqui —
+           MESMO raciocínio já usado antes entre #produto-destaque e
+           #selecao-especial (ver comentário histórico removido desta
+           seção, que agora está mais abaixo na página).
+
+           "transicao-topo": suaviza a ENTRADA vinda de "Cerâmica no
+           Seu Café da Tarde" (bege, clara) — sem isso o corte
+           claro/escuro apareceria seco bem no topo desta seção. -->
+<section class="edicao-surpresa reveal transicao-topo" id="edicao-surpresa" hidden></section>
+
+      <!-- ===== SELEÇÃO ESPECIAL =====
+           Seção vazia de propósito (MESMO padrão de #produto-destaque,
+           logo acima): js/main.js (função montarSelecaoEspecial())
+           monta 2 cards a partir de 2 ids fixos em produtos.js
+           (IDS_SELECAO_ESPECIAL, no JS) — nome, foto, preço e o texto
+           de venda de cada card vêm de lá, nada disso é escrito aqui.
+
+           Fundo ESCURO como "Escolha do Ateliê" (pedido: "pode
+           reaproveitar cor/gradiente similar... com variação sutil pra
+           não ficar idêntica") — mas layout PRÓPRIO (grade de 2 cards
+           com moldura + "pergaminho" por trás do texto), não uma cópia
+           do hero de 1 peça só logo acima.
+
+           SEM "transicao-topo" de propósito: quem vem logo antes agora
+           é "✦ Edição Surpresa", TAMBÉM de fundo escuro, começando
+           exatamente no mesmo --cor-texto desta seção — mesma emenda
+           "cor idêntica, sem degradê necessário" que já existia entre
+           #produto-destaque e esta seção antes de "✦ Edição Surpresa"
+           entrar no meio das duas. COM "transicao-base": suaviza a
+           saída pro Quem Somos (claro) logo abaixo — mesmo sistema
+           utilitário de sempre. -->
+<section class="selecao-especial reveal transicao-base" id="selecao-especial" hidden></section>
+
+      <!-- ===== CROCHÊ ===== -->
+      <!-- Mesma ideia: grade vazia + data-grade-produtos="croche".
+           Enquanto não houver nenhuma peça de crochê no array, o JS
+           esconde esta seção inteira (section.hidden), então ela não
+           aparece como um bloco vazio. Assim que um produto com
+           categoria "croche" for adicionado em produtos.js, a seção
+           volta a aparecer sozinha. -->
+<section class="queridinhos croche-vitrine" id="croche">
+        <h2 class="reveal">Crochê Artesanal 🧶</h2>
+
+    <div class="produtos-grid" data-grade-produtos="croche"></div>
+
+    </section>
+
+      <!-- ===== QUEM SOMOS ===== -->
+<section class="quem-somos" id="quem-somos">
+        <img src="img/institucional/quem-somos.jpg" alt="Ateliê Anasor Sobreira" loading="lazy" class="reveal foto-emoldurada">
+        <!-- Foto real do ateliê (trazida do lote "site mãe" de 22/09,
+             já copiada para img/institucional/quem-somos.jpg) — troca o
+             placeholder antigo (img/categoria-ceramica.jpg) que só
+             reaproveitava a foto de capa da categoria cerâmica. Só a
+             IMAGEM mudou aqui: o texto ao lado (bloco
+             .conteudo-provisorio, logo abaixo) continua provisório de
+             propósito, aguardando o relato real da Anasor — não é
+             parte deste lote.
+             loading="lazy": esta seção fica bem abaixo na página.
+             .foto-emoldurada = a MESMA "moldura de quadro" da foto principal
+             da página de produto (classe reutilizável em css/style.css). -->
+
+        <div class="quem-somos-texto reveal">
+            <h2>Quem Somos</h2>
+
+            <!-- TEXTO AINDA PROVISÓRIO: foi escrito por nós (não é o
+                 relato da Anasor) enquanto o site é montado. A borda
+                 tracejada + a notinha "[Texto provisório...]" abaixo
+                 SÓ aparecem em MODO_DEV (ver js/main.js — checa se o
+                 hostname é local) — no site publicado de verdade,
+                 .conteudo-provisorio/.dev-aviso não têm nenhum efeito
+                 visual (ver style.css), então um cliente nunca vê
+                 esse aviso. Antes de publicar de verdade, troque o
+                 texto abaixo pelo relato real e pode apagar este
+                 comentário e a classe/span — eles não fazem mais
+                 nada sozinhos. -->
+            <div class="conteudo-provisorio">
+                <span class="dev-aviso">[Texto provisório — substituir pelo relato real da Anasor]</span>
+                <p>
+                    A Anasor Sobreira nasceu da vontade de levar o feito à mão para
+                    dentro de casa. Cada peça de cerâmica é torneada, esmaltada e
+                    queimada no nosso ateliê, e cada trabalho de crochê é montado
+                    ponto a ponto com fios naturais.
+                </p>
+                <p>
+                    Trabalhamos em pequenos lotes, então nenhuma peça é exatamente
+                    igual à outra — as pequenas variações são a assinatura do
+                    artesanal.
+                </p>
+                <p>
+                    Ficamos no Rio de Janeiro e enviamos para todo o Brasil.
+                </p>
+            </div>
+        </div>
+
+        <!-- ===== GALERIA "CONHEÇA NOSSO ATELIÊ" =====
+             Continuação do MESMO assunto do bloco acima (por isso vive
+             DENTRO de .quem-somos, não numa <section> nova) — dá
+             sequência natural ao "quem somos" com fotos de verdade do
+             espaço. grid-column:1/-1 (ver style.css) faz este bloco
+             ocupar as DUAS colunas do grid de .quem-somos (que por
+             padrão só tem 2: foto | texto), ficando numa fileira nova,
+             abaixo das outras duas.
+             Fica VAZIO de propósito: js/main.js lê o array fotosAtelie
+             e monta as linhas (foto + legenda, zigue-zague) aqui —
+             adicionar/trocar uma foto no futuro é só mexer naquele
+             array, nada aqui muda. -->
+        <!-- id="atelie": alvo do novo link "Nosso Ateliê" no header
+             (ver <nav> acima). É um id à parte do id="quem-somos" da
+             <section> pai de propósito — o link deve rolar direto até
+             as FOTOS do ateliê, não até o título/texto "Quem Somos"
+             que vem antes delas. -->
+        <div class="atelie-galeria-bloco" id="atelie">
+            <p class="atelie-galeria-subtitulo reveal">
+                <svg class="atelie-galeria-subtitulo__icone" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                     stroke-linejoin="round" aria-hidden="true">
+                    <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/>
+                    <circle cx="12" cy="13" r="3"/>
+                </svg>
+                Um olhar dentro do ateliê onde cada peça ganha vida
+            </p>
+            <div class="atelie-galeria" id="atelie-galeria"></div>
+        </div>
+    </section>
+
+      <!-- ===== SELOS DE CONFIANÇA =====
+           Reposicionada: antes ficava logo após o banner; agora mora
+           bem aqui, imediatamente ANTES do Contato — é o último
+           empurrãozinho de confiança ("entrega rápida, pagamento
+           seguro...") bem antes do visitante decidir falar com a
+           gente ou preencher o formulário, em vez de competir com o
+           banner pela primeira impressão da página. -->
+<section class="selos-confianca">
+              <!-- Ícones da biblioteca Lucide (open source), colados aqui
+                   como SVG "inline". Escolhi inline em vez do CDN da Lucide
+                   porque: (1) zero requisição extra e zero JavaScript;
+                   (2) funciona offline; (3) cada ícone tem stroke="currentColor",
+                   então herda a cor de .selo__icone (CSS) automaticamente.
+                   aria-hidden="true": o ícone é decorativo, o texto abaixo
+                   dele já diz o significado.
+
+                   Cada selo virou um "card" (ver .selo no CSS): círculo
+                   com --cor-fundo-alt atrás do ícone + texto ABAIXO dele
+                   (antes era lado a lado) + sombra sutil no card inteiro
+                   + leve elevação no hover, no mesmo espírito do
+                   .produto-card. classe "reveal": como a seção agora fica
+                   mais abaixo na página (fora da primeira dobra), os
+                   cards entram com o mesmo fade+slide dos outros blocos
+                   ao rolar até aqui. -->
+
+            <div class="selo reveal">
+                <div class="selo__icone-fundo">
+                    <svg class="selo__icone" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M5 18H3c-.6 0-1-.4-1-1V7c0-.6.4-1 1-1h10c.6 0 1 .4 1 1v11"/>
+                        <path d="M14 9h4l4 4v4c0 .6-.4 1-1 1h-2"/>
+                        <path d="M15 18H9"/>
+                        <circle cx="7" cy="18" r="2"/>
+                        <circle cx="17" cy="18" r="2"/>
+                    </svg>
+                </div>
+                <p class="selo__texto">Frete Grátis</p>
+            </div>
+
+            <div class="selo reveal">
+                <div class="selo__icone-fundo">
+                    <svg class="selo__icone" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <rect width="18" height="11" x="3" y="11" rx="2" ry="2"/>
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                    </svg>
+                </div>
+                <p class="selo__texto">Pagamento Seguro</p>
+            </div>
+
+            <div class="selo reveal">
+                <div class="selo__icone-fundo">
+                    <svg class="selo__icone" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M18 11V6a2 2 0 0 0-4 0"/>
+                        <path d="M14 10V4a2 2 0 0 0-4 0v2"/>
+                        <path d="M10 10.5V6a2 2 0 0 0-4 0v8"/>
+                        <path d="m7 15-1.8-1.8a2 2 0 0 0-2.8 2.8L6 20c1.5 1.5 3 2 5 2h2a8 8 0 0 0 8-8V7a2 2 0 0 0-4 0v5"/>
+                    </svg>
+                </div>
+                <p class="selo__texto">Feito à Mão</p>
+            </div>
+
+            <div class="selo reveal">
+                <div class="selo__icone-fundo">
+                    <svg class="selo__icone" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/>
+                    </svg>
+                </div>
+                <p class="selo__texto">Suporte via WhatsApp</p>
+            </div>
+
+        </section>
+
+      <!-- ===== CONTATO ===== -->
+<section class="contato" id="contato">
+        <h2 class="reveal">Fale com a gente</h2>
+        <p class="subtitulo reveal">Dúvidas sobre uma peça, encomendas personalizadas ou parcerias — ou deixe só nome e e-mail para receber nossas novidades e promoções</p>
+
+        <div class="contato-conteudo reveal">
+            <div class="contato-info">
+                <p>📱 WhatsApp: <a href="https://wa.me/5521987222679" target="_blank">(21) 98722-2679</a></p>
+                <p>📧 E-mail: ceramicaeclocheanasor@gmail.com</p>
+                <p>📷 Instagram: <a href="https://www.instagram.com/sobreiraanasor" target="_blank" rel="noopener">@sobreiraanasor</a></p>
+                <p>📍 Rio de Janeiro – RJ · Envios para todo o Brasil</p>
+            </div>
+
+            <!-- Formulário sem back-end ainda. "novalidate" DESLIGA as
+                 bolhas de validação nativas do navegador — a validação
+                 (ao vivo, no blur/input) é feita pelo js/main.js, que
+                 mostra as mensagens nos <span class="campo__erro">.
+                 Cada campo vem dentro de um .campo (input + span de erro). -->
+            <form class="contato-form" novalidate>
+                <div class="campo">
+                    <input type="text" name="nome" placeholder="Seu nome" required>
+                    <span class="campo__erro" id="erro-nome" aria-live="polite"></span>
+                </div>
+                <div class="campo">
+                    <input type="email" name="email" placeholder="Seu e-mail" required>
+                    <span class="campo__erro" id="erro-email" aria-live="polite"></span>
+                </div>
+                <!-- mensagem SEM "required": o form também serve de cadastro
+                     de newsletter — só nome + e-mail já basta pra se
+                     registrar. Quem quiser mandar um recado, manda. -->
+                <div class="campo">
+                    <textarea name="mensagem" placeholder="Sua mensagem (opcional)"></textarea>
+                    <span class="campo__erro" id="erro-mensagem" aria-live="polite"></span>
+                </div>
+                <button type="submit">Enviar</button>
+            </form>
+        </div>
+    </section>
+
+    </main>
+
+    <footer>
+        <div class="footer-container">
+            <div class="footer-sobre">
+                <h3> Anasor Sobreira</h3>
+                <p>Cerâmica e crochê artesanais, feitos à mão com carinho no nosso ateliê.</p>
+            </div>
+
+            <div class="footer-links">
+                <h4> Links Rápidos </h4>
+                <ul>
+                    <li><a href="ceramica.html"> Cerâmica </a></li>
+                    <li><a href="#croche"> Crochê </a></li>
+                    <li><a href="#quem-somos"> Quem Somos </a></li>
+                    <li><a href="politicas.html"> Políticas </a></li>
+                </ul>
+            </div>
+
+            <div class="footer-contato">
+                <h4>Contato</h4>
+                <p>📱 WhatsApp: (21) 98722-2679 </p>
+                <p>📧 ceramicaeclocheanasor@gmail.com</p>
+            </div>
+
+             <div class="footer-social">
+      <h4>Redes Sociais</h4>
+      <a href="https://www.instagram.com/sobreiraanasor" target="_blank" rel="noopener">Instagram</a>
+    </div>
+
+  </div>
+
+  <div class="footer-copyright">
+    <p>&copy; 2026 Anasor Sobreira. Todos os direitos reservados.</p>
+    <!-- &copy; é o código especial HTML para o símbolo © -->
+  </div>
+
+    <!--Rodape da pagina esse footer-->
+    </footer>
+
+      <!-- Ordem importa: produtos.js PRIMEIRO (define a lista "produtos"),
+           main.js DEPOIS (usa essa lista para montar os cards). Os dois
+           ficam no fim do <body> para o HTML já estar carregado quando
+           o JavaScript rodar. -->
+      <script src="js/produtos.js?v=29"></script>
+      <script src="js/main.js?v=29"></script>
+
+</body>
+
+
+
+</html>

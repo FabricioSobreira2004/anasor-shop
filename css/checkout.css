@@ -1,0 +1,740 @@
+/* ============================================================
+   CHECKOUT — checkout.html
+   Carregado DEPOIS de style.css: usa as MESMAS variáveis de :root
+   (nenhuma cor nova), só o layout exclusivo desta página — e das 3
+   páginas de retorno do pagamento (pedido-confirmado / pedido-pendente
+   / pedido-erro), que reaproveitam o bloco ".pedido-status" lá no
+   fim deste arquivo, em vez de cada uma ter seu próprio CSS.
+   ============================================================ */
+
+.checkout {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 1rem 5% 4rem;
+
+  /* MARCA D'ÁGUA: monograma "AS" ao fundo da página inteira de
+     checkout — pedido explícito de redesign ("watermark SVG... como
+     já é feito em outras seções"). Mesma variável/técnica usada em
+     .quem-somos (style.css): nenhum background-color aqui, então o
+     grão de fundo do <body> continua por baixo e o "AS" entra por
+     cima, em opacity baixa (0.1, já embutida no próprio SVG). Antes
+     esta página era a única "seção grande" do site sem nenhuma marca
+     de fundo — daí a sensação de "genérica" apontada no pedido, mesmo
+     já usando a paleta de cores (ver comentário no topo do arquivo:
+     este CSS nunca teve cor nova, só faltava este toque decorativo). */
+  background-image: var(--marca-monograma);
+  background-repeat: repeat;
+}
+
+.checkout__titulo {
+  margin-bottom: 0.5rem;
+  /* era 2rem: reduzido porque agora tem a frase de abertura
+     (.checkout-form__intro) logo abaixo do <h1> antes do respiro
+     grande até o formulário — ver comentário nela, em breve neste
+     arquivo, sobre por que ela mora dentro do <form> e não aqui. */
+}
+
+/* --- "carrinho vazio": nada pra revisar nem pagar --- */
+.checkout-vazio {
+  text-align: center;
+  padding: 4rem 5%;
+}
+
+.checkout-vazio p {
+  font-family: var(--fonte-titulo);
+  font-size: 1.3rem;
+  margin-bottom: 1.5rem;
+}
+
+/* --- as 2 colunas --- */
+.checkout-grid {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr;
+  /* form mais largo que o resumo — é onde está o trabalho de
+     preencher; o resumo só precisa caber nome + preço */
+  gap: 3rem;
+  align-items: start;
+}
+
+/* CLÁSSICO "bug" de grid/flex: todo item de grid tem um mínimo
+   automático de largura = o tamanho do CONTEÚDO (min-content) dele,
+   por padrão — e um <input>/<select> tem um mínimo intrínseco do
+   navegador (~170-200px) que NÃO encolhe só por causa de "width:100%".
+   Sem isto, no mobile (grid vira 1 coluna, container mais estreito
+   que esse mínimo) o input "empurrava" a coluna inteira, e com ela
+   TODO o card do resumo ao lado — foi exatamente o bug encontrado no
+   teste em 390px (a página ganhava barra de rolagem horizontal).
+   min-width:0 zera esse mínimo automático em toda a cadeia de
+   containers, deixando quem manda no tamanho ser só o CSS (width:100%
+   + o espaço disponível), nunca o conteúdo. */
+.checkout-grid,
+.checkout-form,
+.checkout-resumo,
+.checkout-form .campo-linha,
+.checkout-form .campo,
+.checkout-form input,
+.checkout-form select {
+  min-width: 0;
+}
+
+/* ============================================================
+   COLUNA ESQUERDA — formulário
+   ============================================================ */
+.checkout-form fieldset {
+  border: none;
+  padding: 0;
+  margin: 0 0 2rem;
+  min-width: 0;
+  /* fieldset tem um "min-width: min-content" implícito em vários
+     navegadores, que pode estourar um grid estreito — zerado aqui */
+}
+
+.checkout-form legend {
+  font-family: var(--fonte-titulo);
+  font-size: 1.15rem;
+  padding: 0;
+  margin-bottom: 1.2rem;
+  width: 100%;
+  border-bottom: 1px solid var(--cor-fundo-alt);
+  padding-bottom: 0.6rem;
+}
+
+/* fileiras com 2 campos lado a lado (a MESMA ideia do .campo já usado
+   no form de contato, só que aqui alguns campos precisam dividir uma
+   linha em vez de empilhar 1-por-1) */
+.checkout-form .campo-linha {
+  display: grid;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.checkout-form .campo-linha .campo {
+  margin-bottom: 0;
+  /* a linha já tem seu próprio margin-bottom; sem isso o respiro dobraria */
+}
+
+.campo-linha--2 { grid-template-columns: 1fr 1fr; }
+.campo-linha--numero { grid-template-columns: 140px 1fr; }
+.campo-linha--cidade-uf { grid-template-columns: 1fr 100px; }
+
+/* o CEP fica sozinho na largura (não em campo-linha--2): a notinha de
+   "preenchemos automaticamente em breve" precisa de espaço embaixo dele */
+.campo-linha--cep {
+  grid-template-columns: 1fr;
+}
+
+.checkout-form__nota {
+  font-size: 0.8rem;
+  color: var(--cor-secundaria);
+  font-style: italic;
+  margin-top: -0.4rem;
+}
+
+.checkout-form__opcional {
+  font-weight: 400;
+  color: var(--cor-secundaria);
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+/* Frase de abertura ("Só precisamos do essencial..."): fica no topo
+   do <form>, ANTES do aviso de "convidado" — Jost (é texto corrido,
+   não título — Fraunces fica só pro <h1>/<legend>, como no resto do
+   site), tom --cor-secundaria (a mesma cor "de apoio" já usada nas
+   labels e nas notinhas desta página, não uma cor nova) e um pouco
+   maior que o corpo normal pra realmente ler como um convite, não
+   como legal/rodapé. */
+.checkout-form__intro {
+  font-size: 1.05rem;
+  color: var(--cor-secundaria);
+  margin-bottom: 1.75rem;
+}
+
+/* .campo / .campo__erro já vêm de style.css (usados também no form de
+   contato) — aqui só o INPUT/SELECT em si, escopados por
+   ".checkout-form" pra não vazar pra outros formulários do site. */
+.checkout-form .campo {
+  margin-bottom: 1rem;
+}
+
+.checkout-form label {
+  display: block;
+  margin-bottom: 0.35rem;
+  font-size: 0.85rem;
+  color: var(--cor-secundaria);
+}
+
+.checkout-form input,
+.checkout-form select {
+  width: 100%;
+  font: inherit;
+  font-size: 0.95rem;
+  color: var(--cor-texto);
+  padding: 0.8rem 1rem;
+  border: 1px solid #D8C7B0;
+  border-radius: 10px;
+  background-color: var(--cor-card);
+}
+
+.checkout-form select {
+  cursor: pointer;
+}
+
+.checkout-form input:focus,
+.checkout-form select:focus {
+  outline: 2px solid var(--cor-destaque);
+  outline-offset: 1px;
+}
+
+/* estado de erro — mesma cor "de atenção" (terracota escuro) já usada
+   no form de contato, nada de vermelho novo na paleta */
+.checkout-form input.invalido,
+.checkout-form select.invalido {
+  border-color: var(--cor-destaque-escuro);
+}
+
+/* --- aviso "comprando como convidado" --- */
+.checkout-convidado {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+  background-color: var(--cor-fundo-alt);
+  /* Cantos orgânicos assimétricos, pedidos no redesign — MAS não a
+     variável --raio-organico "crua" do :root (60% 40% 55% 45% / 45%
+     55% 40% 60%): aquele valor foi calibrado pra fotos/pílulas
+     GRANDES (banner, categoria). Aplicado num card de texto compacto
+     como este (padding de só 1rem-1.2rem), a curva das pontas fica
+     desproporcional ao conteúdo — o texto quase encosta na borda
+     arredondada em alguns cantos. Uma versão mais SUAVE do mesmo
+     princípio (curvas desiguais entre os 4 cantos, não um retângulo
+     uniforme) preserva a identidade "orgânica" sem prejudicar a
+     leitura — mesmo raciocínio já usado pro .subcategoria-card
+     (ceramica.html) não herdar --raio-organico direto. */
+  border-radius: 28px 14px 28px 14px / 14px 28px 14px 28px;
+  padding: 1rem 1.2rem;
+  margin-bottom: 2rem;
+  font-size: 0.88rem;
+  color: var(--cor-texto);
+}
+
+.checkout-convidado__icone {
+  width: 1.3em;
+  height: 1.3em;
+  flex-shrink: 0;
+  margin-top: 0.15em;
+  color: var(--cor-secundaria);
+}
+
+.checkout-convidado p {
+  margin-top: 0.2rem;
+  color: var(--cor-secundaria);
+}
+
+/* --- botão de enviar --- */
+.checkout-form button[type="submit"] {
+  width: 100%;
+  padding: 1rem;
+  font-size: 1rem;
+  text-align: center;
+}
+
+.checkout-form button[type="submit"]:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ---- EFEITO "GUMOSO" 3D no botão principal do checkout ----
+   Pedido: aplicar o mesmo efeito 3D "gummy button" (box-shadow
+   sólido + translateY no :active) já usado nos botões de comprar do
+   catálogo (.btn-comprar-agora, em style.css). Em vez de mexer em
+   .btn-principal (a classe que #btn-finalizar-pedido também usa, mas
+   que aparece em VÁRIOS outros lugares do site — banner, "Ver
+   Produtos" do carrinho vazio... mudar ali afetaria tudo isso, fora
+   do pedido), a técnica é replicada aqui, escoped só no ID deste
+   botão. Especificidade de ID (#) vence a de classe (.btn-principal),
+   então estas regras sobrescrevem só o necessário (hover/active/
+   transition) sem precisar de !important nem duplicar o resto do
+   visual (cor, formato de pílula, brilho deslizante no hover — esses
+   continuam vindo de .btn-principal, intactos). */
+.checkout-form #btn-finalizar-pedido {
+  transition: transform 0.1s ease-out, box-shadow 0.1s ease-out, background-color 0.2s ease;
+  /* DEGRAU 3D em repouso — mesma técnica/cor de .btn-comprar-agora:
+     sombra SÓLIDA (sem blur, offset-x:0) na cor --cor-destaque-escuro
+     (a mesma que .btn-principal já usa no :hover normal), simulando a
+     "base" da pílula vista de lado. */
+  box-shadow: 0 5px 0 var(--cor-destaque-escuro);
+}
+
+.checkout-form #btn-finalizar-pedido:hover {
+  /* substitui o "sobe 2px" simples de .btn-principal:hover por um
+     "sobe 2px + degrau cresce 2px" — mesma leitura do catálogo: o
+     botão parece mais alto/pronto pra ser apertado, sem mudar de cor
+     (a cor viva precisa continuar em cima pro degrau "escuro" embaixo
+     seguir lendo como profundidade, não como um botão apagado). */
+  transform: translateY(-2px);
+  box-shadow: 0 7px 0 var(--cor-destaque-escuro);
+}
+
+.checkout-form #btn-finalizar-pedido:active {
+  /* o "afundar": desce exatamente a altura do degrau (5px) e o degrau
+     encolhe até sumir (offset 0) — ilusão de botão pressionado até
+     encostar na própria base. */
+  transform: translateY(5px);
+  box-shadow: 0 0 0 var(--cor-destaque-escuro);
+}
+
+.checkout-form #btn-finalizar-pedido:disabled {
+  /* desabilitado (form incompleto) NÃO deve reagir a hover/active —
+     trava o degrau na altura de repouso e ignora qualquer transform,
+     senão um mouse passando por cima de um botão "morto" ainda dava a
+     entender que ele responderia ao clique. */
+  transform: none;
+  box-shadow: 0 5px 0 var(--cor-destaque-escuro);
+}
+
+/* respeita "reduzir movimento" do sistema — mesmo cuidado já tomado
+   nos botões .btn-comprar/.btn-comprar-agora do catálogo (style.css):
+   sem o salto no hover nem o afundar no toque; só a troca de sombra
+   (discreta) ainda avisa que o clique registrou. */
+@media (prefers-reduced-motion: reduce) {
+  .checkout-form #btn-finalizar-pedido,
+  .checkout-form #btn-finalizar-pedido:hover,
+  .checkout-form #btn-finalizar-pedido:active {
+    transition: none;
+    transform: none;
+  }
+}
+
+#erro-envio-pedido {
+  text-align: center;
+  margin-top: 0.8rem;
+}
+
+/* ============================================================
+   COLUNA DIREITA — resumo do pedido
+   ============================================================ */
+.checkout-resumo {
+  background-color: var(--cor-card);
+  /* Mesma ideia de cantos orgânicos "suaves" do .checkout-convidado
+     (ver o comentário completo lá, mais acima neste arquivo) — aqui
+     um pouco mais discreta ainda (24px/12px em vez de 28px/14px)
+     porque este card tem MAIS conteúdo denso e tabular (lista de
+     itens, linhas de subtotal/frete/total): cantos muito acentuados
+     competiriam visualmente com as linhas retas do resumo. */
+  border-radius: 24px 12px 24px 12px / 12px 24px 12px 24px;
+  padding: 1.75rem;
+  box-shadow: 0 4px 14px rgba(62, 46, 34, 0.08);
+  /* sticky: acompanha a rolagem enquanto o form (mais longo) rola —
+     assim o total fica sempre à vista. top:6rem deixa espaço pro
+     header sticky do site não cobrir o topo do resumo. */
+  position: sticky;
+  top: 6rem;
+}
+
+.checkout-resumo h2 {
+  font-size: 1.2rem;
+  margin-bottom: 1.25rem;
+}
+
+.checkout-resumo__lista {
+  list-style: none;
+  margin: 0 0 1.25rem;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  max-height: 320px;
+  overflow-y: auto;
+  /* carrinhos com muitos itens rolam AQUI DENTRO em vez de esticar o
+     resumo (e o sticky) pra fora da tela */
+}
+
+.checkout-resumo__item {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.checkout-resumo__item img {
+  /* 52px -> 76px: pedido explícito ("hoje está pequena demais... quase
+     um ícone"). 76px continua proporcional ao card (a coluna do
+     resumo tem ~300-320px de conteúdo útil depois do padding — a foto
+     ocupa ~1/4 disso, dá pra reconhecer a peça sem competir com o
+     nome/preço ao lado, que ainda tem espaço de sobra pra não truncar
+     demais). */
+  width: 76px;
+  height: 76px;
+  object-fit: cover;
+  border-radius: 10px;
+  /* 8px -> 10px: acompanha o mesmo raio já usado nos <input> desta
+     página (.checkout-form input, mais acima neste arquivo) — mantém
+     as miniaturas "na mesma família visual" dos outros elementos
+     redondados da tela, não um valor novo solto. */
+  flex-shrink: 0;
+  background-color: var(--cor-fundo-alt);
+  /* cor de espera caso o produto tenha sumido do catálogo (foto vazia) */
+
+  /* MOLDURA SUTIL pedida ("borda sutil ou moldura, mesmo tratamento
+     visual usado em outras miniaturas do site") — NÃO a .foto-
+     emoldurada completa (aquela é a moldura "de quadro", pesada, feita
+     pra fotos grandes de destaque: 14px de padding + borda de 6px só
+     ficaria desproporcional num ícone de 76px, engolindo a foto). Em
+     vez disso, reaproveito a MESMA borda fina que os campos deste
+     formulário já usam (--cor-fundo-alt tom bege, cor #D8C7B0 —
+     definida ali embaixo em ".checkout-form input") — mesma "família"
+     de moldura discreta já usada nas miniaturas pequenas do site (ex.:
+     .mini-item__foto do mini-carrinho, em style.css, que também não
+     usa .foto-emoldurada por ser miniatura). */
+  border: 1px solid #D8C7B0;
+}
+
+.checkout-resumo__item-info {
+  flex: 1;
+  min-width: 0;
+  /* min-width:0 deixa o nome truncar (ver abaixo) em vez de espremer o preço */
+}
+
+.checkout-resumo__item-nome {
+  font-size: 0.9rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.checkout-resumo__item-qtd {
+  font-size: 0.8rem;
+  color: var(--cor-secundaria);
+}
+
+/* Preço ORIGINAL riscado, quando o item veio com desconto (campo
+   "precoOriginal" de produtos.js) — pedido item 4. Fica DENTRO da
+   mesma linha "{qtd} × {preço}" (ver checkout.js), então herda o
+   font-size de .checkout-resumo__item-qtd; só o riscado + a cor mais
+   apagada (ela já é --cor-secundaria; o <s> nativo cuida do
+   risco) precisam de regra própria. */
+.checkout-resumo__item-preco-original {
+  text-decoration: line-through;
+  margin-right: 0.3rem;
+  opacity: 0.75;
+}
+
+/* Selo "X% OFF" pequeno, ao lado do preço com desconto — MESMA cor de
+   acento (--cor-ouro) que o selo equivalente do card de produto
+   (.preco-selo-off, style.css), pra continuar lendo como "a mesma
+   linguagem de promoção" em qualquer lugar do site que a pessoa veja
+   um desconto. */
+.checkout-resumo__item-off {
+  display: inline-block;
+  margin-left: 0.4rem;
+  padding: 0.05rem 0.4rem;
+  border-radius: 20px;
+  background-color: var(--cor-ouro);
+  color: #FFF;
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+.checkout-resumo__linha {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 0.6rem 0;
+  border-top: 1px solid var(--cor-fundo-alt);
+  font-size: 0.92rem;
+}
+
+/* A linha que vem IMEDIATAMENTE depois da lista de itens (hoje:
+   "Subtotal") não precisa mais do próprio border-top — esse papel de
+   "linha entre os itens e os totais" passou pro novo
+   .checkout-resumo__divisor (gradiente, logo abaixo), que é
+   desenhado ANTES dela no HTML. Sem zerar aqui, ficariam DOIS traços
+   colados (o gradiente + este border-top simples). Seletor de
+   irmão-adjacente (+) em vez de :first-child: é mais explícito sobre
+   O QUÊ está sendo evitado (duplicar o traço logo após o divisor). */
+.checkout-resumo__lista + .checkout-resumo__linha {
+  border-top: none;
+}
+
+/* DIVISOR — pedido explícito ("hoje é uma linha simples... linha com
+   leve gradiente na cor de destaque"). Um <div> vazio de 2px com um
+   gradiente horizontal que nasce e morre em "transparent": em vez de
+   uma barra sólida de ponta a ponta (que reintroduziria a MESMA
+   sensação "reta/genérica" que o pedido de redesign quer evitar), o
+   gradiente afina nas pontas, ficando mais como um "traço decorativo"
+   do que uma borda de tabela. Terracota -> ouro: as duas cores de
+   acento do :root, nenhuma cor nova. role="separator" + aria-hidden:
+   é decoração de uma separação que a ORDEM do DOM já comunica sozinha
+   pra leitor de tela (a lista termina, os totais começam) — não
+   precisa ser anunciado de novo. */
+.checkout-resumo__divisor {
+  height: 2px;
+  margin: 0.4rem 0 0;
+  background-image: linear-gradient(
+    to right,
+    transparent,
+    var(--cor-destaque) 25%,
+    var(--cor-ouro) 50%,
+    var(--cor-destaque) 75%,
+    transparent
+  );
+}
+
+.checkout-resumo__linha--total {
+  /* ERA: border-top:2px sólido + padding-top:1rem + font-size:1.2rem.
+     AGORA (pedido: "destacar mais o Total — fonte maior, cor de
+     destaque com mais peso, ou fundo/borda diferenciado"): os TRÊS
+     ao mesmo tempo, com moderação — um "cartão dentro do cartão",
+     pra o valor final ser a última coisa que o olho encontra antes do
+     botão de finalizar (que fica na outra coluna, mas visualmente
+     "aponta" pra cá). */
+  margin-top: 0.6rem;
+  padding: 1rem 1rem;
+  /* padding lateral NOVO (as outras linhas não têm — só esta, que
+     agora tem fundo próprio, precisa de respiro nas laterais pra não
+     colar o texto na borda do "cartão") */
+  border-top: none;
+  /* a borda de cima virou desnecessária: o FUNDO diferenciado abaixo
+     já separa esta linha das outras visualmente, mais forte que uma
+     linha fina conseguiria */
+  border-radius: 12px;
+  background-color: rgba(158, 79, 46, 0.07);
+  /* --cor-destaque a ~7% — tingimento bem sutil, só o suficiente pra
+     ler como "um bloco à parte", sem virar uma caixa colorida chamativa */
+  font-family: var(--fonte-titulo);
+  font-size: 1.4rem;
+  /* 1.2rem -> 1.4rem: pedido explícito de aumentar o tamanho */
+}
+
+.checkout-resumo__linha--total span {
+  font-size: 0.85rem;
+  /* o RÓTULO "Total" fica menor que o número ao lado (proporção
+     invertida das outras linhas, onde os dois têm o mesmo tamanho) —
+     reforça que o VALOR é o protagonista desta linha, não a palavra */
+  align-self: center;
+}
+
+.checkout-resumo__linha--total strong {
+  color: var(--cor-destaque);
+  font-weight: 700;
+  /* 700 (antes herdava o peso padrão do <strong>, ~600-700 do
+     navegador mesmo) — deixado EXPLÍCITO aqui porque agora o número
+     também cresceu de tamanho; sem o peso reforçado, um número grande
+     mas fino perde a leitura de "isto é o valor final que pesa" */
+}
+
+.checkout-resumo__frete-gratis {
+  color: var(--cor-secundaria);
+  font-weight: 600;
+}
+
+.checkout-resumo__frete-calcular {
+  font-style: italic;
+  color: var(--cor-secundaria);
+  font-size: 0.85rem;
+}
+
+/* ============================================================
+   SELOS DE CONFIANÇA 3D — item 1 do pedido
+   ============================================================
+   Por que um visual DIFERENTE do .selo "achatado" da Home/produto.html
+   (style.css)? Foi pedido explicitamente: "tratamento visual 3D...
+   sombras em camadas, leve profundidade/relevo... gradiente sutil na
+   paleta (terracota/ouro)" — um badge mais "de moeda/medalha" do que
+   o card simples usado nas outras páginas. A TÉCNICA de profundidade
+   não é nova no site: é a MESMA lógica de sombra SÓLIDA em camadas
+   (sem blur, offset fixo) já usada nos botões "gomosos"
+   (.btn-comprar-agora, style.css) e nos anéis da foto circular dos
+   cards de subcategoria (.subcategoria-card__foto, style.css) — só
+   aplicada aqui num círculo pequeno em vez de um botão ou uma foto.
+   Reaproveitar a mesma LINGUAGEM (não o mesmo componente) é o que
+   mantém a peça nova parecendo "do site", não colada de fora. */
+.checkout-selos {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1.1rem 0.8rem;
+  margin-top: 1.75rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--cor-fundo-alt);
+  /* separa este bloco do Total acima com a MESMA linha fina discreta
+     já usada entre as outras linhas do resumo — aqui SIM cabe simples
+     (não precisa do gradiente do .checkout-resumo__divisor: aquele é
+     "o" divisor de destaque do card, um só; repetir o efeito aqui
+     competiria com ele em vez de reforçar) */
+}
+
+.checkout-selo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  width: 72px;
+  /* largura fixa pequena (não flex:1): são 4 selos compactos, "de
+     reforço" — pedido explícito pra NÃO competirem visualmente com o
+     botão principal de finalizar, que fica na outra coluna */
+  text-align: center;
+}
+
+.checkout-selo__icone-fundo {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  flex-shrink: 0;
+
+  /* GRADIENTE SUTIL na paleta (pedido) — terracota pro ouro, na
+     diagonal, simulando luz vindo de cima-esquerda (mesmo ângulo do
+     gloss diagonal dos botões .btn-comprar*, 115deg — consistência de
+     "de onde vem a luz" no site inteiro). */
+  background-image: linear-gradient(135deg, var(--cor-destaque), var(--cor-ouro));
+
+  /* RELEVO EM CAMADAS — 4 sombras, cada uma com um papel:
+       1) inset clara (topo-esquerda):  brilho, como se o círculo
+          fosse ligeiramente convexo, pegando luz
+       2) inset escura (baixo-direita): sombra interna, "funda" o
+          relevo do lado oposto à luz
+       3) sólida 0 3px 0 (sem blur):    o MESMO "degrau" gomoso dos
+          botões — a base do badge, vista de lado
+       4) borrada 0 6px 12px:           sombra de contato com o card,
+          descola o badge do fundo
+     As 4 juntas = o "badge de medalha" pedido, só com box-shadow,
+     sem nenhuma imagem/ícone extra carregada. */
+  box-shadow:
+    inset 2px 2px 3px rgba(255, 255, 255, 0.4),
+    inset -2px -2px 4px rgba(62, 46, 34, 0.25),
+    0 3px 0 var(--cor-destaque-escuro),
+    0 6px 12px rgba(62, 46, 34, 0.18);
+}
+
+.checkout-selo__icone {
+  width: 20px;
+  height: 20px;
+  color: #FFF;
+  /* branco (não --cor-destaque como no .selo achatado): aqui o FUNDO
+     já é colorido (gradiente terracota/ouro) — um ícone terracota
+     sobre um fundo terracota quase sumiria de contraste */
+}
+
+.checkout-selo__texto {
+  font-size: 0.68rem;
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--cor-secundaria);
+}
+
+/* ============================================================
+   MOBILE — empilha as 2 colunas, campos em linha viram 1 coluna
+   ============================================================ */
+@media (max-width: 768px) {
+  .checkout {
+    padding: 0.5rem 5% 3rem;
+  }
+
+  .checkout-grid {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+
+  .checkout-resumo {
+    /* sem sticky no mobile: a coluna já é a única, "grudar" o resumo
+       no meio da tela enquanto se rola o form ficaria estranho */
+    position: static;
+  }
+
+  .campo-linha--2,
+  .campo-linha--numero,
+  .campo-linha--cidade-uf {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+/* ============================================================
+   PÁGINAS DE RETORNO DO PAGAMENTO
+   (pedido-confirmado.html / pedido-pendente.html / pedido-erro.html)
+   As 3 reaproveitam ESTE bloco — só trocam a classe modificadora
+   (--sucesso / --pendente / --erro, que muda a cor do ícone) e o
+   conteúdo de dentro. Nenhuma tem CSS próprio.
+   ============================================================ */
+.pedido-status {
+  max-width: 560px;
+  margin: 3rem auto 5rem;
+  padding: 3rem 2rem;
+  text-align: center;
+  background-color: var(--cor-card);
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(62, 46, 34, 0.1);
+}
+
+.pedido-status__icone {
+  width: 72px;
+  height: 72px;
+  margin: 0 auto 1.5rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pedido-status__icone svg {
+  width: 34px;
+  height: 34px;
+}
+
+/* verde-oliva da paleta = "tudo certo"; dourado = "aguardando";
+   terracota = "algo deu errado" — as 3 cores já existem no :root,
+   nenhuma nova só pra este estado */
+.pedido-status--sucesso .pedido-status__icone {
+  background-color: rgba(94, 107, 69, 0.15);
+  color: var(--cor-secundaria);
+}
+
+.pedido-status--pendente .pedido-status__icone {
+  background-color: rgba(184, 135, 62, 0.18);
+  color: var(--cor-ouro);
+}
+
+.pedido-status--erro .pedido-status__icone {
+  background-color: rgba(158, 79, 46, 0.15);
+  color: var(--cor-destaque);
+}
+
+.pedido-status h1 {
+  margin-bottom: 1rem;
+  font-size: 1.6rem;
+}
+
+.pedido-status p {
+  margin-bottom: 1rem;
+  color: var(--cor-texto);
+}
+
+.pedido-status__numero {
+  font-weight: 600;
+  color: var(--cor-destaque);
+}
+
+.pedido-status__aviso {
+  font-size: 0.82rem;
+  color: var(--cor-secundaria);
+  font-style: italic;
+  margin-top: 1.5rem;
+  margin-bottom: 0;
+}
+
+.pedido-status__acoes {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 1.75rem;
+}
+
+@media (max-width: 768px) {
+  .pedido-status {
+    margin: 1.5rem auto 3rem;
+    padding: 2.5rem 1.5rem;
+  }
+}

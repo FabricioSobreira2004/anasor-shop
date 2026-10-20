@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Checkout | Anasor Sobreira</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,ital,wght@9..144,0,400..700;9..144,1,400..700&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+    <!-- style.css PRIMEIRO: define as variáveis de cor/fonte em :root -->
+    <link rel="stylesheet" href="css/style.css?v=29">
+    <!-- checkout.css DEPOIS: só o layout exclusivo desta página (e das
+         3 páginas de retorno do pagamento — ver comentário lá em cima
+         do arquivo), usando as mesmas variáveis (nenhuma cor nova) -->
+    <link rel="stylesheet" href="css/checkout.css?v=29">
+
+    <!-- Marca no <html> que o JS rodou logo no início (mesmo truque das
+         outras páginas): o "scroll reveal" só esconde elementos quando
+         esta classe existe -> sem JS, conteúdo aparece normal. -->
+    <script>document.documentElement.classList.add('js-reveal');</script>
+
+</head>
+
+<body>
+
+    <!-- ===== HEADER (idêntico ao das outras páginas) ===== -->
+    <header>
+        <nav>
+            <a href="index.html" class="logo"> Anasor Sobreira  </a>
+
+            <ul class="nav-links">
+                <!-- "Nosso Ateliê": mesma lógica do link em index.html (ver
+                     comentário lá) — aqui, fora da Home, precisa do
+                     "index.html" na frente pra primeiro navegar pra Home e
+                     só então rolar até "#atelie" (o navegador resolve os
+                     dois passos sozinho, sem JS extra). -->
+                <li><a href="index.html#atelie">Nosso Ateliê</a></li>
+                <li><a href="index.html">Home</a></li>
+                <li><a href="ceramica.html">Cerâmica</a></li>
+                <li><a href="index.html#croche">Crochê</a></li>
+                <li><a href="index.html#quem-somos">Quem Somos</a></li>
+                <li><a href="index.html#contato">Contato</a></li>
+            </ul>
+
+            <div class="nav-icons">
+                <!-- checkout.html: ver comentário igual nas outras páginas —
+                     o clique de verdade é interceptado pelo js/main.js e
+                     abre o mini-carrinho; este href é só o fallback (sem
+                     JS, botão direito "abrir em nova aba", etc.). -->
+                <a href="checkout.html">🛒 Carrinho</a>
+            </div>
+
+            <button class="menu-toggle" aria-label="Abrir menu" aria-expanded="false">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </nav>
+    </header>
+
+    <main>
+        <nav id="breadcrumb" class="breadcrumb" aria-label="Você está aqui" hidden></nav>
+
+        <section class="checkout">
+            <h1 class="checkout__titulo">Finalizar Compra</h1>
+
+            <!-- CARRINHO VAZIO: nada pra revisar/pagar. js/checkout.js
+                 decide qual dos dois blocos (este ou #checkout-conteudo)
+                 fica visível, igual ao padrão "hidden até o JS decidir"
+                 já usado em produto.html. -->
+            <div id="checkout-vazio" class="checkout-vazio" hidden>
+                <p>Seu carrinho está vazio.</p>
+                <a href="ceramica.html" class="btn-principal">Ver Produtos</a>
+            </div>
+
+            <div id="checkout-conteudo" class="checkout-grid" hidden>
+
+                <!-- ===== COLUNA ESQUERDA: dados do cliente ===== -->
+                <!-- novalidate: desliga as bolhas nativas do navegador —
+                     a validação (ao vivo, no blur/input) é feita por
+                     js/checkout.js, MESMO padrão do form de contato da
+                     Home (ver "VALIDAÇÃO EM TEMPO REAL" em js/main.js). -->
+                <form id="form-checkout" class="checkout-form" novalidate>
+
+                    <!-- Frase de abertura pedida: avisa, ANTES da pessoa
+                         encarar o formulário, que a maior parte dos
+                         campos é opcional — pedida explicitamente
+                         "acima do formulário" (por isso mora AQUI,
+                         primeiro filho do <form>, antes até do aviso de
+                         "convidado"). Sem isso, um formulário com tantos
+                         campos visíveis passa a impressão de ser mais
+                         trabalhoso do que realmente é agora (só 3 deles
+                         bloqueiam o envio — ver os "required" mais abaixo
+                         e a validação em js/checkout.js). -->
+                    <p class="checkout-form__intro">Só precisamos do essencial para agilizar sua entrega.</p>
+
+                    <!-- "COMPRAR COMO CONVIDADO": hoje é a ÚNICA forma de
+                         comprar — o site ainda não tem sistema de contas/
+                         login. Este aviso já deixa isso claro pro cliente
+                         (não é preciso criar nada) e marca ONDE, no futuro,
+                         entraria a alternativa "Já tenho conta". -->
+                    <div class="checkout-convidado">
+                        <svg class="checkout-convidado__icone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>
+                            <circle cx="12" cy="7" r="4"/>
+                        </svg>
+                        <div>
+                            <strong>Comprando como convidado</strong>
+                            <p>Não é preciso criar conta — só preencher os dados abaixo pra receber sua peça.</p>
+                            <!-- TODO (quando existir sistema de contas): oferecer aqui
+                                 "Já tenho conta / Entrar" como atalho pra preencher
+                                 nome/e-mail/endereço automaticamente. -->
+                        </div>
+                    </div>
+
+                    <fieldset>
+                        <legend>Dados pessoais</legend>
+
+                        <div class="campo">
+                            <label for="nome">Nome completo</label>
+                            <input type="text" id="nome" name="nome" autocomplete="name" required>
+                            <span class="campo__erro" id="erro-nome" aria-live="polite"></span>
+                        </div>
+
+                        <div class="campo-linha campo-linha--2">
+                            <div class="campo">
+                                <label for="email">E-mail</label>
+                                <input type="email" id="email" name="email" autocomplete="email" required>
+                                <span class="campo__erro" id="erro-email" aria-live="polite"></span>
+                            </div>
+
+                            <!-- "required" removido (telefone virou OPCIONAL — pedido
+                                 explícito: só nome/e-mail/CEP bloqueiam o envio) + label
+                                 com "(opcional)", MESMO padrão já usado no campo
+                                 "Complemento" logo abaixo, no outro fieldset — não
+                                 inventei um padrão novo, só repeti o que já existia. -->
+                            <div class="campo">
+                                <label for="telefone">Telefone / WhatsApp <span class="checkout-form__opcional">(opcional)</span></label>
+                                <input type="tel" id="telefone" name="telefone" inputmode="numeric" placeholder="(21) 98722-2679" autocomplete="tel">
+                                <span class="campo__erro" id="erro-telefone" aria-live="polite"></span>
+                            </div>
+                        </div>
+
+                        <!-- CPF também virou opcional — hoje o backend não usa o CPF
+                             pra nada (nem a Preference do Mercado Pago manda esse
+                             dado); exigi-lo só criava atrito sem necessidade real
+                             ainda. Continua com máscara/validação de FORMATO se a
+                             pessoa preencher (ver js/checkout.js: vazio passa,
+                             preenchido errado continua mostrando erro). -->
+                        <div class="campo">
+                            <label for="cpf">CPF <span class="checkout-form__opcional">(opcional)</span></label>
+                            <input type="text" id="cpf" name="cpf" inputmode="numeric" placeholder="000.000.000-00" autocomplete="off">
+                            <span class="campo__erro" id="erro-cpf" aria-live="polite"></span>
+                        </div>
+                    </fieldset>
+
+                    <fieldset>
+                        <legend>Endereço de entrega</legend>
+
+                        <div class="campo-linha campo-linha--cep">
+                            <div class="campo">
+                                <label for="cep">CEP</label>
+                                <input type="text" id="cep" name="cep" inputmode="numeric" placeholder="00000-000" autocomplete="postal-code" required>
+                                <span class="campo__erro" id="erro-cep" aria-live="polite"></span>
+                            </div>
+                            <!-- TODO: quando o CEP for válido, buscar o endereço
+                                 automaticamente (ex.: API ViaCEP) e preencher
+                                 rua/bairro/cidade/estado sozinho — hoje é tudo
+                                 digitado à mão. -->
+                            <p class="checkout-form__nota">Preenchemos seu endereço automaticamente em breve — por enquanto, digite os campos abaixo (se quiser adiantar).</p>
+                        </div>
+
+                        <!-- Rua/número/bairro/cidade/UF: agora OPCIONAIS. O CEP
+                             sozinho já basta pra Anasor entrar em contato e
+                             combinar/confirmar o endereço depois (o site ainda
+                             não calcula frete/rota automaticamente a partir
+                             dele) — pedir o endereço TODO de cara, sem urgência
+                             técnica real pra isso, só afasta quem preferir
+                             preencher o resto depois. Continuam VISÍVEIS
+                             (não escondidos atrás de "mostrar mais"): quem já
+                             tem os dados na ponta da língua preenche na hora e
+                             adianta o processo, sem precisar de mais uma etapa. -->
+                        <div class="campo">
+                            <label for="rua">Rua / Avenida <span class="checkout-form__opcional">(opcional)</span></label>
+                            <input type="text" id="rua" name="rua" autocomplete="address-line1">
+                            <span class="campo__erro" id="erro-rua" aria-live="polite"></span>
+                        </div>
+
+                        <div class="campo-linha campo-linha--numero">
+                            <div class="campo">
+                                <label for="numero">Número <span class="checkout-form__opcional">(opcional)</span></label>
+                                <input type="text" id="numero" name="numero" inputmode="numeric" autocomplete="address-line2">
+                                <span class="campo__erro" id="erro-numero" aria-live="polite"></span>
+                            </div>
+                            <div class="campo">
+                                <label for="complemento">Complemento <span class="checkout-form__opcional">(opcional)</span></label>
+                                <input type="text" id="complemento" name="complemento" placeholder="Apto, bloco, referência...">
+                                <span class="campo__erro" id="erro-complemento" aria-live="polite"></span>
+                            </div>
+                        </div>
+
+                        <div class="campo">
+                            <label for="bairro">Bairro <span class="checkout-form__opcional">(opcional)</span></label>
+                            <input type="text" id="bairro" name="bairro" autocomplete="address-level3">
+                            <span class="campo__erro" id="erro-bairro" aria-live="polite"></span>
+                        </div>
+
+                        <div class="campo-linha campo-linha--cidade-uf">
+                            <div class="campo">
+                                <label for="cidade">Cidade <span class="checkout-form__opcional">(opcional)</span></label>
+                                <input type="text" id="cidade" name="cidade" autocomplete="address-level2">
+                                <span class="campo__erro" id="erro-cidade" aria-live="polite"></span>
+                            </div>
+                            <div class="campo">
+                                <label for="estado">UF <span class="checkout-form__opcional">(opcional)</span></label>
+                                <select id="estado" name="estado" autocomplete="address-level1">
+                                    <option value="">--</option>
+                                    <option value="AC">AC</option>
+                                    <option value="AL">AL</option>
+                                    <option value="AP">AP</option>
+                                    <option value="AM">AM</option>
+                                    <option value="BA">BA</option>
+                                    <option value="CE">CE</option>
+                                    <option value="DF">DF</option>
+                                    <option value="ES">ES</option>
+                                    <option value="GO">GO</option>
+                                    <option value="MA">MA</option>
+                                    <option value="MT">MT</option>
+                                    <option value="MS">MS</option>
+                                    <option value="MG">MG</option>
+                                    <option value="PA">PA</option>
+                                    <option value="PB">PB</option>
+                                    <option value="PR">PR</option>
+                                    <option value="PE">PE</option>
+                                    <option value="PI">PI</option>
+                                    <option value="RJ">RJ</option>
+                                    <option value="RN">RN</option>
+                                    <option value="RS">RS</option>
+                                    <option value="RO">RO</option>
+                                    <option value="RR">RR</option>
+                                    <option value="SC">SC</option>
+                                    <option value="SP">SP</option>
+                                    <option value="SE">SE</option>
+                                    <option value="TO">TO</option>
+                                </select>
+                                <span class="campo__erro" id="erro-estado" aria-live="polite"></span>
+                            </div>
+                        </div>
+                    </fieldset>
+
+                    <!-- id="btn-finalizar-pedido": js/checkout.js liga/desliga
+                         "disabled" conforme o form fica válido (mesmo padrão
+                         do form de contato) e troca o texto pra "Processando..."
+                         durante a chamada ao backend. O 🤎 no fim do texto é o
+                         emoji pedido ("elegante... sem exagero, só o emoji ao
+                         final") — plain text mesmo, sem <span> nem aria-hidden:
+                         é o MESMO padrão já usado no resto do site pra emoji
+                         decorativo em título/rótulo (ex.: "Explore Nossas
+                         Coleções 🤎" na Home, os ícones 📱/📧 do rodapé) —
+                         leitores de tela lidam bem com emoji solto no meio de
+                         texto, não precisa de tratamento especial aqui. Mantive
+                         o TEXTO original "Ir para Pagamento" (não troquei pra
+                         "Finalizar Compra", que é só o <h1> da página) — o
+                         pedido foi sobre o emoji, não sobre renomear o botão. -->
+                    <button type="submit" id="btn-finalizar-pedido" class="btn-principal" disabled>Ir para Pagamento 🤎</button>
+                    <p class="campo__erro" id="erro-envio-pedido" aria-live="polite"></p>
+
+                    <!-- Link discreto pra Políticas, bem no ponto de decisão
+                         final (pedido explícito: "próximo ao botão de
+                         finalizar, reforça segurança antes da decisão final de
+                         compra"). Fica DENTRO do <form>, logo depois do botão —
+                         não é um campo nem some com erro de validação, é só um
+                         reforço de confiança que convive com qualquer estado
+                         do formulário. Ícone de cadeado (mesma linguagem visual
+                         dos selos de confiança logo abaixo, no resumo) reforça
+                         "segurança" antes mesmo de ler o texto. -->
+                    <a href="politicas.html" class="checkout-link-politicas">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <rect width="18" height="11" x="3" y="11" rx="2" ry="2"/>
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                        </svg>
+                        Política de Trocas e Privacidade
+                    </a>
+                </form>
+
+                <!-- ===== COLUNA DIREITA: resumo do pedido ===== -->
+                <!-- <aside> porque é conteúdo complementar (não é o
+                     conteúdo principal da página, que é o formulário).
+                     Todo o miolo é montado por js/checkout.js a partir
+                     do MESMO localStorage que alimenta o mini-carrinho. -->
+                <aside class="checkout-resumo" aria-label="Resumo do pedido">
+                    <h2>Resumo do Pedido</h2>
+                    <ul id="checkout-itens" class="checkout-resumo__lista"></ul>
+
+                    <!-- DIVISOR ELEGANTE entre a lista de itens e os totais —
+                         pedido explícito ("hoje é uma linha simples... linha
+                         com leve gradiente na cor de destaque"). Não existia
+                         nenhum divisor "texturizado" pronto no site pra
+                         reaproveitar (conferi style.css inteiro), então segui a
+                         alternativa que o próprio pedido já autorizava: um
+                         gradiente suave (transparente -> terracota -> ouro ->
+                         transparente), nas mesmas 2 cores de acento do :root,
+                         nenhuma cor nova. Isso SUBSTITUI o border-top simples
+                         que a 1ª ".checkout-resumo__linha" (Subtotal) tinha —
+                         ver o seletor específico que zera aquela borda em
+                         css/checkout.css, pra não duplicar o traço. -->
+                    <div class="checkout-resumo__divisor" role="separator" aria-hidden="true"></div>
+
+                    <div class="checkout-resumo__linha">
+                        <span>Subtotal</span>
+                        <strong id="checkout-subtotal"></strong>
+                    </div>
+                    <div class="checkout-resumo__linha">
+                        <span>Frete</span>
+                        <strong id="checkout-frete"></strong>
+                    </div>
+                    <div class="checkout-resumo__linha checkout-resumo__linha--total">
+                        <span>Total</span>
+                        <strong id="checkout-total"></strong>
+                    </div>
+
+                    <!-- SELOS DE CONFIANÇA 3D — pedido item 1. Ficam DENTRO do
+                         card do Resumo (uma das duas opções sugeridas: "próxima
+                         ao botão de finalizar OU no card do Resumo") — junto do
+                         Total, no exato momento em que a pessoa está decidindo
+                         se finaliza, sem competir com o botão principal (que
+                         fica na OUTRA coluna, no form). O 4º selo
+                         ("Peça Artesanal") também cobre o pedido do item 4
+                         ("considere adicionar um selo 'Peça Artesanal Única'
+                         dentro do card") — decidi NÃO duplicar um selo quase
+                         idêntico duas vezes no mesmo card pequeno; um reforça o
+                         outro sem repetir a mesma mensagem duas vezes. Ícones
+                         Lucide inline, MESMO padrão de SVG (stroke=currentColor)
+                         já usado nos .selo da Home/produto.html — só o visual
+                         do "badge" em si é novo (3D, ver CSS), não a técnica do
+                         ícone. -->
+                    <div class="checkout-selos" aria-label="Garantias desta compra">
+                        <div class="checkout-selo">
+                            <div class="checkout-selo__icone-fundo">
+                                <svg class="checkout-selo__icone" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                                </svg>
+                            </div>
+                            <p class="checkout-selo__texto">Compra Segura</p>
+                        </div>
+                        <div class="checkout-selo">
+                            <div class="checkout-selo__icone-fundo">
+                                <svg class="checkout-selo__icone" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <rect width="18" height="11" x="3" y="11" rx="2" ry="2"/>
+                                    <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                                </svg>
+                            </div>
+                            <p class="checkout-selo__texto">Pagamento Protegido</p>
+                        </div>
+                        <div class="checkout-selo">
+                            <div class="checkout-selo__icone-fundo">
+                                <svg class="checkout-selo__icone" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/>
+                                    <path d="M15 18H9"/>
+                                    <path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14"/>
+                                    <circle cx="17" cy="18" r="2"/>
+                                    <circle cx="7" cy="18" r="2"/>
+                                </svg>
+                            </div>
+                            <p class="checkout-selo__texto">Entrega Garantida</p>
+                        </div>
+                        <div class="checkout-selo">
+                            <div class="checkout-selo__icone-fundo">
+                                <svg class="checkout-selo__icone" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <path d="M18 11V6a2 2 0 0 0-4 0"/>
+                                    <path d="M14 10V4a2 2 0 0 0-4 0v2"/>
+                                    <path d="M10 10.5V6a2 2 0 0 0-4 0v8"/>
+                                    <path d="m7 15-1.8-1.8a2 2 0 0 0-2.8 2.8L6 20c1.5 1.5 3 2 5 2h2a8 8 0 0 0 8-8V7a2 2 0 0 0-4 0v5"/>
+                                </svg>
+                            </div>
+                            <p class="checkout-selo__texto">Peça Artesanal</p>
+                        </div>
+                    </div>
+                </aside>
+            </div>
+        </section>
+    </main>
+
+    <!-- ===== FOOTER (idêntico ao das outras páginas) ===== -->
+    <footer>
+        <div class="footer-container">
+            <div class="footer-sobre">
+                <h3> Anasor Sobreira</h3>
+                <p>Cerâmica e crochê artesanais, feitos à mão com carinho no nosso ateliê.</p>
+            </div>
+
+            <div class="footer-links">
+                <h4> Links Rápidos </h4>
+                <ul>
+                    <li><a href="ceramica.html"> Cerâmica </a></li>
+                    <li><a href="index.html#croche"> Crochê </a></li>
+                    <li><a href="index.html#quem-somos"> Quem Somos </a></li>
+                    <li><a href="politicas.html"> Políticas </a></li>
+                </ul>
+            </div>
+
+            <div class="footer-contato">
+                <h4>Contato</h4>
+                <p>📱 WhatsApp: (21) 98722-2679 </p>
+                <p>📧 ceramicaeclocheanasor@gmail.com</p>
+            </div>
+
+            <div class="footer-social">
+                <h4>Redes Sociais</h4>
+                <a href="https://www.instagram.com/sobreiraanasor" target="_blank" rel="noopener">Instagram</a>
+            </div>
+        </div>
+
+        <div class="footer-copyright">
+            <p>&copy; 2026 Anasor Sobreira. Todos os direitos reservados.</p>
+        </div>
+    </footer>
+
+    <!-- Ordem dos scripts (mesma lógica das outras páginas):
+           1) produtos.js  -> cria a lista "produtos"
+           2) main.js      -> formatarPreco(), menu, CARRINHO (lerCarrinho,
+                              CHAVE_CARRINHO...) e renderBreadcrumb()
+           3) checkout.js  -> usa tudo isso pra montar esta página -->
+    <script src="js/produtos.js?v=29"></script>
+    <script src="js/main.js?v=29"></script>
+    <script src="js/checkout.js?v=29"></script>
+
+</body>
+
+</html>

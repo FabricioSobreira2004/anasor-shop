@@ -1,0 +1,10 @@
+# dependências instaladas (recriadas com "npm install")
+node_modules/
+
+# variáveis de ambiente com segredos (chaves de pagamento, banco...)
+.env
+.env.local
+
+# logs
+*.log
+npm-debug.log*

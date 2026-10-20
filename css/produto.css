@@ -1,0 +1,924 @@
+/* ============================================================
+   PÁGINA DE PRODUTO INDIVIDUAL — produto.html
+
+   Carregado DEPOIS de style.css. Reutiliza as variáveis já
+   definidas em :root lá (--cor-*, --fonte-*, --raio-organico)
+   e NÃO cria nenhuma cor nova. Só descreve o layout exclusivo
+   desta página.
+   ============================================================ */
+
+
+/* O BREADCRUMB foi movido para css/style.css: agora DUAS páginas o
+   usam (produto.html e ceramica.html), então o componente vive na
+   folha de estilo compartilhada, não nesta que é só da página de
+   produto. */
+
+
+/* ============================================================
+   LAYOUT DO DETALHE
+   2 colunas no desktop (galeria | informações), empilhado no mobile
+   ============================================================ */
+.produto-detalhe {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3rem;
+  align-items: start;
+  /* start = alinha as colunas pelo topo (a de texto é mais longa) */
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 2.5rem 5% 4rem;
+}
+
+
+/* ============================================================
+   GALERIA DE FOTOS
+   ============================================================ */
+.galeria {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+
+  position: sticky;
+  top: 6rem;
+  /* no desktop a galeria "acompanha" a rolagem enquanto a coluna de
+     texto (mais longa) rola. O top: 6rem deixa ela abaixo do header
+     fixo. No mobile isso é desligado (media query lá embaixo). */
+}
+
+.galeria__principal-wrap {
+  position: relative;
+  /* ancora as setas (position:absolute) — ver comentário no HTML
+     (js/produto.js) sobre por que este wrapper existe separado do
+     <div class="galeria"> maior */
+}
+
+.galeria__principal {
+  width: 100%;
+  max-height: 600px;
+  object-fit: contain;
+  /* CONTAIN, não COVER: numa foto de produto não se pode cortar a
+     peça. contain mostra a imagem inteira; se sobrar espaço, aparece
+     a cor de fundo. (No banner da Home usamos cover porque lá a
+     imagem é decorativa e pode ser recortada.) */
+
+  /* A "MOLDURA DE QUADRO" (borda dupla + sombra dupla) foi extraída
+     pra a classe .foto-emoldurada em css/style.css — reutilizada
+     também pela foto do "Quem Somos". Aqui o <img> recebe as DUAS
+     classes: "galeria__principal foto-emoldurada" (ver js/produto.js).
+     Este seletor cuida só do tamanho/encaixe da foto. */
+}
+
+/* ---- SETAS (pedido item 1) ----
+   MESMO visual dos botões .banner-seta (style.css, carrossel do
+   banner da Home) — círculo claro translúcido, sombra suave, ícone
+   escuro — copiado valor por valor de propósito ("iguais ao estilo
+   já usado nos outros carrosséis do site"), só que como classe PRÓPRIA
+   desta página (.galeria__seta) em vez de reutilizar .banner-seta
+   direto: aquela classe é escopada pro contexto do banner (setas
+   deitadas sobre uma foto de fundo cobrindo a tela toda); aqui elas
+   ficam sobre uma foto MENOR, com moldura (.foto-emoldurada) — copiar
+   o VISUAL sem herdar suposições de tamanho/contexto que não se
+   aplicam. */
+.galeria__seta {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+  width: 42px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 50%;
+  background-color: rgba(251, 246, 239, 0.85);
+  color: var(--cor-texto);
+  box-shadow: 0 4px 12px rgba(62, 46, 34, 0.18);
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.galeria__seta:hover {
+  background-color: var(--cor-fundo);
+  transform: translateY(-50%) scale(1.08);
+}
+
+.galeria__seta svg {
+  width: 20px;
+  height: 20px;
+}
+
+.galeria__seta--anterior {
+  left: 0.75rem;
+}
+
+.galeria__seta--proxima {
+  right: 0.75rem;
+}
+
+/* ---- DOTS (pedido item 1) ----
+   MESMA técnica de .banner-indicador (style.css): área de toque
+   44x44 (mínimo recomendado pra alvo tocável) com uma bolinha pequena
+   (::after) desenhada no centro — aumentar só a caixa CLICÁVEL, não o
+   desenho visual. Ativo = maior + cor de destaque, mesmo par
+   "cor + tamanho" do banner. */
+.galeria__dots {
+  display: flex;
+  justify-content: center;
+  gap: 0.4rem;
+}
+
+.galeria__dot {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+}
+
+.galeria__dot::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background-color: var(--cor-fundo-alt);
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.galeria__dot:hover::after {
+  background-color: var(--cor-secundaria);
+}
+
+.galeria__dot.is-ativo::after {
+  background-color: var(--cor-destaque);
+  transform: translate(-50%, -50%) scale(1.3);
+}
+
+/* reduzir movimento: sem o "crescer" da seta no hover nem da bolinha
+   ativa — mesmo padrão já usado no resto do site (ex.: .banner-seta/
+   .banner-indicador, style.css). A troca de foto em si continua
+   instantânea (nunca teve fade), então não há mais nada a desligar
+   aqui além dessas duas transições. */
+@media (prefers-reduced-motion: reduce) {
+  .galeria__seta,
+  .galeria__dot::after {
+    transition: none;
+  }
+}
+
+.galeria__miniaturas {
+  display: flex;
+  flex-wrap: wrap;
+  /* algumas peças têm muitas fotos (até 11): as miniaturas quebram
+     em várias linhas em vez de espremer */
+  gap: 0.6rem;
+}
+
+.galeria__thumb {
+  width: 68px;
+  height: 68px;
+  padding: 0;
+  border: 2px solid transparent;
+  /* borda transparente desde já: quando vira "is-ativa" só troca a
+     cor, sem o layout "pular" 2px */
+  border-radius: 10px;
+  overflow: hidden;
+  background: none;
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+}
+
+.galeria__thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* aqui cover tudo bem: a miniatura é só uma "amostra" clicável */
+  display: block;
+}
+
+.galeria__thumb:hover {
+  border-color: var(--cor-secundaria);
+}
+
+.galeria__thumb.is-ativa {
+  border-color: var(--cor-destaque);
+  /* marca qual foto está sendo exibida na imagem grande */
+}
+
+
+/* ============================================================
+   COLUNA DE INFORMAÇÕES
+   ============================================================ */
+
+/* --- Selo "Peça Única" --- */
+.selo-unica {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  background-color: var(--cor-fundo-alt);
+  color: var(--cor-texto);
+  border: 1px solid var(--cor-destaque);
+  border-radius: 30px;
+  /* formato "pílula", igual aos botões do site */
+
+  font-family: var(--fonte-texto);
+  font-size: 0.8rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+
+  padding: 0.4rem 0.9rem;
+  margin-bottom: 1rem;
+}
+
+.selo-unica__icone {
+  font-size: 1rem;
+}
+
+.produto-detalhe__info h1 {
+  font-size: 2rem;
+  line-height: 1.2;
+  margin-bottom: 1rem;
+  /* herda a fonte de título (Fraunces) da regra global h1..h4 */
+}
+
+/* Texto curto sobre variações da peça artesanal */
+.produto-detalhe__nuance {
+  font-size: 0.9rem;
+  color: var(--cor-secundaria);
+  /* texto de apoio: oliva, mais discreto que o corpo */
+  border-left: 3px solid var(--cor-destaque);
+  padding-left: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.produto-detalhe__descricao {
+  color: var(--cor-texto);
+  margin-bottom: 1.5rem;
+}
+
+/* REALCES DENTRO DA DESCRIÇÃO (produtos.js, campo "descricao").
+   Trechos-chave de venda (técnica, material, "peça única", sugestão
+   de uso...) vêm envoltos em <span class="realce"> ou
+   <span class="realce--ouro"> dentro do próprio texto. Só palavras/
+   expressões pontuais — nunca frases inteiras. O peso 600 já dá o
+   destaque; a cor reforça sem gritar.
+     .realce       -> terracota (--cor-destaque): o realce padrão
+     .realce--ouro -> dourado (--cor-ouro): reservado pra momentos
+                      "de brilho" (esmalte metálico/iridescente,
+                      "presente") — usado com mais parcimônia ainda */
+.produto-detalhe__descricao .realce,
+.produto-detalhe__descricao .realce--ouro {
+  font-weight: 600;
+}
+.produto-detalhe__descricao .realce {
+  color: var(--cor-destaque);
+}
+.produto-detalhe__descricao .realce--ouro {
+  color: var(--cor-ouro);
+}
+
+/* GALERIA DE FOTOS EXTRAS dentro da descrição — 3 miniaturas
+   emolduradas, um "mini-vitrine" logo abaixo do texto. Montada em
+   js/produto.js a partir de produto.imagensExtras. */
+.descricao-galeria {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.7rem;
+  margin: 0 0 1.75rem;
+}
+.descricao-galeria img {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  display: block;
+}
+/* a .foto-emoldurada (style.css) foi pensada pra a foto GRANDE — nas
+   miniaturas ela ficaria "toda moldura". Aqui reduzimos a moldura
+   proporcionalmente, mantendo o mesmo desenho (borda dupla + sombra
+   dupla). */
+.descricao-galeria .foto-emoldurada {
+  padding: 6px;
+  border-width: 3px;
+  border-radius: 4px;
+  outline-offset: -4px;
+  box-shadow:
+    0 2px 5px rgba(62, 46, 34, 0.28),
+    0 8px 20px rgba(62, 46, 34, 0.14);
+}
+
+/* ============================================================
+   VÍDEO DA PEÇA (produto.videoUrl) — bloco próprio, logo abaixo da
+   galeria de fotos (ver o comentário de decisão de design em
+   js/produto.js, montarDetalhe). */
+.produto-video {
+  margin-top: 0.25rem;
+}
+
+.produto-video__legenda {
+  font-size: 0.85rem;
+  color: var(--cor-secundaria);
+  margin: 0 0 0.5rem;
+  text-align: center;
+}
+
+/* .foto-emoldurada (style.css) foi pensado pra <img> — funciona igual
+   em <video> porque a moldura é feita só de padding/border/box-shadow
+   (nenhuma regra depende da tag). width:100% + altura automática
+   mantém a proporção nativa do vídeo dentro da moldura. */
+.produto-video__player {
+  display: block;
+  width: 100%;
+  background: #000; /* evita "flash" branco antes do poster carregar */
+}
+
+/* .preco já vem estilizado em style.css (cor de destaque + negrito).
+   Aqui só aumentamos o tamanho para o contexto de página. */
+.produto-detalhe__preco {
+  font-size: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+/* Preço PROMOCIONAL na página da peça.
+   O bloco .preco--promo (montado por renderBlocoPreco no main.js) é
+   flex + justify-content:center porque nos CARDS o texto é centralizado.
+   Aqui na coluna de informações, tudo é alinhado à esquerda — então
+   reposicionamos. O "de" riscado herda tamanho pequeno de style.css;
+   o valor atual (.preco__atual) acompanha o font-size:1.5rem acima. */
+.produto-detalhe__preco.preco--promo {
+  justify-content: flex-start;
+  gap: 0.6rem;
+}
+
+/* O SELO DE ESCASSEZ (.selo-escassez, "Peça única — quando vender...")
+   MUDOU DE ENDEREÇO pra css/style.css: a seção "Peça em Destaque" da
+   Home (index.html, que não carrega este arquivo) também usa o selo
+   agora — mesmo motivo do .foto-emoldurada, que já tinha migrado pra
+   lá antes por essa mesma razão (ver comentário dele em style.css). */
+
+/* ============================================================
+   TÍTULO "Mais Tesouros do Ateliê" (seção de relacionados)
+   O <span class="tesouros-titulo"> agrupa ícone + texto; o ícone
+   (sparkles da Lucide, SVG inline no js/produto.js) pisca de leve
+   num loop contínuo — chama o olhar pra seção sem distrair.
+   ============================================================ */
+.tesouros-titulo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  /* inline-flex (não flex): assim o conjunto continua sendo tratado
+     como "texto" pelo text-align:center do <h2> da .queridinhos, e a
+     linhinha decorativa do ::after segue centralizada embaixo */
+  color: var(--cor-texto);
+  /* TEXTO na cor padrão de título do site (--cor-texto, igual aos
+     outros <h2> de seção). O dourado no texto não ficou bom e foi
+     revertido — só o ÍCONE (regra abaixo) segue dourado. */
+}
+
+.tesouros-titulo__icone {
+  width: 1.05em;
+  height: 1.05em;
+  color: var(--cor-ouro);
+  /* stroke="currentColor" no SVG -> o sparkles fica DOURADO (único
+     trecho dourado do título agora), com a animação de brilho abaixo. */
+  flex-shrink: 0;
+  animation: tesouros-brilho 2.6s ease-in-out infinite;
+}
+
+@keyframes tesouros-brilho {
+  0%, 100% { opacity: 0.75; transform: scale(1); }
+  50%      { opacity: 1;    transform: scale(1.14); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tesouros-titulo__icone { animation: none; opacity: 1; }
+}
+
+/* ============================================================
+   "COMPRAR AGORA" FLUTUANTE
+   Criado por montarBarraCompraFlutuante() em js/produto.js. Aparece
+   com slide + fade quando o botão de compra real sai da tela (a
+   pessoa rolou pra baixo pra ler os detalhes) e some quando volta.
+
+   DUAS FORMAS:
+     - AQUI (regra base, "mobile-first"): BARRA fixa esticada na base
+       da tela — melhor pro espaço estreito do celular.
+     - No @media (min-width: 769px) mais abaixo: vira um CARTÃO no
+       canto inferior direito (miniatura + nome + preço + botão),
+       discreto, pra não dominar a tela larga do desktop.
+   ============================================================ */
+.barra-compra {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 150;
+  /* acima do header (100), abaixo do "voltar ao topo" (200), do
+     toast (300) e do mini-carrinho (400/401) — assim nenhum desses
+     fica escondido atrás dela. O empurrão do "voltar ao topo"/toast
+     pra cima (regras .tem-barra-compra abaixo) é o que impede a
+     SOBREPOSIÇÃO visual; o z-index só resolve o empilhamento. */
+
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.7rem 5%;
+
+  background-color: var(--cor-fundo);
+  border-top: 1px solid var(--cor-fundo-alt);
+  box-shadow: 0 -4px 16px rgba(62, 46, 34, 0.12);
+  /* sombra pra CIMA (y negativo): destaca a barra do conteúdo que
+     rola atrás dela */
+
+  /* estado ESCONDIDO: deslocada pra baixo (fora da tela) e transparente.
+     A transição anima os dois -> slide-up + fade juntos. */
+  transform: translateY(100%);
+  opacity: 0;
+  visibility: hidden;
+  transition: transform 0.32s ease, opacity 0.32s ease, visibility 0.32s ease;
+}
+
+.barra-compra.is-visivel {
+  transform: translateY(0);
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Miniatura da foto: ESCONDIDA no mobile (a barra é estreita, nome +
+   preço + botão já ocupam tudo). Ligada só no cartão do desktop. */
+.barra-compra__thumb {
+  display: none;
+}
+
+.barra-compra__info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  /* min-width:0 deixa o nome truncar (ver __nome abaixo) em vez de
+     empurrar o botão pra fora da tela */
+  flex: 1;
+}
+
+.barra-compra__nome {
+  font-family: var(--fonte-titulo);
+  font-size: 0.95rem;
+  color: var(--cor-texto);
+  /* uma linha só, com "..." se não couber — a barra é estreita e o
+     nome da peça não pode roubar o espaço do botão */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.barra-compra__preco {
+  font-size: 0.9rem;
+  color: var(--cor-destaque);
+}
+
+.barra-compra__preco s {
+  color: var(--cor-secundaria);
+  font-size: 0.8rem;
+  margin-right: 0.35rem;
+}
+
+.barra-compra .btn-comprar-agora {
+  /* herda cor/formato/hover de .btn-comprar-agora (style.css).
+     flex-shrink:0 = o botão nunca encolhe; quem cede espaço é o
+     nome da peça ao lado. */
+  flex-shrink: 0;
+  margin-top: 0;
+  align-self: auto;
+  /* zera o margin-top:0.6rem e o align-self:center que a peça herda
+     do contexto de card — aqui ela vive numa barra flex horizontal */
+  padding: 0.7rem 1.4rem;
+  white-space: nowrap;
+}
+
+/* Enquanto a barra está visível, sobem os outros elementos ancorados
+   no rodapé da tela, pra não ficarem atrás dela.
+   --altura-barra-compra: estimativa da altura da barra (~64px) + um
+   respiro. Usada como deslocamento extra no "bottom" de cada um. */
+body.tem-barra-compra {
+  --altura-barra-compra: 76px;
+}
+
+body.tem-barra-compra .voltar-topo {
+  bottom: calc(2rem + var(--altura-barra-compra));
+  /* 2rem = o "bottom" padrão do .voltar-topo no desktop (style.css) */
+}
+
+body.tem-barra-compra .toast {
+  bottom: calc(1.5rem + var(--altura-barra-compra));
+  /* 1.5rem = o "bottom" padrão do .toast no desktop (style.css) */
+}
+
+/* ============================================================
+   DESKTOP (> 768px): a barra vira um CARTÃO no canto inferior direito
+   Mesmo elemento, mesmo gatilho JS, só muda a "casca" visual.
+   ============================================================ */
+@media (min-width: 769px) {
+  .barra-compra {
+    /* solta das bordas esquerda/base e vira uma caixa no canto */
+    left: auto;
+    right: 1.5rem;
+    bottom: 1.5rem;
+    width: 360px;
+    max-width: calc(100vw - 3rem);
+
+    gap: 0.8rem;
+    padding: 0.85rem 0.95rem;
+
+    /* cara de cartão: fundo --cor-card, cantos arredondados de
+       verdade, borda sutil nos QUATRO lados (a regra base só tinha
+       border-top) e sombra macia em 2 camadas (contato + respiro),
+       no lugar da sombra-pra-cima da barra */
+    background-color: var(--cor-card);
+    border: 1px solid var(--cor-fundo-alt);
+    border-radius: 16px;
+    box-shadow:
+      0 4px 14px rgba(62, 46, 34, 0.16),
+      0 18px 44px rgba(62, 46, 34, 0.12);
+
+    /* estado ESCONDIDO no desktop: desliza pra baixo E some. O
+       "+ 2.5rem" garante que ele (com a sombra) saia todo da tela
+       antes do fade terminar. O fade/visibility continua vindo da
+       regra base. */
+    transform: translateY(calc(100% + 2.5rem));
+  }
+
+  .barra-compra.is-visivel {
+    transform: translateY(0);
+  }
+
+  /* miniatura da foto principal, só no cartão */
+  .barra-compra__thumb {
+    display: block;
+    width: 54px;
+    height: 54px;
+    flex-shrink: 0;
+    object-fit: cover;
+    border-radius: 10px;
+    border: 1px solid var(--cor-fundo-alt);
+  }
+
+  /* botão mais compacto: num cartão de 360px ele divide a linha com a
+     miniatura + nome + preço */
+  .barra-compra .btn-comprar-agora {
+    padding: 0.6rem 1rem;
+    font-size: 0.85rem;
+  }
+
+  /* o cartão é mais alto que a barra (tem miniatura) e mora no MESMO
+     canto inferior direito que o "voltar ao topo" e o toast. O cartão
+     ocupa ~100px de altura + 24px (1.5rem) de "bottom" = ~124px. Este
+     valor precisa passar disso pra os dois não encostarem no cartão. */
+  body.tem-barra-compra {
+    --altura-barra-compra: 132px;
+  }
+}
+
+/* Respeita "reduzir movimento": sem o slide (transform), só o fade.
+   Mesmo padrão do resto do site (reveal, toast, skeleton...).
+   Fica DEPOIS do @media do desktop de propósito, pra anular o
+   translateY nas duas formas (barra e cartão). */
+@media (prefers-reduced-motion: reduce) {
+  .barra-compra {
+    transition: opacity 0.2s ease, visibility 0.2s ease;
+    transform: none;
+  }
+  .barra-compra.is-visivel {
+    transform: none;
+  }
+}
+
+
+/* --- Ações: "Adicionar ao Carrinho" + WhatsApp --- */
+.produto-detalhe__acoes {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  max-width: 340px;
+  /* no desktop os botões não esticam a largura toda da coluna */
+  margin-bottom: 2rem;
+}
+
+.produto-detalhe__acoes .btn-comprar {
+  /* herda cor/formato/hover de .btn-comprar (style.css);
+     aqui só ocupa a largura da coluna de ações */
+  width: 100%;
+  padding: 0.9rem 1.5rem;
+  font-size: 0.95rem;
+}
+
+.btn-whatsapp {
+  /* Botão "fantasma": fundo transparente + contorno na cor
+     secundária. Fica abaixo do botão principal (sólido) na
+     hierarquia visual SEM precisar do verde do WhatsApp, que não
+     está na paleta do :root. */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.8rem 1.5rem;
+
+  border: 1.5px solid var(--cor-secundaria);
+  border-radius: 30px;
+  color: var(--cor-secundaria);
+
+  font-family: var(--fonte-texto);
+  font-size: 0.9rem;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.btn-whatsapp:hover {
+  background-color: var(--cor-secundaria);
+  color: #FFF;
+}
+
+
+/* ============================================================
+   SELOS DE CONFIANÇA (na página de produto, abaixo da compra)
+   Montados por renderSelosConfianca() em js/produto.js. Os CARDS
+   reusam as classes .selo / .selo__icone-fundo / .selo__icone /
+   .selo__texto de style.css (mesma cara da Home) — aqui só definimos
+   o CONTÊINER, mais compacto, porque na Home eles ficam numa seção
+   larga e aqui moram DENTRO da coluna de informações.
+   ============================================================ */
+.produto-selos {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  /* 4 em linha no desktop, como na Home. minmax(0,…) deixa os cards
+     encolherem à vontade dentro da coluna estreita sem estourar. */
+  gap: 0.7rem;
+  margin: 0 0 2rem;
+  /* -0.5rem de "puxão" pra cima seria demais; o margin-bottom:2rem do
+     .produto-detalhe__acoes já dá o respiro entre o botão e os selos */
+}
+
+/* card mais enxuto que o da Home (lá é padding 1.8rem 1rem): aqui são
+   4 numa coluna de ~500px, então diminuímos o respiro interno e o
+   círculo do ícone. O resto (fundo branco, raio 16px, sombra, hover
+   -6px) continua vindo de .selo em style.css. */
+.produto-selos .selo {
+  padding: 1rem 0.5rem;
+  gap: 0.55rem;
+}
+
+.produto-selos .selo__icone-fundo {
+  width: 42px;
+  height: 42px;
+}
+
+.produto-selos .selo__icone {
+  width: 20px;
+  height: 20px;
+}
+
+.produto-selos .selo__texto {
+  font-size: 0.72rem;
+  line-height: 1.25;
+}
+
+/* --- "PULINHO" DO ÍCONE ao entrar na tela ---
+   A classe .selo--visivel é adicionada por animarSelosConfianca()
+   (js/produto.js) quando o card cruza ~35% da tela. Só então o ícone
+   faz um bounce curto (uma vez). O atraso por card (data-selo-index)
+   escalona o efeito da esquerda pra direita. */
+.produto-selos .selo .selo__icone {
+  /* estado de repouso; a animação abaixo parte e volta pra cá */
+  transform: translateY(0) scale(1);
+}
+
+.produto-selos .selo--visivel .selo__icone {
+  animation: selo-icone-bounce 0.6s ease;
+}
+
+.produto-selos .selo[data-selo-index="1"].selo--visivel .selo__icone { animation-delay: 0.08s; }
+.produto-selos .selo[data-selo-index="2"].selo--visivel .selo__icone { animation-delay: 0.16s; }
+.produto-selos .selo[data-selo-index="3"].selo--visivel .selo__icone { animation-delay: 0.24s; }
+
+@keyframes selo-icone-bounce {
+  0%   { transform: translateY(0)     scale(1);    }
+  35%  { transform: translateY(-6px)  scale(1.12); }
+  60%  { transform: translateY(2px)   scale(0.98); }
+  100% { transform: translateY(0)     scale(1);    }
+}
+
+/* quem pediu "reduzir movimento": sem bounce. (o JS já nem cria o
+   observador nesse caso — isto é reforço) */
+@media (prefers-reduced-motion: reduce) {
+  .produto-selos .selo--visivel .selo__icone { animation: none; }
+}
+
+
+/* ============================================================
+   MARCA D'ÁGUA DA PÁGINA (item 6 — CORRIGIDA)
+   ANTES: uma silhueta ÚNICA, grande, presa no canto superior direito
+   (via um ::before absoluto em <main>, com z-index:-1 só pra criar
+   contexto de empilhamento) — um tratamento DIFERENTE do resto do
+   site de propósito (ver comentário antigo, removido, que até
+   documentava essa escolha). Só que isso fugia do padrão visual
+   usado em QUALQUER outra seção com marca d'água (.categorias,
+   .queridinhos, .produto-destaque, .quem-somos): todas elas
+   LADRILHAM o motivo (background-repeat:repeat) numa cor de fundo,
+   pequeno e discreto, cobrindo a seção inteira — nunca uma silhueta
+   solitária grande num canto. Foi reportado como "fora do padrão" e
+   corrigido aqui: agora é o MESMO tratamento ladrilhado, direto no
+   background da própria <main> — sem precisar do truque de ::before/
+   z-index/position:relative que a versão antiga usava (esses só
+   existiam pra sustentar o posicionamento absoluto da silhueta
+   única; um background-image comum já nasce atrás do conteúdo de
+   qualquer elemento, sem holder nenhum).
+   VASO x FLOR: mantido o critério por categoria da peça (vaso pra
+   "ceramica", flor pra "croche" — mesma lógica de .queridinhos x
+   .croche-vitrine na Home), decisão CONFIRMADA explicitamente ao
+   pedir este ajuste — não virou "sempre flor". A classe
+   .produto-marca-vaso / .produto-marca-flor no <body> continua sendo
+   posta por js/produto.js conforme a categoria; só o CSS mudou. */
+body.produto-marca-vaso main,
+body.produto-marca-flor main {
+  background-repeat: repeat;
+  background-size: 220px;
+  /* 220px = o MESMO tamanho de ladrilho que .categorias/.queridinhos
+     já usam pra --marca-vaso (style.css) — reaproveitar o valor exato
+     evita um motivo "com escala diferente" do resto do site. A
+     opacidade sutil (0.1) já vem embutida no próprio SVG, igual em
+     todo lugar — nenhum ajuste extra precisa entrar aqui. */
+}
+
+body.produto-marca-vaso main { background-image: var(--marca-vaso); }
+body.produto-marca-flor main { background-image: var(--marca-flor); }
+
+/* A seção de relacionados (.queridinhos) traz, por padrão, a silhueta
+   de vaso LADRILHADA + o grão. Nesta página a marca d'água é a única
+   acima — então aqui tiramos a camada ladrilhada e deixamos só a cor
+   de fundo + o grão de papel (que é textura, não "motivo em grade"). */
+#produtos-relacionados.queridinhos {
+  background-image: var(--textura-grao);
+  background-repeat: repeat;
+  background-size: 140px;
+
+  /* TRANSIÇÃO SUAVE (pedido item 2) — a classe ".transicao-topo" já
+     vem no HTML (produto.html); aqui só as variáveis de COR que ela
+     usa (definidas em style.css, junto do resto do sistema de
+     transição — ver o comentário grande lá). --cor-fundo é a cor da
+     seção ACIMA desta (o resto da página de produto, sem cor própria,
+     herda o fundo claro do <body>) — é o tom que a faixa "traz
+     emprestado" no topo antes de se dissolver no --cor-fundo-alt
+     (mais escuro) que já é o fundo desta própria seção. */
+  --transicao-topo-cor: var(--cor-fundo);
+  --transicao-topo-cor-fraca: rgba(251, 246, 239, 0.35); /* --cor-fundo a 35% */
+}
+
+
+/* --- Detalhes da Peça (dimensões / cuidados) --- */
+.detalhes-peca {
+  border-top: 1px solid var(--cor-fundo-alt);
+  padding-top: 1.5rem;
+}
+
+.detalhes-peca__titulo {
+  font-size: 1.1rem;
+  margin-bottom: 0.8rem;
+}
+
+.detalhes-peca dl {
+  margin: 0;
+}
+
+.detalhes-peca__linha {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.4rem 0;
+}
+
+.detalhes-peca dt {
+  font-weight: 600;
+  min-width: 110px;
+  /* alinha os valores numa "coluna" só */
+  color: var(--cor-texto);
+}
+
+.detalhes-peca dd {
+  margin: 0;
+  color: var(--cor-secundaria);
+}
+
+
+/* ============================================================
+   BLOCO "PRODUTO NÃO ENCONTRADO"
+   ============================================================ */
+.produto-aviso {
+  text-align: center;
+  padding: 5rem 5%;
+}
+
+.produto-aviso p {
+  font-family: var(--fonte-titulo);
+  font-size: 1.4rem;
+  margin-bottom: 1.5rem;
+}
+
+
+/* ============================================================
+   MOBILE  (<= 768px)
+   A galeria é o ponto mais sensível a quebrar
+   (o breadcrumb mobile está em style.css, junto com o componente)
+   ============================================================ */
+@media (max-width: 768px) {
+
+  .produto-detalhe {
+    grid-template-columns: 1fr;
+    /* uma coluna: galeria em cima, informações embaixo */
+    gap: 2rem;
+    padding: 1.5rem 5% 3rem;
+  }
+
+  .galeria {
+    position: static;
+    top: auto;
+    /* sticky não faz sentido quando tudo está empilhado */
+  }
+
+  .galeria__principal {
+    max-height: 70vh;
+    /* limita a foto a 70% da altura da tela pra não empurrar as
+       miniaturas e o texto pra muito longe */
+  }
+
+  /* SETAS somem no mobile — MESMA decisão do carrossel do banner
+     (.banner-seta, style.css): no toque, a navegação vira o gesto de
+     swipe (ver ativarGaleriaDeFotos, main.js) + as bolinhas, que já
+     ficam visíveis; as setas laterais só ocupariam espaço em cima de
+     uma foto que, no celular, já é bem menor. */
+  .galeria__seta {
+    display: none;
+  }
+
+  .galeria__thumb {
+    width: 56px;
+    height: 56px;
+  }
+
+  .produto-detalhe__info h1 {
+    font-size: 1.6rem;
+  }
+
+  .produto-detalhe__acoes {
+    max-width: none;
+    /* no celular os botões ocupam a largura toda */
+  }
+
+  /* --- Barra "Comprar Agora" flutuante no celular --- */
+  .barra-compra {
+    gap: 0.75rem;
+    padding: 0.6rem 4%;
+  }
+
+  .barra-compra .btn-comprar-agora {
+    padding: 0.7rem 1.1rem;
+    font-size: 0.85rem;
+  }
+
+  /* No celular o "voltar ao topo" fica em bottom:1rem e o toast em
+     bottom:4.5rem (style.css). Reaproveitamos a MESMA variável
+     --altura-barra-compra pra empurrar os dois pra cima quando a
+     barra aparece — só mudam os valores-base do "bottom" pros do
+     mobile. */
+  body.tem-barra-compra .voltar-topo {
+    bottom: calc(1rem + var(--altura-barra-compra));
+  }
+
+  body.tem-barra-compra .toast {
+    bottom: calc(4.5rem + var(--altura-barra-compra));
+  }
+
+  /* SELOS DE CONFIANÇA no celular: 4 em linha numa coluna de ~340px
+     ficaria espremido e "Suporte via WhatsApp" quebraria em 3 linhas.
+     Viram um bloco 2x2 — mesma decisão que a Home toma no mobile. */
+  .produto-selos {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.8rem;
+  }
+
+  .produto-selos .selo__texto {
+    font-size: 0.8rem;
+  }
+
+  /* O override de MARCA D'ÁGUA que existia aqui (reposicionar a
+     silhueta única pra "cair atrás do bloco de texto" no mobile) foi
+     REMOVIDO: virou desnecessário depois da correção pro padrão
+     ladrilhado (ver o bloco grande de comentário lá em cima) — um
+     background-image repetido cobre a página inteira sozinho, em
+     qualquer largura de tela, sem precisar de nenhum ajuste por
+     breakpoint. Mesmo motivo pelo qual .quem-somos/.queridinhos
+     (style.css), que já são ladrilhados, também não têm nenhum
+     override de marca d'água no mobile. */
+}
