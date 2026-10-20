@@ -644,6 +644,65 @@ body.tem-barra-compra .toast {
 
 
 /* ============================================================
+   "ENCOMENDE SUA PEÇA ÚNICA" (ideia da mãe da Anasor) — HTML montado
+   em js/produto.js (ver "encomendaHTML", dentro de montarDetalhe()).
+   Cada peça do catálogo é única (estoque sempre 1): quem gosta de um
+   modelo que já vendeu, ou quer algo parecido, ganha aqui um caminho
+   claro pra pedir uma encomenda direto com a Anasor pelo WhatsApp.
+   ============================================================ */
+.produto-encomenda {
+  max-width: 340px;
+  margin: 0 0 2rem;
+  padding: 1.1rem 1.25rem;
+  border: 1px solid rgba(94, 107, 69, 0.25);
+  /* borda na cor secundária (verde-oliva), bem translúcida: separa o
+     bloco do resto da coluna sem virar uma caixa pesada — ele é um
+     COMPLEMENTO discreto do botão de compra, não deve competir com
+     ele (pedido explícito). */
+  border-radius: 12px;
+  background-color: var(--cor-fundo-alt);
+}
+
+.produto-encomenda__texto {
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: var(--cor-texto);
+  margin-bottom: 0.9rem;
+}
+
+.produto-encomenda__btn {
+  /* mesma largura/escala dos outros botões da coluna de ações
+     (.btn-comprar, .btn-whatsapp, logo acima) — a classe base
+     (.btn-fantasma ou .btn-principal, ver produto.js) já traz cor e
+     formato; aqui só encaixamos o tamanho nesta coluna estreita. */
+  display: flex;
+  width: 100%;
+  padding: 0.8rem 1.5rem;
+  font-size: 0.9rem;
+}
+
+/* Variação INDISPONÍVEL (peça vendida, "disponivel: false"): vira o
+   destaque PRINCIPAL da coluna — fundo próprio mais presente (branco,
+   como um card) + sombra suave, já que aqui não existe mais nenhum
+   botão de compra pra competir com ela. */
+.produto-encomenda--indisponivel {
+  background-color: var(--cor-card);
+  border-color: rgba(158, 79, 46, 0.25);
+  box-shadow: 0 10px 24px rgba(62, 46, 34, 0.1);
+  padding: 1.4rem 1.3rem;
+}
+
+.produto-encomenda__status {
+  font-family: var(--fonte-titulo);
+  font-style: italic;
+  font-weight: 600;
+  font-size: 1.15rem;
+  color: var(--cor-destaque);
+  margin-bottom: 0.4rem;
+}
+
+
+/* ============================================================
    SELOS DE CONFIANÇA (na página de produto, abaixo da compra)
    Montados por renderSelosConfianca() em js/produto.js. Os CARDS
    reusam as classes .selo / .selo__icone-fundo / .selo__icone /
@@ -874,6 +933,11 @@ body.produto-marca-flor main { background-image: var(--marca-flor); }
   .produto-detalhe__acoes {
     max-width: none;
     /* no celular os botões ocupam a largura toda */
+  }
+
+  .produto-encomenda {
+    max-width: none;
+    /* mesma lógica de .produto-detalhe__acoes acima */
   }
 
   /* --- Barra "Comprar Agora" flutuante no celular --- */

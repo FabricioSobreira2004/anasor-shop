@@ -81,6 +81,13 @@
 //                    placeholder — a Anasor mede e preenche depois.
 //   cuidados      -> como limpar/conservar a peça (texto livre).
 //                    Também "A definir" por enquanto.
+//   disponivel    -> OPCIONAL, boolean. Cada peça é única (estoque 1);
+//                    quando UMA vende, a Anasor marca o objeto dela
+//                    com "disponivel: false" (em vez de apagar/esconder
+//                    a peça) — produto.js troca o botão de compra pelo
+//                    bloco "Encomende uma peça parecida". Peça SEM este
+//                    campo é tratada como disponível (o padrão) — por
+//                    isso nenhum dos produtos abaixo precisa declará-lo.
 //
 //  CATEGORIAS VÁLIDAS: "ceramica" | "croche"
 //  Ainda não há fotos das peças de crochê. Quando houver, basta

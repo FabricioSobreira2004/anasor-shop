@@ -192,7 +192,13 @@ if (!produto) {
   montarBreadcrumb(produto);
   montarDetalhe(produto);
   montarRelacionados(produto);
-  montarBarraCompraFlutuante(produto);
+  // Peça indisponível (disponivel: false) não tem o que comprar — a
+  // barra flutuante existe só pra levar o "Adicionar ao Carrinho" de
+  // volta ao alcance ao rolar a página (ver comentário grande da
+  // função); sem botão de compra nenhum, ela não tem função aqui.
+  if (produto.disponivel !== false) {
+    montarBarraCompraFlutuante(produto);
+  }
   animarSelosConfianca();
 }
 
@@ -265,6 +271,77 @@ function montarDetalhe(produto) {
     )}). Poderia me tirar algumas dúvidas?`
   );
   const linkWhats = `https://wa.me/${WHATSAPP_NUMERO}?text=${msgWhats}`;
+
+  // ---------- "ENCOMENDE SUA PEÇA ÚNICA" (ideia da mãe da Anasor) ----------
+  // Cada peça do catálogo é única (estoque sempre 1, ver comentário de
+  // "disponivel" em produtos.js) — quem gosta de um modelo que já
+  // vendeu, ou quer algo parecido, precisa de um caminho claro pra
+  // pedir uma encomenda direto com a Anasor. "produtoDisponivel" só é
+  // false quando o campo existir E for exatamente false — produto SEM
+  // o campo (hoje, o catálogo inteiro) continua tratado como
+  // disponível, sem nenhuma mudança de comportamento.
+  const produtoDisponivel = produto.disponivel !== false;
+
+  // URL da PRÓPRIA página (já inclui "?id=..."): usamos a URL de
+  // verdade do navegador, não montamos "produto.html?id=" na mão, pra
+  // nunca desalinhar se o domínio/caminho mudar.
+  const urlPagina = window.location.href;
+
+  // Mensagem DIFERENTE da do botão "Tirar dúvidas sobre esta peça"
+  // (linkWhats, acima): aquela é uma dúvida sobre ESTA peça à venda;
+  // esta é um pedido de ENCOMENDA de uma peça nova, parecida — por
+  // isso os dois botões convivem na página sem se confundir.
+  const msgEncomenda = encodeURIComponent(
+    `Olá, Anasor! Vi a peça "${produto.nome}" no site e gostaria de encomendar uma peça única parecida. Podemos conversar sobre valores e prazo? ${urlPagina}`
+  );
+  const linkEncomenda = `https://wa.me/${WHATSAPP_NUMERO}?text=${msgEncomenda}`;
+
+  // Variação da mensagem pra quando a peça já vendeu — mesmo pedido,
+  // só reconhecendo que o modelo visto já não está mais disponível.
+  const msgEncomendaIndisponivel = encodeURIComponent(
+    `Olá, Anasor! Vi a peça "${produto.nome}" no site, mas essa peça já foi vendida — gostaria de encomendar uma parecida. Podemos conversar sobre valores e prazo? ${urlPagina}`
+  );
+  const linkEncomendaIndisponivel = `https://wa.me/${WHATSAPP_NUMERO}?text=${msgEncomendaIndisponivel}`;
+
+  // Bloco HTML do convite — MUDA de visual conforme a disponibilidade:
+  // disponível = discreto, .btn-fantasma (contorno), abaixo dos botões
+  // de compra, pra não competir com "Adicionar ao Carrinho";
+  // indisponível = vira o DESTAQUE principal (.btn-principal, o mesmo
+  // botão "cheio" que seria da compra), já que não há mais nada pra
+  // comprar nesta página. aria-label no link entrega o contexto
+  // completo (nome da peça) pra quem usa leitor de tela, mesmo o
+  // texto visível do botão sendo genérico ("pelo WhatsApp").
+  const encomendaHTML = produtoDisponivel
+    ? `
+      <div class="produto-encomenda">
+        <p class="produto-encomenda__texto">
+          Cada peça é feita à mão e é única. Gostou deste modelo?
+          A Anasor pode fazer uma peça parecida só para você.
+        </p>
+        <a
+          class="btn-fantasma produto-encomenda__btn"
+          href="${linkEncomenda}"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Pedir orçamento de uma peça parecida com ${produto.nome} pelo WhatsApp">
+          Pedir orçamento pelo WhatsApp
+        </a>
+      </div>`
+    : `
+      <div class="produto-encomenda produto-encomenda--indisponivel">
+        <p class="produto-encomenda__status">Esta peça já encontrou um lar.</p>
+        <p class="produto-encomenda__texto">
+          Mas você pode pedir uma parecida, feita especialmente para você.
+        </p>
+        <a
+          class="btn-principal produto-encomenda__btn"
+          href="${linkEncomendaIndisponivel}"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Encomendar uma peça parecida com ${produto.nome} pelo WhatsApp">
+          Encomendar peça parecida
+        </a>
+      </div>`;
 
   // "A definir" é o placeholder que fica em produtos.js até a Anasor
   // medir a peça e escrever os cuidados. Mostrar "A definir" cru não
@@ -438,9 +515,13 @@ function montarDetalhe(produto) {
       ${renderSeloEscassez()}
 
       <!-- AÇÕES: sem seletor de quantidade de propósito — cada peça é
-           única, o estoque é sempre 1. -->
+           única, o estoque é sempre 1. "Adicionar ao Carrinho" só
+           aparece pra peça DISPONÍVEL — peça vendida (disponivel:
+           false) não tem o que comprar, então o botão some e o bloco
+           "Encomende sua peça única" (logo abaixo) vira a ação
+           principal da página (ver encomendaHTML, mais acima). -->
       <div class="produto-detalhe__acoes">
-        <button class="btn-comprar">Adicionar ao Carrinho</button>
+        ${produtoDisponivel ? `<button class="btn-comprar">Adicionar ao Carrinho</button>` : ''}
 
         <!-- Botão WhatsApp: target="_blank" abre em nova aba;
              rel="noopener" impede que a nova aba acesse esta via
@@ -450,6 +531,12 @@ function montarDetalhe(produto) {
           Tirar dúvidas sobre esta peça
         </a>
       </div>
+
+      <!-- "ENCOMENDE SUA PEÇA ÚNICA" (ideia da mãe da Anasor, pedido
+           explícito): em toda peça, disponível ou não — ver
+           encomendaHTML, montado mais acima com o texto/estilo certo
+           pra cada caso. -->
+      ${encomendaHTML}
 
       <!-- SELOS DE CONFIANÇA: logo ABAIXO do botão de compra (pedido) —
            é onde o "posso confiar nessa compra?" bate mais forte. HTML
