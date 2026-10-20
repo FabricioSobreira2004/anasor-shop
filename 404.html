@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Página não encontrada | Anasor Sobreira</title>
+
+    <!-- SEM Open Graph de propósito — mesma lógica das páginas de
+         retorno de pedido (ver checkout.html): ninguém compartilha
+         um link de "página não encontrada". noindex: uma 404 nunca
+         deveria aparecer no resultado de busca de ninguém. -->
+    <meta name="robots" content="noindex">
+    <meta name="description" content="Esta página não existe no site da Anasor Sobreira.">
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,ital,wght@9..144,0,400..700;9..144,1,400..700&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+    <!-- Mesma folha de estilo de todas as outras páginas; reaproveita
+         .pagina-croche-conteudo (criada pra croche.html) pro layout
+         centralizado — achado da auditoria, item 10: "página 404
+         personalizada no tema do site" (antes a Vercel mostrava a
+         página de erro genérica dela). -->
+    <link rel="stylesheet" href="css/style.css?v=32">
+
+    <script>document.documentElement.classList.add('js-reveal');</script>
+
+</head>
+
+<body>
+
+    <header>
+        <nav>
+            <a href="index.html" class="logo"> Anasor Sobreira  </a>
+
+            <ul class="nav-links">
+                <li><a href="index.html#atelie">Nosso Ateliê</a></li>
+                <li><a href="index.html">Home</a></li>
+                <li><a href="ceramica.html">Cerâmica</a></li>
+                <li><a href="croche.html">Crochê</a></li>
+                <li><a href="index.html#quem-somos">Quem Somos</a></li>
+                <li><a href="index.html#contato">Contato</a></li>
+            </ul>
+
+            <form class="busca" role="search">
+                <input type="search" id="busca" placeholder="Buscar peça..." aria-label="Buscar peças">
+            </form>
+
+            <div class="nav-icons">
+                <a href="checkout.html">🛒 Carrinho</a>
+            </div>
+
+            <button class="menu-toggle" aria-label="Abrir menu" aria-expanded="false">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+
+        </nav>
+    </header>
+
+    <main>
+        <section class="pagina-croche-conteudo">
+            <svg class="pagina-croche__icone reveal" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="11" cy="11" r="8"/>
+                <path d="m21 21-4.3-4.3"/>
+            </svg>
+
+            <h1 class="reveal">404</h1>
+
+            <p class="pagina-croche__aviso reveal">Essa peça não está na vitrine</p>
+
+            <p class="pagina-croche__texto reveal">
+                A página que você procurou não existe ou foi movida — talvez o
+                link esteja desatualizado, ou o endereço tenha algum erro de
+                digitação.
+            </p>
+
+            <a href="index.html" class="btn-principal reveal">Voltar para a Home</a>
+
+            <p class="pagina-croche__voltar reveal">
+                Ou <a href="ceramica.html">explore a cerâmica</a> do nosso ateliê.
+            </p>
+        </section>
+    </main>
+
+    <footer>
+        <div class="footer-container">
+            <div class="footer-sobre">
+                <h3> Anasor Sobreira</h3>
+                <p>Cerâmica e crochê artesanais, feitos à mão com carinho no nosso ateliê.</p>
+            </div>
+
+            <div class="footer-links">
+                <h4> Links Rápidos </h4>
+                <ul>
+                    <li><a href="ceramica.html"> Cerâmica </a></li>
+                    <li><a href="croche.html"> Crochê </a></li>
+                    <li><a href="index.html#quem-somos"> Quem Somos </a></li>
+                    <li><a href="politicas.html"> Políticas </a></li>
+                </ul>
+            </div>
+
+            <div class="footer-contato">
+                <h4>Contato</h4>
+                <p>📱 WhatsApp: <a href="https://wa.me/5521987222679" target="_blank">(21) 98722-2679</a></p>
+                <p>📧 ceramicaecrocheanasor@gmail.com</p>
+            </div>
+
+             <div class="footer-social">
+      <h4>Redes Sociais</h4>
+      <a href="https://www.instagram.com/sobreiraanasor" target="_blank" rel="noopener">Instagram</a>
+    </div>
+
+  </div>
+
+  <div class="footer-copyright">
+    <p>&copy; 2026 Anasor Sobreira. Todos os direitos reservados.</p>
+  </div>
+
+    </footer>
+
+      <script src="js/produtos.js?v=32"></script>
+      <script src="js/main.js?v=32"></script>
+
+</body>
+
+</html>

@@ -12,14 +12,34 @@
          (document.title = "<nome> | Anasor Sobreira"). -->
     <title>Produto | Anasor Sobreira</title>
 
+    <!-- SEO/compartilhamento (achado da auditoria, item 10) — ver o
+         comentário completo em index.html. A description AQUI troca
+         pela da peça de verdade via JS (produto.js) assim que ela é
+         encontrada — bom pro resultado de busca do Google. As tags
+         "og:*" (preview de link no WhatsApp/Facebook/Twitter) ficam
+         GENÉRICAS de propósito, mesmo numa página de produto
+         específico: bots de preview de link não executam JavaScript,
+         só leem o HTML estático — uma troca feita pelo JS nunca
+         chegaria a tempo pra eles (ver o comentário completo onde o
+         JS mexe na description, em produto.js). -->
+    <meta name="description" content="Peças de cerâmica e crochê artesanais, feitas à mão no ateliê da Anasor Sobreira — cada uma única.">
+    <meta property="og:type" content="product">
+    <meta property="og:site_name" content="Anasor Sobreira">
+    <meta property="og:title" content="Anasor Sobreira — Peça Artesanal">
+    <meta property="og:description" content="Peças de cerâmica e crochê artesanais, feitas à mão no ateliê da Anasor Sobreira — cada uma única.">
+    <meta property="og:image" content="https://anasor-sobreira.vercel.app/img/institucional/quem-somos.jpg">
+    <meta name="twitter:card" content="summary_large_image">
+
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,ital,wght@9..144,0,400..700;9..144,1,400..700&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
 
     <!-- style.css PRIMEIRO: define as variáveis de cor/fonte em :root -->
-    <link rel="stylesheet" href="css/style.css?v=31">
+    <link rel="stylesheet" href="css/style.css?v=32">
     <!-- produto.css DEPOIS: só o layout exclusivo desta página,
          usando as mesmas variáveis (nenhuma cor nova) -->
-    <link rel="stylesheet" href="css/produto.css?v=31">
+    <link rel="stylesheet" href="css/produto.css?v=32">
 
     <!-- Marca no <html> que o JS rodou logo no início (ver comentário
          igual na index.html): o "scroll reveal" só esconde elementos
@@ -172,9 +192,9 @@
              2) main.js      -> define formatarPreco(), o menu e o carrinho
              3) produto.js   -> usa "produtos" + formatarPreco() pra montar
                                 esta página específica -->
-      <script src="js/produtos.js?v=31"></script>
-      <script src="js/main.js?v=31"></script>
-      <script src="js/produto.js?v=31"></script>
+      <script src="js/produtos.js?v=32"></script>
+      <script src="js/main.js?v=32"></script>
+      <script src="js/produto.js?v=32"></script>
 
 </body>
 

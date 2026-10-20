@@ -157,6 +157,26 @@ if (!produto) {
 } else {
   document.title = `${produto.nome} | Anasor Sobreira`;
 
+  // META DESCRIPTION DINÂMICA (achado da auditoria, item 10): o
+  // <head> já traz uma versão genérica (ver produto.html) — aqui ela
+  // vira ESPECÍFICA da peça aberta, útil pro RESULTADO DE BUSCA do
+  // Google (o Googlebot executa JS ao indexar). replace(/<[^>]+>/g,
+  // ''): tira as tags <span class='realce'> da descrição (escrita
+  // pra render HTML na página, não pra virar texto puro de meta tag)
+  // — só o texto. slice(0,160): tamanho usual de meta description
+  // antes do buscador cortar com "...".
+  //
+  // NÃO mexe nas tags "og:*" (Open Graph, usadas pelo preview do
+  // WhatsApp/Facebook/Twitter): bots de preview de link NÃO executam
+  // JavaScript, só leem o HTML estático que o servidor devolve — uma
+  // mudança feita aqui, depois da página já carregada, nunca chegaria
+  // a tempo pra eles. O og:image genérico do ateliê (ver
+  // produto.html) é o que todo link de produto compartilhado vai
+  // mostrar; deixar "correto, porém genérico" é melhor que fingir uma
+  // personalização que não funcionaria na prática.
+  const descricaoLimpa = produto.descricao.replace(/<[^>]+>/g, '').slice(0, 160);
+  document.querySelector('meta[name="description"]')?.setAttribute('content', descricaoLimpa);
+
   // MARCA D'ÁGUA ÚNICA DA PÁGINA (ver .produto-marca-* / main::before em
   // produto.css). Diferente das outras páginas, que LADRILHAM um motivo
   // no fundo, aqui é UMA silhueta grande só. Qual silhueta depende da
@@ -714,12 +734,16 @@ function montarBarraCompraFlutuante(produto) {
        <strong>${formatarPreco(produto.preco)}</strong>`
     : `<strong>${formatarPreco(produto.preco)}</strong>`;
 
-  // A miniatura usa a MESMA foto principal do produto. alt="" +
+  // A miniatura usa a MESMA foto principal do produto (mesma URL ->
+  // o navegador reaproveita do cache, não baixa de novo). alt="" +
   // aria-hidden: é decorativa (o nome ao lado já identifica a peça),
   // então não precisa ser anunciada por leitor de tela. No mobile o
-  // CSS a esconde (display:none) — a barra é estreita.
+  // CSS a esconde (display:none) — a barra é estreita. loading="lazy"
+  // (achado da auditoria, item 9): a barra só aparece depois de rolar
+  // a página — consistente com o resto do site, nenhuma <img> fica
+  // sem o atributo.
   barra.innerHTML = `
-    <img class="barra-compra__thumb" src="${produto.imagem}" alt="" aria-hidden="true">
+    <img class="barra-compra__thumb" src="${produto.imagem}" alt="" aria-hidden="true" loading="lazy">
     <div class="barra-compra__info">
       <span class="barra-compra__nome">${produto.nome}</span>
       <span class="barra-compra__preco">${precoHTML}</span>

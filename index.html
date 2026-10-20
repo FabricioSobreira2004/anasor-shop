@@ -11,6 +11,28 @@
 
    <title> Anasor Sobreira | Cerâmica e Crochê Artesanal </title>
 
+   <!-- SEO/compartilhamento (achado da auditoria, item 10 — o site não
+        tinha nenhuma destas tags ainda). description: usada no
+        resultado de busca do Google. Open Graph (og:*): é quem
+        decide como o link fica ao ser colado no WhatsApp/Facebook/
+        Twitter — sem elas, essas plataformas mostram só a URL crua
+        ou um preview genérico/feio. og:image aponta pra uma foto
+        real do ateliê (quem-somos.jpg) com URL ABSOLUTA de propósito:
+        bots de preview de link buscam a imagem eles mesmos, direto
+        no servidor — uma URL relativa ("img/...") não resolveria
+        sozinha fora do contexto de uma página já aberta num
+        navegador. -->
+   <meta name="description" content="Cerâmica e crochê artesanais, feitos à mão no ateliê da Anasor Sobreira, no Rio de Janeiro. Peças únicas, com entrega para todo o Brasil.">
+   <meta property="og:type" content="website">
+   <meta property="og:site_name" content="Anasor Sobreira">
+   <meta property="og:title" content="Anasor Sobreira | Cerâmica e Crochê Artesanal">
+   <meta property="og:description" content="Cerâmica e crochê artesanais, feitos à mão no ateliê da Anasor Sobreira. Peças únicas, com entrega para todo o Brasil.">
+   <meta property="og:image" content="https://anasor-sobreira.vercel.app/img/institucional/quem-somos.jpg">
+   <meta property="og:url" content="https://anasor-sobreira.vercel.app/">
+   <meta name="twitter:card" content="summary_large_image">
+
+   <link rel="icon" type="image/svg+xml" href="favicon.svg">
+
    <link rel="preconnect" href="https://fonts.googleapis.com">
  <!-- Preconnect avisa o navegador com antecedência que vamos buscar algo nesse domínio, 
   acelera o carregamento da fonte -->
@@ -19,7 +41,7 @@
 <!-- Importa as duas fontes que vamos usar
  : Fraunces (títulos) e Jost (texto) -->
 
-   <link rel="stylesheet" href="css/style.css?v=31">
+   <link rel="stylesheet" href="css/style.css?v=32">
 
    <!-- Marca no <html> que o JS rodou logo no início. O CSS do
         "scroll reveal" só esconde os elementos (opacity 0) quando
@@ -719,8 +741,8 @@
            main.js DEPOIS (usa essa lista para montar os cards). Os dois
            ficam no fim do <body> para o HTML já estar carregado quando
            o JavaScript rodar. -->
-      <script src="js/produtos.js?v=31"></script>
-      <script src="js/main.js?v=31"></script>
+      <script src="js/produtos.js?v=32"></script>
+      <script src="js/main.js?v=32"></script>
 
 </body>
 
