@@ -1,15 +1,31 @@
-# dependências Node (recriadas com "npm install")
+# Dependências (reinstaladas com "npm install" dentro de backend/)
 node_modules/
 
-# segredos — tokens do Mercado Pago, chaves de ambiente
+# Variáveis de ambiente com credenciais reais (Mercado Pago em produção) —
+# backend/.env já tinha seu próprio .gitignore, isso aqui é um segundo
+# cinto de segurança na raiz do repositório.
 .env
-.env.local
-backend/.env
+.env.*
+!.env.example
 
-# logs
+# Logs
 *.log
 npm-debug.log*
 
-# arquivos de sistema do Windows/OneDrive
+# Pasta "site mãe" (fotos/vídeos brutos do WhatsApp, materiais de referência) —
+# nunca deve entrar no repositório do site, mesmo que algum dia seja
+# copiada/colada para dentro desta pasta por engano.
+/site-mae/
+/site mae/
+
+# Arquivos compactados (originais de mídia, nunca pertencem ao código do site)
+*.zip
+*.rar
+
+# Vercel (criado localmente pelo "vercel link"/"vercel dev", específico da máquina)
+.vercel
+
+# Sistema
+.DS_Store
 Thumbs.db
 desktop.ini
