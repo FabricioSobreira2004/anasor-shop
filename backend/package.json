@@ -19,6 +19,7 @@
   "dependencies": {
     "cors": "^2.8.5",
     "express": "^4.19.2",
-    "mercadopago": "^3.6.1"
+    "mercadopago": "^3.6.1",
+    "nodemailer": "^10.1.7"
   }
 }
