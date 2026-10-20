@@ -19,6 +19,18 @@
 //  imprime no console ao subir, e a mensagem que acompanha esta
 //  entrega, antes de rodar qualquer checkout "de teste" com elas.
 //
+//  WEBHOOK + E-MAIL DE PEDIDO — feito
+//  ---------------------------------------------------------
+//  POST /api/webhook/mercadopago (mais abaixo) já: valida a assinatura
+//  da notificação (WebhookSignatureValidator, SDK oficial), consulta o
+//  pagamento DE VERDADE na API do Mercado Pago (nunca confia no corpo
+//  da notificação) e, só quando o status vier "approved", manda um
+//  e-mail pra Anasor com itens/valor/endereço de entrega/contato do
+//  cliente (ver backend/pedido-email.js). Sem isso (ou se o e-mail
+//  falhar por qualquer motivo), o endereço completo CONTINUA disponível
+//  no metadata da Preference, visível no painel do Mercado Pago — o
+//  e-mail é a notificação PROATIVA, o metadata é a rede de segurança.
+//
 //  NÃO faz parte desta etapa ainda (TODO — próximos passos):
 //   [ ] Banco de dados: mover o catálogo pra um Postgres/Mongo
 //       (hoje ele é lido do arquivo do front — ver data/produtos.js) —
@@ -26,22 +38,11 @@
 //       na memória do processo, em "pedidosFake" abaixo: reiniciar o
 //       servidor apaga tudo). Criar uma camada "repositório" pro resto
 //       do código não saber se os dados vêm de arquivo, de SQL, etc.
-//   [ ] Webhook de verdade: em POST /api/webhook/mercadopago, buscar o
-//       pagamento na API do MP pelo id da notificação, conferir o
-//       status e SÓ ENTÃO marcar o pedido como pago no banco — nunca
-//       confiar cegamente no corpo da notificação (ela pode ser
-//       forjada; a fonte da verdade é sempre uma consulta de volta à
-//       API do MP usando o token). ENQUANTO ISSO NÃO EXISTE (Etapa 3):
-//       o endereço de entrega de cada pedido vai no campo "metadata"
-//       da Preference (ver POST /api/checkout, mais abaixo) — é a
-//       forma mais simples/gratuita da Anasor ver pra onde enviar um
-//       pedido pago de verdade: abrindo o pagamento no painel do
-//       Mercado Pago (mesmo painel que ela já usa pra conferir se
-//       recebeu o dinheiro), a seção de detalhes do pagamento mostra
-//       o metadata enviado aqui. Zero infraestrutura nova. Ver o
-//       relatório desta rodada pro que ainda precisa ser CONFIRMADO
-//       com ela (se o metadata aparece de forma legível no painel
-//       dela, ou se vale a pena migrar pra e-mail automático depois).
+//       Sem isso, o webhook também não tem como marcar PEDIDOS
+//       DUPLICADOS (a mesma notificação reenviada pelo Mercado Pago
+//       pode gerar mais de um e-mail pro mesmo pedido — aceitável por
+//       ora: o e-mail sempre traz o id do pagamento, dá pra reconhecer
+//       duplicata de relance).
 //   [ ] Estoque: cada peça é única (estoque 1). Ao confirmar o
 //       pagamento (via webhook), marcar como vendida pra ela sair da
 //       vitrine e não ser vendida 2x.
@@ -92,17 +93,27 @@
 const express = require('express');
 const cors = require('cors');
 
-// SDK oficial do Mercado Pago (pacote npm "mercadopago", v3 — instalado
-// agora que existem credenciais de verdade pra usar). Só os 2 pedaços
-// que este arquivo usa: MercadoPagoConfig (configura o client com o
-// Access Token) e Preference (cria o link de pagamento do Checkout
-// Pro). O require fica aqui em cima INCONDICIONALMENTE — carregar o
-// pacote não faz nenhuma chamada de rede sozinho, então não custa nada
-// mesmo quando não há token (o client só é instanciado mais abaixo,
-// dentro do "if (MERCADOPAGO_ACCESS_TOKEN)").
-const { MercadoPagoConfig, Preference } = require('mercadopago');
+// SDK oficial do Mercado Pago (pacote npm "mercadopago", v3). Além de
+// MercadoPagoConfig/Preference (já usados por POST /api/checkout):
+//   - Payment: consulta um pagamento por id (GET /v1/payments/:id) —
+//     é o que o webhook usa pra saber o status REAL de um pagamento,
+//     nunca confiando no corpo da notificação (ver POST
+//     /api/webhook/mercadopago, mais abaixo).
+//   - WebhookSignatureValidator/InvalidWebhookSignatureError: o SDK
+//     oficial JÁ traz a validação de assinatura HMAC do webhook
+//     pronta (comparação em tempo constante, janela de tolerância de
+//     relógio) — não precisou ser reimplementada na mão aqui.
+// O require fica INCONDICIONAL (igual já era) — carregar o pacote não
+// faz nenhuma chamada de rede sozinho, não custa nada mesmo sem token.
+const {
+  MercadoPagoConfig,
+  Preference,
+  Payment,
+  WebhookSignatureValidator,
+} = require('mercadopago');
 
 const produtos = require('./data/produtos');
+const { extrairDadosPedido, enviarEmailPedido, formatarReal } = require('./pedido-email');
 
 const app = express();
 
@@ -178,6 +189,71 @@ if (!MERCADOPAGO_ACCESS_TOKEN) {
   );
 }
 
+// ---------- CONFIG DO WEBHOOK (assinatura) E DO E-MAIL ----------
+// MERCADOPAGO_WEBHOOK_SECRET: o "segredo" que o painel do Mercado Pago
+// mostra ao configurar a URL do webhook — usado por
+// WebhookSignatureValidator (POST /api/webhook/mercadopago, mais
+// abaixo) pra confirmar que uma notificação realmente veio do Mercado
+// Pago, e não de qualquer um que descubra a URL e minta "esse
+// pagamento foi aprovado". Ver backend/.env.example.
+const MERCADOPAGO_WEBHOOK_SECRET = process.env.MERCADOPAGO_WEBHOOK_SECRET || null;
+
+// EMAIL_USER/EMAIL_APP_PASSWORD: a conta Gmail que ENVIA o aviso de
+// pedido (SMTP com senha de app, não a senha normal — ver
+// backend/.env.example pro passo a passo de gerar uma). EMAIL_DESTINO
+// é pra ONDE o aviso vai — normalmente a própria Anasor; separado do
+// EMAIL_USER de propósito (a conta que ENVIA não precisa ser a mesma
+// que RECEBE, embora possa ser).
+const EMAIL_USER = process.env.EMAIL_USER || null;
+const EMAIL_APP_PASSWORD = process.env.EMAIL_APP_PASSWORD || null;
+const EMAIL_DESTINO = process.env.EMAIL_DESTINO || 'ceramicaecrocheanasor@gmail.com';
+
+// CORREÇÃO (achado do code-review): era um regex de SUBSTRING
+// (/localhost|127\.0\.0\.1/.test(BASE_URL)) — "pega" qualquer URL que
+// CONTENHA esse texto em qualquer parte, não só quando o host É
+// localhost. Era só cosmético enquanto só decidia auto_return/
+// notification_url (o pior caso seria perder uma otimização), mas
+// agora também decide se o webhook EXIGE assinatura (ver o handler,
+// mais abaixo) — uma URL pública que por acaso contivesse a palavra
+// "localhost" em algum pedaço (ex.: um domínio de preview da Vercel
+// pro branch "fix-localhost-bug") faria o webhook rodar em modo
+// permissivo em PRODUÇÃO, sem validar assinatura nenhuma. Em vez do
+// regex, compara o HOSTNAME de verdade (via o parser de URL nativo)
+// contra os 3 valores que realmente significam "minha própria
+// máquina". "fail closed": se BASE_URL não for nem uma URL válida
+// (quase impossível — sempre tem um fallback, ver a constante acima),
+// trata como "NÃO é localhost" — o lado mais seguro do erro é EXIGIR
+// assinatura, não dispensar.
+function calcularBaseUrlEhLocalhost(url) {
+  try {
+    const hostname = new URL(url).hostname.toLowerCase();
+    return hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1';
+  } catch {
+    return false;
+  }
+}
+const baseUrlEhLocalhost = calcularBaseUrlEhLocalhost(BASE_URL);
+
+if (!MERCADOPAGO_WEBHOOK_SECRET && !baseUrlEhLocalhost) {
+  // Erro (não aviso): em produção, sem o segredo, o webhook REJEITA
+  // toda notificação (ver o handler, mais abaixo) — sem isso, qualquer
+  // um que descobrisse a URL poderia forjar "paguei!" pra Anasor. Só
+  // em localhost (dev, sem o segredo configurado ainda) o webhook roda
+  // em modo permissivo.
+  console.error(
+    '❌ MERCADOPAGO_WEBHOOK_SECRET não configurado em produção — POST /api/webhook/mercadopago ' +
+      'vai REJEITAR (401) toda notificação até essa variável existir (ver backend/.env.example).'
+  );
+}
+
+if (!EMAIL_USER || !EMAIL_APP_PASSWORD) {
+  console.warn(
+    '⚠️  EMAIL_USER/EMAIL_APP_PASSWORD não configurados — quando um pagamento for aprovado, ' +
+      'o webhook NÃO vai conseguir notificar a Anasor por e-mail (ver backend/.env.example). ' +
+      'O endereço de entrega continua disponível no metadata da Preference, no painel do Mercado Pago.'
+  );
+}
+
 // ---------- MIDDLEWARES (rodam antes das rotas) ----------
 
 // CORS: o front (index.html etc.) vai rodar num endereço diferente
@@ -243,13 +319,28 @@ app.get('/api/produtos/:id', (req, res) => {
 // itens (com o preço JÁ recalculado no servidor), subtotal, frete, total }.
 const pedidosFake = [];
 
-// Gera um ID de pedido legível (não é um UUID de verdade, não
-// precisa ser: é só pra amarrar o link de pagamento fake ao registro
-// em pedidosFake e aparecer nas telas de retorno). Formato:
-// "PED-<timestamp>-<3 dígitos aleatórios>".
+// Gera um código de pedido legível (não é um UUID de verdade, não
+// precisa ser: é só pra amarrar o link de pagamento ao registro em
+// pedidosFake, aparecer nas telas de retorno E virar o
+// "external_reference" da Preference no Mercado Pago — é por ESSE
+// código que o webhook reconhece de qual pedido um pagamento aprovado
+// é, e que ele aparece no assunto do e-mail de aviso pra Anasor, ver
+// pedido-email.js). Formato "AS-AAAAMMDD-XXXX" (AS = Anasor Sobreira):
+// mais legível que o antigo "PED-<timestamp>-<3 dígitos>" num e-mail
+// ou numa tela de retorno — a data já vem embutida, sem precisar
+// decodificar um timestamp Unix pra saber quando o pedido foi feito.
+// 4 caracteres alfanuméricos (36^4 ≈ 1,7 milhão de combinações) dão
+// uma chance de colisão desprezível mesmo em dias de pico — não
+// precisa ser criptograficamente aleatório pra isso, só "praticamente
+// único por dia".
+const ALFABETO_SUFIXO_PEDIDO = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
 function gerarIdPedido() {
-  const sufixoAleatorio = Math.floor(Math.random() * 900 + 100); // 100-999
-  return `PED-${Date.now()}-${sufixoAleatorio}`;
+  const dataAAAAMMDD = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+  let sufixo = '';
+  for (let i = 0; i < 4; i++) {
+    sufixo += ALFABETO_SUFIXO_PEDIDO[Math.floor(Math.random() * ALFABETO_SUFIXO_PEDIDO.length)];
+  }
+  return `AS-${dataAAAAMMDD}-${sufixo}`;
 }
 
 // ============================================================
@@ -442,7 +533,12 @@ app.post('/api/checkout', async (req, res) => {
     // clicar em "Voltar ao site" manualmente após pagar — sem
     // auto_return, o Checkout Pro mostra esse botão em vez de
     // redirecionar sozinho.
-    const baseUrlEhPublica = !/localhost|127\.0\.0\.1/.test(BASE_URL);
+    // reaproveita o MESMO teste já calculado lá em cima (baseUrlEhLocalhost)
+    // em vez de repetir o regex aqui — CORREÇÃO (achado do code-review):
+    // duas cópias independentes do mesmo regex são 2 lugares pra lembrar
+    // de atualizar se um dia a regra mudar (ex.: passar a tratar um
+    // subdomínio de staging como "não público" também).
+    const baseUrlEhPublica = !baseUrlEhLocalhost;
 
     const preferencia = await new Preference(mp).create({
       body: {
@@ -462,31 +558,28 @@ app.post('/api/checkout', async (req, res) => {
           failure: `${BASE_URL}/pedido-erro.html?order_id=${orderId}`,
         },
         ...(baseUrlEhPublica ? { auto_return: 'approved' } : {}),
-        // notification_url = mesma BASE_URL do site, já que front e
-        // backend agora são o mesmo deploy na Vercel (ver comentário
-        // de BASE_URL lá em cima). Em dev local (BASE_URL ainda
-        // apontando pra localhost), o Mercado Pago não vai conseguir
-        // chamar de volta de verdade — só funciona depois do deploy
-        // público, quando BASE_URL estiver configurada na Vercel.
-        notification_url: `${BASE_URL}/api/webhook/mercadopago`,
-        // external_reference amarra a Preference ao NOSSO orderId —
-        // é assim que o webhook (quando implementado de verdade) vai
-        // saber qual pedido em pedidosFake marcar como pago.
+        // notification_url: SÓ quando BASE_URL é pública (mesmo motivo
+        // do auto_return, acima) — mandar uma notification_url
+        // apontando pra "http://localhost:..." não quebra a Preference
+        // (ao contrário do auto_return), mas também não serve pra
+        // nada: o Mercado Pago roda nos servidores DELE, nunca vai
+        // conseguir alcançar o localhost de ninguém. Omitir em vez de
+        // mandar um valor inútil deixa isso explícito.
+        ...(baseUrlEhPublica ? { notification_url: `${BASE_URL}/api/webhook/mercadopago` } : {}),
+        // external_reference amarra a Preference ao NOSSO código de
+        // pedido — é assim que o webhook (POST /api/webhook/mercadopago,
+        // mais abaixo) sabe qual pedido um pagamento aprovado é, e é o
+        // código que aparece no e-mail de aviso pra Anasor.
         external_reference: orderId,
-        // METADATA (Etapa 3): ESTA é, hoje, a forma mais simples e
-        // gratuita da Anasor VER o endereço de entrega de um pedido
-        // pago de verdade — sem banco de dados, sem e-mail, sem nada
-        // novo pra configurar. O painel do Mercado Pago (o mesmo que
-        // ela já usa pra ver se caiu o dinheiro) mostra o metadata de
-        // cada pagamento na tela de detalhe dele. Campos achatados
-        // (não aninhados): a API de metadata do Mercado Pago espera
-        // pares chave/valor simples, não objetos dentro de objetos.
-        // Isso NÃO substitui uma solução melhor no futuro (ver TODO no
-        // topo do arquivo e o relatório desta rodada) — é a ponte mais
-        // simples possível com o que já existe hoje.
-        // "|| ''" NÃO entra aqui: limitar() (acima) sempre devolve
-        // string ("" no mínimo), nunca undefined/null — um "|| ''" em
-        // cima disso seria morto, nunca entraria em ação.
+        // METADATA: a forma mais simples e gratuita da Anasor ver os
+        // detalhes de um pedido pago de verdade sem banco de dados —
+        // tanto no e-mail automático (webhook + pedido-email.js, ver
+        // comentário completo lá) quanto, de reserva, direto no painel
+        // do Mercado Pago, caso o e-mail falhe por algum motivo. Campos
+        // achatados (não aninhados): a API de metadata do Mercado Pago
+        // espera pares chave/valor simples, não objetos dentro de
+        // objetos. "|| ''" NÃO entra aqui: limitar() (acima) sempre
+        // devolve string ("" no mínimo), nunca undefined/null.
         metadata: {
           pedido_id: orderId,
           cliente_telefone: clienteSaneado.telefone,
@@ -498,6 +591,30 @@ app.post('/api/checkout', async (req, res) => {
           endereco_bairro: enderecoSaneado.bairro,
           endereco_cidade: enderecoSaneado.cidade,
           endereco_uf: enderecoSaneado.estado,
+          // itens_resumo/subtotal/total: redundância de propósito —
+          // o webhook PREFERE additional_info.items (o Mercado Pago
+          // costuma ecoar os "items" acima quando consulta o
+          // pagamento), mas nem toda forma de pagamento garante isso;
+          // este resumo em texto plano é a rede de segurança pro
+          // e-mail NUNCA sair sem nenhuma informação de item (ver
+          // extrairDadosPedido, pedido-email.js). limitar(..., 450)
+          // (mesma função já usada pra saneamento de cliente/endereço,
+          // acima) — CORREÇÃO (achado do code-review): um carrinho com
+          // MUITOS itens/nomes longos podia gerar uma string sem
+          // limite nenhum e estourar o tamanho que a API de metadata
+          // do Mercado Pago aceita, derrubando a Preference inteira —
+          // ironia de uma "rede de segurança" travar o pedido de
+          // verdade. Truncar aqui é seguro: é só o FALLBACK; a fonte
+          // preferida (additional_info.items, no pagamento) não passa
+          // por este limite.
+          itens_resumo: limitar(
+            itensResolvidos
+              .map((item) => `${item.quantidade}x ${item.nome} (${formatarReal(item.precoUnitario)} cada)`)
+              .join('; '),
+            450
+          ),
+          subtotal,
+          total,
         },
       },
     });
@@ -531,29 +648,169 @@ app.post('/api/checkout', async (req, res) => {
 // comprador) sempre que o status de um pagamento muda — é assim que
 // pedidos são confirmados de VERDADE (não pela pessoa "chegar" na
 // pedido-confirmado.html, que ela poderia nem alcançar se fechasse a
-// aba). Por enquanto este endpoint só EXISTE e responde 200 (o MP
-// exige uma resposta rápida; se não receber, ele tenta de novo depois
-// e pode até desativar a notificação) — não faz nada com o corpo
-// ainda.
-//
-// TODO, quando MERCADOPAGO_ACCESS_TOKEN existir:
-//   1. Ler o "id" do pagamento que vem na notificação (formato varia:
-//      às vezes vem em req.query, às vezes no body — conferir a doc
-//      atual do MP, o formato já mudou de versão pra versão).
-//   2. NUNCA confiar no corpo da notificação sozinho (pode ser forjada
-//      por qualquer um que descubra a URL) — sempre CONSULTAR de volta
-//      a API do Mercado Pago com esse id + o MERCADOPAGO_ACCESS_TOKEN,
-//      e usar o status que a API devolver como fonte da verdade.
-//   3. Achar o pedido correspondente (pelo "external_reference" que
-//      mandamos na criação da Preference == nosso orderId) e atualizar
-//      o status dele (pago / recusado / estornado...) no banco.
-//   4. Responder 200 rapidinho (idealmente ANTES de qualquer trabalho
-//      pesado — se demorar, o MP reenvia a notificação achando que
-//      falhou, e o passo 3 precisa ser IDEMPOTENTE: rodar 2x com a
-//      mesma notificação não pode cobrar/enviar 2 vezes).
-app.post('/api/webhook/mercadopago', (req, res) => {
-  console.log('📩 Webhook do Mercado Pago recebido (stub, nada processado ainda):', req.body);
-  res.sendStatus(200);
+// aba). Fluxo completo:
+//   1. Identifica o tipo da notificação e o id do pagamento. Notificação
+//      que não é de pagamento (ex.: "merchant_order") -> 200 e pronto,
+//      não há o que processar aqui.
+//   2. VALIDA A ASSINATURA (x-signature/x-request-id contra
+//      MERCADOPAGO_WEBHOOK_SECRET, via WebhookSignatureValidator do SDK
+//      oficial) — sem isso, qualquer um que descobrisse esta URL
+//      poderia mandar um POST fingindo "paguei!" e dar início a um
+//      envio sem pagamento nenhum ter acontecido.
+//   3. NUNCA confia no corpo da notificação pra decidir o que fazer —
+//      consulta o pagamento DE VERDADE na API do Mercado Pago (GET
+//      /v1/payments/:id, com o ACCESS_TOKEN) e só segue se o status
+//      que a API devolveu for "approved".
+//   4. Monta os dados do pedido a partir do PRÓPRIO pagamento
+//      (metadata + additional_info.items + payer — ver
+//      extrairDadosPedido, pedido-email.js) e manda o e-mail pra
+//      Anasor, AGUARDANDO o envio terminar antes de responder (numa
+//      função serverless a execução para assim que a resposta sai —
+//      sem o "await", o e-mail poderia nunca sair).
+// Responde 200 rápido sempre que não há nada de recuperável a fazer
+// (tipo errado, assinatura inválida, pagamento não aprovado, e-mail
+// mal configurado) — só devolve 500 quando o problema é algo que uma
+// NOVA tentativa do Mercado Pago (ele reenvia sozinho) pode resolver
+// (falha de rede ao consultar o pagamento, falha ao enviar o e-mail).
+app.post('/api/webhook/mercadopago', async (req, res) => {
+  // Formato da notificação (documentado, mas já mudou de versão pra
+  // versão no passado — por isso checar os 2 formatos conhecidos pro
+  // TIPO): querystring "?type=payment&data.id=123" (atual) ou, em
+  // integrações mais antigas, "?topic=payment" / um body { type }.
+  const tipo = req.body?.type || req.query?.type || req.query?.topic;
+
+  // paymentId vem SÓ da query string ("data.id"), nunca do corpo —
+  // CORREÇÃO (achado do code-review): a assinatura (x-signature, logo
+  // abaixo) cobre especificamente o "data.id" da QUERY STRING, nunca o
+  // do corpo. Antes este código preferia "req.body?.data?.id" — um
+  // atacante que conseguisse REPETIR uma notificação antiga, válida
+  // (mesma query string, mesma assinatura, dentro da janela de
+  // tolerância) só precisaria trocar o "data.id" do CORPO pra apontar
+  // pra outro pagamento: a assinatura continuaria batendo (ela nunca
+  // olhou pro corpo), mas o pagamento CONSULTADO/PROCESSADO seria um
+  // id que a assinatura nunca verificou. Usando só o da query, o id
+  // que é validado é SEMPRE o mesmo id que é consultado depois — não
+  // há como os dois dessincronizarem.
+  // primeiroValorQuery: um parâmetro de querystring REPETIDO
+  // (?data.id=1&data.id=2 — pode acontecer por retry de proxy/CDN,
+  // não é exclusivo de alguém tentando forçar algo) faz o Express
+  // devolver um ARRAY, não string — CORREÇÃO (achado do code-review):
+  // sem tratar isso, o "typeof === 'string'" abaixo falhava
+  // silenciosamente, dataIdQuery ficava vazio e a notificação era
+  // descartada (200, sem processar) mesmo sendo legítima. MESMO
+  // critério que o próprio WebhookSignatureValidator do SDK usa
+  // internamente pra normalizar os headers (pega o 1º valor de um
+  // array) — consistente com o que a assinatura também vai considerar.
+  const primeiroValorQuery = (valor) => {
+    if (Array.isArray(valor)) return typeof valor[0] === 'string' ? valor[0] : '';
+    return typeof valor === 'string' ? valor : '';
+  };
+  const dataIdQuery = primeiroValorQuery(req.query?.['data.id']) || primeiroValorQuery(req.query?.id);
+  const paymentId = dataIdQuery;
+
+  console.log(`📩 Webhook Mercado Pago recebido: type=${tipo || '(vazio)'} id=${paymentId || '(vazio)'}`);
+
+  // Notificação de outro tipo (ex.: merchant_order) ou sem id nenhum
+  // -> nada a processar; 200 evita o Mercado Pago reenviar pra sempre
+  // algo que a gente nunca vai tratar.
+  if (tipo !== 'payment' || !paymentId) {
+    return res.sendStatus(200);
+  }
+
+  // ---------- VALIDAÇÃO DE ASSINATURA ----------
+  if (MERCADOPAGO_WEBHOOK_SECRET) {
+    try {
+      WebhookSignatureValidator.validate({
+        xSignature: req.headers['x-signature'],
+        xRequestId: req.headers['x-request-id'],
+        dataId: dataIdQuery,
+        secret: MERCADOPAGO_WEBHOOK_SECRET,
+        // 300s = 5 minutos de tolerância de relógio — generoso o
+        // bastante pra qualquer deriva de horário normal entre os
+        // servidores do Mercado Pago e a função serverless da Vercel,
+        // mas ainda curto o bastante pra rejeitar uma notificação
+        // "replay" (alguém capturando e reenviando uma chamada antiga).
+        toleranceSeconds: 300,
+      });
+    } catch (erro) {
+      console.warn(
+        '⚠️  Webhook com assinatura inválida, rejeitando — reason:',
+        erro?.reason || erro?.message || erro
+      );
+      return res.sendStatus(401);
+    }
+  } else if (!baseUrlEhLocalhost) {
+    // Produção sem o segredo configurado: REJEITA tudo (não dá pra
+    // confirmar que a notificação é legítima). Ver o aviso que já
+    // sobe no console na inicialização do servidor, mais acima.
+    console.error('❌ Webhook rejeitado: MERCADOPAGO_WEBHOOK_SECRET não configurado em produção.');
+    return res.sendStatus(401);
+  } else {
+    // Só localhost, só sem o segredo configurado ainda: modo
+    // permissivo pra dar pra testar o resto do fluxo localmente antes
+    // de ter um webhook de verdade cadastrado no painel do Mercado
+    // Pago (que é quando o segredo passa a existir).
+    console.warn('⚠️  Webhook sem validação de assinatura (modo permissivo — só ativo em localhost).');
+  }
+
+  // ---------- CONSULTA O PAGAMENTO DE VERDADE ----------
+  if (!mp) {
+    console.warn('⚠️  Webhook recebido, mas MERCADOPAGO_ACCESS_TOKEN não configurado — não dá pra consultar o pagamento.');
+    return res.sendStatus(200); // sem token, não há nada mais a fazer — e reenviar não resolveria
+  }
+
+  let pagamento;
+  try {
+    pagamento = await new Payment(mp).get({ id: paymentId });
+  } catch (erro) {
+    console.error(`❌ Falha ao consultar o pagamento ${paymentId} na API do Mercado Pago:`, erro?.message || erro);
+    return res.sendStatus(500); // pode ser falha de rede passageira — vale o MP reenviar
+  }
+
+  if (pagamento.status !== 'approved') {
+    // pending/rejected/cancelled/in_process/refunded... — nada a
+    // notificar ainda. Quando (se) o status mudar pra "approved", o
+    // Mercado Pago manda uma NOVA notificação, e caímos aqui de novo.
+    console.log(`ℹ️  Pagamento ${paymentId} com status "${pagamento.status}" — nenhuma notificação enviada.`);
+    return res.sendStatus(200);
+  }
+
+  // ---------- MONTA E ENVIA O E-MAIL ----------
+  const dadosPedido = extrairDadosPedido(pagamento);
+
+  try {
+    // "await" ANTES de responder: numa função serverless (Vercel), o
+    // processo pode ser encerrado assim que a resposta HTTP sai — sem
+    // aguardar, o envio do e-mail arriscaria nunca terminar.
+    await enviarEmailPedido(dadosPedido, { destino: EMAIL_DESTINO });
+    console.log(`✅ E-mail de novo pedido enviado — ${dadosPedido.codigoPedido} (pagamento ${paymentId}).`);
+  } catch (erro) {
+    // "configuracaoAusente" (ver enviarEmailPedido, pedido-email.js):
+    // ÚNICA fonte de verdade sobre se EMAIL_USER/EMAIL_APP_PASSWORD
+    // estão configurados — CORREÇÃO (achado do code-review): este
+    // handler chegou a checar essas 2 variáveis DE NOVO aqui antes de
+    // tentar enviar, duplicando a mesma checagem que
+    // criarTransportadorGmail() (pedido-email.js) já faz; bastava
+    // deixar ela lançar o erro e decidir o status HTTP a partir dele.
+    if (erro?.configuracaoAusente) {
+      // Reenviar a notificação não faz a variável de ambiente aparecer
+      // sozinha — responde 200 (evita o Mercado Pago martelando pra
+      // sempre) mas grita BEM alto no log: a Anasor NÃO vai saber
+      // deste pedido por e-mail (o endereço completo ainda está no
+      // metadata da Preference, visível no painel do Mercado Pago,
+      // como reserva).
+      console.error(
+        `❌ E-mail não configurado (EMAIL_USER/EMAIL_APP_PASSWORD) — não foi possível notificar a ` +
+          `Anasor do pedido ${dadosPedido.codigoPedido} (pagamento ${paymentId})! Confira o metadata ` +
+          `deste pagamento no painel do Mercado Pago pra ver o endereço de entrega.`
+      );
+      return res.sendStatus(200);
+    }
+    console.error(`❌ Falha ao enviar e-mail do pedido ${dadosPedido.codigoPedido}:`, erro?.message || erro);
+    return res.sendStatus(500); // falha de envio (SMTP/rede) pode ser passageira — vale o MP reenviar
+  }
+
+  return res.sendStatus(200);
 });
 
 // Qualquer outra rota /api/* que não casou acima -> 404 em JSON
