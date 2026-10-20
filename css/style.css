@@ -2538,8 +2538,13 @@ nav {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  width: 36px;
-  height: 36px;
+  /* 36px -> 42px (achado da auditoria, item 11: área de toque
+     pequena pra celular) — mesmo tamanho que .galeria__seta
+     (produto.css) já usa pro MESMO tipo de controle, só que lá numa
+     foto maior; alinha os dois em vez de ter 2 medidas diferentes
+     pro mesmo componente no site. */
+  width: 42px;
+  height: 42px;
   border-radius: 50%;
   border: none;
   cursor: pointer;
@@ -2554,8 +2559,11 @@ nav {
 }
 
 .carrossel-card__seta svg {
-  width: 18px;
-  height: 18px;
+  /* 18px -> 20px: acompanha o botão (36px -> 42px, ver acima) na
+     mesma proporção; MESMO tamanho de ícone de .galeria__seta
+     (produto.css). */
+  width: 20px;
+  height: 20px;
 }
 
 .carrossel-card__seta:hover {
