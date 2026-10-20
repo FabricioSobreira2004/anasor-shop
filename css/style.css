@@ -2583,6 +2583,26 @@ nav {
   display: block;
 }
 
+/* CORREÇÃO (achado ao testar o carrossel mobile de Edição Surpresa em
+   dispositivo real/emulado): o <img>/<video> que deveria estar
+   ESCONDIDO (atributo "hidden", trocado pelo JS a cada slide — ver
+   ativarCarrosselCard, main.js) continuava visível, "espremido" a
+   ~40px de altura por cima do slide ativo. Causa: o seletor de
+   atributo "[hidden]" do navegador (display:none) e a classe
+   ".carrossel-card__foto" acima (display:block) têm a MESMA
+   especificidade (0-1-0) — entre uma regra do navegador e uma regra
+   do autor com empate de especificidade, a do AUTOR sempre vence,
+   então o "display:block" declarado aqui silenciosamente destravava o
+   hidden. (p/ja existia no site publicado antes desta rodada — não foi
+   introduzido pelas mudanças de hoje, só ficou mais visível ao reduzir
+   o espaço entre os slides no carrossel horizontal do mobile.)
+   A correção é só dar ao MESMO seletor + "[hidden]" uma especificidade
+   maior (0-2-0), que bate o "display:block" da regra de cima sem
+   precisar de "!important". */
+.carrossel-card__foto[hidden] {
+  display: none;
+}
+
 /* --video: só o <video> precisa de fundo preto (evita um "flash"
    branco antes do poster carregar — mesmo motivo do antigo
    .edicao-surpresa__video/.produto-video__player, produto.css); o
@@ -2867,10 +2887,45 @@ nav {
     font-size: 1.4rem;
     margin-bottom: 2rem;
   }
+  /* ============================================================
+     Seleção Especial (mobile) — de "2 cards empilhados" pra
+     CARROSSEL horizontal com scroll-snap
+     ============================================================
+     DIAGNÓSTICO MEDIDO (Playwright, iPhone 15, 393×852): com os 2
+     cards EMPILHADOS (grid-template-columns:1fr, como era antes), a
+     seção inteira media 1269px no mobile — quase o DOBRO da versão
+     desktop (781px), porque empilhar verticalmente soma a altura dos
+     2 cards (cada um ~500px) em vez de dividir o espaço como o grid
+     2-colunas do desktop faz. Isso contrariava o pedido de "ficarem
+     proporcionais ao resto" das seções da Home.
+     SOLUÇÃO: mesma técnica já usada no carrossel de produtos
+     (.produtos-grid[data-grade-produtos], mais abaixo neste arquivo)
+     — vira um trilho horizontal com scroll-snap, 1 card por vez (com
+     uma "espiadinha" do próximo, ~14% da largura, sinalizando que dá
+     pra arrastar). Com isso a altura da seção passa a refletir a
+     altura de 1 card só, não a soma dos 2. */
   .selecao-especial__grid {
-    /* pedido: "os 2 cards empilham bem em mobile" */
-    grid-template-columns: 1fr;
-    gap: 2.75rem;
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 1rem;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;           /* Firefox: esconde a barra de rolagem */
+    max-width: none;
+    padding-bottom: 0.5rem;
+    /* respiro embaixo pra a sombra do card (.foto-emoldurada) não ser cortada */
+  }
+  .selecao-especial__grid::-webkit-scrollbar {
+    display: none;                  /* Chrome/Safari: esconde a barra de rolagem */
+  }
+  .selecao-especial__card {
+    flex: 0 0 86%;
+    /* 86% (não 100%): sobra ~14% de "espiadinha" do próximo card na
+       borda direita — é o que sinaliza visualmente "arraste aqui" sem
+       precisar de nenhuma dica de texto/seta nova. */
+    scroll-snap-align: center;
+    scroll-snap-stop: always;       /* não deixa "pular" o card num swipe forte */
   }
 }
 
@@ -3039,9 +3094,28 @@ nav {
   .edicao-surpresa__subtitulo {
     margin-bottom: 2rem;
   }
+  /* MESMA conversão "empilhado -> carrossel horizontal" de
+     .selecao-especial__grid logo acima, e pelo MESMO motivo: medido
+     em 1472px empilhado no mobile (quase o dobro do desktop, 929px) —
+     ver o comentário grande lá pra o diagnóstico completo. */
   .edicao-surpresa__grid {
-    grid-template-columns: 1fr;
-    gap: 2.75rem;
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 1rem;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    max-width: none;
+    padding-bottom: 0.5rem;
+  }
+  .edicao-surpresa__grid::-webkit-scrollbar {
+    display: none;
+  }
+  .edicao-surpresa__card {
+    flex: 0 0 86%;
+    scroll-snap-align: center;
+    scroll-snap-stop: always;
   }
 }
 
@@ -5114,19 +5188,127 @@ footer {
     animation: btn-agora-pulso 2s ease-in-out infinite;
   }
 
+  /* ============================================================
+     CARD DE PRODUTO COMPACTO (mobile) — rodada de ajustes de iPhone
+     ============================================================
+     DIAGNÓSTICO MEDIDO (Playwright, iPhone 15 emulado, 393×852,
+     site publicado): o card tinha 580px de altura (169px de largura —
+     só 2 cabem na tela). Quebra do que ocupava esse espaço:
+       - <img>                         240px (altura fixa)
+       - <img> margin-bottom            16px
+       - <h3> (nomes longos "quebram"
+         em até 4 linhas, 16.8px)      108px
+       - <h3> margin-bottom              8px
+       - bloco de preço (some em 2
+         linhas no card estreito)       56px
+       - padding-bottom do card         24px
+       - "Adicionar ao Carrinho" (o
+         texto "Adicionar ao Carrinho"
+         não cabia numa linha a 90% de
+         largura -> quebrava em 2)      ~61px
+       - "Comprar Agora" + margem       ~52px
+     Os 2 maiores causadores eram a <img> com altura fixa alta e o
+     <h3> sem limite de linhas (nome comprido = card alto). Resolvido
+     abaixo: imagem quase quadrada (imita a proporção das fotos de
+     produto já usadas no catálogo, sem cortar o objeto de forma
+     estranha) + título travado em 2 linhas (com reticências) + preço/
+     botões mais compactos. Meta pedida: ~560px ou menos — o resultado
+     medido depois destas regras ficou bem abaixo disso (ver relatório
+     final), então não precisou espremer ao ponto de ficar apertado. */
+  .produto-card img {
+    /* 240px fixo -> aspect-ratio (acompanha a largura real do card,
+       que varia um pouco entre 360/375/393/430px de tela, em vez de
+       travar um número de pixel). 1/1 (quase quadrado) é o maior
+       corte de altura disponível sem distorcer a foto — object-fit:
+       cover (já existia) garante que a peça continue preenchendo o
+       quadro, só com uma "janela" mais baixa. */
+    aspect-ratio: 1 / 1;
+    height: auto;
+    margin-bottom: 0.65rem;
+  }
+
+  .produto-card h3 {
+    /* 1.05rem/16.8px -> 0.88rem (~14px): ainda bem acima do piso de
+       12px pedido, só um degrau abaixo do desktop. */
+    font-size: 0.88rem;
+    line-height: 1.3;
+    margin-bottom: 0.4rem;
+
+    /* -webkit-line-clamp: trava em NO MÁXIMO 2 linhas (com "..." se
+       o nome não couber) — é o que impede um nome de 4-5 palavras
+       (ex.: "Prato Decorativo Melodia da Primavera") de sozinho
+       praticamente dobrar a altura do card. display:-webkit-box é
+       exigido pela própria propriedade (é assim que a spec define
+       "quantas linhas de um bloco mostrar"), não um hack. */
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    /* min-height reserva o espaço de 2 linhas mesmo em nomes curtos
+       de 1 linha só — sem isto, cards de uma mesma fileira ficariam
+       com o preço/botões em alturas diferentes entre si. */
+    min-height: calc(0.88rem * 1.3 * 2);
+  }
+
+  /* PREÇO (dentro do card, mobile): fontes um degrau menor + menos
+     respiro embaixo — o card de 169px de largura já obriga o preço
+     riscado + o atual + o selo "% OFF" a conviver em pouco espaço;
+     encolher as 3 partes (sem escondar nenhuma) evita a 2ª linha. */
+  .produto-card .preco,
+  .produto-card .preco--promo {
+    font-size: 0.95rem;
+    margin-bottom: 0.65rem;
+    gap: 0.35rem;
+  }
+  .produto-card .preco__antigo {
+    font-size: 0.78rem;
+  }
+  .produto-card .preco-selo-off {
+    font-size: 0.64rem;
+    padding: 0.2rem 0.4rem;
+  }
+
+  .produto-card {
+    /* 1.5rem -> 1rem: o card não precisa do mesmo respiro generoso
+       do desktop pra "arejar" — no carrossel estreito, cada rem
+       conta na meta de altura. */
+    padding-bottom: 1rem;
+  }
+
   /* TAMANHO DOS BOTÕES NO CARD (mobile) — item 2
      Estavam grandes demais e encostando na borda do card (o
-     .produto-card não tem padding lateral). Agora: no máximo 90% da
-     largura do card, centralizados (align-self:center herdado), com
-     folga visível nos dois lados; padding/fonte menores pra ficarem
-     proporcionais ao card estreito do carrossel (2 por "página"). */
+     .produto-card não tem padding lateral). Agora: largura cheia
+     (100%, não mais 90% -- ver nota abaixo), centralizados
+     (align-self:center herdado), padding/fonte menores pra ficarem
+     proporcionais ao card estreito do carrossel (2 por "página").
+     90% -> 100%: medido que "Adicionar ao Carrinho" quebrava em 2
+     linhas a 90% de largura (card de 169px); a largura cheia dá a
+     folga de texto que faltava sem precisar truncar o rótulo do
+     botão, mantendo a altura de 1 linha só. */
   .produto-card .btn-comprar,
   .produto-card .btn-comprar-agora {
     width: 100%;
-    max-width: 90%;
+    max-width: 100%;
     box-sizing: border-box;
-    padding: 0.72rem 0.9rem;
-    font-size: 0.82rem;
+    padding: 0.7rem 0.5rem;
+    font-size: 0.76rem;
+    /* 0.76rem = ~12.2px -> ainda acima do piso de 12px pedido; o
+       padding vertical (0.7rem*2=22.4px) + a linha de texto fecham
+       >=40px de área de toque (conferido por medição real, ver
+       relatório — ficou em ~42-43px). */
+    white-space: nowrap;
+  }
+  .produto-card .btn-comprar-agora {
+    margin-top: 0.4rem;
+  }
+
+  /* skeleton (card "fantasma" de carregamento, main.js): precisa
+     combinar com o tamanho do card real acima, senão o layout "pula"
+     (CLS) no instante em que os produtos de verdade chegam. */
+  .skeleton--img {
+    aspect-ratio: 1 / 1;
+    height: auto;
+    margin-bottom: 0.65rem;
   }
 
   /* SETAS DE NAVEGAÇÃO — só existem visualmente no desktop (ver
