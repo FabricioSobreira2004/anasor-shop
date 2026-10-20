@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 
-<html lang="pt-br">
+<html lang="pt-BR">
 
 <head>
     <meta charset="UTF-8">
@@ -19,7 +19,7 @@
 <!-- Importa as duas fontes que vamos usar
  : Fraunces (títulos) e Jost (texto) -->
 
-   <link rel="stylesheet" href="css/style.css?v=29">
+   <link rel="stylesheet" href="css/style.css?v=30">
 
    <!-- Marca no <html> que o JS rodou logo no início. O CSS do
         "scroll reveal" só esconde os elementos (opacity 0) quando
@@ -75,7 +75,7 @@
                      próppria Home. -->
                 <li><a href="index.html">Home</a></li>
                 <li><a href="ceramica.html">Cerâmica</a></li>
-                <li><a href="#croche">Crochê</a></li>
+                <li><a href="croche.html">Crochê</a></li>
                 <li><a href="#quem-somos">Quem Somos</a></li>
                 <li><a href="#contato">Contato</a></li>
             </ul>
@@ -418,17 +418,38 @@
            utilitário de sempre. -->
 <section class="selecao-especial reveal transicao-base" id="selecao-especial" hidden></section>
 
-      <!-- ===== CROCHÊ ===== -->
-      <!-- Mesma ideia: grade vazia + data-grade-produtos="croche".
-           Enquanto não houver nenhuma peça de crochê no array, o JS
-           esconde esta seção inteira (section.hidden), então ela não
-           aparece como um bloco vazio. Assim que um produto com
-           categoria "croche" for adicionado em produtos.js, a seção
-           volta a aparecer sozinha. -->
+      <!-- ===== CROCHÊ =====
+           ANTES: enquanto não houvesse nenhuma peça de crochê no
+           array, o JS escondia esta seção INTEIRA (section.hidden) —
+           resolvia o "bloco vazio", mas fazia a categoria crochê
+           simplesmente desaparecer da Home, sem nenhum sinal de que
+           ela existe/está vindo (pedido da auditoria: "não mostre uma
+           seção vazia; mostre um bloco elegante de em breve, ou
+           esconda"). AGORA: a seção continua visível, e
+           aplicarEExibir() (js/main.js) decide qual dos dois filhos
+           abaixo mostrar — a grade de produtos (quando algum dia
+           existir 1+ peça com categoria "croche") OU o aviso "em
+           breve" (#croche-em-breve, hoje), nunca os dois. -->
 <section class="queridinhos croche-vitrine" id="croche">
         <h2 class="reveal">Crochê Artesanal 🧶</h2>
 
     <div class="produtos-grid" data-grade-produtos="croche"></div>
+
+    <!-- Mesmo link que o card "Crochê" de "Explore Nossas Coleções" e
+         o menu já usam (croche.html) — a página dedicada tem o aviso
+         completo + botão de WhatsApp; este bloco aqui é só o teaser
+         curto, no meio do scroll da Home. hidden por padrão: só
+         aparece se montarEstadoCrocheHome() decidir que é o caso (sem
+         produtos de crochê ainda). -->
+    <div class="croche-em-breve reveal" id="croche-em-breve" hidden>
+        <svg class="croche-em-breve__icone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/>
+            <circle cx="12" cy="12" r="4"/>
+        </svg>
+        <p class="croche-em-breve__titulo">Nossa coleção de crochê está chegando</p>
+        <p class="croche-em-breve__texto">Peças feitas ponto a ponto, com o mesmo cuidado artesanal da cerâmica — em breve aqui na vitrine.</p>
+        <a href="croche.html" class="btn-fantasma">Saiba mais</a>
+    </div>
 
     </section>
 
@@ -462,7 +483,17 @@
                  comentário e a classe/span — eles não fazem mais
                  nada sozinhos. -->
             <div class="conteudo-provisorio">
-                <span class="dev-aviso">[Texto provisório — substituir pelo relato real da Anasor]</span>
+                <!-- Pedido explícito: a notinha "[Texto provisório...]" não
+                     pode aparecer no HTML público nem por acidente (antes
+                     ela já ficava oculta por CSS fora de MODO_DEV — ver
+                     .dev-aviso em style.css — mas o pedido foi tirá-la do
+                     próprio marcado, não só escondê-la visualmente).
+                     Virou este comentário: quem olhar o código-fonte
+                     ainda vê o aviso pra quem for escrever o texto real,
+                     mas nada é renderizado. O span/classe .dev-aviso
+                     continuam existindo em style.css/main.js só porque
+                     ainda são usados nas legendas da galeria do ateliê,
+                     mais abaixo nesta mesma página. -->
                 <p>
                     A Anasor Sobreira nasceu da vontade de levar o feito à mão para
                     dentro de casa. Cada peça de cerâmica é torneada, esmaltada e
@@ -634,7 +665,7 @@
                 <h4> Links Rápidos </h4>
                 <ul>
                     <li><a href="ceramica.html"> Cerâmica </a></li>
-                    <li><a href="#croche"> Crochê </a></li>
+                    <li><a href="croche.html"> Crochê </a></li>
                     <li><a href="#quem-somos"> Quem Somos </a></li>
                     <li><a href="politicas.html"> Políticas </a></li>
                 </ul>
@@ -665,8 +696,8 @@
            main.js DEPOIS (usa essa lista para montar os cards). Os dois
            ficam no fim do <body> para o HTML já estar carregado quando
            o JavaScript rodar. -->
-      <script src="js/produtos.js?v=29"></script>
-      <script src="js/main.js?v=29"></script>
+      <script src="js/produtos.js?v=30"></script>
+      <script src="js/main.js?v=30"></script>
 
 </body>
 

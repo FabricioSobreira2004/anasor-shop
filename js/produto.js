@@ -47,17 +47,20 @@ const relacionadosSecao = document.querySelector('#produtos-relacionados');
 
 
 // ---------- CONFIG COMPARTILHADA ----------
-// Número do WhatsApp no formato que o link "wa.me" exige: só dígitos,
-// com código do país (55) + DDD (21) + número. É o mesmo
-// (21) 99722-2679 que aparece no rodapé, sem espaços/traços/parênteses.
-const WHATSAPP_NUMERO = '5521987222679';
+// WHATSAPP_NUMERO (usada mais abaixo, no botão de comprar por
+// WhatsApp) NÃO é declarada aqui: morava aqui antes, mas virou uma
+// constante ÚNICA em js/main.js (carregado ANTES deste arquivo em
+// produto.html — mesmo "escopo global de scripts clássicos" já usado
+// no resto do site). Declarar de novo aqui daria
+// "Identifier 'WHATSAPP_NUMERO' has already been declared" (os dois
+// arquivos compartilham o mesmo escopo de top-level no navegador).
 
-// Como o breadcrumb deve linkar cada categoria:
-//  - "ceramica" tem página própria (ceramica.html)
-//  - "croche" ainda não tem página, então aponta pra seção da Home
+// Como o breadcrumb deve linkar cada categoria: as duas já têm
+// página própria agora (croche.html foi criada — antes apontava pra
+// uma seção da Home, index.html#croche).
 const CATEGORIAS = {
   ceramica: { rotulo: 'Cerâmica', href: 'ceramica.html' },
-  croche: { rotulo: 'Crochê', href: 'index.html#croche' },
+  croche: { rotulo: 'Crochê', href: 'croche.html' },
 };
 
 

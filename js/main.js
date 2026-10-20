@@ -1,7 +1,3 @@
-// Marcador de verificação do deploy automático na Vercel (Tarefa 3,
-// passo 2) — comentário inofensivo só pra confirmar, via diff deste
-// mesmo arquivo publicado, que um push na main dispara um novo deploy
-// em produção sozinho, sem precisar reimportar o projeto no painel.
 // ============================================================
 //  VERSIONAMENTO DE CACHE DOS ARQUIVOS (?v=N)
 // ============================================================
@@ -49,6 +45,15 @@ const MODO_DEV = ['localhost', '127.0.0.1', ''].includes(location.hostname);
 if (MODO_DEV) {
   document.documentElement.classList.add('modo-dev');
 }
+
+// Número do WhatsApp no formato que o link "wa.me" exige: só dígitos,
+// com código do país (55) + DDD (21) + número — o mesmo (21) 98722-2679
+// que aparece no rodapé. MOVIDO pra aqui (main.js, carregado em TODA
+// página) porque antes só existia duplicado dentro de js/produto.js;
+// agora que o form de contato (mais abaixo, nesta mesma Home) e
+// js/croche.js também precisam dele, ter 1 cópia só evita o risco de
+// uma ficar desatualizada se o número mudar um dia.
+const WHATSAPP_NUMERO = '5521987222679';
 
 
 // ============================================
@@ -978,14 +983,34 @@ function aplicarEExibir() {
     });
     const secao = grade.closest('section');
 
-    // categoria sem NENHUMA peça no catálogo (ex.: crochê hoje):
-    // esconde a seção inteira
+    // categoria sem NENHUMA peça no catálogo:
     if (daCategoria.length === 0) {
-      if (secao) secao.hidden = true;
       grade.innerHTML = '';
+
+      // CROCHÊ especificamente (achado da auditoria, item 2): em vez
+      // de esconder a seção INTEIRA (como as outras categorias vazias
+      // fariam, no "else" abaixo), mostra o aviso "em breve" dela
+      // (#croche-em-breve, no HTML) — assim "Crochê Artesanal 🧶"
+      // continua visível na Home, só sem fingir ter produtos. No dia
+      // em que existir 1+ peça com categoria "croche" em produtos.js,
+      // daCategoria.length para de ser 0 e este "if" nem roda mais —
+      // a grade normal (código mais abaixo) assume sozinha, sem
+      // precisar tocar aqui de novo.
+      const avisoCroche = document.querySelector('#croche-em-breve');
+      if (cat === 'croche' && avisoCroche) {
+        if (secao) secao.hidden = false;
+        avisoCroche.hidden = false;
+      } else {
+        if (secao) secao.hidden = true;
+      }
       return;
     }
     if (secao) secao.hidden = false;
+    // categoria passou a ter peça(s): garante que o aviso "em breve"
+    // (se esta grade for a de crochê) não fique visível junto da
+    // grade de produtos de verdade.
+    const avisoCroche = document.querySelector('#croche-em-breve');
+    if (cat === 'croche' && avisoCroche) avisoCroche.hidden = true;
 
     // aplica busca + faixa de preço + ordenação
     const visiveis = filtrarProdutos(daCategoria, criterios);
@@ -1841,14 +1866,35 @@ if (formContato) {
       .every(Boolean);
     if (!tudoOk) return;
 
-    // "envio" sem back-end: só confirma com o toast que já existe
-    // toast conforme o caso: recado de verdade x só cadastro na lista
-    const temMensagem = campos[2].el.value.trim().length > 0;
-    mostrarToast(
-      temMensagem
-        ? 'Mensagem enviada! Em breve retornaremos.'
-        : 'Pronto! Seu cadastro foi feito — em breve você recebe nossas novidades.'
+    // CORRIGIDO (bug real, achado na auditoria): antes este bloco só
+    // mostrava um toast de "Mensagem enviada!"/"Cadastro feito!" e
+    // reiniciava o form — SEM entregar a mensagem em lugar nenhum
+    // (não há back-end nem mailto aqui, e o toast de sucesso era
+    // simplesmente falso). Agora o "envio" de verdade é abrir o
+    // WhatsApp da Anasor com a mensagem já escrita — mesmo canal que o
+    // site já usa nos outros botões de WhatsApp (produto.js,
+    // croche.html), só que aqui com nome/e-mail/recado embutidos no
+    // texto, pra ela não precisar perguntar de novo quem está falando.
+    const nome = campos[0].el.value.trim();
+    const email = campos[1].el.value.trim();
+    const mensagem = campos[2].el.value.trim();
+
+    const textoWhats =
+      `Olá! Me chamo ${nome} (${email}) e vim pelo site.` +
+      (mensagem ? `\n\n${mensagem}` : '\n\nGostaria de receber novidades da Anasor Sobreira.');
+
+    // encodeURIComponent: a mensagem pode ter espaços, acentos e
+    // quebra de linha — nada disso é válido direto numa URL; a função
+    // nativa do navegador escapa tudo isso no formato que a wa.me
+    // exige (mesma técnica já usada em produto.js pro botão "Comprar
+    // pelo WhatsApp").
+    window.open(
+      `https://wa.me/${WHATSAPP_NUMERO}?text=${encodeURIComponent(textoWhats)}`,
+      '_blank',
+      'noopener'
     );
+
+    mostrarToast('Abrindo o WhatsApp pra você enviar sua mensagem...');
     formContato.reset();
     campos.forEach((c) => {
       c.el.classList.remove('invalido');

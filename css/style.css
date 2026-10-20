@@ -1691,6 +1691,44 @@ nav {
   background-image: var(--marca-flor), var(--textura-grao);
 }
 
+/* "Em breve" do crochê (achado da auditoria, item 2): substitui a
+   seção INTEIRA sendo escondida (section.hidden) quando o catálogo
+   não tem nenhuma peça de crochê ainda — ver montarEstadoCrocheHome()
+   em js/main.js. Card centralizado, estreito (não tenta imitar uma
+   grade de produtos vazia), na mesma linguagem visual do resto do
+   site: Fraunces no título, --cor-secundaria no corpo, borda
+   orgânica leve (igual .queridinhos-card, só mais discreta). */
+.croche-em-breve {
+  max-width: 460px;
+  margin: 1rem auto 0;
+  padding: 2.2rem 2rem;
+  text-align: center;
+  background-color: var(--cor-card);
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(62, 46, 34, 0.08);
+}
+
+.croche-em-breve__icone {
+  width: 2rem;
+  height: 2rem;
+  color: var(--cor-destaque);
+  margin-bottom: 0.8rem;
+}
+
+.croche-em-breve__titulo {
+  font-family: var(--fonte-titulo);
+  font-style: italic;
+  font-size: 1.3rem;
+  margin-bottom: 0.6rem;
+}
+
+.croche-em-breve__texto {
+  color: var(--cor-secundaria);
+  font-size: 0.95rem;
+  line-height: 1.6;
+  margin-bottom: 1.4rem;
+}
+
 /* "Cerâmica no Seu Café da Tarde" (index.html) — herda TODO o visual
    de .queridinhos (mesmo fundo bege, mesma marca d'água de vaso, MESMO
    carrossel) — só adiciona a transição de ENTRADA (pedido item 1),
@@ -4075,6 +4113,63 @@ nav {
   .faq-icone {
     transition: none;
   }
+}
+
+/* ============================================
+   PÁGINA DE CROCHÊ — EM BREVE (croche.html)
+   ============================================
+   Página nova (bug corrigido: o menu/card "Crochê" levava pra um
+   /croche.html que não existia, 404). "body.pagina-croche main":
+   MESMA técnica de "body.produto-marca-flor main" (produto.css,
+   usada nas peças de crochê dentro de produto.html) — mas declarada
+   aqui, na folha COMPARTILHADA, porque croche.html não carrega
+   produto.css (cheio de regras só daquela página). */
+body.pagina-croche main {
+  background-image: var(--marca-flor);
+  background-repeat: repeat;
+  background-size: 220px; /* mesmo tamanho de ladrilho usado em .categorias/.queridinhos */
+}
+
+.pagina-croche-conteudo {
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 4rem 5% 5rem;
+  text-align: center;
+}
+
+.pagina-croche__icone {
+  width: 2.5rem;
+  height: 2.5rem;
+  color: var(--cor-destaque);
+  margin-bottom: 1rem;
+}
+
+.pagina-croche-conteudo h1 {
+  margin-bottom: 0.6rem;
+}
+
+.pagina-croche__aviso {
+  font-family: var(--fonte-titulo);
+  font-style: italic;
+  font-size: 1.3rem;
+  color: var(--cor-ouro);
+  margin-bottom: 1.8rem;
+}
+
+.pagina-croche__texto {
+  color: var(--cor-secundaria);
+  line-height: 1.7;
+  margin-bottom: 1.2rem;
+}
+
+.pagina-croche-conteudo .btn-principal {
+  margin-top: 0.8rem;
+  margin-bottom: 2rem;
+}
+
+.pagina-croche__voltar {
+  font-size: 0.9rem;
+  color: var(--cor-secundaria);
 }
 
 /* ============================================

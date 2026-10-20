@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Crochê | Anasor Sobreira</title>
+
+    <meta name="description" content="Nossa coleção de crochê artesanal está chegando. Fale com a Anasor Sobreira pelo WhatsApp para encomendas e novidades.">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,ital,wght@9..144,0,400..700;9..144,1,400..700&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+    <!-- Mesma folha de estilo de todas as outras páginas: nenhum CSS
+         novo de layout/cor, só a regrinha ".pagina-croche" (ver
+         style.css, seção "PÁGINA DE CROCHÊ — EM BREVE"). -->
+    <link rel="stylesheet" href="css/style.css?v=30">
+
+    <!-- Marca no <html> que o JS rodou logo no início (ver comentário
+         igual nas outras páginas): o "scroll reveal" só esconde
+         elementos quando esta classe existe -> sem JS, conteúdo
+         aparece normal. -->
+    <script>document.documentElement.classList.add('js-reveal');</script>
+
+</head>
+
+<!-- class="pagina-croche": liga a marca d'água de FLOR (--marca-flor)
+     no <main> inteiro (ver style.css) — pedido explícito ("watermark
+     de flor", mesma técnica já usada em produto.html pra peças de
+     crochê, via body.produto-marca-flor em produto.css). Esta página
+     não carrega produto.css (é específico de produto.html, cheio de
+     regras que não servem aqui), então a regra equivalente mora em
+     style.css, a folha compartilhada por todas as páginas. -->
+<body class="pagina-croche">
+
+    <!-- ===== HEADER (idêntico ao das outras páginas) ===== -->
+    <header>
+        <nav>
+            <a href="index.html" class="logo"> Anasor Sobreira  </a>
+
+            <ul class="nav-links">
+                <li><a href="index.html#atelie">Nosso Ateliê</a></li>
+                <li><a href="index.html">Home</a></li>
+                <li><a href="ceramica.html">Cerâmica</a></li>
+                <li><a href="croche.html">Crochê</a></li>
+                <li><a href="index.html#quem-somos">Quem Somos</a></li>
+                <li><a href="index.html#contato">Contato</a></li>
+            </ul>
+
+            <form class="busca" role="search">
+                <input type="search" id="busca" placeholder="Buscar peça..." aria-label="Buscar peças">
+            </form>
+
+            <div class="nav-icons">
+                <a href="checkout.html">🛒 Carrinho</a>
+            </div>
+
+            <button class="menu-toggle" aria-label="Abrir menu" aria-expanded="false">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+
+        </nav>
+    </header>
+
+    <main>
+        <!-- Página simples (1 mensagem, sem listagem/filtro) — por
+             isso sem breadcrumb, mesmo padrão de politicas.html (que
+             também não tem um). -->
+        <section class="pagina-croche-conteudo">
+            <svg class="pagina-croche__icone reveal" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/>
+                <circle cx="12" cy="12" r="4"/>
+            </svg>
+
+            <h1 class="reveal">Crochê Artesanal 🧶</h1>
+
+            <p class="pagina-croche__aviso reveal">Nossa coleção de crochê está chegando</p>
+
+            <p class="pagina-croche__texto reveal">
+                Estamos preparando, com o mesmo cuidado artesanal da nossa cerâmica,
+                peças de crochê feitas ponto a ponto, com fios naturais — cada uma
+                única, como tudo que sai do nosso ateliê. Em breve elas chegam aqui
+                na vitrine.
+            </p>
+
+            <p class="pagina-croche__texto reveal">
+                Quer encomendar uma peça personalizada antes do lançamento, ou só
+                ser avisada quando a coleção chegar? Fale com a gente direto pelo
+                WhatsApp.
+            </p>
+
+            <!-- Link fixo (mesmo número/estilo dos outros botões de
+                 WhatsApp do site — ver index.html, banner principal, e
+                 produto.js). Texto pré-preenchido já identifica o
+                 assunto, pra Anasor não precisar perguntar "em que
+                 posso ajudar?" de novo. -->
+            <a href="https://wa.me/5521987222679?text=Ol%C3%A1!%20Vim%20pelo%20site%20e%20queria%20saber%20sobre%20as%20pe%C3%A7as%20de%20croch%C3%AA%20que%20est%C3%A3o%20chegando."
+               class="btn-principal reveal" target="_blank" rel="noopener">
+                Falar no WhatsApp sobre Crochê
+            </a>
+
+            <p class="pagina-croche__voltar reveal">
+                Enquanto isso, <a href="ceramica.html">conheça nossa cerâmica</a>.
+            </p>
+        </section>
+    </main>
+
+    <!-- ===== FOOTER (idêntico ao das outras páginas) ===== -->
+    <footer>
+        <div class="footer-container">
+            <div class="footer-sobre">
+                <h3> Anasor Sobreira</h3>
+                <p>Cerâmica e crochê artesanais, feitos à mão com carinho no nosso ateliê.</p>
+            </div>
+
+            <div class="footer-links">
+                <h4> Links Rápidos </h4>
+                <ul>
+                    <li><a href="ceramica.html"> Cerâmica </a></li>
+                    <li><a href="croche.html"> Crochê </a></li>
+                    <li><a href="index.html#quem-somos"> Quem Somos </a></li>
+                    <li><a href="politicas.html"> Políticas </a></li>
+                </ul>
+            </div>
+
+            <div class="footer-contato">
+                <h4>Contato</h4>
+                <p>📱 WhatsApp: <a href="https://wa.me/5521987222679" target="_blank">(21) 98722-2679</a></p>
+                <p>📧 ceramicaecrocheanasor@gmail.com</p>
+            </div>
+
+             <div class="footer-social">
+      <h4>Redes Sociais</h4>
+      <a href="https://www.instagram.com/sobreiraanasor" target="_blank" rel="noopener">Instagram</a>
+    </div>
+
+  </div>
+
+  <div class="footer-copyright">
+    <p>&copy; 2026 Anasor Sobreira. Todos os direitos reservados.</p>
+  </div>
+
+    </footer>
+
+      <script src="js/produtos.js?v=30"></script>
+      <script src="js/main.js?v=30"></script>
+
+</body>
+
+</html>
