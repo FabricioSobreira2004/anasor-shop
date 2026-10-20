@@ -44,9 +44,17 @@
 //       "express-validator") em todos os endpoints que recebem body —
 //       hoje o /api/checkout faz só uma checagem manual básica.
 //   [ ] Testes (ex.: com "vitest" ou "jest" + "supertest").
-//   [ ] Deploy (Render / Railway / Fly.io) + apontar o front pra
-//       URL pública da API (hoje js/checkout.js tem API_BASE fixo
-//       em "http://localhost:3001").
+//
+//  DEPLOY (Vercel) — feito
+//  ---------------------------------------------------------
+//  Este arquivo roda na Vercel como função serverless (ver
+//  api/index.js, que só faz "module.exports = require('../backend/
+//  server.js')", e vercel.json, que redireciona /api/* pra ela).
+//  Front (HTML/CSS/JS) e backend passaram a ser o MESMO deploy, no
+//  mesmo domínio — por isso js/checkout.js chama "/api/checkout"
+//  (URL relativa) em vez de um endereço fixo, e por isso só existe
+//  BASE_URL (sem uma 2ª variável BACKEND_URL — ver comentário dela
+//  mais abaixo).
 //
 //  VARIÁVEIS DE AMBIENTE (.env)
 //  ---------------------------------------------------------
@@ -60,11 +68,15 @@
 //  dependem das chaves reais (o pagamento em si) ficam no modo "fake"
 //  até o arquivo existir.
 //
-//  COMO RODAR (local)
+//  COMO RODAR (local, testando só a API)
 //   1. cd backend
 //   2. npm install        (baixa express + cors + mercadopago)
 //   3. npm start          (ou "npm run dev" p/ reiniciar ao salvar)
 //   4. abre http://localhost:3001/api/produtos
+//  Esse fluxo continua igual (não muda com o deploy na Vercel) — é
+//  útil pra testar só o backend, isolado. Pra testar front + backend
+//  juntos como na Vercel (URLs relativas funcionando), usar
+//  "vercel dev" na raiz do projeto em vez disso.
 // ============================================================
 
 const express = require('express');
@@ -107,24 +119,25 @@ const PORT = process.env.PORT || 3001;
 // suportar a flag (serviços bem antigos), aí sim vale reconsiderar.
 const MERCADOPAGO_ACCESS_TOKEN = process.env.MERCADOPAGO_ACCESS_TOKEN || null;
 const MERCADOPAGO_PUBLIC_KEY = process.env.MERCADOPAGO_PUBLIC_KEY || null;
-// BASE_URL = endereço público do FRONT-END (não deste backend!) — é a
-// partir dele que montamos os "back_urls" (success/failure/pending)
-// que o Mercado Pago usa pra mandar o comprador de volta depois de
-// pagar. Fallback pro endereço usado em desenvolvimento local (python
-// -m http.server / Live Server costumam abrir aqui).
+// BASE_URL = endereço público do site (front-end E backend juntos —
+// ver nota abaixo). É a partir dele que montamos os "back_urls"
+// (success/failure/pending) que o Mercado Pago usa pra mandar o
+// comprador de volta depois de pagar, e também a "notification_url"
+// do webhook. Fallback pro endereço usado em desenvolvimento local
+// (python -m http.server / Live Server costumam abrir aqui).
+//
+// ANTES existia uma 2ª variável, BACKEND_URL, separada do BASE_URL —
+// fazia sentido quando front e backend eram pensados como 2 serviços
+// hospedados em lugares diferentes (ver TODO "Deploy" acima, que
+// citava Render/Railway pro backend). Na Vercel esse projeto passou a
+// ser UM deploy só: o Express deste arquivo roda como função
+// serverless em /api/* (ver backend/README.md e api/index.js) e o
+// HTML/CSS/JS estático é servido do MESMO domínio — então front e
+// backend sempre têm a mesma URL pública, e BACKEND_URL ficaria sempre
+// igual a BASE_URL. Removê-la evita 2 variáveis pra configurar em vez
+// de 1, e principalmente evita o risco de alguém configurar só uma
+// das duas na Vercel e o webhook apontar pro lugar errado.
 const BASE_URL = process.env.BASE_URL || 'http://localhost:8765';
-
-// BACKEND_URL = endereço público DESTE backend (diferente do BASE_URL
-// acima!) — é pra onde o Mercado Pago manda a "notification_url" do
-// webhook. Não existe uma variável de ambiente pra isso ainda porque,
-// hoje, o backend inteiro só roda em localhost (documentado no TODO
-// "Deploy", no topo do arquivo) — e "localhost" não é alcançável pelo
-// Mercado Pago de jeito nenhum, nem em teste (precisaria de um túnel
-// tipo ngrok, ou já estar publicado). Por isso o fallback aqui é só
-// pra a Preference ter uma URL sintaticamente válida; o webhook
-// continua sendo tratado como stub (ver POST /api/webhook/mercadopago
-// mais abaixo) até o deploy de verdade acontecer.
-const BACKEND_URL = process.env.BACKEND_URL || `http://localhost:${PORT}`;
 
 // Client do Mercado Pago: instanciado 1 VEZ (não a cada requisição) —
 // é só configuração (guarda o token), reaproveitar a mesma instância
@@ -395,12 +408,13 @@ app.post('/api/checkout', async (req, res) => {
           failure: `${BASE_URL}/pedido-erro.html?order_id=${orderId}`,
         },
         ...(baseUrlEhPublica ? { auto_return: 'approved' } : {}),
-        // notification_url usa BACKEND_URL (não BASE_URL) — é o
-        // endereço DESTE servidor, não o do front-end (ver comentário
-        // de BACKEND_URL lá em cima: hoje é só localhost, então o
-        // Mercado Pago não vai conseguir chamar de volta de verdade
-        // até existir um deploy público).
-        notification_url: `${BACKEND_URL}/api/webhook/mercadopago`,
+        // notification_url = mesma BASE_URL do site, já que front e
+        // backend agora são o mesmo deploy na Vercel (ver comentário
+        // de BASE_URL lá em cima). Em dev local (BASE_URL ainda
+        // apontando pra localhost), o Mercado Pago não vai conseguir
+        // chamar de volta de verdade — só funciona depois do deploy
+        // público, quando BASE_URL estiver configurada na Vercel.
+        notification_url: `${BASE_URL}/api/webhook/mercadopago`,
         // external_reference amarra a Preference ao NOSSO orderId —
         // é assim que o webhook (quando implementado de verdade) vai
         // saber qual pedido em pedidosFake marcar como pago.
@@ -468,9 +482,30 @@ app.use('/api', (_req, res) => {
   res.status(404).json({ erro: 'Rota não encontrada.' });
 });
 
-// ---------- SOBE O SERVIDOR ----------
-app.listen(PORT, () => {
-  console.log(`\n  Anasor Sobreira — backend no ar`);
-  console.log(`  http://localhost:${PORT}/api/produtos`);
-  console.log(`  (${produtos.length} peças carregadas do catálogo)\n`);
-});
+// ---------- SOBE O SERVIDOR (SÓ EM LOCAL) ----------
+// "require.main === module" é true SÓ quando este arquivo é o ponto
+// de entrada do processo Node (ou seja, quando alguém rodou
+// "node server.js" / "npm start" direto — o fluxo local de sempre).
+// Quando este arquivo é importado por OUTRO módulo via require()
+// (é exatamente o que api/index.js faz, pra servir o Express como
+// função serverless na Vercel), essa comparação dá false — e
+// app.listen() NUNCA é chamado. Isso é essencial na Vercel: lá não
+// existe "um processo que fica de pé esperando conexão numa porta"
+// (o modelo é serverless: cada requisição é uma invocação própria da
+// função); chamar app.listen() lá dentro não quebraria o deploy, mas
+// ficaria tentando abrir uma porta que ninguém usa, e são bytes/tempo
+// de inicialização desperdiçados em TODA invocação.
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`\n  Anasor Sobreira — backend no ar`);
+    console.log(`  http://localhost:${PORT}/api/produtos`);
+    console.log(`  (${produtos.length} peças carregadas do catálogo)\n`);
+  });
+}
+
+// Exporta o app Express (sem precisar dar "new" nem chamar nada) —
+// é o que api/index.js importa pra expor estas MESMAS rotas como
+// função serverless na Vercel. Exportar não tem custo nem efeito
+// colateral: só disponibiliza o objeto "app" pra quem importar este
+// arquivo; quem roda "node server.js" direto nem usa o valor exportado.
+module.exports = app;

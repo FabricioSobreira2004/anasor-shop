@@ -65,10 +65,31 @@ toda vez que o servidor reinicia. Suficiente pra testar o fluxo
 inteiro (formulário → checkout → link de pagamento → página de
 retorno) sem precisar de banco de dados ainda.
 
+## Deploy (Vercel)
+
+Este backend roda em produção como **função serverless** da Vercel,
+não como um processo Node tradicional. Ver, na raiz do projeto:
+
+- `api/index.js` — reexporta este mesmo `server.js` (`module.exports =
+  require('../backend/server.js')`); é esse arquivo que a Vercel
+  invoca a cada requisição.
+- `vercel.json` — redireciona qualquer `/api/*` pra `api/index.js`
+  (o front estático na raiz continua servido direto, sem passar pelo
+  Express).
+- `package.json` na raiz — lista as mesmas dependências deste
+  `backend/package.json` (express/cors/mercadopago), pra a Vercel
+  conseguir instalá-las e a função serverless encontrá-las.
+
+`server.js` detecta sozinho em qual dos dois modos está rodando
+(`require.main === module`): rodando direto (`node server.js` / `npm
+start`, este README) ele sobe com `app.listen()` normalmente; importado
+pela função da Vercel, ele NÃO chama `app.listen()` (não existe porta
+pra abrir num ambiente serverless) — só exporta o `app`.
+
 ## Próximos passos
 
 A lista completa e comentada está no topo de `server.js`. Resumo:
 banco de dados (catálogo **e** pedidos) → Preference real da API do
 Mercado Pago em `POST /api/checkout` → conferir pagamentos de verdade
 em `POST /api/webhook/mercadopago` → estoque (peça única = vendida
-some da vitrine) → autenticação da artesã → deploy.
+some da vitrine) → autenticação da artesã.

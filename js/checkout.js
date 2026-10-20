@@ -28,12 +28,16 @@
 
 
 // ---------- CONFIG ----------
-// URL do backend. Fixa por enquanto (ambiente de desenvolvimento local,
-// backend rodando com "cd backend && npm start" na porta 3001 — ver
-// backend/server.js). Quando o site for pro ar, isso precisa vir de
-// uma configuração de build/deploy (mesmo domínio via proxy reverso,
-// ou um valor injetado no HTML na hora do deploy) — TODO.
-const API_BASE = 'http://localhost:3001';
+// URL do backend. String VAZIA de propósito: na Vercel, o backend
+// (backend/server.js) roda como função serverless no MESMO domínio do
+// front (ver vercel.json + api/index.js) — então "/api/checkout" já
+// chega no lugar certo sem precisar de host nenhum na frente. Isso
+// troca o endereço fixo "http://localhost:3001" que só funcionava
+// rodando o backend solto em dev; pra testar front+backend juntos
+// como na Vercel, local, usar "vercel dev" na raiz do projeto (ele
+// serve o estático E a função /api no mesmo endereço, exatamente como
+// em produção).
+const API_BASE = '';
 
 // Mesmo limiar de frete grátis já anunciado na barra do topo e nos
 // selos de confiança do site ("Frete Grátis para todo o Brasil em
