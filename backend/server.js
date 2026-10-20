@@ -324,14 +324,13 @@ app.post('/api/checkout', async (req, res) => {
     itensResolvidos.reduce((soma, item) => soma + item.subtotal, 0)
   );
 
-  // FRETE: mesma regra já anunciada no site (grátis a partir de
-  // R$200). Abaixo disso, ainda não existe cálculo real por CEP —
-  // "frete" fica null (o front mostra "A calcular") em vez de cobrar
-  // um valor inventado. TODO: integrar Correios/transportadora usando
-  // endereco.cep e SOMAR o valor real ao total abaixo quando existir.
-  const LIMIAR_FRETE_GRATIS = 200;
-  const frete = subtotal >= LIMIAR_FRETE_GRATIS ? 0 : null;
-  const total = subtotal + (frete || 0);
+  // FRETE: sempre grátis (decisão do dono, Etapa 1) — o custo já está
+  // embutido no preço de cada peça (js/produtos.js), pra todo o
+  // Brasil, sem limiar por valor de compra. "frete: 0" explícito (não
+  // "null"/"A calcular" como antes) porque agora é um fato sempre
+  // verdadeiro, não uma condição.
+  const frete = 0;
+  const total = subtotal + frete;
 
   const orderId = gerarIdPedido();
 

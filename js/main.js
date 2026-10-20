@@ -210,8 +210,12 @@ if (menuToggle && navLinks) {
 const barraTexto = document.querySelector('#barra-anuncio-texto');
 
 if (barraTexto) {
+  // "em compras acima de R$ 200" SAIU (decisão do dono, Etapa 1): o
+  // frete agora é grátis para QUALQUER compra, em todo o Brasil — o
+  // custo já está embutido no preço das peças (ver js/produtos.js e o
+  // relatório desta rodada), não existe mais um limiar.
   const MENSAGENS = [
-    '🚚 Frete Grátis para todo o Brasil em compras acima de R$ 200',
+    '🚚 Frete Grátis para todo o Brasil',
     '🔒 Pagamento 100% Seguro',
     '✋ Peças Únicas, Feitas à Mão no Ateliê',
   ];

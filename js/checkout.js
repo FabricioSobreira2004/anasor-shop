@@ -39,15 +39,11 @@
 // em produção).
 const API_BASE = '';
 
-// Mesmo limiar de frete grátis já anunciado na barra do topo e nos
-// selos de confiança do site ("Frete Grátis para todo o Brasil em
-// compras acima de R$ 200") — um valor só, comentado aqui, em vez de
-// espalhar "200" solto por vários arquivos. Precisa estar declarado
-// AQUI (antes do bloco "if/else" logo abaixo, que já chama
-// montarResumo()) — "const" não sobe pro topo do jeito que "function"
-// sobe; declarar isso lá embaixo, perto de montarResumo(), quebraria
-// com "Cannot access before initialization".
-const LIMIAR_FRETE_GRATIS = 200;
+// Frete grátis para QUALQUER compra, em todo o Brasil (decisão do
+// dono, Etapa 1: custo já embutido no preço das peças) — não existe
+// mais limiar nenhum. REMOVIDO: a antiga constante LIMIAR_FRETE_GRATIS
+// (200) e o "if" que só liberava frete grátis acima dela; ver
+// montarResumo(), mais abaixo, onde "Grátis" agora é incondicional.
 
 const vazioEl = document.querySelector('#checkout-vazio');
 const conteudoEl = document.querySelector('#checkout-conteudo');
@@ -77,8 +73,6 @@ if (carrinho.length === 0) {
 // ============================================================
 //  RESUMO DO PEDIDO (coluna direita)
 // ============================================================
-// (LIMIAR_FRETE_GRATIS é declarado lá em cima, na seção CONFIG — ver
-// o comentário lá explicando por quê.)
 function montarResumo(itens) {
   const listaEl = document.querySelector('#checkout-itens');
 
@@ -134,26 +128,19 @@ function montarResumo(itens) {
     .join('');
 
   const subtotal = itens.reduce((soma, i) => soma + i.preco * i.quantidade, 0);
-  const freteGratis = subtotal >= LIMIAR_FRETE_GRATIS;
 
   document.querySelector('#checkout-subtotal').textContent = formatarPreco(subtotal);
 
-  // FRETE: ≥ R$200 -> aplica a promoção já anunciada no site (grátis).
-  // Abaixo disso, ainda NÃO calculamos frete de verdade (isso depende
-  // de uma integração futura com Correios/transportadora a partir do
-  // CEP) — em vez de inventar um valor, mostramos um placeholder
-  // honesto. TODO: quando essa integração existir, trocar o texto
-  // "A calcular" por um valor real assim que o campo CEP for validado,
-  // e SOMAR esse valor no total abaixo.
-  document.querySelector('#checkout-frete').innerHTML = freteGratis
-    ? '<span class="checkout-resumo__frete-gratis">Frete Grátis</span>'
-    : '<span class="checkout-resumo__frete-calcular">A calcular</span>';
+  // FRETE: sempre grátis (decisão do dono, Etapa 1 — custo já embutido
+  // no preço das peças, ver js/produtos.js). Incondicional agora: não
+  // existe mais "A calcular" nem limiar por valor de compra.
+  document.querySelector('#checkout-frete').innerHTML =
+    '<span class="checkout-resumo__frete-gratis">Frete Grátis</span>';
 
-  // total exibido = só o subtotal por enquanto: o frete "a calcular"
-  // conscientemente NÃO soma nada ainda (seria inventar um número).
+  // total = subtotal (frete não soma nada, é sempre grátis)
   document.querySelector('#checkout-total').textContent = formatarPreco(subtotal);
 
-  return { subtotal, freteGratis };
+  return { subtotal };
 }
 
 

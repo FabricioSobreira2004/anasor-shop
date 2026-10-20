@@ -526,12 +526,9 @@
   color: var(--cor-secundaria);
   font-weight: 600;
 }
-
-.checkout-resumo__frete-calcular {
-  font-style: italic;
-  color: var(--cor-secundaria);
-  font-size: 0.85rem;
-}
+/* .checkout-resumo__frete-calcular REMOVIDA (Etapa 1): o frete agora
+   é sempre grátis, não existe mais o estado "A calcular" que usava
+   esta classe. */
 
 /* ============================================================
    SELOS DE CONFIANÇA 3D — item 1 do pedido
