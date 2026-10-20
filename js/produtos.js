@@ -103,13 +103,15 @@ const produtos = [
       "Prato decorativo em cerâmica, <span class='realce'>torneado e pintado à mão</span> no ateliê. Sobre um fundo marfim acetinado, um pássaro amarelo pousa num ramo de roseiras silvestres cor-de-rosa — as pinceladas ficam soltas, quase de aquarela, e a <span class='realce'>borda em terracota natural</span>, sem esmalte, dá o contraste rústico. Fica bem pendurado na parede, apoiado num aparador ou compondo a mesa posta. É daqueles <span class='realce--ouro'>presentes</span> que a pessoa guarda por anos, porque não existe outro igual.",
     // PROMOÇÃO DOS PRATOS DECORATIVOS (menos o Pavão Real): os 4
     // pratos entram na mesma campanha, com o MESMO "de/por" pra a
-    // comunicação ficar redonda ("Pratos decorativos por R$ 149,90").
+    // comunicação ficar redonda ("Pratos decorativos por R$ 134,90").
     // precoOriginal 200,00 é o valor cheio de referência da linha;
-    // preco 149,90 é o que será cobrado (carrinho/WhatsApp leem ESTE).
-    // O selo "25% OFF" NÃO é escrito aqui — o main.js calcula a partir
-    // destes dois números (1 - 149.90/200 = 0.2505 -> 25%).
+    // preco 134,90 é o que será cobrado (carrinho/WhatsApp leem ESTE)
+    // — AJUSTADO (Etapa 2, popularização de preços): era 149,90, caiu
+    // ~10% (ver tabela completa no relatório desta rodada). O selo
+    // "33% OFF" NÃO é escrito aqui — o main.js calcula a partir
+    // destes dois números (1 - 134.9/200 = 0.3255 -> 33%).
     precoOriginal: 200.0,
-    preco: 149.9,
+    preco: 134.9,
     categoria: "ceramica",
     subcategoria: "Pratos Artísticos",
     imagem: "img/produtos/prato-melodia-da-primavera.jpg",
@@ -131,7 +133,7 @@ const produtos = [
       "Prato decorativo grande em cerâmica, <span class='realce'>modelado e pintado à mão</span>. No centro, um buquê de copos-de-leite em vermelho e terracota se abre sobre folhagem dourada e um <span class='realce'>fundo azul-e-branco marmorizado</span>, rematado por borda branca e pela assinatura da artesã. Pelo tamanho e pelo contraste de cores, é uma <span class='realce'>peça de conversa</span>: pede lugar de destaque num aparador, numa estante alta ou na parede da sala de jantar. Bonito de dar e de receber.",
     // Mesma promoção da linha de pratos decorativos (ver id 1).
     precoOriginal: 200.0,
-    preco: 149.9,
+    preco: 134.9,
     categoria: "ceramica",
     subcategoria: "Pratos Artísticos",
     imagem: "img/produtos/prato-buque-de-calla-rubra.jpg",
@@ -154,7 +156,7 @@ const produtos = [
       "Prato decorativo em cerâmica com pintura <span class='realce'>à mão em traço fino</span>: flores coral de estames delicados e folhas verde-oliva, em <span class='realce'>estilo aquarela sobre esmalte creme</span>. A borda natural em terracota e a assinatura da artesã fecham a peça. É leve e discreto — combina com paredes claras, prateleiras de livros e mesas de canto — e faz um <span class='realce--ouro'>presente</span> delicado pra quem gosta de ter flores por perto o ano inteiro.",
     // Mesma promoção da linha de pratos decorativos (ver id 1).
     precoOriginal: 200.0,
-    preco: 149.9,
+    preco: 134.9,
     categoria: "ceramica",
     subcategoria: "Pratos Artísticos",
     imagem: "img/produtos/prato-cerejeira-coral.jpg",
@@ -175,7 +177,7 @@ const produtos = [
       "Prato decorativo em cerâmica <span class='realce'>pintado à mão</span>, com girassóis de miolo ferrugem e folhas verde-oliva sobre um <span class='realce'>fundo azul-céu mesclado</span>. É a peça mais quente e luminosa da série — acende um canto apagado da casa na hora. Use na parede como quadro, de apoio numa cômoda ou como <span class='realce'>fruteira decorativa</span> no centro da mesa. Um bom <span class='realce--ouro'>presente</span> pra quem ama a estética de campo.",
     // Mesma promoção da linha de pratos decorativos (ver id 1).
     precoOriginal: 200.0,
-    preco: 149.9,
+    preco: 134.9,
     categoria: "ceramica",
     subcategoria: "Pratos Artísticos",
     imagem: "img/produtos/prato-girassois-ao-sol.jpg",
@@ -197,7 +199,7 @@ const produtos = [
     // SEM promoção de propósito: o Pavão Real fica FORA da campanha
     // dos pratos decorativos. Sem "precoOriginal", o card e a página
     // dele mostram só o preço normal, sem "de/por" e sem selo de %.
-    preco: 195.0,
+    preco: 174.9,
     categoria: "ceramica",
     subcategoria: "Pratos Artísticos",
     imagem: "img/produtos/prato-pavao-real.jpg",
@@ -220,11 +222,13 @@ const produtos = [
     // DESCONTO DOS VASOS ESCULTÓRICOS: diferente dos pratos (que têm
     // um "de/por" único e redondo), aqui cada vaso ganha um desconto
     // PROPORCIONAL ao próprio valor — mantém o preço cheio como
-    // referência real (não inventa um número "de" inflado) e tira
-    // ~16-18%, um corte moderado, coerente com peças de autor mais
-    // caras. Este: de 239,00 por 199,90 (~16% OFF, calculado pelo main.js).
+    // referência real (não inventa um número "de" inflado). Este: de
+    // 239,00 por 179,90 (~25% OFF, calculado pelo main.js) — AJUSTADO
+    // (Etapa 2): preco era 199,90 (~16% OFF), caiu mais ~10% na
+    // popularização de preços (ver tabela completa no relatório desta
+    // rodada); precoOriginal (239,00) não muda, só o "por".
     precoOriginal: 239.0,
-    preco: 199.9,
+    preco: 179.9,
     categoria: "ceramica",
     subcategoria: "Vasos Escultóricos",
     imagem: "img/produtos/vaso-escultorico-silhueta-e-poesia.jpg",
@@ -250,9 +254,10 @@ const produtos = [
     descricao:
       "Vaso escultórico em cerâmica <span class='realce'>feito à mão</span>, de corpo cilíndrico em esmaltes mel e verde-oliva. Da borda saem <span class='realce'>copos-de-leite brancos modelados em alto-relevo</span>, com folhas que abraçam a peça — a flor faz parte do vaso, não é pintura. É um <span class='realce'>centro de mesa</span> que já vem florido: bonito com flores frescas, com secas ou vazio. Presente marcante pra quem cozinha e gosta de receber em casa.",
     // Desconto proporcional dos vasos (ver id 6): de 229,00 por
-    // 189,90 (~17% OFF).
+    // 169,90 (~26% OFF) — AJUSTADO (Etapa 2): preco era 189,90
+    // (~17% OFF), mesma popularização de ~10% dos demais.
     precoOriginal: 229.0,
-    preco: 189.9,
+    preco: 169.9,
     categoria: "ceramica",
     subcategoria: "Vasos Escultóricos",
     imagem: "img/produtos/vaso-escultorico-copos-de-leite-em-flor.jpg",
@@ -272,9 +277,10 @@ const produtos = [
     descricao:
       "Vaso escultórico em cerâmica <span class='realce'>modelado à mão</span>, formado por duas grandes folhas curvadas que se envolvem para criar o recipiente. O acabamento é um <span class='realce--ouro'>bronze escuro metálico com nervuras douradas</span>, que reluz de perto e recolhe a luz no escuro. Orgânico e escultural, pede um lugar de <span class='realce'>decoração autoral</span> — mesa de entrada, nicho, estante — e combina tanto com folhagens grandes quanto com nada dentro.",
     // Desconto proporcional dos vasos (ver id 6): de 219,00 por
-    // 179,90 (~18% OFF).
+    // 159,90 (~27% OFF) — AJUSTADO (Etapa 2): preco era 179,90
+    // (~18% OFF), mesma popularização de ~10% dos demais.
     precoOriginal: 219.0,
-    preco: 179.9,
+    preco: 159.9,
     categoria: "ceramica",
     subcategoria: "Vasos Escultóricos",
     imagem: "img/produtos/vaso-escultorico-manto-de-folhas.jpg",
@@ -312,7 +318,7 @@ const produtos = [
     // outras peças da linha, então o mesmo par de preços se aplica
     // sem inventar um número novo.
     precoOriginal: 200.0,
-    preco: 149.9,
+    preco: 134.9,
     categoria: "ceramica",
     subcategoria: "Pratos Artísticos",
     imagem: "img/produtos/prato-flor-de-pessegueiro.jpg",
@@ -337,7 +343,7 @@ const produtos = [
     // porte, composição equivalente (1 pássaro + flores) à
     // "Melodia da Primavera".
     precoOriginal: 200.0,
-    preco: 149.9,
+    preco: 134.9,
     categoria: "ceramica",
     subcategoria: "Pratos Artísticos",
     imagem: "img/produtos/prato-ave-da-alvorada.jpg",
@@ -360,7 +366,7 @@ const produtos = [
     // motivo do ninho é um detalhe a mais na composição, mas a
     // área pintada e o porte da peça são equivalentes aos demais.
     precoOriginal: 200.0,
-    preco: 149.9,
+    preco: 134.9,
     categoria: "ceramica",
     subcategoria: "Pratos Artísticos",
     imagem: "img/produtos/prato-ninho-encantado.jpg",
@@ -380,7 +386,7 @@ const produtos = [
     // id 5): a composição com DUAS figuras de pássaro pede mais
     // tempo de pintura que as peças de 1 pássaro só da linha
     // promocional, então fica fora da campanha "de/por" delas.
-    preco: 179.9,
+    preco: 159.9,
     categoria: "ceramica",
     subcategoria: "Pratos Artísticos",
     imagem: "img/produtos/prato-serenata-a-dois.jpg",
@@ -404,7 +410,7 @@ const produtos = [
     // base de apoio nas fotos originais. SEM promoção de propósito:
     // é peça de entrada de uma subcategoria nova, sem uma "linha"
     // ainda formada pra ter um "de/por" com sentido.
-    preco: 219.9,
+    preco: 199.9,
     categoria: "ceramica",
     // "Travessas Decorativas": subcategoria NOVA (as duas travessas
     // desta leva, ids 13 e 14) — formato oval/retangular alongado,
@@ -439,7 +445,7 @@ const produtos = [
     // Mesma subcategoria nova "Travessas Decorativas" (ver id 13) e
     // mesma classe de tamanho (retangular alongada, também bem
     // maior que os pratos redondos) — por isso o mesmo preço.
-    preco: 219.9,
+    preco: 199.9,
     categoria: "ceramica",
     subcategoria: "Travessas Decorativas",
     // FOTO PRINCIPAL TROCADA: a peça estava colada nas bordas do
@@ -467,7 +473,7 @@ const produtos = [
     // promocional pelo tamanho, não por ser peça "de duas figuras"
     // como a Serenata a Dois (id 12); mesmo valor final, motivo
     // diferente.
-    preco: 179.9,
+    preco: 159.9,
     categoria: "ceramica",
     subcategoria: "Pratos Artísticos",
     // FOTO PRINCIPAL RECORTADA (revisão geral do catálogo): mesmo caso
@@ -491,7 +497,7 @@ const produtos = [
     // porte da linha padrão, só o estilo (geométrico, não floral)
     // é diferente; isso não muda o preço.
     precoOriginal: 200.0,
-    preco: 149.9,
+    preco: 134.9,
     categoria: "ceramica",
     subcategoria: "Pratos Artísticos",
     // FOTO PRINCIPAL TROCADA (revisão geral do catálogo): a antiga
@@ -538,8 +544,12 @@ const produtos = [
     // catálogo — ver renderBlocoPreco, js/main.js). Critério de escolha:
     // peça de destaque do lote (maior kit, mais peças), sem exagerar —
     // só uma peça por subcategoria ganhou desconto, não o lote inteiro.
+    // AJUSTADO (Etapa 2, popularização de preços): preco era 449,90,
+    // caiu pra 399,90 (~11% OFF sobre o "preco" anterior; exemplo
+    // explícito do dono — "conjuntos de R$449 -> R$399").
+    // precoOriginal=549,90 não muda.
     precoOriginal: 549.9,
-    preco: 449.9,
+    preco: 399.9,
     categoria: "ceramica",
     // RENOMEADO de "Kits" (nome vago, destoava do padrão elaborado das
     // outras subcategorias) para "Conjuntos Artesanais" — aplicado nas
@@ -640,7 +650,7 @@ const produtos = [
     nome: "Vaso Jarra Flor de Campo",
     descricao:
       "Uma jarra de corpo generoso e alça encorpada, com pequenas flores azuis, brancas e rosadas <span class='realce'>pintadas à mão, uma a uma</span>, sobre um esmalte bege aveludado. É uma peça versátil — serve tanto como vaso para um pequeno arranjo quanto como objeto decorativo solo, trazendo um ar de jardim de primavera para qualquer cômodo. O acabamento rústico do bocal contrasta com a delicadeza da pintura floral, um equilíbrio que só se consegue com <span class='realce--ouro'>muitas horas de trabalho manual</span>.",
-    preco: 189.9,
+    preco: 169.9,
     categoria: "ceramica",
     subcategoria: "Jarras",
     imagem: "img/produtos/vaso-jarra-floral-pintada-a-mao.jpg",
@@ -656,7 +666,7 @@ const produtos = [
     nome: "Kit Jarra e 2 Copos Textura Casca",
     descricao:
       "Um conjunto de jarra e dois copos com textura de <span class='realce'>casca de árvore</span>, em esmalte terroso que lembra areia ao entardecer — perfeito para servir suco, vinho ou água numa mesa posta com personalidade. As três peças foram <span class='realce'>queimadas e esmaltadas juntas</span>, garantindo a mesma variação de tom entre elas, um detalhe que só um conjunto genuinamente artesanal consegue entregar. É a escolha certa para quem busca elevar o dia a dia da mesa, e também um <span class='realce--ouro'>presente de casa nova</span> e tanto.",
-    preco: 259.9,
+    preco: 229.9,
     categoria: "ceramica",
     subcategoria: "Conjuntos Artesanais",
     // FOTO PRINCIPAL REENQUADRADA: a antiga (agora extra nº2) tinha a
@@ -677,7 +687,7 @@ const produtos = [
     nome: "Kit 4 Canequinhas Arlequim Marmorizado",
     descricao:
       "Quatro canequinhas de pequeno porte, cada uma com uma mistura <span class='realce'>única de amarelo, vinho, azul-marinho e terracota</span> marmorizados na queima — nenhuma repete o desenho da outra, mesmo nascendo do mesmo lote de esmalte. É a peça perfeita para quem gosta de misturar cores fortes na mesa de café, ou para presentear em grupo — uma canequinha para cada pessoa especial. Um kit <span class='realce--ouro'>genuinamente impossível de replicar</span>: o padrão marmorizado depende do acaso do forno, e este exato conjunto de quatro não vai se repetir.",
-    preco: 289.9,
+    preco: 254.9,
     categoria: "ceramica",
     subcategoria: "Conjuntos Artesanais",
     imagem: "img/produtos/kit-4-canequinhas-marmorizadas.jpg",
@@ -701,7 +711,7 @@ const produtos = [
     // promoção em "Objetos Decorativos" (ver critério completo no
     // comentário da id 17).
     precoOriginal: 309.9,
-    preco: 259.9,
+    preco: 234.9,
     categoria: "ceramica",
     subcategoria: "Objetos Decorativos",
     imagem: "img/produtos/boleira-com-tampa-morangos-e-flores.jpg",
@@ -717,7 +727,7 @@ const produtos = [
     nome: "Vaso Escultórico Refúgio de Pétalas",
     descricao:
       "Um vaso de silhueta orgânica e sinuosa, esculpido em argila crua com dois recortes vazados que brincam com a luz — sobre ele, um ramo de <span class='realce'>flores brancas aplicadas à mão</span>, folha por folha, pétala por pétala. É uma peça que funciona como escultura mesmo sem flores dentro, protagonista de qualquer aparador ou estante. O acabamento em terracota natural, sem esmalte vitrificado, realça a textura do barro e reforça o caráter <span class='realce--ouro'>artesanal e único</span> da peça.",
-    preco: 199.9,
+    preco: 179.9,
     categoria: "ceramica",
     subcategoria: "Vasos Escultóricos",
     imagem: "img/produtos/vaso-escultorico-silhueta-e-flor-branca.jpg",
@@ -739,7 +749,7 @@ const produtos = [
     // promoção em "Canecas Artísticas" (ver critério completo no
     // comentário da id 17).
     precoOriginal: 169.9,
-    preco: 139.9,
+    preco: 124.9,
     categoria: "ceramica",
     subcategoria: "Canecas Artísticas",
     // FOTO PRINCIPAL TROCADA + RECORTADA: a antiga (agora extra nº2)
@@ -762,7 +772,7 @@ const produtos = [
     nome: "Caneca Artística Buquê de Rosas Esculpidas",
     descricao:
       "A alça desta caneca se transforma em um verdadeiro buquê: rosas vermelhas <span class='realce'>esculpidas uma a uma</span> brotam de uma folha verde que serve de apoio para os dedos — um detalhe tridimensional raro de se ver em cerâmica utilitária. O corpo em esmalte branco-esverdeado degradê contrasta suavemente com o vermelho das rosas, tornando a peça um verdadeiro <span class='realce'>objeto de admiração</span> na hora do café. Uma escolha e tanto para presentear quem ama flores, e uma <span class='realce--ouro'>prova de valor artesanal</span> que vale cada detalhe modelado à mão.",
-    preco: 169.9,
+    preco: 154.9,
     categoria: "ceramica",
     subcategoria: "Canecas Artísticas",
     // FOTO PRINCIPAL TROCADA + RECORTADA: as 3 fotos deste produto são
@@ -804,7 +814,7 @@ const produtos = [
     nome: "Caneca Artística Pássaro Azul ao Amanhecer",
     descricao:
       "Um pássaro de bico laranja inclina a cabeça para dentro desta caneca de esmalte escuro em degradê, como se também quisesse provar o café — uma cena capturada em cerâmica com humor e delicadeza. Ao lado, uma flor vermelha aplicada completa a composição, equilibrando o visual mais sóbrio do esmalte. Para quem ama observar pássaros, ou simplesmente aprecia um objeto de mesa com <span class='realce'>história para contar</span>, esta é uma peça que <span class='realce--ouro'>não se repete</span> no ateliê.",
-    preco: 149.9,
+    preco: 134.9,
     categoria: "ceramica",
     subcategoria: "Canecas Artísticas",
     imagem: "img/produtos/caneca-passaro-azul.jpg",
@@ -821,7 +831,7 @@ const produtos = [
     nome: "Caneca Artística Pássaro e Rosa",
     descricao:
       "Uma caneca de corpo arredondado, esmalte azul-acinzentado fosco por fora e branco por dentro, com um pequeno pássaro pousado sobre uma rosa aplicada na borda — um detalhe discreto que se revela aos poucos para quem observa de perto. É uma peça <span class='realce'>simples e elegante</span>, ideal para quem prefere um design mais clean sem abrir mão do toque artesanal do ateliê. Como todas as peças aqui, é <span class='realce--ouro'>única</span> — modelada e pintada à mão, sem produção em série.",
-    preco: 119.9,
+    preco: 109.9,
     categoria: "ceramica",
     subcategoria: "Canecas Artísticas",
     // FOTO PRINCIPAL RECORTADA DE NOVO, a partir do ORIGINAL intacto
@@ -847,7 +857,7 @@ const produtos = [
     nome: "Caneca Artística Pássaro no Galho Florido",
     descricao:
       "Um passarinho pousa sobre um galho ramificado que forma a própria alça desta caneca — um design escultórico em que a peça inteira vira uma pequena cena de jardim. O esmalte em degradê de verde-escuro para preto, com efeito de gotejamento natural da queima, dá um ar rústico e misterioso à peça, equilibrado pelos pequenos brotos vermelhos que pontuam o galho. Um <span class='realce'>trabalho de escultura aplicada</span> raro de se encontrar em uma caneca de uso diário — <span class='realce--ouro'>peça única</span>, sem produção repetida.",
-    preco: 149.9,
+    preco: 134.9,
     categoria: "ceramica",
     subcategoria: "Canecas Artísticas",
     // FOTO PRINCIPAL TROCADA DE NOVO: a troca do turno anterior ainda
@@ -870,7 +880,7 @@ const produtos = [
     nome: "Caneca Artística Rosas Champagne",
     descricao:
       "Pequenas rosas na cor champagne, com miolo dourado, decoram a alça desta caneca em esmalte bege terroso — uma paleta sofisticada e atemporal, longe do floral tradicional. É uma peça que combina elegância com o conforto de uma caneca de uso diário, ideal para quem gosta de detalhes refinados na própria xícara de café da manhã. Cada rosa foi <span class='realce'>modelada à mão, pétala por pétala</span>, tornando esta uma peça <span class='realce--ouro'>impossível de encontrar igual</span> em qualquer loja.",
-    preco: 139.9,
+    preco: 124.9,
     categoria: "ceramica",
     subcategoria: "Canecas Artísticas",
     // FOTO PRINCIPAL TROCADA DE NOVO (pedido explícito): agora é a
@@ -891,7 +901,7 @@ const produtos = [
     nome: "Kit 3 Xícaras de Café Terra Escura",
     descricao:
       "Três xícaras com pires em esmalte marrom-chocolate profundo, com o interior em branco cremoso — um kit clássico e sóbrio, perfeito para servir um café especial para visitas ou para compor uma mesa de café da manhã com personalidade. As bordas irregulares dos pires, deixadas propositalmente <span class='realce'>orgânicas</span>, reforçam o caráter artesanal do conjunto. Um kit de 6 peças (3 xícaras + 3 pires) <span class='realce--ouro'>feito e queimado junto</span>, garantindo harmonia entre as peças — o tipo de presente que qualquer amante de café vai guardar com carinho.",
-    preco: 249.9,
+    preco: 219.9,
     categoria: "ceramica",
     subcategoria: "Conjuntos Artesanais",
     imagem: "img/produtos/kit-3-xicaras-de-cafe-com-pires-chocolate.jpg",
@@ -908,7 +918,7 @@ const produtos = [
     nome: "Pote Decorativo Bruma Dourada",
     descricao:
       "Um pote com tampa em esmalte verde-oliva e dourado, com textura irregular que lembra musgo sobre pedra — o acabamento reativo da queima cria manchas únicas em cada peça, impossíveis de planejar ou repetir. É perfeito para guardar pequenos tesouros (chaves, joias, doces) ou simplesmente como <span class='realce'>objeto decorativo</span> sobre uma mesa ou estante. Uma peça de forte <span class='realce--ouro'>caráter artesanal</span>, para quem valoriza texturas cruas e imperfeições que contam uma história.",
-    preco: 149.9,
+    preco: 134.9,
     categoria: "ceramica",
     subcategoria: "Objetos Decorativos",
     imagem: "img/produtos/pote-decorativo-com-tampa-verde-oliva.jpg",
@@ -928,7 +938,7 @@ const produtos = [
     nome: "Kit 3 Maçãs Guardiãs do Pomar",
     descricao:
       "Três potinhos com tampa em formato de maçã, esmaltados em vermelho vivo com cabinho verde, e interior em branco — um kit lúdico e cheio de charme, perfeito para guardar pequenos doces, temperos ou bijuterias. Juntos, formam uma pequena cesta de frutas de cerâmica sobre a mesa, um toque de <span class='realce'>alegria e cor</span> em qualquer cozinha. Um kit de 3 peças <span class='realce--ouro'>feito à mão</span>, com pequenas variações de tom entre uma maçã e outra — a prova de que nenhuma saiu do mesmo molde industrial.",
-    preco: 219.9,
+    preco: 194.9,
     categoria: "ceramica",
     subcategoria: "Conjuntos Artesanais",
     imagem: "img/produtos/kit-3-potinhos-maca.jpg",
@@ -949,7 +959,7 @@ const produtos = [
     nome: "Kit 2 Tigelinhas Jardim Encantado",
     descricao:
       "Duas tigelinhas com borda azul-marinho e o interior pintado à mão com um <span class='realce'>jardim de flores rosadas e margaridas</span> sobre fundo verde-claro — perfeitas para servir petiscos, azeitonas, ou como potinhos de mesa em um jantar especial. A pintura minuciosa, feita pincelada a pincelada, transforma cada tigela num pequeno quadro que só se revela quando ela está vazia. Um kit de duas peças, <span class='realce--ouro'>gêmeas mas nunca idênticas</span>, ideal para presentear em dupla.",
-    preco: 169.9,
+    preco: 149.9,
     categoria: "ceramica",
     subcategoria: "Conjuntos Artesanais",
     // FOTO PRINCIPAL RECORTADA: mesma foto de antes, mas cortando o
@@ -968,7 +978,7 @@ const produtos = [
     nome: "Kit 4 Casinhas de Fada Luminária",
     descricao:
       "Quatro casinhas de fada em miniatura, cada uma com um &ldquo;telhado&rdquo; esculpido em formato diferente — pétala, cogumelo, concha — e pequenos furos que deixam a luz de uma vela escapar por dentro, criando um efeito mágico ao anoitecer. Decoradas com flores aplicadas e detalhes pintados à mão, são peças de <span class='realce'>fantasia pura</span>, perfeitas para quartos infantis, jardins de inverno ou mesas de centro que pedem um toque de encantamento. Um conjunto de 4 peças <span class='realce--ouro'>genuinamente únicas</span> — nenhuma casinha do ateliê tem o mesmo telhado.",
-    preco: 379.9,
+    preco: 334.9,
     categoria: "ceramica",
     subcategoria: "Conjuntos Artesanais",
     // FOTO PRINCIPAL TROCADA: a antiga (agora extra nº2) só mostrava 3
@@ -1022,7 +1032,7 @@ const produtos = [
     nome: "Porta-Joias Jacaré das Águas Azuis",
     descricao:
       "Um prato fundo em esmalte azul marmorizado — que lembra o movimento da água — ganha vida com um pequeno jacaré esculpido à mão, deitado à beira do &ldquo;lago&rdquo;, e um pino que funciona como porta-anéis. É uma peça cheia de personalidade para guardar joias do dia a dia sobre a cômoda ou o criado-mudo, e também um mimo e tanto para quem ama peças diferentes. Uma peça <span class='realce'>esculpida em detalhes</span>, <span class='realce--ouro'>única no ateliê</span> — não há outro jacaré igual a este.",
-    preco: 139.9,
+    preco: 124.9,
     categoria: "ceramica",
     subcategoria: "Objetos Decorativos",
     imagem: "img/produtos/porta-joias-jacare-azul-marmorizado.jpg",
@@ -1043,7 +1053,7 @@ const produtos = [
     // critério completo no comentário da id 17) — sem exagerar,
     // "Kits" ficou com 2 peças em promoção entre as 8 do lote.
     precoOriginal: 179.9,
-    preco: 149.9,
+    preco: 134.9,
     categoria: "ceramica",
     subcategoria: "Conjuntos Artesanais",
     imagem: "img/produtos/kit-2-copos-ondas-azuis.jpg",
@@ -1063,7 +1073,7 @@ const produtos = [
     // promoção em "Pratos Artísticos" (ver critério completo no
     // comentário da id 17) — único prato do lote novo com desconto.
     precoOriginal: 209.9,
-    preco: 169.9,
+    preco: 154.9,
     categoria: "ceramica",
     subcategoria: "Pratos Artísticos",
     imagem: "img/produtos/prato-passaros-e-flores-alaranjadas.jpg",
@@ -1103,7 +1113,7 @@ const produtos = [
     nome: "Anjo Guardião Porta-Incenso",
     descricao:
       "Uma escultura de anjo em cerâmica branca, com asas abertas e uma saia perfurada que deixa a fumaça do incenso escapar em pequenos filetes — uma peça que une devoção e decoração num só objeto. É ideal para meditar, orar ou simplesmente perfumar a casa com delicadeza, trazendo uma presença serena para qualquer cômodo. Uma peça <span class='realce'>esculpida à mão</span>, de acabamento generoso e <span class='realce--ouro'>única no ateliê</span> — um presente de significado para quem busca paz em casa.",
-    preco: 179.9,
+    preco: 159.9,
     categoria: "ceramica",
     subcategoria: "Objetos Decorativos",
     imagem: "img/produtos/anjo-guardiao-porta-incenso.jpg",
@@ -1141,7 +1151,7 @@ const produtos = [
     // comentário da id 17) — última das 6 peças do lote com desconto,
     // uma por subcategoria (exceto "Kits", maior delas, com 2).
     precoOriginal: 259.9,
-    preco: 219.9,
+    preco: 199.9,
     categoria: "ceramica",
     subcategoria: "Vasos Escultóricos",
     imagem: "img/produtos/vaso-escultorico-preto-com-alcas-em-elo.jpg",
