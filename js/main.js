@@ -1,3 +1,7 @@
+// Marcador de verificação do deploy automático na Vercel (Tarefa 3,
+// passo 2) — comentário inofensivo só pra confirmar, via diff deste
+// mesmo arquivo publicado, que um push na main dispara um novo deploy
+// em produção sozinho, sem precisar reimportar o projeto no painel.
 // ============================================================
 //  VERSIONAMENTO DE CACHE DOS ARQUIVOS (?v=N)
 // ============================================================
