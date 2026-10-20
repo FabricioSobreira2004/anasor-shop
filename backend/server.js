@@ -31,7 +31,17 @@
 //       status e SÓ ENTÃO marcar o pedido como pago no banco — nunca
 //       confiar cegamente no corpo da notificação (ela pode ser
 //       forjada; a fonte da verdade é sempre uma consulta de volta à
-//       API do MP usando o token).
+//       API do MP usando o token). ENQUANTO ISSO NÃO EXISTE (Etapa 3):
+//       o endereço de entrega de cada pedido vai no campo "metadata"
+//       da Preference (ver POST /api/checkout, mais abaixo) — é a
+//       forma mais simples/gratuita da Anasor ver pra onde enviar um
+//       pedido pago de verdade: abrindo o pagamento no painel do
+//       Mercado Pago (mesmo painel que ela já usa pra conferir se
+//       recebeu o dinheiro), a seção de detalhes do pagamento mostra
+//       o metadata enviado aqui. Zero infraestrutura nova. Ver o
+//       relatório desta rodada pro que ainda precisa ser CONFIRMADO
+//       com ela (se o metadata aparece de forma legível no painel
+//       dela, ou se vale a pena migrar pra e-mail automático depois).
 //   [ ] Estoque: cada peça é única (estoque 1). Ao confirmar o
 //       pagamento (via webhook), marcar como vendida pra ela sair da
 //       vitrine e não ser vendida 2x.
@@ -261,25 +271,22 @@ app.post('/api/checkout', async (req, res) => {
   // cálculo de preço/frete) continua exatamente igual a antes.
   const { cliente, endereco, itens } = req.body || {};
 
-  // Validação de entrada BÁSICA (checa presença, não formato — o
-  // formato já foi validado no navegador por js/checkout.js; aqui é
-  // só a defesa contra um body malformado ou vazio). Uma validação
-  // completa de verdade é um TODO do topo do arquivo (zod/express-validator).
-  //
-  // CAMPOS OBRIGATÓRIOS reduzidos pra bater com o formulário: só
-  // nome/e-mail (identificar quem comprou e como contatar) e CEP
-  // (mínimo pra frete/entrega). Telefone, CPF e o resto do endereço
-  // (rua/número/bairro/cidade/estado) viraram opcionais também aqui —
-  // sem essa mudança, o backend rejeitaria com 400 um pedido que o
-  // PRÓPRIO formulário já deixa enviar sem esses campos, o que
-  // derrubaria a mudança inteira silenciosamente no passo seguinte.
+  // Validação de entrada (Etapa 3, AJUSTADA — antes só checava
+  // PRESENÇA de nome/e-mail/CEP; o resto do endereço virou opcional
+  // "pra bater com o formulário", na época em que o formulário
+  // também os tratava como opcionais). Agora o front exige endereço
+  // completo (checkout.html/js/checkout.js) — o backend bloqueando
+  // menos do que o front permitiria um pedido sem endereço chegar
+  // aqui direto via fetch/curl, ignorando o navegador inteiro. NUNCA
+  // confia só na validação do front: é só a primeira camada, feita
+  // pra UX; esta aqui é quem de fato decide o que entra.
   const camposClienteObrigatorios = ['nome', 'email'];
-  const camposEnderecoObrigatorios = ['cep'];
+  const camposEnderecoObrigatorios = ['cep', 'rua', 'numero', 'bairro', 'cidade', 'estado'];
 
   const clienteIncompleto =
-    !cliente || camposClienteObrigatorios.some((campo) => !cliente[campo]);
+    !cliente || camposClienteObrigatorios.some((campo) => !String(cliente[campo] || '').trim());
   const enderecoIncompleto =
-    !endereco || camposEnderecoObrigatorios.some((campo) => !endereco[campo]);
+    !endereco || camposEnderecoObrigatorios.some((campo) => !String(endereco[campo] || '').trim());
   const semItens = !Array.isArray(itens) || itens.length === 0;
 
   if (clienteIncompleto || enderecoIncompleto || semItens) {
@@ -287,6 +294,56 @@ app.post('/api/checkout', async (req, res) => {
       erro: 'Dados do pedido incompletos (cliente, endereço ou itens faltando).',
     });
   }
+
+  // Validação de FORMATO (além de presença) — e-mail e CEP são os 2
+  // campos onde um valor presente, mas mal formado, causaria dano real
+  // depois (e-mail de contato inválido; CEP que a Anasor não consegue
+  // usar pra postar). O resto do endereço (rua/bairro/cidade) é texto
+  // livre por natureza, sem "formato errado" possível de checar aqui.
+  const emailValido = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(cliente.email).trim());
+  const cepSoDigitos = String(endereco.cep).replace(/\D/g, '');
+  const cepValido = cepSoDigitos.length === 8;
+  const UFS_VALIDAS = [
+    'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MT', 'MS',
+    'MG', 'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN', 'RS', 'RO', 'RR', 'SC',
+    'SP', 'SE', 'TO',
+  ];
+  const estadoValido = UFS_VALIDAS.includes(String(endereco.estado).trim().toUpperCase());
+
+  if (!emailValido || !cepValido || !estadoValido) {
+    return res.status(400).json({
+      erro: 'Dados do pedido inválidos (confira e-mail, CEP e UF).',
+    });
+  }
+
+  // Sanitização/limite de tamanho: corta qualquer campo de texto num
+  // comprimento razoável (defesa contra alguém mandar um body gigante
+  // via curl/fetch direto, ignorando os limites que o <input> do
+  // navegador já impõe) e remove caracteres de controle invisíveis
+  // (podem vir de copiar/colar). Nada disso vira HTML em lugar nenhum
+  // hoje (nem aqui, nem no painel do Mercado Pago, que só mostra
+  // texto puro) — não é proteção contra XSS, é só higiene de dado.
+  const limitar = (valor, max) =>
+    String(valor || '')
+      .replace(/[\x00-\x1F\x7F]/g, '') // caracteres de controle (tab/newline inclusos — campos de 1 linha só)
+      .trim()
+      .slice(0, max);
+
+  const clienteSaneado = {
+    nome: limitar(cliente.nome, 120),
+    email: limitar(cliente.email, 180).toLowerCase(),
+    telefone: limitar(cliente.telefone, 20),
+    cpf: limitar(cliente.cpf, 14),
+  };
+  const enderecoSaneado = {
+    cep: limitar(endereco.cep, 9),
+    rua: limitar(endereco.rua, 200),
+    numero: limitar(endereco.numero, 20),
+    complemento: limitar(endereco.complemento, 120),
+    bairro: limitar(endereco.bairro, 100),
+    cidade: limitar(endereco.cidade, 100),
+    estado: limitar(endereco.estado, 2).toUpperCase(),
+  };
 
   // Resolve cada item contra o catálogo — ignora silenciosamente um
   // id que não existe mais (peça removida do catálogo entre o
@@ -338,8 +395,8 @@ app.post('/api/checkout', async (req, res) => {
     id: orderId,
     criadoEm: new Date().toISOString(),
     status: 'aguardando_pagamento',
-    cliente,
-    endereco,
+    cliente: clienteSaneado,
+    endereco: enderecoSaneado,
     itens: itensResolvidos,
     subtotal,
     frete,
@@ -397,10 +454,8 @@ app.post('/api/checkout', async (req, res) => {
           currency_id: 'BRL',
         })),
         // "name" recebe o nome completo direto — o Mercado Pago aceita
-        // (não EXIGE separar em first/last name pro Checkout Pro); os
-        // outros dados de cliente/endereço já foram validados acima e
-        // ficam guardados em pedidosFake, não precisam ir todos pro MP.
-        payer: { name: cliente.nome, email: cliente.email },
+        // (não EXIGE separar em first/last name pro Checkout Pro).
+        payer: { name: clienteSaneado.nome, email: clienteSaneado.email },
         back_urls: {
           success: `${BASE_URL}/pedido-confirmado.html?order_id=${orderId}`,
           pending: `${BASE_URL}/pedido-pendente.html?order_id=${orderId}`,
@@ -418,6 +473,32 @@ app.post('/api/checkout', async (req, res) => {
         // é assim que o webhook (quando implementado de verdade) vai
         // saber qual pedido em pedidosFake marcar como pago.
         external_reference: orderId,
+        // METADATA (Etapa 3): ESTA é, hoje, a forma mais simples e
+        // gratuita da Anasor VER o endereço de entrega de um pedido
+        // pago de verdade — sem banco de dados, sem e-mail, sem nada
+        // novo pra configurar. O painel do Mercado Pago (o mesmo que
+        // ela já usa pra ver se caiu o dinheiro) mostra o metadata de
+        // cada pagamento na tela de detalhe dele. Campos achatados
+        // (não aninhados): a API de metadata do Mercado Pago espera
+        // pares chave/valor simples, não objetos dentro de objetos.
+        // Isso NÃO substitui uma solução melhor no futuro (ver TODO no
+        // topo do arquivo e o relatório desta rodada) — é a ponte mais
+        // simples possível com o que já existe hoje.
+        // "|| ''" NÃO entra aqui: limitar() (acima) sempre devolve
+        // string ("" no mínimo), nunca undefined/null — um "|| ''" em
+        // cima disso seria morto, nunca entraria em ação.
+        metadata: {
+          pedido_id: orderId,
+          cliente_telefone: clienteSaneado.telefone,
+          cliente_cpf: clienteSaneado.cpf,
+          endereco_cep: enderecoSaneado.cep,
+          endereco_rua: enderecoSaneado.rua,
+          endereco_numero: enderecoSaneado.numero,
+          endereco_complemento: enderecoSaneado.complemento,
+          endereco_bairro: enderecoSaneado.bairro,
+          endereco_cidade: enderecoSaneado.cidade,
+          endereco_uf: enderecoSaneado.estado,
+        },
       },
     });
 

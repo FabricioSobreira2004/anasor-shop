@@ -212,19 +212,16 @@ function ligarValidacaoForm(itensCarrinho) {
   // Mesmo formato do form de contato (js/main.js): cada campo tem o
   // elemento, o <span> de erro, uma função "valida" e a mensagem.
   //
-  // CAMPOS OBRIGATÓRIOS agora são só 3: nome, e-mail e CEP (pedido
-  // explícito — o resto vira atrito sem necessidade real hoje: o
-  // backend não usa telefone/CPF pra nada ainda, e o endereço
-  // detalhado só serve pra entrega, que por enquanto é combinada
-  // "manualmente" mesmo, então o CEP sozinho já é suficiente pra
-  // seguir o pedido). Os demais continuam com uma REGRA DE FORMATO
-  // (a mesma de antes) mas agora só entram em vigor se a pessoa
-  // digitou algo: vazio passa reto (campo opcional, ninguém é
-  // obrigado a preencher), preenchido ERRADO continua acusando erro —
-  // não faz sentido aceitar um "CPF" ou "CEP" mal formado só porque o
-  // campo virou opcional; opcional é sobre PRECISAR preencher, não
-  // sobre aceitar qualquer coisa quando a pessoa preenche.
+  // CAMPOS OBRIGATÓRIOS (Etapa 3, AJUSTADO — pedido explícito): nome,
+  // e-mail, CEP, rua, número, bairro, cidade e UF — sem endereço
+  // completo a Anasor não consegue enviar a peça (o CEP sozinho não
+  // bastava de verdade). Telefone, complemento e CPF continuam
+  // opcionais. Rua/bairro/cidade/UF chegam quase sempre PRONTOS pelo
+  // autopreenchimento do ViaCEP (ver buscarEnderecoPorCep, mais
+  // abaixo) — exigi-los não é o mesmo atrito de digitar tudo à mão.
   const opcional = (formatoValido) => (v) => v.trim() === '' || formatoValido(v);
+  const obrigatorio = (formatoValido) => (v) => v.trim() !== '' && formatoValido(v);
+  const textoLivre = (v) => v.trim().length > 0;
 
   const campos = [
     {
@@ -275,49 +272,42 @@ function ligarValidacaoForm(itensCarrinho) {
     {
       el: form.querySelector('[name="rua"]'),
       erroEl: document.querySelector('#erro-rua'),
-      // OPCIONAL: sem regra de formato pra "texto livre" — só passa a
-      // exigir NÃO-VAZIO se a pessoa começar a preencher e apagar tudo
-      // de novo, o que já é coberto por opcional() (vazio = válido).
-      valida: opcional((v) => v.trim().length > 0),
-      msg: 'Digite a rua ou avenida (ou deixe em branco).',
+      valida: obrigatorio(textoLivre),
+      msg: 'Digite a rua ou avenida.',
     },
     {
       el: form.querySelector('[name="numero"]'),
       erroEl: document.querySelector('#erro-numero'),
-      valida: opcional((v) => v.trim().length > 0),
-      msg: 'Digite o número (ou "S/N"), ou deixe em branco.',
+      valida: obrigatorio(textoLivre),
+      msg: 'Digite o número (ou "S/N").',
     },
     {
       el: form.querySelector('[name="complemento"]'),
       erroEl: document.querySelector('#erro-complemento'),
-      // já era OPCIONAL antes desta mudança: sempre válido, nunca
-      // trava o botão nem mostra erro.
+      // continua OPCIONAL: sempre válido, nunca trava o botão nem
+      // mostra erro (nem todo endereço tem apto/bloco/referência).
       valida: () => true,
       msg: '',
     },
     {
       el: form.querySelector('[name="bairro"]'),
       erroEl: document.querySelector('#erro-bairro'),
-      valida: opcional((v) => v.trim().length > 0),
-      msg: 'Digite o bairro (ou deixe em branco).',
+      valida: obrigatorio(textoLivre),
+      msg: 'Digite o bairro.',
     },
     {
       el: form.querySelector('[name="cidade"]'),
       erroEl: document.querySelector('#erro-cidade'),
-      valida: opcional((v) => v.trim().length > 0),
-      msg: 'Digite a cidade (ou deixe em branco).',
+      valida: obrigatorio(textoLivre),
+      msg: 'Digite a cidade.',
     },
     {
       el: form.querySelector('[name="estado"]'),
       erroEl: document.querySelector('#erro-estado'),
-      // ANTES exigia "v !== ''" (a option vazia "--" travava o envio —
-      // UF era obrigatória). Agora vira sempre válido: não escolher UF
-      // não deve mais bloquear o formulário, igual aos outros campos
-      // de endereço. Não dá pra usar o helper opcional() aqui (ele
-      // testa string vazia; um <select> sem opção marcada TAMBÉM é
-      // ""), mas o resultado é o mesmo: sempre passa.
-      valida: () => true,
-      msg: '',
+      // volta a ser OBRIGATÓRIO (Etapa 3): a option vazia "--" não
+      // passa (textoLivre rejeita string vazia).
+      valida: obrigatorio(textoLivre),
+      msg: 'Selecione o estado (UF).',
     },
   ];
 
@@ -355,6 +345,150 @@ function ligarValidacaoForm(itensCarrinho) {
       }
       atualizarBotao();
     });
+  });
+
+  // ---------- BUSCA AUTOMÁTICA DE ENDEREÇO (ViaCEP) ----------
+  // Etapa 3, pedido explícito: ao completar os 8 dígitos do CEP,
+  // busca rua/bairro/cidade/UF em https://viacep.com.br e preenche os
+  // campos sozinho (continuam editáveis depois — a pessoa pode
+  // corrigir se o CEP cobrir uma rua grande com numeração dividida,
+  // por exemplo). "#cep-status" (checkout.html) é o <p> que mostra o
+  // andamento — aria-live:polite já está nele, então cada mudança de
+  // texto é anunciada por leitor de tela sem precisar de nada extra
+  // aqui.
+  const cepEl = form.querySelector('[name="cep"]');
+  const cepStatusEl = document.querySelector('#cep-status');
+  const camposPorNome = Object.fromEntries(
+    campos.map((c) => [c.el.name, c])
+  );
+
+  // Preenche UM campo (se ele vier vazio OU com o MESMO valor que o
+  // próprio ViaCEP já tinha preenchido antes — não sobrescreve texto
+  // que a pessoa digitou/corrigiu à mão) e revalida. "valorAnterior"
+  // guardado em cada <input> (data-preenchido-por-cep) é o que
+  // diferencia "a pessoa editou" de "ainda é o que o CEP preencheu".
+  // validarCampo(campo, true) — CORREÇÃO (achado do code-review): o
+  // "true" (mostra erro se inválido) é de propósito, não um descuido —
+  // alguns CEPs (ex.: de cidade pequena, sem bairro/logradouro
+  // cadastrado) fazem o PRÓPRIO ViaCEP devolver "rua"/"bairro" VAZIOS
+  // mesmo com sucesso; sem mostrar o erro nesse caso, o campo ficava
+  // vazio, o botão continuava desabilitado, e a pessoa não tinha
+  // NENHUMA pista do que faltava preencher. Pra quem preenche
+  // normalmente (CEP com rua/bairro completos) isto não muda nada: o
+  // campo fica válido, e validarCampo só mostra erro quando inválido.
+  function preencherCampoAutomatico(nome, valor) {
+    const campo = camposPorNome[nome];
+    if (!campo) return;
+    const el = campo.el;
+    const vazio = el.value.trim() === '';
+    const aindaOQueOCepPreencheu = el.dataset.preenchidoPorCep === el.value;
+    if (vazio || aindaOQueOCepPreencheu) {
+      el.value = valor;
+      el.dataset.preenchidoPorCep = valor;
+      validarCampo(campo, true);
+    }
+  }
+
+  // Token de corrida: cada chamada nova invalida a anterior — se a
+  // pessoa corrigir o CEP rápido (ex.: errou 1 dígito e já emendou a
+  // correção), uma resposta antiga, mais lenta, que chegue DEPOIS da
+  // mais nova não pode sobrescrever o que a busca mais recente já
+  // preencheu.
+  let tokenBuscaAtual = 0;
+
+  // CORREÇÃO (achado do code-review): o campo CEP dispara a busca em
+  // DOIS eventos (no 8º dígito via "input" E de novo ao sair do campo
+  // via "blur") — digitar o último dígito e já dar Tab em seguida
+  // (fluxo normal) dispara os dois quase juntos, ANTES do primeiro
+  // "await" sequer resolver. Por isso "ultimoCepProcessado" é marcado
+  // de forma SÍNCRONA, logo no início da função — ANTES do fetch, não
+  // só depois de um sucesso: fecha a corrida (JS é single-thread; a 2ª
+  // chamada roda até aqui antes do fetch da 1ª terminar, então já
+  // encontra a marca). Em erro (CEP inexistente/falha de rede) a marca
+  // é DESFEITA no fim, pra um evento seguinte poder tentar de novo.
+  let ultimoCepProcessado = null;
+
+  async function buscarEnderecoPorCep(cepFormatado) {
+    const cepLimpo = soDigitos(cepFormatado);
+    if (cepLimpo.length !== 8) return;
+    if (cepLimpo === ultimoCepProcessado) return;
+    ultimoCepProcessado = cepLimpo;
+
+    const meuToken = ++tokenBuscaAtual;
+    cepStatusEl.textContent = 'Buscando endereço...';
+
+    let dados;
+    try {
+      // timeout manual (AbortController): sem isso, uma rede lenta/
+      // instável deixaria "Buscando..." preso indefinidamente — 8s é
+      // generoso pra uma API simples, sem travar a pessoa por muito
+      // tempo numa conexão ruim.
+      const controlador = new AbortController();
+      const timeoutId = setTimeout(() => controlador.abort(), 8000);
+      const resposta = await fetch(`https://viacep.com.br/ws/${cepLimpo}/json/`, {
+        signal: controlador.signal,
+      });
+      clearTimeout(timeoutId);
+      if (!resposta.ok) throw new Error(`HTTP ${resposta.status}`);
+      dados = await resposta.json();
+    } catch (erro) {
+      if (meuToken !== tokenBuscaAtual) return; // uma busca mais nova já assumiu
+      ultimoCepProcessado = null; // falhou: libera esta marca pra um evento seguinte poder tentar de novo
+      console.error('Falha ao buscar CEP no ViaCEP:', erro);
+      cepStatusEl.textContent =
+        'Não foi possível buscar o endereço agora — preencha rua, bairro, cidade e UF manualmente.';
+      return;
+    }
+
+    if (meuToken !== tokenBuscaAtual) return; // resposta antiga, já tem busca mais nova em andamento
+
+    // ViaCEP devolve { erro: true } (sem outros campos) pra CEP
+    // inexistente — formato válido (8 dígitos) não garante que o CEP
+    // exista de verdade.
+    if (dados.erro) {
+      ultimoCepProcessado = null; // CEP inexistente: libera pra tentar de novo (mesmo motivo do catch acima)
+      cepStatusEl.textContent = 'CEP não encontrado — confira o número ou preencha o endereço manualmente.';
+      return;
+    }
+
+    preencherCampoAutomatico('rua', dados.logradouro || '');
+    preencherCampoAutomatico('bairro', dados.bairro || '');
+    preencherCampoAutomatico('cidade', dados.localidade || '');
+    preencherCampoAutomatico('estado', dados.uf || '');
+    atualizarBotao();
+
+    // CORREÇÃO (achado do code-review): alguns CEPs (cidade pequena,
+    // sem logradouro/bairro cadastrado) fazem o PRÓPRIO ViaCEP
+    // devolver sucesso com "rua"/"bairro" VAZIOS — sem este aviso, o
+    // único sinal de que algo falta seriam os campos em vermelho
+    // (ver validarCampo(campo, true) em preencherCampoAutomatico,
+    // acima), fáceis de não notar numa tela pequena. Mensagem só
+    // aparece quando sobra algo pra completar; senão, status limpa
+    // normalmente (endereço veio completo).
+    const faltou = ['rua', 'bairro'].filter((nome) => camposPorNome[nome].el.value.trim() === '');
+    cepStatusEl.textContent = faltou.length
+      ? `Endereço encontrado, mas sem ${faltou.join(' e ')} cadastrado — complete manualmente.`
+      : '';
+
+    // foco automático no Número (pedido explícito): é o único campo
+    // de endereço que o ViaCEP NUNCA preenche (CEP não tem esse
+    // detalhe), então é sempre o próximo passo real da pessoa depois
+    // da busca — só move o foco se o campo ainda estiver vazio (não
+    // rouba o foco de quem já tinha preenchido e seguiu digitando
+    // outra coisa) E SE o foco ainda estiver no próprio campo CEP
+    // (CORREÇÃO, achado do code-review: numa rede lenta, a pessoa
+    // pode dar Tab e já estar digitando em "Rua" quando a busca
+    // responde — sem esta checagem, o foco pulava pro Número no meio
+    // da digitação, espalhando as próximas teclas no campo errado).
+    const numeroEl = camposPorNome.numero.el;
+    if (numeroEl.value.trim() === '' && document.activeElement === cepEl) {
+      numeroEl.focus();
+    }
+  }
+
+  cepEl.addEventListener('blur', () => buscarEnderecoPorCep(cepEl.value));
+  cepEl.addEventListener('input', () => {
+    if (soDigitos(cepEl.value).length === 8) buscarEnderecoPorCep(cepEl.value);
   });
 
   atualizarBotao(); // começa desabilitado (form vazio)
