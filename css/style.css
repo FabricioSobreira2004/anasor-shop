@@ -1680,6 +1680,18 @@ nav {
   background-size: 220px, 140px;
 }
 
+/* Cor-alvo de .transicao-topo só do #ceramica da HOME (achado da
+   auditoria, item 5) — funde com o fundo claro de "Explore Nossas
+   Coleções" (--cor-fundo) logo acima. Escopado por ID (não na classe
+   genérica .queridinhos) porque ceramica.html também usa id="ceramica"
+   num contexto diferente (vem do breadcrumb, não de .categorias) — lá
+   a seção não recebe a classe "transicao-topo" no HTML, então esta
+   variável fica sem efeito nenhum, só por precaução. */
+#ceramica {
+  --transicao-topo-cor: var(--cor-fundo);
+  --transicao-topo-cor-fraca: rgba(251, 246, 239, 0.35); /* --cor-fundo a 35% */
+}
+
 /* a vitrine de crochê usa o fundo claro pra alternar com a de cerâmica
    (duas seções seguidas com o mesmo bege escuro ficariam "coladas").
    Troca a COR e, na 1ª camada de background, troca o VASO pela FLOR —
@@ -2396,7 +2408,11 @@ nav {
    na paleta). Leva a MESMA marca d'água clara do hero (monograma
    "AS") — assina a seção como "do ateliê", igual ao resto do site. */
 .selecao-especial {
-  padding: 4.5rem 5%;
+  /* 4.5rem -> 3rem (achado da auditoria, item 5: "grande demais...
+     compacte, sem ocupar uma tela inteira") — mesmo valor que esta
+     seção já usava no mobile; não precisa de 2 valores diferentes só
+     pra desktop/mobile aqui. */
+  padding: 3rem 5%;
   text-align: center;
   color: var(--cor-fundo);
 
@@ -2424,19 +2440,30 @@ nav {
      vem logo depois desta na página. */
   --transicao-base-cor: var(--cor-fundo);
   --transicao-base-cor-fraca: rgba(251, 246, 239, 0.35); /* --cor-fundo a 35% */
+
+  /* cor de ENTRADA da faixa .transicao-topo — ADICIONADA (achado da
+     auditoria, item 5): mira #2b1f17, o tom EXATO do stop final
+     (100%) do gradiente de .edicao-surpresa, a seção escura logo
+     acima — não var(--cor-texto) (o INÍCIO do gradiente dela), que é
+     mais claro e deixava uma linha visível na emenda (ver o
+     comentário completo no HTML, junto da classe nova). */
+  --transicao-topo-cor: #2b1f17;
+  --transicao-topo-cor-fraca: rgba(43, 31, 23, 0.35); /* #2b1f17 a 35% */
 }
 
 .selecao-especial__titulo {
   color: var(--cor-fundo);
   font-size: 1.75rem;
   max-width: 520px;
-  margin: 0 auto 3rem;
+  /* 3rem -> 1.75rem (achado da auditoria, item 5) */
+  margin: 0 auto 1.75rem;
 }
 
 .selecao-especial__grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 3rem;
+  /* 3rem -> 2rem (achado da auditoria, item 5) */
+  gap: 2rem;
   max-width: 980px;
   margin: 0 auto;
 }
@@ -2456,33 +2483,50 @@ nav {
   height: 100%;
 }
 
-/* .selecao-especial__foto-wrap: NOVO (pedido item 2, setas) — ancora
+/* .carrossel-card__foto-wrap: NOVO (pedido item 2, setas) — ancora
    as setas (position:absolute) no tamanho EXATO da foto, não do card
    inteiro (que também tem dots/pergaminho abaixo) — MESMO motivo do
    .galeria__principal-wrap em produto.html (ver comentário lá). O
    max-width/margin que antes viviam direto na <img> mudaram pra cá:
    é o wrap que agora centraliza e reserva o respiro embaixo. */
-.selecao-especial__foto-wrap {
+.carrossel-card__foto-wrap {
   position: relative;
   width: 100%;
-  max-width: 260px;
-  margin: 0 auto 1.75rem;
+  /* 260px -> 220px (achado da auditoria, item 5: "compacte, sem
+     ocupar uma tela inteira") — mesmo encolhimento aplicado ao
+     padding/gap das 2 seções que usam este carrossel, mais abaixo. */
+  max-width: 220px;
+  margin: 0 auto 1.5rem;
 }
 
-.selecao-especial__foto {
-  /* SEM giro360__frame de propósito (pedido: "SEM o efeito arraste
-     para girar — esse fica exclusivo daquela seção") — é uma <img>
-     estática comum, só com a moldura escura reaproveitada (ver
-     ".produto-destaque .foto-emoldurada, .selecao-especial
-     .foto-emoldurada" mais acima). .foto-emoldurada não define
-     tamanho/encaixe de propósito (cada contexto traz o seu — ver o
-     comentário dela) — aqui: */
+/* COMPARTILHADA por <img> e <video> (achado da auditoria, item 7: o
+   carrossel de "Edição Surpresa" agora também usa esta classe, não só
+   "Seleção Especial" — ver carrosselCardHTML, main.js). SEM
+   giro360__frame de propósito (pedido: "SEM o efeito arraste para
+   girar — esse fica exclusivo daquela seção") — moldura escura
+   reaproveitada (ver ".produto-destaque .foto-emoldurada,
+   .selecao-especial .foto-emoldurada" mais acima). .foto-emoldurada
+   não define tamanho/encaixe de propósito (cada contexto traz o seu —
+   ver o comentário dela) — aqui: */
+.carrossel-card__foto {
   width: 100%;
-  max-height: 320px;
+  /* 320px -> 230px (achado da auditoria, item 5) — era o maior fator
+     de altura das duas seções; MESMO valor pros dois tipos de slide
+     (antes .edicao-surpresa__video tinha o seu próprio, 300px),
+     senão o card "pularia" de tamanho ao trocar de slide foto<->vídeo. */
+  max-height: 230px;
   object-fit: contain;
   /* contain, não cover: mesma regra de sempre no site — uma peça de
      cerâmica não pode ser cortada pela moldura */
   display: block;
+}
+
+/* --video: só o <video> precisa de fundo preto (evita um "flash"
+   branco antes do poster carregar — mesmo motivo do antigo
+   .edicao-surpresa__video/.produto-video__player, produto.css); o
+   <img> não tem esse problema. */
+.carrossel-card__foto--video {
+  background: #000;
 }
 
 /* ---- SETAS do carrossel de cada card (pedido item 2) ----
@@ -2490,7 +2534,7 @@ nav {
    translúcido com sombra, ícone escuro — só reescopado como classe
    PRÓPRIA (mesmo motivo de .galeria__seta já não reaproveitar
    .banner-seta direto: contextos de tamanho diferentes). */
-.selecao-especial__seta {
+.carrossel-card__seta {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
@@ -2509,26 +2553,26 @@ nav {
   z-index: 2;
 }
 
-.selecao-especial__seta svg {
+.carrossel-card__seta svg {
   width: 18px;
   height: 18px;
 }
 
-.selecao-especial__seta:hover {
+.carrossel-card__seta:hover {
   background-color: var(--cor-fundo);
   transform: translateY(-50%) scale(1.08);
 }
 
-.selecao-especial__seta--anterior {
+.carrossel-card__seta--anterior {
   left: -6px;
 }
 
-.selecao-especial__seta--proxima {
+.carrossel-card__seta--proxima {
   right: -6px;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .selecao-especial__seta {
+  .carrossel-card__seta {
     transition: none;
   }
 }
@@ -2546,8 +2590,10 @@ nav {
 .selecao-especial__pergaminho {
   position: relative;
   width: 100%;
-  max-width: 340px;
-  padding: 1.75rem 1.5rem;
+  /* 340px/1.75rem -> 300px/1.5rem (achado da auditoria, item 5:
+     compactar a seção) */
+  max-width: 300px;
+  padding: 1.5rem 1.4rem;
   text-align: left;
 
   /* CORREÇÃO (cards desalinhados), parte 2: flex:1 faz o pergaminho
@@ -2599,25 +2645,61 @@ nav {
   margin-bottom: 0.6rem;
 }
 
-.selecao-especial__frase {
-  /* CORREÇÃO (toque de cor, pedido item 2): era #4A3826 (marrom
-     neutro, quase sem diferença de saturação pro resto do texto).
-     Trocado por --cor-secundaria (verde-oliva) — a MESMA cor que o
-     site já usa como 2ª cor de destaque em outros lugares, então não
-     é uma cor nova inventada só pra cá. Não usei --cor-destaque (o
-     terracota): esse já é a cor do PREÇO logo abaixo (.preco), e
-     repetir a mesma cor na frase tiraria a hierarquia visual entre
-     "texto de venda" e "o número que importa". Contraste sobre o
-     creme #EAD9AE de fundo: ~6.3:1 — acima do mínimo AA (4.5:1). */
-  color: var(--cor-secundaria);
-  /* CORREÇÃO (fonte pequena demais): 0.92rem → 1.05rem. Continua
-     menor que o título da peça (1.15rem, .selecao-especial__titulo-
-     peca) — mantém a hierarquia visual — mas sai da faixa "letrinha
-     miúda" e vira confortável de ler de novo sem precisar aproximar a
-     tela, principalmente no card de texto mais longo. */
-  font-size: 1.05rem;
-  line-height: 1.6;
-  margin-bottom: 1.1rem;
+/* REDESENHADO (achado da auditoria, item 6: "sem tabelão de
+   parágrafo cinza... tagline curta em destaque, Fraunces itálico").
+   Troca o antigo .selecao-especial__frase (1 parágrafo inteiro) por
+   uma linha SÓ — a mesma função de "gancho de venda" de antes, só que
+   tratada como texto de DESTAQUE (fonte de título, itálico, cor
+   dourada) em vez de corpo de texto comum. */
+.selecao-especial__tagline {
+  font-family: var(--fonte-titulo);
+  font-style: italic;
+  font-weight: 600;
+  color: var(--cor-ouro);
+  /* --cor-ouro sobre o creme #EAD9AE de fundo: ~3,1:1 — abaixo do
+     mínimo AA pra texto normal (4,5:1), mas esta linha é CURTA e
+     GRANDE (1.2rem, perto do piso de "texto grande" da WCAG, 18,66px
+     bold/24px regular) — mesmo uso/mesma ressalva já documentada pra
+     --cor-ouro em style.css (ver ":root", comentário da variável).
+     Contraste escolhido de propósito pra combinar com a cor dourada
+     do preço/etiqueta da seção — ver item 4 da auditoria anterior,
+     onde o cliente pediu pra deixar essa cor como está. */
+  font-size: 1.2rem;
+  line-height: 1.4;
+  margin-bottom: 0.9rem;
+}
+
+/* Benefícios curtos com ícone (achado da auditoria, item 6) — cada
+   <li> é 1 linha: ícone Lucide (herda a cor --cor-destaque do texto
+   ao lado, currentColor) + frase curta. Substitui o parágrafo único
+   de antes por pontos ESCANEÁVEIS, mais fáceis de ler rápido do que
+   um bloco de texto corrido. */
+.selecao-especial__beneficios {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin: 0 0 1.1rem;
+  list-style: none;
+}
+
+.selecao-especial__beneficios li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  color: var(--cor-texto);
+  font-size: 0.92rem;
+  line-height: 1.4;
+}
+
+.selecao-especial__beneficios svg {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  margin-top: 0.1rem;
+  color: var(--cor-destaque);
+  /* terracota: mesma cor do preço logo abaixo — o ícone reforça a
+     hierarquia "isto é um ponto de venda", sem competir com o
+     dourado da tagline acima dele. */
 }
 
 .selecao-especial__preco {
@@ -2650,17 +2732,17 @@ nav {
    reduzida) pra não desaparecer contra o fundo marrom. Ativa/hover
    continuam com --cor-destaque/--cor-secundaria, que já têm bom
    contraste tanto em fundo claro quanto escuro. */
-.selecao-especial__dots {
+.carrossel-card__dots {
   display: flex;
   justify-content: center;
   gap: 0.4rem;
   margin: -0.5rem 0 1rem;
-  /* margin-top negativo: compensa o respiro que .selecao-especial__foto
+  /* margin-top negativo: compensa o respiro que .carrossel-card__foto
      já deixa embaixo dela (margin-bottom:1.75rem) — sem isso as
      bolinhas ficariam longe demais da foto que elas controlam. */
 }
 
-.selecao-especial__dot {
+.carrossel-card__dot {
   position: relative;
   width: 44px;
   height: 44px;
@@ -2670,7 +2752,7 @@ nav {
   cursor: pointer;
 }
 
-.selecao-especial__dot::after {
+.carrossel-card__dot::after {
   content: "";
   position: absolute;
   top: 50%;
@@ -2683,17 +2765,17 @@ nav {
   transition: background-color 0.2s ease, transform 0.2s ease;
 }
 
-.selecao-especial__dot:hover::after {
+.carrossel-card__dot:hover::after {
   background-color: var(--cor-secundaria);
 }
 
-.selecao-especial__dot.is-ativo::after {
+.carrossel-card__dot.is-ativo::after {
   background-color: var(--cor-destaque);
   transform: translate(-50%, -50%) scale(1.3);
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .selecao-especial__dot::after {
+  .carrossel-card__dot::after {
     transition: none;
   }
 }
@@ -2723,7 +2805,9 @@ nav {
    as duas fica idêntica sem precisar de transicao-base aqui (ver
    comentário no HTML). */
 .edicao-surpresa {
-  padding: 4.5rem 5%;
+  /* 4.5rem -> 3rem (achado da auditoria, item 5) — mesmo motivo/valor
+     de .selecao-especial, logo acima neste arquivo. */
+  padding: 3rem 5%;
   text-align: center;
   color: var(--cor-fundo);
 
@@ -2748,7 +2832,8 @@ nav {
   color: var(--cor-fundo);
   opacity: 0.85;
   max-width: 480px;
-  margin: 0 auto 3rem;
+  /* 3rem -> 1.75rem (achado da auditoria, item 5) */
+  margin: 0 auto 1.75rem;
   font-size: 1rem;
   line-height: 1.6;
 }
@@ -2756,7 +2841,8 @@ nav {
 .edicao-surpresa__grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 3rem;
+  /* 3rem -> 2rem (achado da auditoria, item 5) */
+  gap: 2rem;
   max-width: 720px;
   margin: 0 auto;
 }
@@ -2767,49 +2853,28 @@ nav {
   align-items: center;
 }
 
-/* ---- VÍDEO (retrabalhado — antes era foto + blur no hover/toque) ----
-   position:relative ancora a dica de texto (.edicao-surpresa__dica,
-   agora uma FAIXA no RODAPÉ do vídeo, não mais um overlay cobrindo
-   tudo — ver comentário dela mais abaixo). overflow:hidden garante
-   que a moldura (.foto-emoldurada) recorte o vídeo nas bordas certas.
-   cursor NÃO é mais "pointer": o card não depende de clique/toque pra
-   nada agora — o vídeo já toca sozinho (ver IntersectionObserver no
-   JS) — então não faz sentido sinalizar "isto é clicável". */
-.edicao-surpresa__foto-wrap {
-  position: relative;
-  width: 100%;
-  max-width: 240px;
-  overflow: hidden;
-  margin-bottom: 1.25rem;
-}
-
-.edicao-surpresa__video {
-  width: 100%;
-  max-height: 300px;
-  object-fit: contain;
-  display: block;
-  background: #000; /* mesmo motivo do .produto-video__player (produto.css):
-                        evita "flash" branco antes do poster carregar */
-}
+/* .edicao-surpresa__foto-wrap/__video SAÍRAM daqui (achado da
+   auditoria, item 7): viraram o carrossel COMPARTILHADO
+   .carrossel-card__foto-wrap/__foto(--video), já estilizado mais
+   acima neste arquivo, junto de "Seleção Especial" — nenhuma regra
+   nova precisou entrar aqui, só as desta seção serem removidas. */
 
 /* Dica de texto SOBRE o vídeo ("Observe o fundo da caneca") — pedido
-   explícito: "leve overlay... sem cobrir o vídeo a ponto de atrapalhar
-   a visualização do efeito". Por isso NÃO é mais inset:0 (cobrindo o
-   quadro inteiro, como na versão com blur, onde cobrir tudo não
-   atrapalhava porque o conteúdo por baixo já estava borrado) — agora é
-   só uma FAIXA fina colada no RODAPÉ do vídeo (bottom:0, altura
-   automática pelo padding), deixando o resto do quadro — onde o
-   bichinho aparece — livre. O degradê (transparent -> preto) por trás
-   do texto substitui o "brightness(0.75)" que a foto borrada tinha:
-   sem ele, texto branco por cima de um vídeo claro perderia contraste
-   em vários momentos do loop (quando o líquido ainda não cobriu o
-   fundo, por exemplo). SEM opacity/transition mais: a versão anterior
-   escondia a dica ao revelar; aqui ela fica sempre visível — é uma
-   legenda permanente do vídeo, não um convite que desaparece depois
-   de uma interação que não existe mais. pointer-events:none: mesmo
-   sem listener de clique no card, mantém o hábito do site de não
-   deixar texto decorativo interceptar cliques (ex.: no botão "Comprar
-   Agora" logo abaixo, se algum dia o layout mudar). */
+   explícito original: "leve overlay... sem cobrir o vídeo a ponto de
+   atrapalhar a visualização do efeito". Por isso NÃO é inset:0
+   (cobrindo o quadro inteiro) — é só uma FAIXA fina colada no RODAPÉ
+   do vídeo (bottom:0, altura automática pelo padding), deixando o
+   resto do quadro — onde o bichinho aparece — livre. O degradê
+   (transparent -> preto) por trás do texto garante contraste em
+   qualquer momento do loop (quando o líquido ainda não cobriu o
+   fundo, por exemplo). ATUALIZADO (achado da auditoria, item 7): "só
+   faz sentido sobre o vídeo" — agora que o card é um carrossel com
+   fotos também, o JS (ativarCarrosselCard/aoMudarSlide, main.js)
+   liga/desliga o atributo "hidden" deste elemento a cada troca de
+   slide; o CSS aqui só cuida da aparência de quando ela ESTÁ visível.
+   pointer-events:none: mantém o hábito do site de não deixar texto
+   decorativo interceptar cliques (ex.: as setas do carrossel, por
+   cima dela). */
 .edicao-surpresa__dica {
   position: absolute;
   left: 0;
@@ -3677,6 +3742,13 @@ nav {
   background-image: var(--marca-flor), var(--textura-grao);
   background-repeat: repeat, repeat;
   background-size: 220px, 140px;
+
+  /* Cor-alvo de .transicao-topo (achado da auditoria, item 5) — funde
+     com o fundo claro que vem antes desta seção na Home (--cor-fundo:
+     corpo da página / Quem Somos / Selos de Confiança, que é um card
+     flutuante sem bg próprio de verdade). */
+  --transicao-topo-cor: var(--cor-fundo);
+  --transicao-topo-cor-fraca: rgba(251, 246, 239, 0.35); /* --cor-fundo a 35% */
 }
 
 .contato h2 {
@@ -4190,6 +4262,14 @@ footer {
   background-image: var(--marca-monograma-clara);
   background-repeat: repeat;
   background-size: 240px;
+
+  /* Cor-alvo de .transicao-topo (achado da auditoria da Home, item 5)
+     — só tem efeito visível nas páginas cujo <footer> recebe a classe
+     "transicao-topo" no HTML (hoje, só index.html, vindo de #contato,
+     --cor-fundo-alt); nas outras páginas a variável fica declarada
+     mas sem efeito, porque a classe/pseudo-elemento não existem lá. */
+  --transicao-topo-cor: var(--cor-fundo-alt);
+  --transicao-topo-cor-fraca: rgba(239, 227, 208, 0.35); /* --cor-fundo-alt a 35% */
 }
 
 .footer-container {

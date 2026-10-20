@@ -2431,16 +2431,49 @@ const IDS_SELECAO_ESPECIAL = [14, 16]; // 14 = Travessa Bruma Azul, 16 = Prato R
 // função é CHAMADA logo abaixo, ainda synchronous e cedo no arquivo —
 // um "const" só declarado depois dela ainda estaria fora de alcance
 // (temporal dead zone) no momento exato da chamada.
+//
+// REDESENHADO (achado da auditoria, item 6): "frase" (um parágrafo
+// inteiro, cinza, sem hierarquia nenhuma) virou "tagline" (1 linha
+// curta, em destaque) + "beneficios" (2 bullets curtos, cada um com
+// seu ícone Lucide) — MESMO gatilho mental de antes por card, só
+// quebrado em pedaços menores e mais fáceis de escanear visualmente.
+// Os ícones são SVGs inline (só o conteúdo de dentro de <svg>, que
+// carrosselCardHTML/montarSelecaoEspecial — ver mais abaixo — encaixa
+// no <svg viewBox="0 0 24 24"...> compartilhado, mesmo padrão de
+// atributos já usado nos outros ícones do site): "clock" e "check"
+// (travessa) e "heart" e o MESMO "hand" já usado no selo "Feito à
+// Mão" dos Selos de Confiança (prato) — reaproveitando desenhos que
+// já existem no site em vez de inventar novos.
 const COPY_SELECAO_ESPECIAL = {
   14: {
     // Travessa Decorativa Bruma Azul — gatilho: urgência/exclusividade
-    frase:
-      'Cada travessa como esta nasce sozinha — sem molde, sem repetir o mesmo tom exato de azul duas vezes. Quando esta sair do ateliê, a próxima já será outra peça. Poucas chegam a existir.',
+    tagline: 'Nenhuma sai igual à outra do forno.',
+    beneficios: [
+      {
+        icone: '<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>',
+        texto: 'Quando esta vender, não haverá outra igual.',
+      },
+      {
+        icone:
+          '<path d="M18 11V6a2 2 0 0 0-4 0"/><path d="M14 10V4a2 2 0 0 0-4 0v2"/><path d="M10 10.5V6a2 2 0 0 0-4 0v8"/><path d="m7 15-1.8-1.8a2 2 0 0 0-2.8 2.8L6 20c1.5 1.5 3 2 5 2h2a8 8 0 0 0 8-8V7a2 2 0 0 0-4 0v5"/>',
+        texto: 'Pintada à mão — o tom de azul nunca se repete.',
+      },
+    ],
   },
   16: {
     // Prato Decorativo Renda Portuguesa — gatilho: apelo emocional / valorização do ambiente
-    frase:
-      'Tem peça que só decora, e tem peça que muda o clima do cômodo. Na parede ou centralizando a mesa posta, esta é do tipo que puxa elogio antes mesmo de alguém perguntar de onde veio.',
+    tagline: 'Do tipo que muda o clima do cômodo.',
+    beneficios: [
+      {
+        icone:
+          '<path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.5 4.04 3 5.5l7 7Z"/>',
+        texto: 'Puxa elogio antes de perguntarem de onde veio.',
+      },
+      {
+        icone: '<path d="M20 6 9 17l-5-5"/>',
+        texto: 'Traço fino em renda, pintado à mão, peça a peça.',
+      },
+    ],
   },
 };
 
@@ -2628,6 +2661,158 @@ function montarProdutoDestaque(secao) {
 // "const" definido só aqui embaixo ainda estaria fora de alcance
 // (temporal dead zone) no momento da chamada — diferente de uma
 // "function" (hoisted, pode morar em qualquer lugar do arquivo).
+// ============================================================
+//  CARROSSEL DE CARD — compartilhado entre "Seleção Especial" e
+//  "✦ Edição Surpresa" (achado da auditoria, item 7: "reaproveite o
+//  componente de carrossel já existente... sem duplicar CSS/JS")
+// ============================================================
+// Carrossel pequeno (dots + setas) VIVENDO DENTRO DE 1 CARD — não é
+// nem ativarGaleriaDeFotos() (produto.js/produto.html, que também
+// mexe em miniaturas) nem o carrossel do banner da Home (troca o
+// <section> inteiro): é o padrão que "Seleção Especial" já usava
+// sozinho, generalizado aqui pra também servir "Edição Surpresa"
+// (que precisa de um VÍDEO como 1 dos slides — algo que a versão
+// antiga, exclusiva de "Seleção Especial", não previa).
+//
+// Cada slide é { tipo: 'imagem', src } ou { tipo: 'video', videoUrl,
+// poster }. carrosselCardHTML() gera o MARCADO (chamado de dentro do
+// template de cada card, antes dele ir pro DOM); ativarCarrosselCard()
+// liga o COMPORTAMENTO (chamado depois, com o card já no DOM).
+// Separados assim porque o HTML de cada card tem MUITO mais coisa
+// (pergaminho, selo, preço...) além do carrossel — a função de
+// montagem de cada seção continua dona do template INTEIRO, só
+// pedindo este pedaço aqui pra ela.
+function carrosselCardHTML(slides, nomeProduto, overlayHTML = '') {
+  // overlayHTML: gancho opcional pra quem chama injetar algo DENTRO
+  // do .carrossel-card__foto-wrap (ex.: a dica "Observe o fundo da
+  // caneca" de Edição Surpresa, que precisa de position:absolute
+  // ancorado no tamanho EXATO da foto/vídeo, não do card inteiro —
+  // por isso não dá pra só concatenar depois, como um irmão do
+  // wrap). Vazio por padrão: Seleção Especial não usa.
+  const temVarias = slides.length > 1;
+  const primeiroSlide = slides[0];
+  const videoSlide = slides.find((s) => s.tipo === 'video');
+  // imagem que o <img> mostra ao nascer: a do 1º slide, se ele for
+  // foto; senão (1º slide é o vídeo), a 1ª foto que existir na lista —
+  // o <img> precisa de ALGUM src válido mesmo começando "hidden"
+  // (card com vídeo como slide inicial).
+  const imagemInicial =
+    primeiroSlide.tipo === 'imagem'
+      ? primeiroSlide.src
+      : slides.find((s) => s.tipo === 'imagem')?.src || '';
+
+  // SETAS: MESMOS paths de chevron já usados em .galeria__seta
+  // (produto.html) — reaproveitando o desenho, não reinventando um
+  // ícone novo.
+  const setasHTML = temVarias
+    ? `
+      <button type="button" class="carrossel-card__seta carrossel-card__seta--anterior" aria-label="Slide anterior de ${nomeProduto}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="m15 18-6-6 6-6"/>
+        </svg>
+      </button>
+      <button type="button" class="carrossel-card__seta carrossel-card__seta--proxima" aria-label="Próximo slide de ${nomeProduto}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="m9 18 6-6-6-6"/>
+        </svg>
+      </button>`
+    : '';
+
+  const dotsHTML = temVarias
+    ? `<div class="carrossel-card__dots" role="tablist" aria-label="Selecionar slide de ${nomeProduto}">
+          ${slides
+            .map(
+              (_, i) => `
+            <button type="button" class="carrossel-card__dot ${i === 0 ? 'is-ativo' : ''}" aria-label="Ver slide ${i + 1} de ${slides.length}"></button>`
+            )
+            .join('')}
+        </div>`
+    : '';
+
+  // O <img> SEMPRE existe, mesmo quando o slide inicial é o vídeo —
+  // é ele quem mostra as FOTOS do produto sempre que o slide ativo
+  // não for o vídeo. "hidden" no HTML de nascença (não só via JS)
+  // evita um pisca de 1 frame com os dois elementos visíveis ao
+  // mesmo tempo antes do JS rodar.
+  const imgHTML = `<img class="foto-emoldurada carrossel-card__foto" src="${imagemInicial}" alt="${nomeProduto}" loading="lazy" ${primeiroSlide.tipo === 'video' ? 'hidden' : ''}>`;
+
+  // muted+playsinline+loop: vídeo É um efeito ambiente (tipo GIF), não
+  // um player — ver comentário grande de montarEdicaoSurpresa() pra
+  // o histórico completo dessa decisão. hidden de nascença se o 1º
+  // slide NÃO for o vídeo (mesmo motivo do <img> acima).
+  const videoHTML = videoSlide
+    ? `<video
+          class="foto-emoldurada carrossel-card__foto carrossel-card__foto--video"
+          src="${videoSlide.videoUrl}"
+          poster="${videoSlide.poster}"
+          muted
+          loop
+          playsinline
+          preload="metadata"
+          aria-label="Vídeo de ${nomeProduto}"
+          ${primeiroSlide.tipo === 'video' ? '' : 'hidden'}>
+        </video>`
+    : '';
+
+  return `
+    <div class="carrossel-card__foto-wrap">
+      ${imgHTML}
+      ${videoHTML}
+      ${overlayHTML}
+      ${setasHTML}
+    </div>
+    ${dotsHTML}
+  `;
+}
+
+// Liga dots+setas de UM card já no DOM. "aoMudarSlide(indice, slide,
+// card)" é opcional — Edição Surpresa usa pra saber quando o slide de
+// vídeo entra/sai de cena (pra decidir play/pause junto com a
+// visibilidade do card na tela); Seleção Especial, sem vídeo nenhum,
+// simplesmente não passa esse callback.
+function ativarCarrosselCard(card, slides, { aoMudarSlide } = {}) {
+  const foto = card.querySelector('.carrossel-card__foto:not(.carrossel-card__foto--video)');
+  const video = card.querySelector('.carrossel-card__foto--video');
+  const dots = [...card.querySelectorAll('.carrossel-card__dot')];
+  const setaAnterior = card.querySelector('.carrossel-card__seta--anterior');
+  const setaProxima = card.querySelector('.carrossel-card__seta--proxima');
+
+  let indiceAtual = 0;
+  function irParaIndice(indice) {
+    // "+ length antes do %": mesma fórmula já documentada em
+    // irParaIndice() (ativarGaleriaDeFotos, main.js) — em JS, -1 % N
+    // dá -1 (não N-1), somar length primeiro corrige o loop nos dois
+    // sentidos (clicar "anterior" no 1º slide deve ir pro ÚLTIMO).
+    indiceAtual = ((indice % slides.length) + slides.length) % slides.length;
+    const slide = slides[indiceAtual];
+
+    if (slide.tipo === 'video') {
+      if (video) video.hidden = false;
+      if (foto) foto.hidden = true;
+    } else {
+      if (video) video.hidden = true;
+      if (foto) {
+        foto.hidden = false;
+        foto.src = slide.src;
+      }
+    }
+
+    dots.forEach((d) => d.classList.remove('is-ativo'));
+    dots[indiceAtual]?.classList.add('is-ativo');
+    aoMudarSlide?.(indiceAtual, slide, card);
+  }
+
+  dots.forEach((dot, i) => dot.addEventListener('click', () => irParaIndice(i)));
+  setaAnterior?.addEventListener('click', () => irParaIndice(indiceAtual - 1));
+  setaProxima?.addEventListener('click', () => irParaIndice(indiceAtual + 1));
+
+  // dispara 1x já no início: garante que quem passou "aoMudarSlide"
+  // saiba qual é o slide ativo de largada, mesmo sem nenhum clique
+  // ainda ter acontecido (ex.: Edição Surpresa decidir se o vídeo
+  // deve tentar tocar assim que a seção entra na tela).
+  irParaIndice(0);
+}
+
 function montarSelecaoEspecial(secao) {
   // Mesma ideia de robustez de montarProdutoDestaque(): se algum dos
   // 2 ids sumir do catálogo um dia, a peça em falta é IGNORADA (não
@@ -2642,59 +2827,42 @@ function montarSelecaoEspecial(secao) {
   const cardsHTML = pecas
     .map((produto) => {
       const copy = COPY_SELECAO_ESPECIAL[produto.id];
-      // CARROSSEL (retrabalho): a foto única virou uma lista imagem
-      // principal + imagensExtras, igual à galeria de produto.html —
-      // reaproveita fotos que já estavam cadastradas, nenhuma foto nova
-      // precisou ser adicionada. Dots E SETAS (pedido item 2) só
-      // entram quando há mais de 1 foto — peça com uma foto só não
-      // precisa de navegação nenhuma.
-      const imagens = [produto.imagem, ...(produto.imagensExtras || [])];
-      const temVarias = imagens.length > 1;
-      // SETAS: MESMOS paths de chevron já usados em .galeria__seta
-      // (produto.html) e .carrossel-seta (Home) — reaproveitando o
-      // desenho, não reinventando um ícone novo (consistência pedida
-      // explicitamente: "no mesmo padrão visual já usado em outros
-      // carrosséis do site"). Vivem dentro de um wrap PRÓPRIO
-      // (.selecao-especial__foto-wrap), igual ao
-      // .galeria__principal-wrap de produto.html: position:absolute
-      // nelas precisa de um ancestral relative do tamanho EXATO da
-      // foto, não do card inteiro (que também tem dots/pergaminho
-      // abaixo) — sem esse wrapper, as setas ficariam centralizadas na
-      // altura de TUDO, não só da foto.
-      const setasHTML = temVarias
-        ? `
-          <button type="button" class="selecao-especial__seta selecao-especial__seta--anterior" aria-label="Foto anterior de ${produto.nome}">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="m15 18-6-6 6-6"/>
-            </svg>
-          </button>
-          <button type="button" class="selecao-especial__seta selecao-especial__seta--proxima" aria-label="Próxima foto de ${produto.nome}">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="m9 18 6-6-6-6"/>
-            </svg>
-          </button>`
-        : '';
-      const dotsHTML = temVarias
-        ? `<div class="selecao-especial__dots" role="tablist" aria-label="Selecionar foto de ${produto.nome}">
-              ${imagens
-                .map(
-                  (_, i) => `
-                <button type="button" class="selecao-especial__dot ${i === 0 ? 'is-ativo' : ''}" aria-label="Ver foto ${i + 1} de ${imagens.length}"></button>`
-                )
-                .join('')}
-            </div>`
-        : '';
+      // Fotos já cadastradas (imagem principal + imagensExtras) viram
+      // os slides do carrossel — nenhuma foto nova precisou ser
+      // adicionada, nenhum slide de vídeo aqui (reservado pra Edição
+      // Surpresa, a única seção com vídeo nas 2 peças).
+      const slides = [produto.imagem, ...(produto.imagensExtras || [])].map((src) => ({
+        tipo: 'imagem',
+        src,
+      }));
+      // REDESIGN (achado da auditoria, item 6): o "tabelão de
+      // parágrafo cinza" virou tagline curta (Fraunces itálico,
+      // reaproveitando .carrossel-card__foto-wrap... não, ver
+      // .selecao-especial__tagline) + 2 benefícios curtos com ícone —
+      // ambos vindos de COPY_SELECAO_ESPECIAL (editado junto desta
+      // função; ver comentário lá no topo do arquivo). comSelo:true é
+      // NOVO aqui: antes o selo "% OFF" nunca aparecia nesta seção,
+      // mesmo quando a peça estava em promoção (ex.: id 16) — pedido
+      // explícito: "preço em destaque com o selo de desconto quando
+      // houver".
       return `
         <article class="selecao-especial__card" data-id="${produto.id}" data-nome="${produto.nome}" data-preco="${produto.preco}" data-imagem="${produto.imagem}">
-          <div class="selecao-especial__foto-wrap">
-            <img class="foto-emoldurada selecao-especial__foto" src="${produto.imagem}" alt="${produto.nome}" loading="lazy">
-            ${setasHTML}
-          </div>
-          ${dotsHTML}
+          ${carrosselCardHTML(slides, produto.nome)}
           <div class="selecao-especial__pergaminho">
             <h3 class="selecao-especial__titulo-peca">${produto.nome}</h3>
-            <p class="selecao-especial__frase">${copy.frase}</p>
-            ${renderBlocoPreco(produto, { classeExtra: 'selecao-especial__preco' })}
+            <p class="selecao-especial__tagline">${copy.tagline}</p>
+            <ul class="selecao-especial__beneficios">
+              ${copy.beneficios
+                .map(
+                  (b) => `
+                <li>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${b.icone}</svg>
+                  <span>${b.texto}</span>
+                </li>`
+                )
+                .join('')}
+            </ul>
+            ${renderBlocoPreco(produto, { classeExtra: 'selecao-especial__preco', comSelo: true })}
             <button class="btn-comprar-agora" type="button">Comprar Agora</button>
           </div>
         </article>`;
@@ -2709,42 +2877,13 @@ function montarSelecaoEspecial(secao) {
 
   secao.hidden = false;
 
-  // Liga a troca de foto de cada card às bolinhas E às setas (pedido
-  // item 2). Um carrossel POR CARD (não um só pra seção inteira):
-  // cada peça tem sua própria lista de fotos e seu próprio índice
-  // atual — por isso itera .selecao-especial__card e guarda
-  // "imagens"/"indiceAtual" fechados (closure) dentro do loop, em vez
-  // de reaproveitar ativarGaleriaDeFotos() (main.js): aquela função
-  // também mexe em miniaturas, que este card não tem — só dots+setas.
-  // irParaIndice() é a MESMA ideia de fonte única de verdade que
-  // ativarGaleriaDeFotos() usa: dot E seta chamam a mesma função, que
-  // sincroniza foto + dot ativo juntos, em vez de cada controle
-  // escrever sua própria versão (o jeito clássico de divergirem depois
-  // de uma mudança futura).
   pecas.forEach((produto) => {
-    const imagens = [produto.imagem, ...(produto.imagensExtras || [])];
-    if (imagens.length < 2) return;
+    const slides = [produto.imagem, ...(produto.imagensExtras || [])].map((src) => ({
+      tipo: 'imagem',
+      src,
+    }));
     const card = secao.querySelector(`.selecao-especial__card[data-id="${produto.id}"]`);
-    const foto = card.querySelector('.selecao-especial__foto');
-    const dots = [...card.querySelectorAll('.selecao-especial__dot')];
-    const setaAnterior = card.querySelector('.selecao-especial__seta--anterior');
-    const setaProxima = card.querySelector('.selecao-especial__seta--proxima');
-
-    let indiceAtual = 0;
-    function irParaIndice(indice) {
-      // "+ length antes do %": mesma fórmula já documentada em
-      // irParaIndice() (ativarGaleriaDeFotos, main.js) — em JS, -1 % N
-      // dá -1 (não N-1), somar length primeiro corrige o loop nos dois
-      // sentidos (clicar "anterior" na 1ª foto deve ir pra ÚLTIMA).
-      indiceAtual = ((indice % imagens.length) + imagens.length) % imagens.length;
-      foto.src = imagens[indiceAtual];
-      dots.forEach((d) => d.classList.remove('is-ativo'));
-      dots[indiceAtual]?.classList.add('is-ativo');
-    }
-
-    dots.forEach((dot, i) => dot.addEventListener('click', () => irParaIndice(i)));
-    setaAnterior?.addEventListener('click', () => irParaIndice(indiceAtual - 1));
-    setaProxima?.addEventListener('click', () => irParaIndice(indiceAtual + 1));
+    ativarCarrosselCard(card, slides);
   });
 
   // a seção já nasce com .reveal no HTML (index.html) — registra
@@ -2782,6 +2921,34 @@ const IDS_EDICAO_SURPRESA = [19, 20]; // 19 = Cachorrinho, 20 = Gatinho
 // de propósito: não é um player pro usuário operar, é um efeito
 // ambiente em loop, tipo GIF — controles nativos por cima só
 // atrapalhariam essa leitura.
+// Monta a lista de slides de 1 peça: o vídeo (se existir) SEMPRE
+// primeiro — mantém o comportamento de sempre ("abre já mostrando o
+// efeito") — seguido de TODAS as fotos do produto (achado da
+// auditoria, item 7: "carrossel... usando todas as fotos do produto e
+// o vídeo como um dos slides, se existir"). Peça sem vídeo cadastrado
+// (não deveria acontecer com as 2 IDs fixas de hoje, mas protege o
+// futuro se uma delas perder o campo) vira um carrossel só de fotos,
+// sem quebrar o card.
+function slidesEdicaoSurpresa(produto) {
+  // SEM vídeo (fallback — não deveria acontecer com as 2 IDs fixas de
+  // hoje): produto.imagem entra como 1ª foto normal do carrossel.
+  if (!produto.videoUrl) {
+    return [produto.imagem, ...(produto.imagensExtras || [])].map((src) => ({
+      tipo: 'imagem',
+      src,
+    }));
+  }
+  // COM vídeo: produto.imagem já aparece como POSTER do slide de
+  // vídeo (1º slide) — repeti-la de novo como uma 2ª foto logo a
+  // seguir mostraria a mesma imagem 2x seguidas (o poster parado, só
+  // trocando de <video> pra <img>, sem diferença visível nenhuma).
+  // Só imagensExtras vira foto de verdade aqui.
+  return [
+    { tipo: 'video', videoUrl: produto.videoUrl, poster: produto.imagem },
+    ...(produto.imagensExtras || []).map((src) => ({ tipo: 'imagem', src })),
+  ];
+}
+
 function montarEdicaoSurpresa(secao) {
   const pecas = IDS_EDICAO_SURPRESA
     .map((id) => produtos.find((p) => p.id === id))
@@ -2790,30 +2957,21 @@ function montarEdicaoSurpresa(secao) {
 
   const cardsHTML = pecas
     .map((produto) => {
-      // Peça sem vídeo cadastrado (não deveria acontecer com as 2 IDs
-      // fixas de hoje, mas protege o futuro se uma delas perder o
-      // campo): cai de volta pra foto estática, sem quebrar o card.
-      const midiaHTML = produto.videoUrl
-        ? `<video
-              class="foto-emoldurada edicao-surpresa__video"
-              src="${produto.videoUrl}"
-              poster="${produto.imagem}"
-              muted
-              loop
-              playsinline
-              preload="metadata"
-              aria-label="Vídeo mostrando o bichinho sendo revelado dentro de ${produto.nome}">
-            </video>`
-        : `<img class="foto-emoldurada edicao-surpresa__video" src="${produto.imagem}" alt="${produto.nome}" loading="lazy">`;
+      const slides = slidesEdicaoSurpresa(produto);
+      // A dica "Observe o fundo da caneca" só faz sentido sobre o
+      // VÍDEO (é ele que mostra o bichinho sendo revelado) — hidden
+      // de nascença quando o 1º slide não é o vídeo (fallback sem
+      // produto.videoUrl); ativarCarrosselCard() (chamada mais
+      // abaixo, já com o card no DOM) liga/desliga isso sozinho a
+      // cada troca de slide, via o 3º argumento "aoMudarSlide".
+      const dicaHTML = `
+        <p class="edicao-surpresa__dica" aria-hidden="true" ${slides[0].tipo !== 'video' ? 'hidden' : ''}>
+          <span aria-hidden="true">&#128064;</span>
+          Observe o fundo da caneca
+        </p>`;
       return `
         <article class="edicao-surpresa__card" data-id="${produto.id}" data-nome="${produto.nome}" data-preco="${produto.preco}" data-imagem="${produto.imagem}">
-          <div class="edicao-surpresa__foto-wrap">
-            ${midiaHTML}
-            <p class="edicao-surpresa__dica" aria-hidden="true">
-              <span aria-hidden="true">&#128064;</span>
-              Observe o fundo da caneca
-            </p>
-          </div>
+          ${carrosselCardHTML(slides, produto.nome, dicaHTML)}
           <p class="edicao-surpresa__selo">Edição Limitada &mdash; só 2 no mundo</p>
           <h3 class="edicao-surpresa__titulo-peca">${produto.nome}</h3>
           ${renderBlocoPreco(produto, { classeExtra: 'edicao-surpresa__preco' })}
@@ -2831,52 +2989,77 @@ function montarEdicaoSurpresa(secao) {
 
   secao.hidden = false;
 
-  // ---- AUTOPLAY AO ENTRAR NA TELA ----
-  // Pedido explícito: "autoplay assim que a seção entra na viewport,
-  // usando o mesmo IntersectionObserver já padrão no site". O
-  // observador NATIVO de reveal (observadorReveal, mais acima neste
-  // arquivo) não serve pra reaproveitar DIRETO aqui: ele dispara UMA
-  // vez só e some (unobserve logo em seguida) — bom pra uma animação
-  // de entrada, ruim pra vídeo, que precisa PAUSAR de novo se a pessoa
-  // rolar pra longe (senão ficaria tocando escondido, gastando
-  // bateria/dados à toa) e voltar a tocar se ela rolar de volta. Por
-  // isso este é um observador PRÓPRIO, mas com os MESMOS parâmetros
-  // (threshold/rootMargin) e o MESMO respeito a "prefers-reduced-
-  // motion" (reduzirMovimento, já calculado mais acima no arquivo —
-  // reaproveitado direto, não recalculado) que o padrão do site já
-  // usa: quem pediu menos movimento no sistema não recebe vídeo
-  // autoplay nenhum, só o poster (frame estático) parado.
-  const videos = [...secao.querySelectorAll('.edicao-surpresa__video')].filter(
-    (el) => el.tagName === 'VIDEO'
-  );
-  if (videos.length > 0 && !reduzirMovimento && 'IntersectionObserver' in window) {
-    const observadorVideos = new IntersectionObserver(
-      (entradas) => {
-        entradas.forEach((entrada) => {
-          const video = entrada.target;
-          if (entrada.isIntersecting) {
-            // .play() devolve uma Promise que pode REJEITAR (política
-            // de autoplay do navegador, aba em segundo plano etc.) —
-            // .catch(() => {}) evita um erro não tratado no console
-            // por causa de algo que não é um bug nosso; o poster
-            // continua sendo mostrado nesse caso, então a peça nunca
-            // fica "quebrada" pro usuário, só sem o loop automático.
-            video.play().catch(() => {});
-          } else {
-            video.pause();
-          }
-        });
+  // ---- CARROSSEL + AUTOPLAY DO VÍDEO (achado da auditoria, item 7)
+  // ----
+  // Antes existia 1 IntersectionObserver pra SEÇÃO INTEIRA, assumindo
+  // "só existe 1 mídia por card, e é sempre o vídeo". Agora que cada
+  // card é um carrossel (o vídeo é só 1 dos slides, trocável), o
+  // vídeo só pode tocar quando as DUAS coisas forem verdade ao mesmo
+  // tempo: o CARD está visível na tela E o slide ATIVO agora é o do
+  // vídeo ("pausa ao sair dele" vale tanto pra sair da TELA quanto
+  // pra sair do SLIDE, pedido explícito). Por isso o observer virou
+  // POR CARD (não mais 1 só pra todos os vídeos), e a troca de slide
+  // (aoMudarSlide, dentro de ativarCarrosselCard) também decide
+  // play/pause, não só o scroll. MESMO respeito de sempre a
+  // "prefers-reduced-motion" (reduzirMovimento, calculado mais acima
+  // no arquivo): quem pediu menos movimento no sistema não recebe
+  // autoplay nenhum, só o poster/frame parado, em NENHUM slide.
+  pecas.forEach((produto) => {
+    const slides = slidesEdicaoSurpresa(produto);
+    const card = secao.querySelector(`.edicao-surpresa__card[data-id="${produto.id}"]`);
+    const video = card.querySelector('.carrossel-card__foto--video');
+    const dica = card.querySelector('.edicao-surpresa__dica');
+
+    let cardVisivel = false;
+
+    function atualizarVideo() {
+      if (!video) return;
+      // "!video.hidden" = o slide ativo AGORA é o do vídeo (ver
+      // ativarCarrosselCard: ele é quem liga/desliga esse "hidden" a
+      // cada troca). Checar o atributo em vez de guardar um 2º estado
+      // à parte evita os dois alguma hora dessincronizarem.
+      const slideDoVideoAtivo = !video.hidden;
+      if (slideDoVideoAtivo && cardVisivel && !reduzirMovimento) {
+        // .play() devolve uma Promise que pode REJEITAR (política de
+        // autoplay do navegador, aba em segundo plano etc.) —
+        // .catch(() => {}) evita um erro não tratado no console por
+        // causa de algo que não é bug nosso; o poster continua
+        // aparecendo nesse caso, a peça nunca fica "quebrada" pro
+        // usuário, só sem o loop automático.
+        video.play().catch(() => {});
+      } else {
+        video.pause();
+      }
+    }
+
+    ativarCarrosselCard(card, slides, {
+      aoMudarSlide(_indice, slide) {
+        if (dica) dica.hidden = slide.tipo !== 'video';
+        atualizarVideo();
       },
-      { threshold: 0.4 }
-    );
-    videos.forEach((video) => observadorVideos.observe(video));
-  } else if (videos.length > 0 && !reduzirMovimento) {
-    // Fallback sem IntersectionObserver (navegador muito antigo): só
-    // tenta tocar direto, sem controle de entrar/sair da tela — mesma
-    // postura de outros fallbacks do site (ex.: barra-compra
-    // flutuante) quando a API não existe.
-    videos.forEach((video) => video.play().catch(() => {}));
-  }
+    });
+
+    if ('IntersectionObserver' in window) {
+      const observadorCard = new IntersectionObserver(
+        (entradas) => {
+          entradas.forEach((entrada) => {
+            cardVisivel = entrada.isIntersecting;
+            atualizarVideo();
+          });
+        },
+        { threshold: 0.4 }
+      );
+      observadorCard.observe(card);
+    } else {
+      // Fallback sem IntersectionObserver (navegador muito antigo):
+      // assume "sempre visível" — sem controle de entrar/sair da
+      // tela, mas ainda respeita qual slide está ativo. Mesma postura
+      // de outros fallbacks do site (ex.: barra-compra flutuante)
+      // quando a API não existe.
+      cardVisivel = true;
+      atualizarVideo();
+    }
+  });
 
   escanearReveal();
 }

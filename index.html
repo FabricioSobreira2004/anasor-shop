@@ -19,7 +19,7 @@
 <!-- Importa as duas fontes que vamos usar
  : Fraunces (títulos) e Jost (texto) -->
 
-   <link rel="stylesheet" href="css/style.css?v=30">
+   <link rel="stylesheet" href="css/style.css?v=31">
 
    <!-- Marca no <html> que o JS rodou logo no início. O CSS do
         "scroll reveal" só esconde os elementos (opacity 0) quando
@@ -315,7 +315,11 @@
     </section>
 
       <!-- ===== CERÂMICA / QUERIDINHOS DO ATELIÊ ===== -->
-<section class="queridinhos" id="ceramica">
+<!-- transicao-topo: achado da auditoria (item 5) — faltava suavizar a
+     emenda vinda de "Explore Nossas Coleções" (--cor-fundo) pra cá
+     (--cor-fundo-alt, bege mais escuro); hoje era um corte reto. Ver
+     a regra "#ceramica" em style.css pra saber qual cor ela funde. -->
+<section class="queridinhos transicao-topo" id="ceramica">
         <h2 class="reveal">Queridinhos do Ateliê ❤️</h2>
         <!-- Vitrine dos produtos mais populares/em destaque -->
 
@@ -416,7 +420,17 @@
            entrar no meio das duas. COM "transicao-base": suaviza a
            saída pro Quem Somos (claro) logo abaixo — mesmo sistema
            utilitário de sempre. -->
-<section class="selecao-especial reveal transicao-base" id="selecao-especial" hidden></section>
+<!-- transicao-topo ADICIONADA (achado da auditoria, item 5): o
+     comentário antigo abaixo ("mesma emenda cor idêntica, sem
+     degradê necessário") partia de uma premissa errada — os dois
+     gradientes (.edicao-surpresa e .selecao-especial) são
+     declarados DE NOVO em cada seção, cada um indo de --cor-texto
+     (0%) até #2b1f17 (100%); a BASE de uma seção com o TOPO da
+     outra não é a mesma cor (uma termina escura, a outra começa mais
+     clara) — por isso a linha dura que apareceu no teste visual.
+     Corrigido fundindo com a cor REAL do fim do gradiente de cima
+     (#2b1f17 — ver a variável logo abaixo, em style.css). -->
+<section class="selecao-especial reveal transicao-topo transicao-base" id="selecao-especial" hidden></section>
 
       <!-- ===== CROCHÊ =====
            ANTES: enquanto não houvesse nenhuma peça de crochê no
@@ -614,7 +628,11 @@
         </section>
 
       <!-- ===== CONTATO ===== -->
-<section class="contato" id="contato">
+<!-- transicao-topo: achado da auditoria (item 5) — faltava suavizar a
+     emenda vinda do fundo claro acima (--cor-fundo, corpo da página/
+     Quem Somos/Selos de Confiança) pra esta seção (--cor-fundo-alt,
+     mais bege) — era um corte reto. -->
+<section class="contato transicao-topo" id="contato">
         <h2 class="reveal">Fale com a gente</h2>
         <p class="subtitulo reveal">Dúvidas sobre uma peça, encomendas personalizadas ou parcerias — ou deixe só nome e e-mail para receber nossas novidades e promoções</p>
 
@@ -654,7 +672,12 @@
 
     </main>
 
-    <footer>
+    <!-- transicao-topo: achado da auditoria (item 5) — faltava suavizar
+         a emenda vinda de "Fale com a gente" (--cor-fundo-alt, bege)
+         pro rodapé (--cor-texto, escuro) — era um corte reto. A regra
+         de cor fica em "footer" (style.css), igual nas outras 3
+         transições novas desta seção. -->
+    <footer class="transicao-topo">
         <div class="footer-container">
             <div class="footer-sobre">
                 <h3> Anasor Sobreira</h3>
@@ -696,8 +719,8 @@
            main.js DEPOIS (usa essa lista para montar os cards). Os dois
            ficam no fim do <body> para o HTML já estar carregado quando
            o JavaScript rodar. -->
-      <script src="js/produtos.js?v=30"></script>
-      <script src="js/main.js?v=30"></script>
+      <script src="js/produtos.js?v=31"></script>
+      <script src="js/main.js?v=31"></script>
 
 </body>
 
