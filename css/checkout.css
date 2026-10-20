@@ -618,7 +618,10 @@
 }
 
 .checkout-selo__texto {
-  font-size: 0.68rem;
+  /* era 0.68rem (10,88px) — abaixo do piso de 11px pra texto
+     funcional (achado da auditoria de acessibilidade); 0.72rem
+     (11,52px) resolve sem mudar fonte/peso/cor. */
+  font-size: 0.72rem;
   font-weight: 600;
   line-height: 1.25;
   color: var(--cor-secundaria);

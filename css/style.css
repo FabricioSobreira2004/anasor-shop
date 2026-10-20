@@ -696,7 +696,11 @@ nav {
 }
 
 .busca input::placeholder {
-  color: #9a8b78;
+  /* Escurecido de #9a8b78 (3,3:1 contra o fundo branco do campo — não
+     batia WCAG AA, 4,5:1 mínimo pra texto normal) pra #7a6b58 (~5,1:1):
+     mesmo tom "taupe" acastanhado de antes, só mais escuro, sem virar
+     uma cor nova da marca — achado da auditoria de acessibilidade. */
+  color: #7a6b58;
 }
 
 .busca input:focus {
@@ -1624,7 +1628,10 @@ nav {
   padding: 1rem 1rem 1.3rem;
 }
 
-.subcategoria-card__info h3 {
+.subcategoria-card__info h2 {
+  /* era "h3" — ver comentário em js/ceramica.js: a tag mudou pra h2
+     por acessibilidade (hierarquia de heading), o tamanho/peso aqui
+     continuam EXATAMENTE os mesmos, então o visual não muda nada. */
   font-size: 1.15rem;
   margin-bottom: 0.3rem;
 }
@@ -4667,7 +4674,8 @@ footer {
      pequena (~100-110px de diâmetro nessa largura de coluna), afinar
      ainda mais os anéis os deixaria imperceptíveis — melhor manter a
      moldura "cheia" e só reduzir o texto. */
-  .subcategoria-card__info h3 {
+  .subcategoria-card__info h2 {
+    /* era "h3" — mesmo motivo do seletor base, acima no arquivo. */
     font-size: 1rem;
   }
   .subcategoria-card__info p {

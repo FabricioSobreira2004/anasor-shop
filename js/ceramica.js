@@ -114,7 +114,14 @@ function renderVisaoGeral() {
         <a href="ceramica.html?sub=${slugificar(sub)}" class="subcategoria-card reveal">
           <div class="subcategoria-card__foto">${fotosHTML}</div>
           <div class="subcategoria-card__info">
-            <h3>${sub}</h3>
+            <!-- h2, não h3: a página só tem um <h1> ("Cerâmica") antes
+                 destes cards — usar h3 pulava o nível 2 (achado da
+                 auditoria de acessibilidade), hierarquia errada pra
+                 quem navega por heading no leitor de tela. Visual não
+                 muda: o tamanho/peso vem do seletor CSS
+                 .subcategoria-card__info h2 (ver style.css), não da
+                 tag em si. -->
+            <h2>${sub}</h2>
             <p>${rotuloQtd}</p>
           </div>
         </a>`;
