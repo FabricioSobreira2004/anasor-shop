@@ -339,17 +339,50 @@ function montarDetalhe(produto) {
       </div>`;
 
   // "A definir" é o placeholder que fica em produtos.js até a Anasor
-  // medir a peça e escrever os cuidados. Mostrar "A definir" cru não
-  // ajuda quem está decidindo a compra — então, nesse caso, trocamos
-  // por um convite pra tirar a dúvida no WhatsApp, no MESMO número/URL
-  // do botão "Tirar dúvidas sobre esta peça" acima (linkWhats). Quando
-  // o campo já estiver preenchido, o valor real aparece sem mudança.
-  // A comparação é feita em minúsculas e sem espaços nas pontas pra
-  // pegar "A definir", "a definir", " A definir " etc.
-  const valorDetalhe = (valor) =>
-    String(valor).trim().toLowerCase() === 'a definir'
-      ? `Em breve &mdash; dúvidas? <a href="${linkWhats}" target="_blank" rel="noopener">Fale conosco no WhatsApp</a>`
-      : valor;
+  // medir a peça/escrever os cuidados. AJUSTADO (Etapa 4, pedido
+  // explícito — "Em breve" mostrando nas 44 peças do catálogo inteiro
+  // passava a impressão de site incompleto):
+  //   - DIMENSÕES "a definir": a linha inteira some (ver dimensoesHTML,
+  //     mais abaixo) — não tem texto genérico que ajude quem está
+  //     decidindo a compra sem a medida real.
+  //   - CUIDADOS "a definir": mostra o texto PADRÃO de cuidados (o
+  //     mesmo já usado em politicas.html, seção "Cuidados com a
+  //     Peça"), por categoria — ao contrário de dimensão, cuidado
+  //     genérico de cerâmica/crochê é verdadeiro pra QUALQUER peça da
+  //     categoria, então não precisa esperar a Anasor escrever um
+  //     texto específico pra cada uma.
+  const ehIndefinido = (valor) => {
+    const v = String(valor ?? '').trim().toLowerCase();
+    return v === '' || v === 'a definir';
+  };
+
+  const CUIDADOS_PADRAO = {
+    ceramica:
+      'Lave à mão, com água morna e sabão neutro, evitando mudanças bruscas de temperatura. Pequenas variações de cor, textura e formato em relação às fotos são normais — fazem parte da autenticidade do trabalho manual.',
+    croche: 'Lave à mão e seque à sombra, para preservar as fibras.',
+  };
+
+  // Dimensões: linha inteira SOME quando indefinida (string vazia:
+  // nenhum <dt>/<dd> "Dimensões" no DOM) — ao contrário de Cuidados,
+  // não existe um texto genérico verdadeiro pra QUALQUER peça (cada
+  // peça tem um tamanho diferente), então mostrar "Em breve" só
+  // lembrava quem está comprando que falta informação, sem ajudar.
+  const dimensoesHTML = ehIndefinido(produto.dimensoes)
+    ? ''
+    : `
+          <div class="detalhes-peca__linha">
+            <dt>Dimensões</dt>
+            <dd>${produto.dimensoes}</dd>
+          </div>`;
+
+  // Cuidados: indefinido -> texto PADRÃO da categoria (sempre
+  // verdadeiro, não precisa esperar a Anasor escrever um texto
+  // específico pra esta peça); "|| .ceramica": fallback defensivo se
+  // um dia existir uma categoria nova sem entrada em CUIDADOS_PADRAO
+  // ainda (hoje as únicas são "ceramica"/"croche", as 2 cobertas).
+  const textoCuidados = ehIndefinido(produto.cuidados)
+    ? CUIDADOS_PADRAO[produto.categoria] || CUIDADOS_PADRAO.ceramica
+    : produto.cuidados;
 
   container.innerHTML = `
     <div class="produto-detalhe__midia">
@@ -538,21 +571,20 @@ function montarDetalhe(produto) {
            montado por renderSelosConfianca(), igual ao da Home. -->
       ${renderSelosConfianca()}
 
-      <!-- DETALHES DA PEÇA: dimensoes/cuidados vêm de produtos.js
-           ("A definir" por enquanto). <dl> (lista de descrição) é a
-           tag semântica certa pra pares "rótulo / valor". O <h2>
-           fica FORA do <dl> porque <dl> só aceita <dt>, <dd> e <div>
-           como filhos. -->
+      <!-- DETALHES DA PEÇA: dimensoes/cuidados vêm de produtos.js. <dl>
+           (lista de descrição) é a tag semântica certa pra pares
+           "rótulo / valor". O <h2> fica FORA do <dl> porque <dl> só
+           aceita <dt>, <dd> e <div> como filhos. dimensoesHTML/
+           textoCuidados (calculados acima, antes deste template) —
+           ver o comentário completo lá: Dimensões pode sumir
+           inteira, Cuidados sempre mostra algo (texto real ou o
+           padrão da categoria). -->
       <div class="detalhes-peca">
         <h2 class="detalhes-peca__titulo">Detalhes da Peça</h2>
-        <dl>
-          <div class="detalhes-peca__linha">
-            <dt>Dimensões</dt>
-            <dd>${valorDetalhe(produto.dimensoes)}</dd>
-          </div>
+        <dl>${dimensoesHTML}
           <div class="detalhes-peca__linha">
             <dt>Cuidados</dt>
-            <dd>${valorDetalhe(produto.cuidados)}</dd>
+            <dd>${textoCuidados}</dd>
           </div>
         </dl>
 
@@ -564,8 +596,13 @@ function montarDetalhe(produto) {
              ".checkout-link-politicas" do link equivalente em
              checkout.html (CSS compartilhado, style.css — texto
              pequeno, --cor-secundaria, sem chamar mais atenção que o
-             preço/botão de compra acima). -->
-        <a href="politicas.html" class="checkout-link-politicas">
+             preço/botão de compra acima). href aponta pra
+             "#trocas-devolucoes" (achado do code-review, Etapa 4): o
+             texto do link já é "Consulte nossa Política de Trocas" —
+             agora que politicas.html tem esse id dedicado, cair
+             direto nele poupa a pessoa de procurar a seção certa
+             sozinha, igual ao link equivalente em checkout.html. -->
+        <a href="politicas.html#trocas-devolucoes" class="checkout-link-politicas">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <rect width="18" height="11" x="3" y="11" rx="2" ry="2"/>
             <path d="M7 11V7a5 5 0 0 1 10 0v4"/>

@@ -85,7 +85,26 @@
 
             <h1 class="reveal">Políticas</h1>
 
-            <div class="politica-bloco reveal">
+            <!-- MENU DE ÂNCORAS (Etapa 4, pedido explícito): a página cresceu
+                 (ganhou a seção "Privacidade e Dados Pessoais", mais abaixo) e
+                 passou a ter 6 blocos — um jeito rápido de pular direto pro
+                 que interessa, sobretudo em quem chega aqui JÁ procurando algo
+                 específico (ex.: vindo do link "Política de Trocas e
+                 Privacidade" do checkout). <nav> + aria-label: identifica o
+                 bloco pra leitor de tela como um conjunto de links de
+                 navegação, não parágrafo comum. Os href's (#como-comprar etc.)
+                 apontam pros "id" que cada .politica-bloco ganhou agora, logo
+                 abaixo. -->
+            <nav class="politicas-menu reveal" aria-label="Seções desta página">
+                <a href="#como-comprar">Como Comprar</a>
+                <a href="#prazo-envio">Prazo de Envio</a>
+                <a href="#trocas-devolucoes">Trocas e Devoluções</a>
+                <a href="#cuidados">Cuidados com a Peça</a>
+                <a href="#faq">Perguntas Frequentes</a>
+                <a href="#privacidade">Privacidade e Dados Pessoais</a>
+            </nav>
+
+            <div class="politica-bloco reveal" id="como-comprar">
                 <h2>Como Comprar</h2>
                 <p>
                     Comprar uma peça da Anasor Sobreira é simples: escolha a peça que
@@ -97,7 +116,7 @@
                 </p>
             </div>
 
-            <div class="politica-bloco reveal">
+            <div class="politica-bloco reveal" id="prazo-envio">
                 <h2>Prazo de Envio</h2>
                 <p>
                     <!-- Etapa 1 (frete grátis embutido no preço): frase nova no
@@ -112,7 +131,7 @@
                 </p>
             </div>
 
-            <div class="politica-bloco reveal">
+            <div class="politica-bloco reveal" id="trocas-devolucoes">
                 <h2>Trocas e Devoluções</h2>
                 <p>
                     Você tem direito de se arrepender da compra em até 7 dias
@@ -130,7 +149,7 @@
                 </p>
             </div>
 
-            <div class="politica-bloco reveal">
+            <div class="politica-bloco reveal" id="cuidados">
                 <h2>Cuidados com a Peça</h2>
                 <p>
                     Cada peça de cerâmica é única e pode apresentar pequenas
@@ -153,7 +172,7 @@
                  visual (abrir/fechar a resposta + girar a seta) é
                  feito em CSS a partir dessa classe.
                  ============================================ -->
-            <div class="politica-bloco reveal">
+            <div class="politica-bloco reveal" id="faq">
                 <h2>Perguntas Frequentes</h2>
 
                 <div class="faq">
@@ -228,6 +247,44 @@
                     </div>
 
                 </div>
+            </div>
+
+            <!-- PRIVACIDADE E DADOS PESSOAIS (Etapa 4, pedido explícito) —
+                 linguagem simples, só o que o site REALMENTE faz com os
+                 dados (nada inventado): coleta no checkout.html, repasse pro
+                 Mercado Pago (pagamento) e um CEP cru pro ViaCEP
+                 (autopreenchimento de endereço — ver js/checkout.js). O
+                 link "Política de Trocas e Privacidade" do checkout.html
+                 aponta pra "#privacidade" (este id), então quem clica lá
+                 cai direto aqui. -->
+            <div class="politica-bloco reveal" id="privacidade">
+                <h2>Privacidade e Dados Pessoais</h2>
+                <p>
+                    Para processar seu pedido, coletamos nome, e-mail, endereço
+                    de entrega e, se você preencher, telefone/WhatsApp e CPF
+                    (os dois opcionais no checkout). Usamos esses dados só para
+                    processar e enviar o seu pedido e para entrar em contato
+                    sobre ele — nada de marketing sem você pedir.
+                </p>
+                <p>
+                    Compartilhamos o necessário com quem participa da entrega
+                    da sua compra: o <strong>Mercado Pago</strong> processa o
+                    pagamento (recebe seus dados de pagamento e contato), os
+                    <strong>Correios/transportadora</strong> recebem o
+                    endereço pra entregar a peça, e o
+                    <strong>ViaCEP</strong> recebe só o CEP digitado, pra
+                    preencher o restante do endereço automaticamente — não
+                    sabe quem você é. Não vendemos nem alugamos seus dados
+                    para ninguém.
+                </p>
+                <p>
+                    Guardamos seus dados pelo tempo necessário para cumprir o
+                    seu pedido e as obrigações legais da Anasor Sobreira (por
+                    exemplo, fiscais). Você pode pedir acesso, correção ou
+                    exclusão dos seus dados a qualquer momento pelo e-mail
+                    <a href="mailto:ceramicaecrocheanasor@gmail.com">ceramicaecrocheanasor@gmail.com</a>
+                    ou pelo WhatsApp.
+                </p>
             </div>
 
         </section>

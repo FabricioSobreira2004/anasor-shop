@@ -146,7 +146,15 @@
   }
 }
 
-section[id] {
+/* ".politica-bloco[id]" ADICIONADO (achado do code-review, Etapa 4):
+   os alvos do novo menu de âncoras em politicas.html (#como-comprar,
+   #privacidade etc.) são <div class="politica-bloco" id="...">, não
+   <section id="...">, então o seletor original (só "section[id]")
+   não os alcançava — pular pra lá encostava o título embaixo do
+   header fixo, exatamente o problema que esta regra existe pra
+   evitar. */
+section[id],
+.politica-bloco[id] {
   scroll-margin-top: 90px;
   /* O header é sticky (position: sticky; top: 0). Sem esta regra, ao
      pular para uma seção ela encostaria em y=0 e o header ficaria
@@ -4406,7 +4414,49 @@ nav {
 .politicas h1 {
   text-align: center;
   font-size: 2rem;
-  margin-bottom: 3rem;
+  margin-bottom: 1.75rem;
+  /* era 3rem: parte desse respiro agora é ocupado pelo
+     .politicas-menu (logo abaixo), que precisa ficar mais perto do
+     título do que do 1º bloco de texto */
+}
+
+/* MENU DE ÂNCORAS (Etapa 4): pílulas discretas, mesma linguagem visual
+   dos selos/chips do site (borda fina + fundo claro), só que SEM o
+   peso 3D dos .selo — é navegação, não um selo de confiança, não
+   precisa chamar tanta atenção. wrap: em telas estreitas as 6 pílulas
+   quebram em várias linhas, nunca espremem/cortam o texto. */
+.politicas-menu {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.6rem;
+  margin: 0 auto 3rem;
+  max-width: 640px;
+}
+
+.politicas-menu a {
+  padding: 0.45rem 0.9rem;
+  border-radius: 999px;
+  border: 1px solid var(--cor-fundo-alt);
+  background-color: var(--cor-card);
+  color: var(--cor-secundaria);
+  font-size: 0.82rem;
+  font-weight: 500;
+  text-decoration: none;
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.politicas-menu a:hover,
+.politicas-menu a:focus-visible {
+  background-color: var(--cor-fundo-alt);
+  border-color: var(--cor-destaque);
+  color: var(--cor-destaque);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .politicas-menu a {
+    transition: none;
+  }
 }
 
 .politica-bloco {
