@@ -2821,6 +2821,154 @@ function ativarCarrosselCard(card, slides, { aoMudarSlide } = {}) {
   irParaIndice(0);
 }
 
+// ============================================================
+//  INDICADOR DE PRODUTO (mobile) — Seleção Especial / Edição Surpresa
+// ============================================================
+// Relato com prints (iPhone 15): os ÚNICOS pontinhos visíveis no
+// carrossel de 2 cards eram os do carrossel de FOTOS de cada card
+// (.carrossel-card__dot, ativado por ativarCarrosselCard acima) — por
+// isso ninguém percebia que havia um 2º PRODUTO ao lado, achando que
+// os pontinhos contavam fotos da mesma peça. Esta função monta um
+// indicador PRÓPRIO (contador "1 / 2" + traços + dica "Deslize") logo
+// abaixo da grade, que conta CARDS, não fotos — chamada por
+// montarSelecaoEspecial/montarEdicaoSurpresa depois do grid estar no
+// DOM. "cards" já vem filtrado (>= 2, ver os dois chamadores) — com 1
+// card só não haveria o que indicar, por isso o "if" de saída.
+function montarIndicadorProdutos(grid, cards) {
+  if (cards.length < 2) return;
+
+  const indicador = document.createElement('div');
+  indicador.className = 'produto-indicador';
+  // aria-hidden: puramente decorativo/redundante pra leitor de tela —
+  // o DOM já lista os 2 <article> na ordem real, e os dots também são
+  // <button> navegáveis por teclado (não dependem do indicador visual
+  // pra funcionar).
+  indicador.setAttribute('aria-hidden', 'true');
+  indicador.innerHTML = `
+    <span class="produto-indicador__contador">1 / ${cards.length}</span>
+    <div class="produto-indicador__dots">
+      ${cards
+        .map(
+          (_, i) =>
+            `<button type="button" class="produto-indicador__dot ${i === 0 ? 'is-ativo' : ''}" tabindex="-1"></button>`
+        )
+        .join('')}
+    </div>
+    <span class="produto-indicador__dica">Deslize &rarr;</span>
+  `;
+  grid.after(indicador);
+
+  const contador = indicador.querySelector('.produto-indicador__contador');
+  const dots = [...indicador.querySelectorAll('.produto-indicador__dot')];
+  const dica = indicador.querySelector('.produto-indicador__dica');
+
+  // Índice do card mais "centrado" no viewport do trilho —
+  // getBoundingClientRect() pros dois lados (card E trilho), nunca
+  // offsetLeft/scrollLeft misturados: CORREÇÃO (achado do
+  // code-review) — offsetLeft é relativo ao offsetParent do card (sem
+  // nenhum ancestral com position:relative/absolute entre o card e
+  // <body>, isso é o PRÓPRIO <body>), enquanto scrollLeft é relativo à
+  // origem de rolagem do TRILHO; comparar os dois direto soma um viés
+  // constante (a posição do trilho na página) à distância calculada.
+  // getBoundingClientRect() devolve coordenadas de TELA pros dois —
+  // sempre comparáveis entre si, não importa quantos ancestrais
+  // posicionados existam no meio nem como o trilho rolou.
+  function indiceMaisCentral() {
+    const retTrilho = grid.getBoundingClientRect();
+    const centroViewport = retTrilho.left + retTrilho.width / 2;
+    let indice = 0;
+    let menorDistancia = Infinity;
+    cards.forEach((card, i) => {
+      const retCard = card.getBoundingClientRect();
+      const centroCard = retCard.left + retCard.width / 2;
+      const distancia = Math.abs(centroCard - centroViewport);
+      if (distancia < menorDistancia) {
+        menorDistancia = distancia;
+        indice = i;
+      }
+    });
+    return indice;
+  }
+
+  function atualizar() {
+    const indice = indiceMaisCentral();
+    contador.textContent = `${indice + 1} / ${cards.length}`;
+    dots.forEach((d, i) => d.classList.toggle('is-ativo', i === indice));
+  }
+
+  // "Deslize ->" só faz sentido ANTES de alguém descobrir que o
+  // trilho arrasta — some no 1º scroll (gesto de arraste) ou no 1º
+  // toque num dot, o que vier primeiro. Sem localStorage de propósito
+  // (diferente de CHAVE_DICA_CARROSSEL/montarDicaDeslize, acima): é
+  // uma dica pequena, por seção, sem custo em "lembrar entre visitas"
+  // — reaparecer numa visita futura não incomoda do jeito que a dica
+  // maior do carrossel de produtos normais incomodaria.
+  let dicaEscondida = false;
+  function esconderDica() {
+    if (dicaEscondida) return;
+    dicaEscondida = true;
+    dica.classList.add('is-oculta');
+  }
+
+  // "pronta" vira true só depois de 2 frames (CORREÇÃO, achado ao
+  // testar com Playwright): o PRÓPRIO navegador pode disparar um
+  // "scroll" automático no trilho assim que ele monta, ajustando a
+  // posição em sub-pixel pra satisfazer o scroll-snap exatamente —
+  // mesmo com o padding-inline calculado certinho (CSS, corrigido
+  // pelo code-review: "100%" do trilho, não "100vw" da tela), um
+  // arredondamento de fração de pixel ainda pode sobrar. Sem esta
+  // trava, esse ajuste (nunca um gesto do visitante) já escondia a
+  // dica antes de qualquer toque na tela. 2x requestAnimationFrame
+  // garante que esse possível ajuste do layout inicial já aconteceu
+  // antes de começarmos a reagir a "scroll" como sinal de interação
+  // real.
+  let prontoParaEsconderNoScroll = false;
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      prontoParaEsconderNoScroll = true;
+    });
+  });
+
+  // passive:true (não faz preventDefault) — este listener só LÊ a
+  // posição do scroll, nunca interfere no gesto nativo do navegador.
+  grid.addEventListener(
+    'scroll',
+    () => {
+      atualizar();
+      if (prontoParaEsconderNoScroll) esconderDica();
+    },
+    { passive: true }
+  );
+
+  // touchstart: esconde no exato momento em que o dedo toca o
+  // trilho, mesmo antes de qualquer "scroll" de fato acontecer (dedo
+  // parado, ainda decidindo a direção do arraste) — sinal de
+  // interação mais imediato que esperar o scroll disparar.
+  grid.addEventListener('touchstart', esconderDica, { passive: true });
+
+  dots.forEach((dot, i) => {
+    dot.addEventListener('click', () => {
+      // scrollTo({left}) espera uma coordenada no sistema de rolagem
+      // do PRÓPRIO trilho (mesmo espaço de scrollLeft) — diferente de
+      // indiceMaisCentral() (que só LÊ, em coordenadas de tela), aqui
+      // precisamos ESCREVER uma posição de rolagem; por isso partimos
+      // do scrollLeft atual e somamos a diferença entre os centros em
+      // tela (getBoundingClientRect), em vez de usar offsetLeft (mesmo
+      // bug de coordenadas que o code-review achou em
+      // indiceMaisCentral — ver o comentário lá).
+      const card = cards[i];
+      const retTrilho = grid.getBoundingClientRect();
+      const retCard = card.getBoundingClientRect();
+      const centroTrilho = retTrilho.left + retTrilho.width / 2;
+      const centroCard = retCard.left + retCard.width / 2;
+      grid.scrollTo({ left: grid.scrollLeft + (centroCard - centroTrilho), behavior: 'smooth' });
+      esconderDica();
+    });
+  });
+
+  atualizar();
+}
+
 function montarSelecaoEspecial(secao) {
   // Mesma ideia de robustez de montarProdutoDestaque(): se algum dos
   // 2 ids sumir do catálogo um dia, a peça em falta é IGNORADA (não
@@ -2893,6 +3041,14 @@ function montarSelecaoEspecial(secao) {
     const card = secao.querySelector(`.selecao-especial__card[data-id="${produto.id}"]`);
     ativarCarrosselCard(card, slides);
   });
+
+  // indicador "1 / 2" (mobile) — ver montarIndicadorProdutos() acima
+  // pro motivo completo (achado: pontinhos de FOTO eram o único sinal
+  // de que havia um 2º produto).
+  montarIndicadorProdutos(
+    secao.querySelector('.selecao-especial__grid'),
+    [...secao.querySelectorAll('.selecao-especial__card')]
+  );
 
   // a seção já nasce com .reveal no HTML (index.html) — registra
   // agora que tem conteúdo de verdade, mesmo padrão de
@@ -3068,6 +3224,13 @@ function montarEdicaoSurpresa(secao) {
       atualizarVideo();
     }
   });
+
+  // indicador "1 / 2" (mobile) — mesmo componente/motivo de
+  // montarSelecaoEspecial (ver montarIndicadorProdutos(), acima).
+  montarIndicadorProdutos(
+    secao.querySelector('.edicao-surpresa__grid'),
+    [...secao.querySelectorAll('.edicao-surpresa__card')]
+  );
 
   escanearReveal();
 }

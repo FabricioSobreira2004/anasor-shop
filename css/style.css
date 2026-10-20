@@ -2638,6 +2638,10 @@ nav {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
   transition: background-color 0.2s ease, transform 0.2s ease;
   z-index: 2;
+  touch-action: manipulation;
+  /* elimina o atraso de ~300ms (espera do navegador por um possível
+     2º toque = double-tap-zoom) e o próprio double-tap-zoom nestas
+     setas pequenas — pedido explícito da correção de zoom acidental. */
 }
 
 .carrossel-card__seta svg {
@@ -2811,6 +2815,18 @@ nav {
   margin-top: auto;
 }
 
+/* touch-action:manipulation nos botões/links destes 2 carrosséis de
+   produto (correção de zoom acidental, mesmo motivo de
+   .carrossel-card__seta/__dot, acima): sem isto, um toque rápido
+   duplo no botão "Comprar Agora" ou nas setas/dots pode disparar o
+   double-tap-zoom do navegador em vez do clique. */
+.selecao-especial__card button,
+.selecao-especial__card a,
+.edicao-surpresa__card button,
+.edicao-surpresa__card a {
+  touch-action: manipulation;
+}
+
 /* ---- BOLINHAS (dots) do carrossel de cada card ----
    MESMA estrutura/comportamento de .banner-indicador (style.css) e
    .galeria__dot (produto.css) — área de toque 44×44 com uma bolinha
@@ -2840,6 +2856,7 @@ nav {
   border: none;
   background: none;
   cursor: pointer;
+  touch-action: manipulation; /* mesmo motivo de .carrossel-card__seta, acima */
 }
 
 .carrossel-card__dot::after {
@@ -2901,31 +2918,72 @@ nav {
      SOLUÇÃO: mesma técnica já usada no carrossel de produtos
      (.produtos-grid[data-grade-produtos], mais abaixo neste arquivo)
      — vira um trilho horizontal com scroll-snap, 1 card por vez (com
-     uma "espiadinha" do próximo, ~14% da largura, sinalizando que dá
-     pra arrastar). Com isso a altura da seção passa a refletir a
-     altura de 1 card só, não a soma dos 2. */
+     uma "espiadinha" do próximo, sinalizando que dá pra arrastar). Com
+     isso a altura da seção passa a refletir a altura de 1 card só, não
+     a soma dos 2.
+     CORREÇÃO (relato com prints, iPhone 15): o card media 86% da
+     LARGURA DO TRILHO (sem nenhum padding-inline no trilho), então o
+     1º card — scroll-snap-align:center não tem "espaço" pra puxá-lo
+     pro centro quando o scroll já está em 0 (não dá pra rolar
+     "negativo") — ficava colado na borda esquerda, cortando a
+     etiqueta e quase escondendo o 2º card. A correção clássica pra
+     "carrossel com espiadinha simétrica": dar ao TRILHO um
+     padding-inline de (largura do TRILHO − largura do card) ÷ 2 —
+     isso sobra espaço suficiente ANTES do 1º card e DEPOIS do último
+     pra cada um alcançar o centro exato da tela, não só o centro do
+     trilho (ver indiceMaisCentral()/getBoundingClientRect, main.js, e
+     o teste Playwright que mede esse ±2px). min(84vw, 340px): mesma
+     largura pedida (80–84vw, até ~340px num tablet/celular grande).
+     CORREÇÃO (achado do code-review): a largura de referência do
+     cálculo é "100%" (a largura do PRÓPRIO trilho, já descontado o
+     padding de 6% da seção ao redor — .selecao-especial, acima), NÃO
+     "100vw" (a largura da TELA inteira). Usar 100vw aqui inflava o
+     padding além da conta (sobrava o equivalente ao padding da seção
+     TAMBÉM dentro do trilho), o que não quebrava a centralização final
+     (scroll-snap-align:center sempre corrige sozinho), mas forçava o
+     navegador a fazer um ajuste de rolagem (scrollLeft 0 -> ~24px) já
+     na montagem da página — um "pulinho" evitável. Com "100%" o
+     padding já nasce correto, sem ajuste nenhum ao montar. */
   .selecao-especial__grid {
     display: flex;
     flex-wrap: nowrap;
     gap: 1rem;
     overflow-x: auto;
+    overflow-y: visible;
+    /* overflow-y:visible aqui é só DOCUMENTAÇÃO da intenção (nenhuma
+       rolagem vertical aninhada) — a especificação CSS força o valor
+       USADO de overflow-y pra "auto" sempre que overflow-x não for
+       "visible" nem "clip"; não há como ter x:auto + y:visible de
+       verdade num navegador. Mesmo sem efeito prático, documenta que
+       NINGUÉM queria rolagem vertical aqui, só a horizontal. */
     scroll-snap-type: x mandatory;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;           /* Firefox: esconde a barra de rolagem */
     max-width: none;
+    padding-inline: calc((100% - min(84vw, 340px)) / 2);
     padding-bottom: 0.5rem;
     /* respiro embaixo pra a sombra do card (.foto-emoldurada) não ser cortada */
+    touch-action: pan-x pan-y;
+    /* trava o gesto de arrastar/soltar o dedo em SÓ rolagem (eixo X
+       ou Y) — sem isto o Safari interpreta um arraste mais diagonal
+       como o início de um pinch-zoom (relato: "zoom sem querer" ao
+       arrastar). maximum-scale/user-scalable no <meta viewport> NÃO
+       resolveriam isso: o Safari ignora as duas há anos. */
+    overscroll-behavior-x: contain;
+    /* impede que o "esticão" no fim do scroll (chegar ao último card
+       e continuar arrastando) vaze pra PÁGINA inteira (ex.: ativar o
+       "pull-to-refresh"/bounce do navegador) */
   }
   .selecao-especial__grid::-webkit-scrollbar {
     display: none;                  /* Chrome/Safari: esconde a barra de rolagem */
   }
   .selecao-especial__card {
-    flex: 0 0 86%;
-    /* 86% (não 100%): sobra ~14% de "espiadinha" do próximo card na
-       borda direita — é o que sinaliza visualmente "arraste aqui" sem
-       precisar de nenhuma dica de texto/seta nova. */
+    flex: 0 0 min(84vw, 340px);
     scroll-snap-align: center;
     scroll-snap-stop: always;       /* não deixa "pular" o card num swipe forte */
+  }
+  .selecao-especial .produto-indicador {
+    display: flex; /* ver comentário completo em .produto-indicador, mais abaixo neste arquivo */
   }
 }
 
@@ -3097,25 +3155,144 @@ nav {
   /* MESMA conversão "empilhado -> carrossel horizontal" de
      .selecao-especial__grid logo acima, e pelo MESMO motivo: medido
      em 1472px empilhado no mobile (quase o dobro do desktop, 929px) —
-     ver o comentário grande lá pra o diagnóstico completo. */
+     ver o comentário grande lá pra o diagnóstico completo. MESMA
+     correção de centralização/zoom acidental também (padding-inline
+     calculado + touch-action + overscroll-behavior) — ver o
+     comentário grande em .selecao-especial__grid, mais acima: motivo
+     idêntico, só repetido aqui porque são 2 blocos de regra
+     separados (seções com fundos/paddings diferentes). "100%" (não
+     "100vw") pelo MESMO motivo do achado do code-review lá. */
   .edicao-surpresa__grid {
     display: flex;
     flex-wrap: nowrap;
     gap: 1rem;
     overflow-x: auto;
+    overflow-y: visible;
     scroll-snap-type: x mandatory;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
     max-width: none;
+    padding-inline: calc((100% - min(84vw, 340px)) / 2);
     padding-bottom: 0.5rem;
+    touch-action: pan-x pan-y;
+    overscroll-behavior-x: contain;
   }
   .edicao-surpresa__grid::-webkit-scrollbar {
     display: none;
   }
   .edicao-surpresa__card {
-    flex: 0 0 86%;
+    flex: 0 0 min(84vw, 340px);
     scroll-snap-align: center;
     scroll-snap-stop: always;
+  }
+  .edicao-surpresa .produto-indicador {
+    display: flex; /* ver comentário completo em .produto-indicador, mais abaixo neste arquivo */
+  }
+}
+
+/* ============================================================
+   INDICADOR DE PRODUTO (mobile) — Edição Surpresa / Seleção Especial
+   ============================================================
+   Relato com prints: os ÚNICOS pontinhos visíveis no mobile eram os
+   do carrossel de FOTOS de cada card (.carrossel-card__dot, acima) —
+   ninguém percebia que existiam 2 PRODUTOS lado a lado (achava que
+   os pontinhos contavam fotos da MESMA peça). Este é um componente
+   PRÓPRIO, visualmente BEM diferente (contador "1 / 2" + traços
+   compridos, não bolinhas pequenas), que conta CARDS/produtos, não
+   fotos — montado pelo JS (montarIndicadorProdutos, main.js) depois
+   da grade de cards. display:none por padrão: só aparece dentro do
+   @media (max-width:768px) de cada seção (ver overrides logo abaixo
+   de .selecao-especial__card/.edicao-surpresa__card) — no desktop o
+   grid de 2 colunas não é um carrossel, não há o que indicar. */
+.produto-indicador {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  margin: 0.25rem auto 0;
+}
+
+.produto-indicador__contador {
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
+  /* tabular-nums: "1 / 2" -> "2 / 2" não muda de largura ao trocar de
+     slide, evita um "pulinho" nos elementos ao lado (dots/dica) */
+}
+
+.produto-indicador__dots {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.produto-indicador__dot {
+  width: 22px;
+  height: 7px;
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.produto-indicador__dot.is-ativo {
+  transform: scaleX(1.15);
+}
+
+.produto-indicador__dica {
+  font-size: 0.78rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  transition: opacity 0.3s ease, width 0.3s ease, margin 0.3s ease;
+}
+
+/* .is-oculta: aplicada pelo JS (main.js) no 1º scroll/toque no
+   carrossel — "Deslize ->" só faz sentido antes de alguém já ter
+   descoberto que dá pra arrastar; width:0 (não só opacity:0) recolhe
+   o espaço que ela ocupava, pra não deixar um vão vazio ao lado dos
+   dots depois que ela desaparece. */
+.produto-indicador__dica.is-oculta {
+  opacity: 0;
+  width: 0;
+  margin-left: -0.6rem; /* cancela o "gap" do flex pai, some sem deixar vão */
+}
+
+/* Cores — variante CLARA (sobre o bege de .selecao-especial): MESMA
+   paleta de texto/destaque já usada no resto da seção clara (ver
+   .selecao-especial__etiqueta, mais acima). */
+.selecao-especial .produto-indicador__contador,
+.selecao-especial .produto-indicador__dica {
+  color: var(--cor-texto);
+}
+.selecao-especial .produto-indicador__dot {
+  background-color: rgba(62, 46, 34, 0.25); /* --cor-texto a 25% */
+}
+.selecao-especial .produto-indicador__dot.is-ativo {
+  background-color: var(--cor-destaque);
+}
+
+/* Cores — variante ESCURA (sobre o gradiente marrom de
+   .edicao-surpresa): MESMO ajuste já aplicado a .edicao-surpresa
+   .preco (mais acima) — terracota baixa demais de contraste no fundo
+   escuro, troca pra dourado (--cor-ouro). */
+.edicao-surpresa .produto-indicador__contador,
+.edicao-surpresa .produto-indicador__dica {
+  color: var(--cor-fundo);
+}
+.edicao-surpresa .produto-indicador__dot {
+  background-color: rgba(251, 246, 239, 0.3); /* --cor-fundo a 30% */
+}
+.edicao-surpresa .produto-indicador__dot.is-ativo {
+  background-color: var(--cor-ouro);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .produto-indicador__dot,
+  .produto-indicador__dica {
+    transition: none;
   }
 }
 
