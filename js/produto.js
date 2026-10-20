@@ -55,6 +55,24 @@ const relacionadosSecao = document.querySelector('#produtos-relacionados');
 // "Identifier 'WHATSAPP_NUMERO' has already been declared" (os dois
 // arquivos compartilham o mesmo escopo de top-level no navegador).
 
+// ---------- "ENCOMENDE SUA PEÇA ÚNICA" — link de WhatsApp ----------
+// Usado em 2 lugares desta página: o bloco .produto-encomenda (dentro
+// de montarDetalhe) e a barra flutuante "Comprar Agora" no mobile
+// (montarBarraCompraFlutuante, mais abaixo) — uma função só, pra não
+// duplicar a mensagem/URL nos dois lugares.
+// indisponivel:true troca a mensagem pra reconhecer que a peça já
+// vendeu (mesma ideia de pedido, só o texto muda).
+function linkEncomendaWhatsApp(produto, { indisponivel = false } = {}) {
+  // URL da PRÓPRIA página (já inclui "?id=..."): usamos a URL de
+  // verdade do navegador, não montamos "produto.html?id=" na mão, pra
+  // nunca desalinhar se o domínio/caminho mudar.
+  const urlPagina = window.location.href;
+  const msg = indisponivel
+    ? `Olá, Anasor! Vi a peça "${produto.nome}" no site, mas essa peça já foi vendida — gostaria de encomendar uma parecida. Podemos conversar sobre valores e prazo? ${urlPagina}`
+    : `Olá, Anasor! Vi a peça "${produto.nome}" no site e gostaria de encomendar uma peça única parecida. Podemos conversar sobre valores e prazo? ${urlPagina}`;
+  return `https://wa.me/${WHATSAPP_NUMERO}?text=${encodeURIComponent(msg)}`;
+}
+
 // Como o breadcrumb deve linkar cada categoria: as duas já têm
 // página própria agora (croche.html foi criada — antes apontava pra
 // uma seção da Home, index.html#croche).
@@ -192,13 +210,9 @@ if (!produto) {
   montarBreadcrumb(produto);
   montarDetalhe(produto);
   montarRelacionados(produto);
-  // Peça indisponível (disponivel: false) não tem o que comprar — a
-  // barra flutuante existe só pra levar o "Adicionar ao Carrinho" de
-  // volta ao alcance ao rolar a página (ver comentário grande da
-  // função); sem botão de compra nenhum, ela não tem função aqui.
-  if (produto.disponivel !== false) {
-    montarBarraCompraFlutuante(produto);
-  }
+  // SEMPRE monta a barra (rodada de mobile: peça indisponível não some
+  // mais — vira "Encomendar peça parecida", ver montarBarraCompraFlutuante).
+  montarBarraCompraFlutuante(produto);
   animarSelosConfianca();
 }
 
@@ -281,27 +295,8 @@ function montarDetalhe(produto) {
   // o campo (hoje, o catálogo inteiro) continua tratado como
   // disponível, sem nenhuma mudança de comportamento.
   const produtoDisponivel = produto.disponivel !== false;
-
-  // URL da PRÓPRIA página (já inclui "?id=..."): usamos a URL de
-  // verdade do navegador, não montamos "produto.html?id=" na mão, pra
-  // nunca desalinhar se o domínio/caminho mudar.
-  const urlPagina = window.location.href;
-
-  // Mensagem DIFERENTE da do botão "Tirar dúvidas sobre esta peça"
-  // (linkWhats, acima): aquela é uma dúvida sobre ESTA peça à venda;
-  // esta é um pedido de ENCOMENDA de uma peça nova, parecida — por
-  // isso os dois botões convivem na página sem se confundir.
-  const msgEncomenda = encodeURIComponent(
-    `Olá, Anasor! Vi a peça "${produto.nome}" no site e gostaria de encomendar uma peça única parecida. Podemos conversar sobre valores e prazo? ${urlPagina}`
-  );
-  const linkEncomenda = `https://wa.me/${WHATSAPP_NUMERO}?text=${msgEncomenda}`;
-
-  // Variação da mensagem pra quando a peça já vendeu — mesmo pedido,
-  // só reconhecendo que o modelo visto já não está mais disponível.
-  const msgEncomendaIndisponivel = encodeURIComponent(
-    `Olá, Anasor! Vi a peça "${produto.nome}" no site, mas essa peça já foi vendida — gostaria de encomendar uma parecida. Podemos conversar sobre valores e prazo? ${urlPagina}`
-  );
-  const linkEncomendaIndisponivel = `https://wa.me/${WHATSAPP_NUMERO}?text=${msgEncomendaIndisponivel}`;
+  const linkEncomenda = linkEncomendaWhatsApp(produto);
+  const linkEncomendaIndisponivel = linkEncomendaWhatsApp(produto, { indisponivel: true });
 
   // Bloco HTML do convite — MUDA de visual conforme a disponibilidade:
   // disponível = discreto, .btn-fantasma (contorno), abaixo dos botões
@@ -802,8 +797,14 @@ function animarSelosConfianca() {
 // toast (ambos ancorados no rodapé da tela), pra nada ficar escondido
 // atrás da barra.
 function montarBarraCompraFlutuante(produto) {
+  const disponivel = produto.disponivel !== false;
+
   const barra = document.createElement('div');
-  barra.className = 'barra-compra';
+  // modificador ".barra-compra--indisponivel": só muda o botão (ver
+  // abaixo) — o resto da barra (miniatura, nome, preço) é igual nos
+  // dois casos, então não precisou de nenhum CSS novo pra esta classe,
+  // ela só marca o estado pra quem for ler o HTML/depurar no futuro.
+  barra.className = disponivel ? 'barra-compra' : 'barra-compra barra-compra--indisponivel';
   // dados que o carrinho (main.js) lê do ancestral [data-id] do botão
   // ("imagem" incluída pelo mesmo motivo do container principal, logo
   // acima nesta função — correção do bug de foto sumindo no mini-carrinho)
@@ -821,11 +822,47 @@ function montarBarraCompraFlutuante(produto) {
        <strong>${formatarPreco(produto.preco)}</strong>`
     : `<strong>${formatarPreco(produto.preco)}</strong>`;
 
+  // BOTÃO PRINCIPAL da barra — MUDA conforme a disponibilidade:
+  //   disponível   -> <button class="btn-comprar-agora"> de verdade:
+  //                   o listener delegado (main.js) adiciona ao
+  //                   carrinho E abre o mini-carrinho, igual a
+  //                   qualquer outro "Comprar Agora" do site.
+  //   indisponível -> <a class="btn-comprar-agora" href="wa.me/...">:
+  //                   MESMA classe (reaproveita o visual "gomoso" 3D
+  //                   inteiro, sem duplicar CSS), mas é um <a>, não um
+  //                   <button> — o listener delegado de main.js só
+  //                   reage a "button.btn-comprar-agora" exatamente
+  //                   pra este link NÃO disparar "adicionar ao
+  //                   carrinho" como efeito colateral do clique (ver
+  //                   comentário grande no listener, main.js). O clique
+  //                   em si só faz o <a> navegar (nova aba) pro
+  //                   WhatsApp, como qualquer link.
+  //   "🤎" no rótulo: mesmo emoji-assinatura já usado em outros
+  //   títulos do site (ex.: "Cerâmica no Seu Café da Tarde 🤎") — aqui
+  //   reforça a chamada principal da barra sem precisar de um ícone
+  //   SVG novo.
+  const botaoHTML = disponivel
+    ? `<button class="btn-comprar-agora" type="button" aria-label="Comprar ${produto.nome} agora">Comprar Agora 🤎</button>`
+    : `<a class="btn-comprar-agora" href="${linkEncomendaWhatsApp(produto, { indisponivel: true })}" target="_blank" rel="noopener noreferrer" aria-label="Encomendar uma peça parecida com ${produto.nome} pelo WhatsApp">Encomendar peça parecida</a>`;
+
+  // BOTÃO COMPACTO "adicionar ao carrinho" — AVALIADO e DESCARTADO
+  // (pedido deixava explicitamente condicional: "se couber sem
+  // poluir"). Medido com Playwright (iPhone 15, 393px): a barra já
+  // reserva espaço pra miniatura (46px) + o CTA principal, que
+  // precisa ficar INTEIRO pra mostrar "Comprar Agora 🤎" sem cortar
+  // (pedido explícito de não truncar o CTA) — sobrava só ~38px pra
+  // nome+preço, a ponto do nome virar 1-2 letras + "...". Um 3º
+  // elemento (botão extra) espremeria ainda mais esse espaço — mais
+  // perto de "poluir" do que de ajudar. Mantido FORA da barra mobile;
+  // nada impede adicionar depois se o layout mudar.
+
   // A miniatura usa a MESMA foto principal do produto (mesma URL ->
   // o navegador reaproveita do cache, não baixa de novo). alt="" +
   // aria-hidden: é decorativa (o nome ao lado já identifica a peça),
-  // então não precisa ser anunciada por leitor de tela. No mobile o
-  // CSS a esconde (display:none) — a barra é estreita. loading="lazy"
+  // então não precisa ser anunciada por leitor de tela. Aparece no
+  // mobile TAMBÉM agora (antes só no cartão do desktop — pedido
+  // explícito desta rodada: "chamada mais visível e bonita", a foto
+  // ajuda a reconhecer a peça de relance). loading="lazy"
   // (achado da auditoria, item 9): a barra só aparece depois de rolar
   // a página — consistente com o resto do site, nenhuma <img> fica
   // sem o atributo.
@@ -835,7 +872,7 @@ function montarBarraCompraFlutuante(produto) {
       <span class="barra-compra__nome">${produto.nome}</span>
       <span class="barra-compra__preco">${precoHTML}</span>
     </div>
-    <button class="btn-comprar-agora" type="button">Comprar Agora</button>
+    ${botaoHTML}
   `;
   document.body.appendChild(barra);
 

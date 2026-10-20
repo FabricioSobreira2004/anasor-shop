@@ -427,14 +427,28 @@
 
   display: flex;
   align-items: center;
-  gap: 1rem;
-  padding: 0.7rem 5%;
+  gap: 0.6rem;
+  /* REDESENHO (rodada de mobile — "chamada mais visível e bonita",
+     pedido explícito): mais respiro vertical (0.7rem -> 0.85rem) pra
+     acompanhar a miniatura/botão maiores abaixo. O "bottom" usa
+     max() com env(safe-area-inset-bottom): no iPhone (barra de
+     indicador de home na base da tela), a área segura some do valor
+     "env()" — max() garante que o respiro NUNCA fique menor que
+     0.85rem (navegadores sem notch/indicador, onde env() é 0), só
+     CRESCE quando precisa. Exige viewport-fit=cover na tag <meta
+     viewport> (produto.html) — sem isso o navegador nem calcula
+     env(safe-area-inset-*), a barra ficaria sempre no valor mínimo. */
+  padding: 0.85rem 4% max(0.85rem, env(safe-area-inset-bottom)) 4%;
 
+  /* FUNDO: creme sólido + sombra pra cima em 2 camadas (contato +
+     respiro) — "leve gradiente/sombra superior" pedido: a 2ª camada,
+     mais larga e mais fraca, é o que lê como um esmaecer gradual da
+     sombra, não um degrau só. */
   background-color: var(--cor-fundo);
   border-top: 1px solid var(--cor-fundo-alt);
-  box-shadow: 0 -4px 16px rgba(62, 46, 34, 0.12);
-  /* sombra pra CIMA (y negativo): destaca a barra do conteúdo que
-     rola atrás dela */
+  box-shadow:
+    0 -2px 6px rgba(62, 46, 34, 0.08),
+    0 -10px 28px rgba(62, 46, 34, 0.14);
 
   /* estado ESCONDIDO: deslocada pra baixo (fora da tela) e transparente.
      A transição anima os dois -> slide-up + fade juntos. */
@@ -450,10 +464,18 @@
   visibility: visible;
 }
 
-/* Miniatura da foto: ESCONDIDA no mobile (a barra é estreita, nome +
-   preço + botão já ocupam tudo). Ligada só no cartão do desktop. */
+/* Miniatura da foto: ANTES só aparecia no cartão do desktop (a barra
+   mobile "era pequena e discreta demais" — pedido explícito desta
+   rodada). Agora aparece nos dois: ajuda a reconhecer a peça de
+   relance, sem precisar ler o nome truncado ao lado. */
 .barra-compra__thumb {
-  display: none;
+  display: block;
+  width: 46px;
+  height: 46px;
+  flex-shrink: 0;
+  object-fit: cover;
+  border-radius: 10px;
+  border: 1px solid var(--cor-fundo-alt);
 }
 
 .barra-compra__info {
@@ -467,7 +489,7 @@
 
 .barra-compra__nome {
   font-family: var(--fonte-titulo);
-  font-size: 0.95rem;
+  font-size: 0.92rem;
   color: var(--cor-texto);
   /* uma linha só, com "..." se não couber — a barra é estreita e o
      nome da peça não pode roubar o espaço do botão */
@@ -477,35 +499,60 @@
 }
 
 .barra-compra__preco {
-  font-size: 0.9rem;
+  /* 0.9rem -> 1.05rem: "preço em destaque" pedido explícito — o maior
+     elemento de texto da barra depois do botão em si. */
+  font-size: 1.05rem;
+  font-weight: 600;
   color: var(--cor-destaque);
 }
 
 .barra-compra__preco s {
   color: var(--cor-secundaria);
-  font-size: 0.8rem;
+  font-size: 0.82rem;
+  font-weight: 400;
   margin-right: 0.35rem;
 }
 
 .barra-compra .btn-comprar-agora {
   /* herda cor/formato/hover de .btn-comprar-agora (style.css).
      flex-shrink:0 = o botão nunca encolhe; quem cede espaço é o
-     nome da peça ao lado. */
+     nome da peça ao lado. O CRESCIMENTO dele (flex-grow, pra "ocupar
+     a maior parte da largura da barra") fica só no mobile — ver
+     @media (max-width:768px) mais abaixo — pra não alterar a largura
+     do botão dentro do CARTÃO do desktop, que não foi pedido pra
+     mudar nesta rodada. */
   flex-shrink: 0;
   margin-top: 0;
   align-self: auto;
   /* zera o margin-top:0.6rem e o align-self:center que a peça herda
      do contexto de card — aqui ela vive numa barra flex horizontal */
-  padding: 0.7rem 1.4rem;
+
+  /* BOTÃO GRANDE (pedido explícito, mobile): altura >=48px e fonte
+     >=16px — padding 0.85rem verticais (13.6px) + a linha de texto a
+     1rem fecham bem acima de 48px (conferido por medição real, ver
+     relatório). O desktop pisa por cima com seus PRÓPRIOS valores
+     (0.6rem/0.85rem — ver @media min-width:769px, mais abaixo),
+     então este tamanho maior nunca chega a aparecer no cartão. */
+  padding: 0.85rem 1rem;
+  font-size: 1rem;
   white-space: nowrap;
 }
 
 /* Enquanto a barra está visível, sobem os outros elementos ancorados
    no rodapé da tela, pra não ficarem atrás dela.
-   --altura-barra-compra: estimativa da altura da barra (~64px) + um
-   respiro. Usada como deslocamento extra no "bottom" de cada um. */
+   --altura-barra-compra: estimativa da altura da barra + um respiro.
+   Usada como deslocamento extra no "bottom" de cada um.
+   76px -> 142px (rodada de mobile): a barra redesenhada mede ~105px
+   de altura (medido via Playwright, iPhone 15 emulado, 393×852 —
+   miniatura+botão maiores que a versão antiga de 68px). Os 142px
+   somam uma folga de ~37px acima disso: o emulador de dispositivo do
+   Chromium NÃO simula env(safe-area-inset-bottom) (sempre devolve 0
+   mesmo em "modo iPhone") — só um iPhone de verdade, com o indicador
+   de home, cresce esse valor (até ~34px) — a folga garante que
+   "voltar ao topo"/toast não encostem na barra também NESSE caso,
+   mesmo sem poder medir o valor exato aqui. */
 body.tem-barra-compra {
-  --altura-barra-compra: 76px;
+  --altura-barra-compra: 142px;
 }
 
 body.tem-barra-compra .voltar-topo {
@@ -940,15 +987,28 @@ body.produto-marca-flor main { background-image: var(--marca-flor); }
     /* mesma lógica de .produto-detalhe__acoes acima */
   }
 
-  /* --- Barra "Comprar Agora" flutuante no celular --- */
-  .barra-compra {
-    gap: 0.75rem;
-    padding: 0.6rem 4%;
-  }
-
+  /* --- Barra "Comprar Agora" flutuante no celular ---
+     ATUALIZADO (rodada de mobile): os 2 overrides que existiam aqui
+     (gap/padding menores, botão com padding/fonte reduzidos) ficaram
+     OBSOLETOS depois do redesenho da barra (ver .barra-compra e
+     .barra-compra .btn-comprar-agora, regras base, mais acima neste
+     arquivo) — eram de uma versão anterior, mais discreta, da barra.
+     Removidos pra não brigar com os valores novos (este bloco vem
+     DEPOIS da regra base no arquivo, então venceria por ordem de
+     cascata se continuasse aqui). O que SOBRA aqui é só o que
+     realmente precisa ser diferente no mobile: o botão principal
+     CRESCE pra ocupar a maior parte da barra (a regra base deixa
+     isso só pro mobile de propósito — ver comentário lá). */
   .barra-compra .btn-comprar-agora {
-    padding: 0.7rem 1.1rem;
-    font-size: 0.85rem;
+    flex: 1 1 auto;
+    max-width: 62%;
+    /* teto pra não "engolir" miniatura+nome+preço com nomes curtos */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    /* "Encomendar peça parecida" é mais longo que "Comprar Agora 🤎"
+       — se não couber numa tela muito estreita, trunca com "..." em
+       vez de quebrar a barra pra 2 linhas (mudaria a altura dela e
+       desalinharia --altura-barra-compra, logo abaixo). */
   }
 
   /* No celular o "voltar ao topo" fica em bottom:1rem e o toast em

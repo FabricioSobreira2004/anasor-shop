@@ -1509,9 +1509,17 @@ function adicionarAoCarrinho(card, botao) {
 // inteiro e verificamos se ele partiu de um ".btn-comprar" OU de um
 // ".btn-comprar-agora". Assim funciona para qualquer card, inclusive
 // os que forem adicionados depois.
+// "button." na frente das duas classes (rodada de mobile/barra-compra):
+// a barra flutuante de produto.html agora reaproveita a MESMA classe
+// ".btn-comprar-agora" num <a href="wa.me/..."> pra peça indisponível
+// (visual idêntico ao botão gummy de compra, sem duplicar CSS) — sem
+// este prefixo, o <a> também cairia neste listener e adicionaria a
+// peça (indisponível!) ao carrinho como efeito colateral do clique.
+// Todo botão de compra DE VERDADE no site já é <button>, então este
+// filtro não muda nenhum comportamento existente.
 document.addEventListener('click', (evento) => {
-  const botaoComprarAgora = evento.target.closest('.btn-comprar-agora');
-  const botao = botaoComprarAgora || evento.target.closest('.btn-comprar');
+  const botaoComprarAgora = evento.target.closest('button.btn-comprar-agora');
+  const botao = botaoComprarAgora || evento.target.closest('button.btn-comprar');
   if (!botao) return;
 
   // Sobe do botão até o elemento que carrega os dados do produto

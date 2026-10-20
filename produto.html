@@ -5,7 +5,14 @@
 <head>
     <meta charset="UTF-8">
 
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- viewport-fit=cover (rodada de mobile): deixa o conteúdo ocupar
+         até embaixo da "ilha"/indicador de home do iPhone (sem isso,
+         o navegador nem calcula env(safe-area-inset-bottom) — a barra
+         "Comprar Agora" flutuante, em produto.css, usa esse valor pra
+         não ficar colada embaixo da área segura). Só produto.html tem
+         essa barra fixa no rodapé; as outras páginas não precisam
+         deste ajuste. -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 
     <!-- Título "genérico" de partida. Quando o produto é encontrado,
          o js/produto.js troca este texto pelo nome da peça
