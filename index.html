@@ -41,7 +41,7 @@
 <!-- Importa as duas fontes que vamos usar
  : Fraunces (títulos) e Jost (texto) -->
 
-   <link rel="stylesheet" href="css/style.css?v=35">
+   <link rel="stylesheet" href="css/style.css?v=36">
 
    <!-- Marca no <html> que o JS rodou logo no início. O CSS do
         "scroll reveal" só esconde os elementos (opacity 0) quando
@@ -367,6 +367,21 @@
                 </div>
             </a>
         </div>
+
+        <!-- ===== GRADE DE SUBCATEGORIAS (Etapa 3) =====
+             Abaixo dos 2 grandes acessos (Cerâmica/Crochê, acima), uma
+             grade "premium" com uma peça por SUBCATEGORIA de cerâmica
+             (Pratos Artísticos, Vasos Escultóricos...) — a mesma ideia
+             dos cards de ceramica.html (foto circular + anel + nome +
+             contagem), só que num tratamento mais elaborado (sombra em
+             camadas, bisel, tilt no desktop). Fica VAZIA de propósito:
+             js/main.js (montarColecoesHome(), que reaproveita
+             subcategoriasCeramica() de js/ceramica.js — nenhuma lista
+             de nomes nem contagem escrita à mão aqui) preenche na
+             carga. Crochê fica de fora da grade (ainda não tem
+             subcategorias reais; o card grande "Crochê" acima já cobre
+             o acesso à categoria). -->
+        <div class="colecoes-grid" id="colecoes-grid"></div>
 
         <!-- "ENCOMENDE SUA PEÇA ÚNICA" (ideia da mãe da Anasor) — menção
              MUITO discreta na Home, pedido explícito pra NÃO virar uma
@@ -794,8 +809,8 @@
            main.js DEPOIS (usa essa lista para montar os cards). Os dois
            ficam no fim do <body> para o HTML já estar carregado quando
            o JavaScript rodar. -->
-      <script src="js/produtos.js?v=35"></script>
-      <script src="js/main.js?v=35"></script>
+      <script src="js/produtos.js?v=36"></script>
+      <script src="js/main.js?v=36"></script>
 
 </body>
 

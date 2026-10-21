@@ -868,28 +868,140 @@ function slugificar(txt) {
 }
 
 // ============================================================
-//  DROPDOWN DE SUBCATEGORIAS NO MENU ("Cerâmica")
+//  SUBCATEGORIAS DE CERÂMICA — dados COMPARTILHADOS
 // ============================================================
-// O <li> "Cerâmica" do menu ganha um submenu com as subcategorias.
-// A LISTA DE ITENS É MONTADA A PARTIR DE produtos.js (valores
-// únicos do campo "subcategoria"), NÃO escrita no HTML. Assim, se
-// amanhã um produto novo trouxer subcategoria: "Canecas Artísticas",
-// o item aparece no menu sozinho — sem tocar em HTML nem aqui.
-// Roda em TODAS as páginas (o header é o mesmo em todas).
-function montarDropdownCeramica() {
-  // pega o link "Cerâmica" que está DENTRO do menu principal
-  const linkCeramica = document.querySelector('.nav-links a[href="ceramica.html"]');
-  if (!linkCeramica) return;
-
-  // valores únicos de "subcategoria" entre as peças de cerâmica,
-  // na ordem em que aparecem no array
-  const subs = [
+// Usado por: montarDropdownCeramica() (abaixo), js/ceramica.js (visão
+// geral da categoria) e montarColecoesHome() (mais abaixo, a grade
+// "Explore Nossas Coleções" da Home, item 3). UM lugar só que lê
+// produtos.js — nenhuma lista de nomes nem contagem escrita à mão em
+// lugar nenhum: tudo nasce dos dados.
+//
+// subcategoriasCeramica(): só os NOMES, na ordem em que aparecem em
+// produtos.js (new Set tira duplicatas preservando a 1ª ocorrência).
+function subcategoriasCeramica() {
+  return [
     ...new Set(
       produtos
         .filter((p) => p.categoria === 'ceramica')
         .map((p) => p.subcategoria)
     ),
   ];
+}
+
+// dadosCardsSubcategoriaCeramica(): para cada subcategoria, os dados
+// que um CARD precisa pra se montar (nome, até 5 fotos distintas pra
+// revezar, contagem já formatada, link pra listagem filtrada) — sem
+// decidir HTML/CSS nenhum, isso fica por conta de quem chama (cada
+// página tem seu próprio layout de card).
+function dadosCardsSubcategoriaCeramica() {
+  return subcategoriasCeramica().map((sub) => {
+    const daSub = produtos.filter((p) => p.subcategoria === sub);
+    // até 5 fotos DISTINTAS da subcategoria (Set tira duplicatas, caso
+    // duas peças usem a mesma imagem) — viram os quadros que se
+    // revezam no círculo, ver iniciarRotacaoFotos() mais abaixo
+    const fotos = [...new Set(daSub.map((p) => p.imagem))].slice(0, 5);
+    const qtd = daSub.length;
+    const rotuloQtd = `${qtd} ${qtd === 1 ? 'peça disponível' : 'peças disponíveis'}`;
+    return { sub, fotos, qtd, rotuloQtd, href: `ceramica.html?sub=${slugificar(sub)}` };
+  });
+}
+
+// Monta o HTML das <img> empilhadas de um card (a 1ª nasce .is-ativa —
+// sem isso, sem CSS/antes do JS rodar, o círculo ficaria vazio). alt
+// cheio só na 1ª; as demais são decorativas até entrarem em cena (alt
+// vazio evita repetir o nome da subcategoria várias vezes pra quem usa
+// leitor de tela). Compartilhado pelos 2 lugares que desenham essas
+// fotos (ceramica.js e montarColecoesHome, mais abaixo).
+function fotosSubcategoriaHTML(fotos, nomeSub) {
+  return fotos
+    .map(
+      (src, i) => `
+      <img src="${src}" alt="${i === 0 ? nomeSub : ''}" loading="lazy"
+           class="${i === 0 ? 'is-ativa' : ''}">`
+    )
+    .join('');
+}
+
+// ============================================================
+//  ROTAÇÃO DE FOTOS DOS CARDS DE SUBCATEGORIA (fade cruzado)
+// ============================================================
+// Cada card reveza entre algumas peças de verdade daquela
+// subcategoria (dá mais vida à visão geral/à grade da Home, antecipa
+// a variedade do catálogo antes da pessoa clicar). O crossfade em si é
+// só CSS (transition de opacity nas <img> empilhadas via
+// position:absolute, ver .subcategoria-card__foto em style.css); aqui
+// o JS só decide QUANDO trocar qual delas tem a classe .is-ativa.
+// GENÉRICO de propósito (procura .subcategoria-card__foto em TODA a
+// página): funciona igual em ceramica.html (visão geral) e na Home
+// (montarColecoesHome reaproveita a MESMA classe), sem precisar saber
+// qual página é.
+//
+// REGRAS: troca a cada 3,5s; PAUSA com o mouse em cima (não atrapalha
+// quem tá lendo o nome/contagem) e volta ao sair; subcategoria com 1
+// produto só não entra no loop (a única <img> já nasce .is-ativa,
+// fixa); respeita "reduzir movimento".
+function iniciarRotacaoFotos() {
+  const semMovimento = window.matchMedia(
+    '(prefers-reduced-motion: reduce)'
+  ).matches;
+  if (semMovimento) return; // fica parado na 1ª foto (já é a que está visível)
+
+  const INTERVALO_MS = 3500;
+
+  document.querySelectorAll('.subcategoria-card__foto').forEach((moldura) => {
+    // guarda pra não ligar 2 intervalos na MESMA moldura se esta
+    // função for chamada de novo (ex.: Home recria a grade numa busca
+    // futura) — moldura.dataset sobrevive a innerHTML de um ANCESTRAL,
+    // só não ao da própria moldura (que não é recriada sem necessidade)
+    if (moldura.dataset.rotacaoLigada) return;
+
+    const fotos = moldura.querySelectorAll('img');
+    if (fotos.length < 2) return; // 1 peça só nessa subcategoria -> nada pra revezar
+    moldura.dataset.rotacaoLigada = '1';
+
+    let indiceAtivo = 0;
+    let timer = null;
+
+    function trocar() {
+      fotos[indiceAtivo].classList.remove('is-ativa');
+      indiceAtivo = (indiceAtivo + 1) % fotos.length;
+      fotos[indiceAtivo].classList.add('is-ativa');
+    }
+
+    function comecar() {
+      if (timer) return; // já rodando — evita 2 intervalos pro mesmo card
+      timer = setInterval(trocar, INTERVALO_MS);
+    }
+    function pausar() {
+      clearInterval(timer);
+      timer = null;
+    }
+
+    comecar();
+
+    // Pausa é só no MOUSE (pedido explícito: "evitar distração ao
+    // ler") — no toque (mobile) não existe estado de "passar o mouse
+    // por cima" persistente, então lá a rotação segue normalmente.
+    moldura.addEventListener('mouseenter', pausar);
+    moldura.addEventListener('mouseleave', comecar);
+  });
+}
+
+// ============================================================
+//  DROPDOWN DE SUBCATEGORIAS NO MENU ("Cerâmica")
+// ============================================================
+// O <li> "Cerâmica" do menu ganha um submenu com as subcategorias.
+// A LISTA DE ITENS vem de subcategoriasCeramica() (acima) — NÃO
+// escrita no HTML. Assim, se amanhã um produto novo trouxer
+// subcategoria: "Canecas Artísticas", o item aparece no menu sozinho —
+// sem tocar em HTML nem aqui.
+// Roda em TODAS as páginas (o header é o mesmo em todas).
+function montarDropdownCeramica() {
+  // pega o link "Cerâmica" que está DENTRO do menu principal
+  const linkCeramica = document.querySelector('.nav-links a[href="ceramica.html"]');
+  if (!linkCeramica) return;
+
+  const subs = subcategoriasCeramica();
   if (subs.length === 0) return;
 
   const li = linkCeramica.closest('li');
@@ -2557,6 +2669,81 @@ window.matchMedia('(min-width: 769px)').addEventListener('change', () => {
   montarVitrineCurada(gradeQueridinhos, IDS_QUERIDINHOS_ATELIE);
   montarVitrineCurada(gradeCafeDaTarde, IDS_CAFE_DA_TARDE);
 });
+
+// ============================================================
+//  "EXPLORE NOSSAS COLEÇÕES" — grade de subcategorias (Home, item 3)
+// ============================================================
+// Antes só havia os 2 círculos grandes (Cerâmica/Crochê, acima, no
+// próprio HTML). Esta função acrescenta, logo abaixo, 1 card por
+// SUBCATEGORIA de cerâmica — reaproveita dadosCardsSubcategoriaCeramica()
+// e fotosSubcategoriaHTML() (acima, compartilhadas com js/ceramica.js):
+// nenhuma lista de nomes/contagem escrita à mão aqui, e nenhuma lógica
+// de "quais fotos usar"/"quantas peças tem" duplicada.
+//
+// Crochê FICA DE FORA de propósito: ainda não tem subcategorias reais
+// (é "em breve", ver #croche-em-breve) — o card grande "Crochê" já
+// cobre esse acesso.
+//
+// .colecao-card reaproveita a MESMA classe .subcategoria-card__foto da
+// foto circular (ceramica.html) — iniciarRotacaoFotos() (acima) já
+// funciona em cima dela sem precisar saber que roda na Home agora.
+function montarColecoesHome() {
+  const grade = document.querySelector('#colecoes-grid');
+  if (!grade) return; // só a Home tem esta grade
+
+  const cards = dadosCardsSubcategoriaCeramica()
+    .map(({ sub, fotos, rotuloQtd, href }) => `
+      <a href="${href}" class="colecao-card reveal">
+        <div class="colecao-card__anel">
+          <div class="subcategoria-card__foto">${fotosSubcategoriaHTML(fotos, sub)}</div>
+        </div>
+        <h3 class="colecao-card__nome">${sub}</h3>
+        <p class="colecao-card__qtd">${rotuloQtd}</p>
+      </a>`)
+    .join('');
+
+  grade.innerHTML = cards;
+  escanearReveal();
+  iniciarRotacaoFotos();
+  ativarTiltColecoes();
+}
+montarColecoesHome();
+
+// ============================================================
+//  TILT 3D NO HOVER (desktop com mouse de verdade — item 3)
+// ============================================================
+// Inclinação suave seguindo o cursor, só quando hover:hover AND
+// pointer:fine (mouse/trackpad de verdade — NUNCA em toque: um
+// "tilt" preso no dedo depois de tocar e soltar ficaria estranho, e
+// touch não tem "mousemove" contínuo de qualquer forma). Escreve o
+// ângulo em 2 custom properties (--tilt-x/--tilt-y) que o CSS usa no
+// transform do card (ver .colecao-card, style.css) — JS só calcula o
+// número, a animação/transição em si é CSS.
+function ativarTiltColecoes() {
+  if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
+
+  const INCLINACAO_MAX_GRAUS = 8;
+  document.querySelectorAll('.colecao-card').forEach((card) => {
+    function aoMoverMouse(e) {
+      const r = card.getBoundingClientRect();
+      // posição do mouse DENTRO do card, de -0.5 (borda esquerda/topo)
+      // a +0.5 (borda direita/base) — 0 é o centro exato
+      const px = (e.clientX - r.left) / r.width - 0.5;
+      const py = (e.clientY - r.top) / r.height - 0.5;
+      // eixo invertido de propósito: mouse na METADE DE CIMA do card
+      // deve inclinar o TOPO "pra longe" (rotateX negativo), não a
+      // base — por isso -py, não +py
+      card.style.setProperty('--tilt-x', `${(-py * INCLINACAO_MAX_GRAUS).toFixed(2)}deg`);
+      card.style.setProperty('--tilt-y', `${(px * INCLINACAO_MAX_GRAUS).toFixed(2)}deg`);
+    }
+    function aoSairMouse() {
+      card.style.setProperty('--tilt-x', '0deg');
+      card.style.setProperty('--tilt-y', '0deg');
+    }
+    card.addEventListener('mousemove', aoMoverMouse);
+    card.addEventListener('mouseleave', aoSairMouse);
+  });
+}
 
 // ============================================================
 //  PEÇA EM DESTAQUE (Home) — "vitrine de honra" de UM produto só

@@ -1744,6 +1744,220 @@ nav {
        leve relevo, tipo um carimbo/etiqueta de ateliê */
 }
 
+/* ============================================================
+   GRADE "EXPLORE NOSSAS COLEÇÕES" (Home, item 3)
+   ============================================================
+   1 card por subcategoria de cerâmica (montarColecoesHome(), js/
+   main.js), abaixo dos 2 grandes acessos Cerâmica/Crochê. Reaproveita
+   a MESMA foto circular giratória de ceramica.html
+   (.subcategoria-card__foto, ver acima) dentro de um invólucro NOVO
+   (.colecao-card__anel) que acrescenta o acabamento "premium" pedido:
+   anel em gradiente marrom/dourado com bisel 3D, cartão com camadas de
+   sombra (elevação), borda interna clara fina, leve brilho no topo,
+   afundar ao toque (mesma família dos botões gummy do site) e tilt
+   suave no desktop com mouse de verdade (ver ativarTiltColecoes, js/
+   main.js — as variáveis --tilt-x/--tilt-y abaixo vêm de lá). */
+.colecoes-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.75rem;
+  max-width: 1200px;
+  margin: var(--espaco-secao) auto 0;
+  /* mesmo token de respiro vertical que toda seção da Home usa —
+     ver comentário igual em .queridinhos, logo abaixo */
+}
+
+.colecao-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 1.5rem 1rem 1.3rem;
+  border-radius: 20px;
+  background-color: var(--cor-card);
+  text-decoration: none;
+
+  /* CAMADAS DE SOMBRA ("elevação") + BORDA INTERNA CLARA FINA: o
+     box-shadow empilha uma sombra de contato bem próxima (define a
+     borda do cartão) + uma sombra difusa mais longa (dá profundidade,
+     "flutua" sobre o fundo) + um inset claro de 1px (simula uma
+     borda biselada pegando luz, mesma linguagem "gummy" dos botões). */
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.7),
+    0 1px 2px rgba(62, 46, 34, 0.08),
+    0 10px 24px rgba(62, 46, 34, 0.14);
+
+  /* tilt (desktop, ver ativarTiltColecoes) + afundar no toque (active,
+     abaixo) — perspective aqui (não num ancestral) mantém o ponto de
+     fuga centrado no PRÓPRIO card, então o tilt gira "ao redor do seu
+     próprio centro", não de um canto da tela. --tilt-x/--tilt-y
+     nascem em 0deg (ver fallback abaixo) pra o card renderizar reto
+     antes do JS calcular qualquer coisa. */
+  --tilt-x: 0deg;
+  --tilt-y: 0deg;
+  transform: perspective(700px) rotateX(var(--tilt-x)) rotateY(var(--tilt-y)) translateY(0) scale(1);
+  transition: transform 0.15s ease, box-shadow 0.25s ease;
+}
+
+/* leve brilho no TOPO do cartão — um gradiente bem sutil, claro
+   em cima e some no meio, simulando luz incidindo de cima (mesmo
+   recurso visual dos "degraus" gummy dos botões, aqui como um véu) */
+.colecao-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0) 40%);
+  pointer-events: none;
+}
+
+/* AFUNDAR AO TOQUE — mesma família dos botões gummy 3D do site
+   (reduz a sombra "de flutuação" e aproxima o card do fundo, como se
+   tivesse sido empurrado). Funciona em toque E clique (:active cobre
+   os dois). O tilt (--tilt-x/--tilt-y) continua valendo por cima —
+   um pressionar vindo de um tilt ativo afunda "na mesma inclinação". */
+.colecao-card:active {
+  transform: perspective(700px) rotateX(var(--tilt-x)) rotateY(var(--tilt-y)) translateY(2px) scale(0.97);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.7),
+    0 1px 2px rgba(62, 46, 34, 0.1),
+    0 4px 10px rgba(62, 46, 34, 0.14);
+}
+
+/* tilt só quando hover:hover AND pointer:fine (ver ativarTiltColecoes,
+   js/main.js, que só ESCUTA mousemove sob a mesma condição) — esta
+   regra é só o reforço visual: sem ela, um dispositivo touchscreen
+   que de alguma forma herdasse --tilt-x/--tilt-y de uma sessão
+   anterior ainda poderia girar; zerando aqui garante reto sempre fora
+   de hover:hover+pointer:fine. */
+@media not all and (hover: hover) and (pointer: fine) {
+  .colecao-card {
+    --tilt-x: 0deg !important;
+    --tilt-y: 0deg !important;
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .colecao-card:hover {
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.7),
+      0 1px 2px rgba(62, 46, 34, 0.08),
+      0 16px 32px rgba(62, 46, 34, 0.2);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .colecao-card {
+    transition: none;
+  }
+}
+
+/* ANEL — moldura em gradiente marrom/dourado com "bisel" 3D (claro
+   numa borda, escuro na oposta, simulando luz vinda de cima-esquerda)
+   por trás da foto circular (.subcategoria-card__foto, dentro). Um
+   pouco menor que o da listagem de ceramica.html (140px x 190px) —
+   cabe 4 por linha no desktop sem ficar apertado. */
+.colecao-card__anel {
+  width: 140px;
+  aspect-ratio: 1 / 1;
+  border-radius: 50%;
+  padding: 5px;
+  margin-bottom: 1.1rem;
+  background: linear-gradient(135deg, var(--cor-ouro) 0%, var(--cor-destaque) 55%, var(--cor-destaque-escuro) 100%);
+  box-shadow:
+    0 2px 5px rgba(62, 46, 34, 0.3),
+    /* sombra de contato do próprio anel sobre o cartão */
+    inset 0 2px 2px rgba(255, 255, 255, 0.5),
+    /* bisel claro (luz vindo de cima) */
+    inset 0 -2px 3px rgba(62, 46, 34, 0.35);
+    /* bisel escuro (sombra na base) — os 2 insets juntos dão o relevo 3D */
+}
+
+/* a foto circular compartilhada (.subcategoria-card__foto) ganha um
+   tamanho PRÓPRIO aqui dentro (100% do anel, menos a borda de 5px já
+   reservada pelo padding acima) — sobrescreve os valores fixos em px
+   pensados pro card maior de ceramica.html */
+.colecao-card__anel .subcategoria-card__foto {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  box-shadow: 0 0 0 3px var(--cor-fundo);
+  /* só o respiro claro entre foto e anel — o "anel" de verdade agora é
+     .colecao-card__anel (acima), então as 2 camadas de anel que
+     .subcategoria-card__foto normalmente desenha sozinha (ver style.css,
+     mais acima) ficariam redundantes/grossas demais aqui dentro */
+}
+
+.colecao-card__nome {
+  font-size: 1.05rem;
+  margin-bottom: 0;
+  color: var(--cor-texto);
+}
+
+/* traço decorativo — MESMA técnica/visual de .categorias h2::after
+   (linha fina centralizada), só que por card, mais curta */
+.colecao-card__nome::after {
+  content: "";
+  display: block;
+  width: 28px;
+  height: 2px;
+  background-color: var(--cor-destaque);
+  margin: 0.5rem auto 0.6rem;
+}
+
+.colecao-card__qtd {
+  font-family: var(--fonte-titulo);
+  font-style: italic;
+  font-weight: 600;
+  font-size: 0.85rem;
+  margin: 0;
+  /* GOLD ACESSÍVEL: var(--cor-ouro) puro mede ~3,2:1 sobre
+     --cor-card (branco) — abaixo do AA de 4,5:1 pedido explicitamente
+     pra este texto (diferente de outros usos de --cor-ouro no site,
+     que são "texto grande" e por isso só precisam de 3:1 — ver
+     comentário em .subcategoria-card__info p, acima). Esta variação
+     mais escura (mesma família de tom, R>G>B preservado — ainda lê
+     como "dourado/bronze", não vira marrom) mede ~6,3:1, com folga. */
+  color: #7A5A26;
+}
+
+/* MOBILE: 2 colunas compactas (pedido explícito: não esticar a altura
+   da Home) — anel menor, menos respiro vertical por card. */
+@media (max-width: 768px) {
+  .colecoes-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    margin-top: var(--espaco-secao-mobile);
+  }
+  .colecao-card {
+    padding: 1.1rem 0.6rem 1rem;
+    border-radius: 16px;
+  }
+  .colecao-card__anel {
+    width: 92px;
+    margin-bottom: 0.8rem;
+    padding: 4px;
+  }
+  .colecao-card__nome {
+    font-size: 0.9rem;
+  }
+  .colecao-card__nome::after {
+    margin: 0.4rem auto 0.5rem;
+  }
+  .colecao-card__qtd {
+    font-size: 0.76rem;
+  }
+}
+
+/* TABLET (769-1024px, mesma faixa já tratada em outros pontos do
+   site): 4 colunas ficam apertadas demais — 3 cabe melhor */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .colecoes-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
 /* ============================================
    QUERIDINHOS DO ATELIÊ / GRID DE PRODUTOS
    ============================================ */

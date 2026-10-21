@@ -41,17 +41,10 @@ const breadcrumbEl = document.querySelector('#breadcrumb');
 const filtrosEl = document.querySelector('#ceramica-filtros');
 const conteudoEl = document.querySelector('#ceramica-conteudo');
 
-// Subcategorias de ceramica, na ordem em que aparecem em produtos.js.
-// Mesma tecnica do dropdown do menu (new Set = valores unicos).
-function subcategoriasCeramica() {
-  return [
-    ...new Set(
-      produtos
-        .filter((p) => p.categoria === 'ceramica')
-        .map((p) => p.subcategoria)
-    ),
-  ];
-}
+// subcategoriasCeramica() agora mora em js/main.js (compartilhada com
+// o dropdown do menu e com a grade "Explore Nossas Coleções" da Home —
+// ver dadosCardsSubcategoriaCeramica() lá). Carrega ANTES deste
+// arquivo, então já está disponível aqui.
 
 // Acha o NOME real da subcategoria a partir do slug da URL
 // (ex.: "pratos-artisticos" -> "Pratos Artisticos"), ou undefined
@@ -78,41 +71,14 @@ function renderVisaoGeral() {
     { rotulo: 'Cerâmica' },
   ]);
 
-  const cards = subcategoriasCeramica()
-    .map((sub) => {
-      const daSub = produtos.filter((p) => p.subcategoria === sub);
-      // ANTES: só a foto do PRIMEIRO produto (a "capa" fixa). AGORA:
-      // até 5 fotos DISTINTAS da subcategoria — viram os quadros que
-      // se revezam no círculo (ver CSS .subcategoria-card__foto e a
-      // rotação em iniciarRotacaoFotos(), mais abaixo). O Set tira
-      // duplicatas (se por acaso duas peças usassem a mesma imagem) e
-      // o slice(0,5) põe um teto: mais que isso e o "carrossel" fica
-      // repetitivo/lento demais pra caber no intervalo de 3-4s pedido
-      // sem a pessoa esquecer qual foto já viu.
-      const fotos = [...new Set(daSub.map((p) => p.imagem))].slice(0, 5);
-      // "1 peca disponivel" / "N pecas disponiveis" — contagem
-      // calculada na hora a partir dos dados
-      const qtd = daSub.length;
-      const rotuloQtd = `${qtd} ${qtd === 1 ? 'peça disponível' : 'peças disponíveis'}`;
-
-      // A 1ª foto já nasce com .is-ativa (visível) DIRETO no HTML —
-      // sem isso, com CSS desligado ou antes do JS rodar, o card
-      // ficaria com um círculo vazio (todas as fotos em opacity:0).
-      // alt cheio só na 1ª (a única perceptível de cada vez por
-      // padrão); as demais são decorativas ATÉ entrarem em cena, daí
-      // alt="" — evita repetir "Pratos Artísticos" um monte de vezes
-      // pra quem usa leitor de tela.
-      const fotosHTML = fotos
-        .map(
-          (src, i) => `
-          <img src="${src}" alt="${i === 0 ? sub : ''}" loading="lazy"
-               class="${i === 0 ? 'is-ativa' : ''}">`
-        )
-        .join('');
-
-      return `
-        <a href="ceramica.html?sub=${slugificar(sub)}" class="subcategoria-card reveal">
-          <div class="subcategoria-card__foto">${fotosHTML}</div>
+  // dadosCardsSubcategoriaCeramica() + fotosSubcategoriaHTML() moram em
+  // js/main.js, compartilhadas com montarColecoesHome() (a grade
+  // "Explore Nossas Coleções" da Home) — mesma fonte de dados, nenhuma
+  // lista/contagem duplicada entre as duas páginas.
+  const cards = dadosCardsSubcategoriaCeramica()
+    .map(({ sub, fotos, rotuloQtd, href }) => `
+        <a href="${href}" class="subcategoria-card reveal">
+          <div class="subcategoria-card__foto">${fotosSubcategoriaHTML(fotos, sub)}</div>
           <div class="subcategoria-card__info">
             <!-- h2, não h3: a página só tem um <h1> ("Cerâmica") antes
                  destes cards — usar h3 pulava o nível 2 (achado da
@@ -124,8 +90,7 @@ function renderVisaoGeral() {
             <h2>${sub}</h2>
             <p>${rotuloQtd}</p>
           </div>
-        </a>`;
-    })
+        </a>`)
     .join('');
 
   // .categoria-cards e so o LAYOUT flex (centraliza + quebra linha);
@@ -140,67 +105,10 @@ function renderVisaoGeral() {
   // no IntersectionObserver do main.js pra animarem ao entrar na tela
   escanearReveal();
 
-  // liga o revezamento de fotos de cada card (função logo abaixo)
+  // liga o revezamento de fotos de cada card — iniciarRotacaoFotos()
+  // agora mora em js/main.js (compartilhada com a grade da Home,
+  // montarColecoesHome()); já carregou antes deste arquivo.
   iniciarRotacaoFotos();
-}
-
-// ============================================================
-//  ROTAÇÃO DE FOTOS DOS CARDS DE SUBCATEGORIA (fade cruzado)
-// ============================================================
-// Cada card, em vez de mostrar só a foto do primeiro produto pra
-// sempre, revezA entre algumas peças de verdade daquela subcategoria
-// — dá mais vida à visão geral e já antecipa a variedade do catálogo
-// antes da pessoa clicar. O CROSSFADE em si é só CSS (transition de
-// opacity nas <img> empilhadas via position:absolute, ver style.css);
-// aqui o JS só decide QUANDO trocar qual delas tem a classe .is-ativa.
-//
-// REGRAS PEDIDAS:
-//   - troca a cada 3,5s (meio do intervalo sugerido de 3-4s);
-//   - PAUSA com o mouse em cima do card (não atrapalha quem tá lendo
-//     o nome/contagem) e volta a rodar quando o mouse sai;
-//   - subcategoria com 1 produto só -> nem entra no loop (a única
-//     <img> já nasce com .is-ativa no HTML, fixa, sem custo de timer);
-//   - respeita "reduzir movimento" do sistema operacional — mesmo
-//     cuidado já tomado no resto do site (reveal, logo do header, a
-//     respiração dos círculos da Home em mobile).
-function iniciarRotacaoFotos() {
-  const semMovimento = window.matchMedia(
-    '(prefers-reduced-motion: reduce)'
-  ).matches;
-  if (semMovimento) return; // fica parado na 1ª foto (já é a que está visível)
-
-  const INTERVALO_MS = 3500;
-
-  document.querySelectorAll('.subcategoria-card__foto').forEach((moldura) => {
-    const fotos = moldura.querySelectorAll('img');
-    if (fotos.length < 2) return; // 1 peça só nessa subcategoria -> nada pra revezar
-
-    let indiceAtivo = 0;
-    let timer = null;
-
-    function trocar() {
-      fotos[indiceAtivo].classList.remove('is-ativa');
-      indiceAtivo = (indiceAtivo + 1) % fotos.length;
-      fotos[indiceAtivo].classList.add('is-ativa');
-    }
-
-    function comecar() {
-      if (timer) return; // já rodando — evita 2 intervalos pro mesmo card
-      timer = setInterval(trocar, INTERVALO_MS);
-    }
-    function pausar() {
-      clearInterval(timer);
-      timer = null;
-    }
-
-    comecar();
-
-    // Pausa é só no MOUSE (pedido explícito: "evitar distração ao
-    // ler") — no toque (mobile) não existe estado de "passar o mouse
-    // por cima" persistente, então lá a rotação segue normalmente.
-    moldura.addEventListener('mouseenter', pausar);
-    moldura.addEventListener('mouseleave', comecar);
-  });
 }
 
 // ============================================================
