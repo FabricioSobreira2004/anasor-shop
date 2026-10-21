@@ -1149,6 +1149,85 @@ function garantirSetasCarrossel(grade) {
   return { viewport, setaAnterior, setaProxima };
 }
 
+// ============================================================
+//  SNAP DE SEGURANÇA — TODOS os carrosséis horizontais com scroll-snap
+// ============================================================
+// ACHADO (reprodução com Playwright, iPhone 15 emulado, gestos de
+// toque via CDP — Input.dispatchTouchEvent, não scrollTo/scrollBy):
+// mesmo com o CSS de scroll-snap certo (scroll-snap-type:mandatory +
+// scroll-snap-align + scroll-snap-stop:always), um toque curto que
+// solta o dedo sem "arrastão" suficiente pode, dependendo do motor do
+// navegador, deixar o trilho PARADO NO MEIO de duas unidades — o
+// realinhamento que o scroll-snap deveria forçar simplesmente não
+// dispara. Bate com o relato em vídeo (iPhone real, Safari): carrossel
+// "solto", card cortado dos dois lados. A correção de CSS (touch-action
+// + overscroll-behavior-x, ver .produtos-grid[data-grade-produtos] e
+// .selecao-especial__grid em style.css) reduz bastante, mas depender
+// só do CSS não dá uma GARANTIA — navegadores diferentes, versões
+// diferentes.
+//
+// Por isso: depois que o scroll "assenta" (sem nenhum evento de scroll
+// por 140ms — ou seja, o dedo já soltou e a inércia nativa já parou),
+// este safety net RECONFERE a posição e, se estiver a mais de 2px de
+// QUALQUER unidade (slide de produtos OU card grande), corrige sozinho
+// com scrollTo suave. Resultado: o trilho SEMPRE termina alinhado,
+// não importa o que o motor nativo decidiu fazer — a mesma função
+// serve pro carrossel de produtos (sincronizarDotsCarrossel, abaixo) E
+// pro carrossel de 2 cards de Edição Surpresa/Seleção Especial
+// (montarIndicadorProdutos, mais abaixo no arquivo): um lugar só, não
+// uma correção solta por seção.
+//
+// "unidades" é uma FUNÇÃO (não um array fixo) porque a lista de
+// elementos pode ficar obsoleta: a busca/filtro reconstrói o
+// innerHTML da grade de produtos a qualquer momento, e um array
+// guardado na hora de ligar o listener apontaria pra elementos que já
+// nem estão mais no DOM.
+const TOLERANCIA_SNAP_PX = 2; // mesma tolerância pedida no teste de aceitação
+
+function ativarSnapDeSeguranca(trilho, unidades) {
+  if (!trilho) return;
+  let timer = null;
+
+  function corrigirSeNecessario() {
+    const lista = unidades();
+    if (!lista || lista.length === 0) return;
+
+    const r = trilho.getBoundingClientRect();
+    let alvoMaisPerto = null;
+    let menorDistancia = Infinity;
+    lista.forEach((u) => {
+      const ur = u.getBoundingClientRect();
+      // getBoundingClientRect já reflete a rolagem ATUAL do trilho —
+      // "ur.left - r.left" sozinho é relativo a ESSE instante, não um
+      // alvo absoluto de scrollLeft comparável depois. Somar
+      // trilho.scrollLeft de volta devolve a coordenada absoluta.
+      const alvo = ur.left - r.left + trilho.scrollLeft;
+      const distancia = Math.abs(trilho.scrollLeft - alvo);
+      if (distancia < menorDistancia) {
+        menorDistancia = distancia;
+        alvoMaisPerto = alvo;
+      }
+    });
+
+    if (alvoMaisPerto !== null && menorDistancia > TOLERANCIA_SNAP_PX) {
+      const semMovimento = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      trilho.scrollTo({ left: alvoMaisPerto, behavior: semMovimento ? 'auto' : 'smooth' });
+    }
+  }
+
+  // passive:true: este listener só LÊ a posição, nunca interfere no
+  // gesto nativo. 140ms sem nenhum outro evento de scroll = sinal de
+  // que o trilho parou de vez (dedo solto, inércia zerada).
+  trilho.addEventListener(
+    'scroll',
+    () => {
+      clearTimeout(timer);
+      timer = setTimeout(corrigirSeNecessario, 140);
+    },
+    { passive: true }
+  );
+}
+
 // Para cada grade-carrossel da Home: garante o viewport + setas,
 // garante um <div class="carrossel-dots"> com um ponto por slide, e
 // liga (uma vez) o listener de scroll que mantém dot ativo + setas em
@@ -1214,6 +1293,8 @@ function sincronizarDotsCarrossel() {
     if (!grade.dataset.carrosselLigado) {
       grade.addEventListener('scroll', atualizarAtivo, { passive: true });
       grade.dataset.carrosselLigado = '1';
+      // ver o comentário grande em ativarSnapDeSeguranca(), acima
+      ativarSnapDeSeguranca(grade, () => grade.querySelectorAll('.carrossel-slide'));
     }
     atualizarAtivo();
 
@@ -2971,6 +3052,11 @@ function montarIndicadorProdutos(grid, cards) {
   });
 
   atualizar();
+
+  // ver o comentário grande em ativarSnapDeSeguranca(), acima — mesma
+  // garantia de "sempre termina alinhado" que o carrossel de produtos
+  // normais, aqui pros 2 cards grandes
+  ativarSnapDeSeguranca(grid, () => cards);
 }
 
 function montarSelecaoEspecial(secao) {

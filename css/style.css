@@ -5324,6 +5324,22 @@ footer {
     /* esconde a barra de rolagem (o controle são os dots) */
     scrollbar-width: none;              /* Firefox */
     -webkit-overflow-scrolling: touch;  /* inércia no iOS */
+
+    /* CORREÇÃO (carrossel "solto" no mobile, rodada de toque real) —
+       estas 2 linhas já existiam no carrossel de fotos de Edição
+       Surpresa/Seleção Especial (.selecao-especial__grid, mais abaixo
+       neste arquivo) mas faltavam AQUI, a única diferença real de CSS
+       entre os dois trilhos. touch-action:pan-x pan-y diz ao navegador,
+       ANTES do gesto começar, que este elemento só rola (nunca faz
+       pinch-zoom nem decide a rolagem de outro jeito) — sem isso, o
+       motor de toque às vezes trata um arraste curto/ambíguo como
+       gesto indeciso e não fecha o ciclo de "fim de rolagem" direito,
+       e o scroll-snap:mandatory não chega a reencaixar o trilho (fica
+       parado onde o dedo soltou, no meio de dois cards — exatamente o
+       relato do vídeo). overscroll-behavior-x:contain impede que um
+       "esticão" na ponta do carrossel vaze pra rolagem da PÁGINA. */
+    touch-action: pan-x pan-y;
+    overscroll-behavior-x: contain;
   }
   .produtos-grid[data-grade-produtos]::-webkit-scrollbar {
     display: none;                      /* Chrome/Safari */
@@ -5612,6 +5628,11 @@ footer {
     padding: 0.5rem 0 0.75rem;
     scrollbar-width: none;
     width: 100%;
+    /* mesma correção do bloco mobile acima — notebook/tablet com tela
+       de toque usa este trilho também, então o touch-action vale aqui
+       igual */
+    touch-action: pan-x pan-y;
+    overscroll-behavior-x: contain;
     /* já herda max-width/margin do .carrossel-viewport — width:100%
        evita que o max-width:1200px "cru" da regra sem media query
        (lá em cima) force uma segunda centralização redundante */
