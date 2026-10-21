@@ -29,13 +29,21 @@
     <!-- Mesma folha de estilo de todas as outras páginas: nenhum CSS
          novo de layout/cor, só a regrinha ".pagina-croche" (ver
          style.css, seção "PÁGINA DE CROCHÊ — EM BREVE"). -->
-    <link rel="stylesheet" href="css/style.css?v=34">
+    <link rel="stylesheet" href="css/style.css?v=35">
 
     <!-- Marca no <html> que o JS rodou logo no início (ver comentário
          igual nas outras páginas): o "scroll reveal" só esconde
          elementos quando esta classe existe -> sem JS, conteúdo
          aparece normal. -->
     <script>document.documentElement.classList.add('js-reveal');</script>
+
+    <!-- Etapa 2 (barra de busca recolhível no mobile): mesmo raciocínio
+         do .js-reveal acima, ver comentário completo em index.html. -->
+    <script>
+      if (window.scrollY > 40) {
+        document.documentElement.classList.add('busca-recolhida-inicial');
+      }
+    </script>
 
 </head>
 
@@ -47,6 +55,9 @@
      regras que não servem aqui), então a regra equivalente mora em
      style.css, a folha compartilhada por todas as páginas. -->
 <body class="pagina-croche">
+
+    <!-- Sentinela do item 2 — ver comentário completo em index.html -->
+    <div id="topo-sentinela" aria-hidden="true"></div>
 
     <!-- ===== HEADER (idêntico ao das outras páginas) ===== -->
     <header>
@@ -65,6 +76,13 @@
             <form class="busca" role="search">
                 <input type="search" id="busca" placeholder="Buscar peça..." aria-label="Buscar peças">
             </form>
+
+            <!-- Ícone de lupa — ver comentário completo em index.html -->
+            <button type="button" class="busca-toggle" aria-label="Abrir busca">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+                </svg>
+            </button>
 
             <div class="nav-icons">
                 <a href="checkout.html">🛒 Carrinho</a>
@@ -159,8 +177,8 @@
 
     </footer>
 
-      <script src="js/produtos.js?v=34"></script>
-      <script src="js/main.js?v=34"></script>
+      <script src="js/produtos.js?v=35"></script>
+      <script src="js/main.js?v=35"></script>
 
 </body>
 

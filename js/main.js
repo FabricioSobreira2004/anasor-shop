@@ -192,6 +192,84 @@ if (menuToggle && navLinks) {
 })();
 
 // ============================================================
+//  BARRA DE BUSCA RECOLHÍVEL (só mobile) — item 2
+// ============================================================
+// RELATO: no celular, a barra "Buscar peça..." ficava fixa logo abaixo
+// do cabeçalho e cobria o conteúdo (ex.: o título "Cerâmica no Seu Café
+// da Tarde") enquanto a pessoa rolava — ela sempre ocupava a 2ª linha
+// do header, mesmo longe do topo.
+//
+// REGRA: a busca só aparece com a página a menos de 40px do topo. Ao
+// rolar pra BAIXO *ou* pra CIMA (saindo dessa faixa) ela recolhe; volta
+// ao retornar ao topo. O cabeçalho (logo/Carrinho/menu) continua
+// visível — só a 2ª linha (a busca) some, deixando o header mais
+// compacto (ver header.busca-recolhida, style.css).
+//
+// POR QUE IntersectionObserver + SENTINELA (#topo-sentinela, 1º filho
+// do <body>) EM VEZ DE UM LISTENER DE SCROLL/MATH MANUAL: é o mecanismo
+// mais robusto pedido — o navegador decide quando a interseção muda
+// (sem reler window.scrollY a cada frame, sem risco de "esquecer" de
+// chamar em algum caminho de scroll) e dá de graça o "rodar fora da
+// thread principal" em navegadores que otimizam isso. rootMargin
+// desloca o limite de interseção: com "-40px" no topo, a sentinela
+// (que mede 0px de altura, encostada no topo do documento) só conta
+// como "visível" quando a rolagem ainda não passou de 40px.
+(function recolherBuscaAoRolar() {
+  const formBusca = document.querySelector('.busca');
+  const sentinela = document.querySelector('#topo-sentinela');
+  // produto.html/políticas/checkout não têm busca no header — nada a
+  // fazer nessas páginas (ver auditoria: "aplicar onde houver a barra")
+  if (!formBusca || !sentinela) return;
+
+  const header = document.querySelector('header');
+  const botaoLupa = document.querySelector('.busca-toggle');
+  const campoBusca = formBusca.querySelector('input');
+  const mqMobile = window.matchMedia('(max-width: 768px)');
+
+  function aplicar(pertoDoTopo) {
+    // desktop: a busca é sempre visível (o CSS já ignora esta classe
+    // fora do @media mobile, mas também não a escrevemos lá de propósito)
+    if (!mqMobile.matches) {
+      header?.classList.remove('busca-recolhida');
+      return;
+    }
+    header?.classList.toggle('busca-recolhida', !pertoDoTopo);
+  }
+
+  // SEM rootMargin: a sentinela já está posicionada (CSS) exatamente
+  // na marca dos 40px do documento — combinar isso com um rootMargin
+  // negativo (duas formas de "encolher" o mesmo limiar) foi tentado e
+  // deu inconsistente (um alvo de 1px some do cálculo de interseção
+  // quando o root encolhido fica menor que a posição do alvo, e
+  // isIntersecting trava em false mesmo no topo). Um ponto fixo +
+  // root padrão é mais direto e mais previsível entre navegadores.
+  const observador = new IntersectionObserver(
+    ([entrada]) => aplicar(entrada.isIntersecting),
+    { threshold: 0 }
+  );
+  observador.observe(sentinela);
+
+  // girou/redimensionou pra desktop com a busca recolhida -> garante
+  // visível (mesma cautela do headerAutoHide, acima)
+  mqMobile.addEventListener('change', (e) => {
+    if (!e.matches) header?.classList.remove('busca-recolhida');
+  });
+
+  // ÍCONE DE LUPA: rola pro topo (reaparece a busca, via observer acima)
+  // e foca o campo. Fallback simples e explicitamente aceito pelo
+  // pedido no lugar de "expandir a barra no lugar", mais robusto
+  // (funciona em QUALQUER posição de scroll, sem precisar simular a
+  // barra sobrepondo o conteúdo numa posição arbitrária).
+  botaoLupa?.addEventListener('click', () => {
+    const semMovimento = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    window.scrollTo({ top: 0, behavior: semMovimento ? 'auto' : 'smooth' });
+    // o foco espera o scroll/transição decantarem — focar cedo demais
+    // abriria o teclado virtual no meio da rolagem/animação
+    setTimeout(() => campoBusca?.focus(), semMovimento ? 50 : 350);
+  });
+})();
+
+// ============================================================
 //  BARRA DE ANÚNCIO — 3 mensagens que se alternam com fade
 // ============================================================
 // Por que NÃO um "marquee" (texto rolando de lado)? Rolagem lateral

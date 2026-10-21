@@ -41,7 +41,7 @@
 <!-- Importa as duas fontes que vamos usar
  : Fraunces (títulos) e Jost (texto) -->
 
-   <link rel="stylesheet" href="css/style.css?v=34">
+   <link rel="stylesheet" href="css/style.css?v=35">
 
    <!-- Marca no <html> que o JS rodou logo no início. O CSS do
         "scroll reveal" só esconde os elementos (opacity 0) quando
@@ -50,9 +50,30 @@
         invisível preso. -->
    <script>document.documentElement.classList.add('js-reveal');</script>
 
+   <!-- Etapa 2 (barra de busca recolhível no mobile): decide ANTES da
+        1ª pintura se a página já carregou rolada (reload com posição
+        preservada, ou voltando de outra página pelo histórico) — sem
+        isto, haveria um "flash" de uma fração de segundo com a busca
+        visível antes do IntersectionObserver (js/main.js) rodar e
+        escondê-la, contando como CLS (layout shift logo após o load).
+        MESMO raciocínio do .js-reveal acima, só que pra este caso. -->
+   <script>
+     if (window.scrollY > 40) {
+       document.documentElement.classList.add('busca-recolhida-inicial');
+     }
+   </script>
+
 </head>
 
 <body>
+
+    <!-- Sentinela do item 2 (barra de busca recolhível): altura 0, não
+         ocupa espaço nem aparece — serve só de "marco" pro
+         IntersectionObserver (js/main.js) saber quando a página está
+         a menos de 40px do topo (rootMargin desloca esse limite, ver o
+         comentário completo lá). Fica ANTES de tudo, bem no topo real
+         do documento. -->
+    <div id="topo-sentinela" aria-hidden="true"></div>
 
     <!-- ===== BARRA DE ANÚNCIO ===== -->
     <!-- aria-hidden="true": é conteúdo de marketing que se troca sozinho
@@ -108,6 +129,18 @@
             <form class="busca" role="search">
                 <input type="search" id="busca" placeholder="Buscar peça..." aria-label="Buscar peças">
             </form>
+
+            <!-- Ícone de lupa (item 2, só aparece no mobile e só quando a
+                 busca está recolhida — ver .busca-toggle em style.css):
+                 ao tocar, rola a página pro topo e foca o campo #busca
+                 (js/main.js, função recolherBuscaAoRolar). Fica FORA de
+                 .nav-icons (que tem o fundo colorido do botão
+                 "Carrinho") — é um botão neutro, não um CTA. -->
+            <button type="button" class="busca-toggle" aria-label="Abrir busca">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+                </svg>
+            </button>
 
             <div class="nav-icons">
                 <a href="checkout.html">🛒 Carrinho</a>
@@ -761,8 +794,8 @@
            main.js DEPOIS (usa essa lista para montar os cards). Os dois
            ficam no fim do <body> para o HTML já estar carregado quando
            o JavaScript rodar. -->
-      <script src="js/produtos.js?v=34"></script>
-      <script src="js/main.js?v=34"></script>
+      <script src="js/produtos.js?v=35"></script>
+      <script src="js/main.js?v=35"></script>
 
 </body>
 

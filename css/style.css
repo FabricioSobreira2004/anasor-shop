@@ -334,6 +334,43 @@ button {
   opacity: 0;
 }
 
+/* ÍCONE DE LUPA (header) — escondido por padrão AQUI, FORA de qualquer
+   media query: no desktop a busca nunca recolhe, então o botão não tem
+   motivo pra existir lá. Mesma lição já documentada nas setas do
+   carrossel (.carrossel-seta, mais abaixo neste arquivo) — uma regra
+   "display:flex" dentro do @media mobile por si só NÃO esconde nada
+   fora dele; sem este reset global, o <button> apareceria no desktop
+   com o display padrão do navegador. O @media (max-width:768px) mais
+   abaixo é quem liga display:flex de volta, só quando
+   header.busca-recolhida. */
+.busca-toggle {
+  display: none;
+}
+
+/* Sentinela do item 2 (barra de busca recolhível, só mobile — ver
+   .busca-toggle/header.busca-recolhida mais abaixo e
+   recolherBuscaAoRolar em js/main.js). position:absolute + top:40px:
+   fixa um PONTO no documento exatamente na marca dos 40px (o limiar
+   pedido) — como não tem position:relative em nenhum ancestral até o
+   <html>, ancora no canto do PRÓPRIO DOCUMENTO (não da viewport), então
+   continua acompanhando a rolagem sem JS nenhum recalculando nada.
+   O IntersectionObserver (JS) só verifica se esse ponto ainda está
+   dentro da viewport: estiver (scrollY <= 40), a página está "perto do
+   topo"; não estiver, já rolou além de 40px. 1x1px (não 0x0): um alvo
+   de ÁREA ZERO dá isIntersecting inconsistente em alguns navegadores
+   (intersecção/área = 0/0) — 1px é invisível na prática mas tem área
+   de verdade pro cálculo. visibility:hidden (não display:none): o
+   IntersectionObserver não vê elementos display:none. */
+#topo-sentinela {
+  position: absolute;
+  top: 40px;
+  left: 0;
+  width: 1px;
+  height: 1px;
+  visibility: hidden;
+  pointer-events: none;
+}
+
 /* ============================================
    HEADER / NAVEGAÇÃO
    ============================================ */
@@ -4838,6 +4875,93 @@ footer {
     /* zera o margin-right de 1.5rem do desktop: aqui a busca já ocupa
        flex-basis:100% (a linha toda) — mantida a margem, ela estouraria
        a largura do container e causaria scroll horizontal indesejado */
+
+    /* ============================================================
+       ETAPA 2 — recolhe ao rolar (fora do topo), some sem cobrir nada
+       ============================================================
+       ACHADO: a barra ficava fixa (sticky, dentro do header) e cobria
+       o título da seção seguinte ("Cerâmica no Seu Café da Tarde" etc.)
+       enquanto a pessoa rolava — ela sempre ocupava a 2ª linha do
+       header, não importa quão longe da busca a pessoa já tivesse
+       rolado. js/main.js (recolherBuscaAoRolar) decide, via
+       IntersectionObserver numa sentinela no topo (#topo-sentinela),
+       quando aplicar header.busca-recolhida — aqui só o CSS visual.
+
+       display:grid + grid-template-rows (1fr <-> 0fr) em vez de
+       height: é a técnica recomendada pra "recolher até 0" com
+       transição suave sem JS medir pixels (scrollHeight) a cada
+       frame — isso sim causaria o "jank" que o pedido pediu pra
+       evitar. overflow:hidden corta o conteúdo enquanto a linha "fr"
+       encolhe. opacity+transform (não a presença/ausência no layout)
+       cuidam do desaparecer visual — threshold de 2px */
+    display: grid;
+    grid-template-rows: 1fr;
+    overflow: hidden;
+    opacity: 1;
+    transform: translateY(0);
+    transition: grid-template-rows 0.3s ease, opacity 0.22s ease, transform 0.22s ease;
+  }
+
+  /* o <form> vira grid (acima) mas só tem 1 filho (o <input>) — min-
+     height:0 deixa esse filho encolher JUNTO da linha "fr" indo a 0
+     (sem isto, um item de grid não encolhe abaixo do seu conteúdo
+     mínimo, e a linha nunca chegaria a 0 de verdade) */
+  .busca input {
+    min-height: 0;
+  }
+
+  header.busca-recolhida .busca,
+  html.busca-recolhida-inicial .busca {
+    grid-template-rows: 0fr;
+    opacity: 0;
+    transform: translateY(-6px);
+    pointer-events: none;   /* não captura toque nem foco enquanto invisível */
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .busca,
+    header nav {
+      transition: none;
+    }
+  }
+
+  /* ÍCONE DE LUPA — só existe visualmente quando a busca está
+     recolhida (é o atalho de volta pra ela); com a busca visível seria
+     um 2º controle de busca redundante na tela. Mesmo tamanho/área de
+     toque dos outros ícones do header (44px). */
+  .busca-toggle {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border: none;
+    background: none;
+    color: var(--cor-destaque);
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .busca-toggle svg {
+    width: 22px;
+    height: 22px;
+  }
+  header.busca-recolhida .busca-toggle,
+  html.busca-recolhida-inicial .busca-toggle {
+    display: flex;
+  }
+
+  /* o respiro entre a 1ª linha (logo/ícones) e a 2ª (busca) vem do
+     row-gap da nav (flex-wrap), NÃO de margin/padding do .busca — por
+     isso zerar só o grid-template-rows do .busca não bastava: sobraria
+     0.8rem de "vão fantasma" onde a busca já nem existe mais
+     visualmente. Anima o row-gap junto (mesma duração/easing) pra
+     cabeçalho ficar de fato compacto, sem esse resto de espaço. */
+  header nav {
+    transition: row-gap 0.3s ease;
+  }
+  header.busca-recolhida nav,
+  html.busca-recolhida-inicial header nav {
+    row-gap: 0;
   }
 
   .filtros {

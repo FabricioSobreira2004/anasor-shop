@@ -28,16 +28,27 @@
 
     <!-- Mesma folha de estilo da Home: o design (cores, fontes, cards)
          é reaproveitado inteiro, sem CSS novo pra esta página -->
-    <link rel="stylesheet" href="css/style.css?v=34">
+    <link rel="stylesheet" href="css/style.css?v=35">
 
     <!-- Marca no <html> que o JS rodou logo no início (ver comentário
          igual na index.html): o "scroll reveal" só esconde elementos
          quando esta classe existe -> sem JS, conteúdo aparece normal. -->
     <script>document.documentElement.classList.add('js-reveal');</script>
 
+    <!-- Etapa 2 (barra de busca recolhível no mobile): mesmo raciocínio
+         do .js-reveal acima, ver comentário completo em index.html. -->
+    <script>
+      if (window.scrollY > 40) {
+        document.documentElement.classList.add('busca-recolhida-inicial');
+      }
+    </script>
+
 </head>
 
 <body>
+
+    <!-- Sentinela do item 2 — ver comentário completo em index.html -->
+    <div id="topo-sentinela" aria-hidden="true"></div>
 
     <!-- ===== HEADER (idêntico ao da Home) ===== -->
     <header> <!-- <header> é uma tag semântica: indica
@@ -77,6 +88,13 @@
             <form class="busca" role="search">
                 <input type="search" id="busca" placeholder="Buscar peça..." aria-label="Buscar peças">
             </form>
+
+            <!-- Ícone de lupa — ver comentário completo em index.html -->
+            <button type="button" class="busca-toggle" aria-label="Abrir busca">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+                </svg>
+            </button>
 
             <div class="nav-icons">
                 <a href="checkout.html">🛒 Carrinho</a>
@@ -212,9 +230,9 @@
       <!-- produtos.js (lista) -> main.js (funcoes comuns: slugificar,
            filtrarProdutos, criarCardProduto...) -> ceramica.js (usa
            essas funcoes pra montar a visao geral OU a listagem por ?sub) -->
-      <script src="js/produtos.js?v=34"></script>
-      <script src="js/main.js?v=34"></script>
-      <script src="js/ceramica.js?v=34"></script>
+      <script src="js/produtos.js?v=35"></script>
+      <script src="js/main.js?v=35"></script>
+      <script src="js/ceramica.js?v=35"></script>
 
 </body>
 
