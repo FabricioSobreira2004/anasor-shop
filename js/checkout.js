@@ -570,6 +570,10 @@ function ligarValidacaoForm(itensCarrinho) {
         // em backend/server.js). Não é falha de conexão — a saída certa
         // pro cliente é o WhatsApp, não "tente de novo".
         erro.pagamentoIndisponivel = resposta.status === 503 && erroBody.codigo === 'pagamento_indisponivel';
+        // o backend explicou o problema (ex.: CEP inválido, peça já
+        // vendida, Mercado Pago fora do ar): é ESSA frase que o cliente
+        // precisa ler pra saber o que fazer — não o aviso de conexão
+        erro.mensagemDoServidor = typeof erroBody.erro === 'string' ? erroBody.erro : '';
         throw erro;
       }
 
@@ -587,10 +591,19 @@ function ligarValidacaoForm(itensCarrinho) {
       console.error('Erro ao iniciar o checkout:', erro);
       if (erro.pagamentoIndisponivel) {
         mostrarPagamentoIndisponivel();
+      } else if (erro.mensagemDoServidor) {
+        // textContent (nunca innerHTML): o texto vem da API
+        erroEnvioEl.textContent = erro.mensagemDoServidor;
       } else {
-        erroEnvioEl.textContent =
-          'Não foi possível conectar ao servidor de pagamento agora. ' +
-          'Verifique se o backend está rodando (cd backend && npm start) e tente de novo.';
+        // sem resposta do servidor (rede caiu, função fora do ar). A dica
+        // de "rodar o backend" só faz sentido pra quem desenvolve — no
+        // site no ar o cliente via uma instrução de terminal (achado do
+        // code-review).
+        const emDesenvolvimento = ['localhost', '127.0.0.1'].includes(location.hostname);
+        erroEnvioEl.textContent = emDesenvolvimento
+          ? 'Não foi possível conectar ao servidor de pagamento agora. ' +
+            'Verifique se o backend está rodando (cd backend && npm start) e tente de novo.'
+          : 'Não foi possível conectar ao pagamento agora. Confira sua internet e tente de novo em instantes.';
       }
       botaoEnviar.disabled = false;
       botaoEnviar.textContent = textoOriginal;
