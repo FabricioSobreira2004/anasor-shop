@@ -115,7 +115,9 @@ const {
 // Dois acessos ao MESMO catálogo: "produtos" (completo, pra buscar por
 // id) e "produtosVisiveis()" (sem as peças "oculto: true", pra listar).
 const { produtos, produtosVisiveis } = require('./data/produtos');
-const { extrairDadosPedido, enviarEmailPedido, formatarReal } = require('./pedido-email');
+const { extrairDadosPedido, formatarReal } = require('./pedido-email');
+// Envio dos avisos de pedido pago (e-mail + Telegram, isolados entre si).
+const { notificarPedidoAprovado } = require('./notificar-pedido');
 
 const app = express();
 
@@ -253,6 +255,16 @@ if (!EMAIL_USER || !EMAIL_APP_PASSWORD) {
     '⚠️  EMAIL_USER/EMAIL_APP_PASSWORD não configurados — quando um pagamento for aprovado, ' +
       'o webhook NÃO vai conseguir notificar a Anasor por e-mail (ver backend/.env.example). ' +
       'O endereço de entrega continua disponível no metadata da Preference, no painel do Mercado Pago.'
+  );
+}
+
+// Telegram é OPCIONAL (2º canal de aviso, ver pedido-telegram.js):
+// só informa, sem alarme. Checa a PRESENÇA das variáveis — o valor do
+// token nunca é impresso.
+if (!process.env.TELEGRAM_BOT_TOKEN || !process.env.TELEGRAM_CHAT_ID) {
+  console.log(
+    'ℹ️  TELEGRAM_BOT_TOKEN/TELEGRAM_CHAT_ID não configurados — o aviso de venda paga sai só por e-mail ' +
+      '(ver backend/.env.example).'
   );
 }
 
@@ -669,15 +681,17 @@ app.post('/api/checkout', async (req, res) => {
 //      que a API devolveu for "approved".
 //   4. Monta os dados do pedido a partir do PRÓPRIO pagamento
 //      (metadata + additional_info.items + payer — ver
-//      extrairDadosPedido, pedido-email.js) e manda o e-mail pra
-//      Anasor, AGUARDANDO o envio terminar antes de responder (numa
-//      função serverless a execução para assim que a resposta sai —
-//      sem o "await", o e-mail poderia nunca sair).
-// Responde 200 rápido sempre que não há nada de recuperável a fazer
-// (tipo errado, assinatura inválida, pagamento não aprovado, e-mail
-// mal configurado) — só devolve 500 quando o problema é algo que uma
-// NOVA tentativa do Mercado Pago (ele reenvia sozinho) pode resolver
-// (falha de rede ao consultar o pagamento, falha ao enviar o e-mail).
+//      extrairDadosPedido, pedido-email.js) e avisa a Anasor por e-mail
+//      E pelo Telegram (notificar-pedido.js), AGUARDANDO os dois
+//      terminarem (ou estourarem o timeout curto de cada um) antes de
+//      responder (numa função serverless a execução para assim que a
+//      resposta sai — sem o "await", os avisos poderiam nunca sair).
+// Responde 200 sempre que não há nada de recuperável a fazer (tipo
+// errado, pagamento não aprovado) e também depois dos avisos, MESMO se
+// um ou os dois falharem: um 500 ali faria o Mercado Pago reenviar e o
+// canal que deu certo mandaria o aviso DUPLICADO. Só devolve 500 quando
+// a falha é ao CONSULTAR o pagamento (aí nenhum aviso saiu ainda e a
+// nova tentativa do Mercado Pago pode resolver).
 app.post('/api/webhook/mercadopago', async (req, res) => {
   // Formato da notificação (documentado, mas já mudou de versão pra
   // versão no passado — por isso checar os 2 formatos conhecidos pro
@@ -781,41 +795,20 @@ app.post('/api/webhook/mercadopago', async (req, res) => {
     return res.sendStatus(200);
   }
 
-  // ---------- MONTA E ENVIA O E-MAIL ----------
+  // ---------- AVISA A ANASOR (E-MAIL + TELEGRAM) ----------
   const dadosPedido = extrairDadosPedido(pagamento);
 
-  try {
-    // "await" ANTES de responder: numa função serverless (Vercel), o
-    // processo pode ser encerrado assim que a resposta HTTP sai — sem
-    // aguardar, o envio do e-mail arriscaria nunca terminar.
-    await enviarEmailPedido(dadosPedido, { destino: EMAIL_DESTINO });
-    console.log(`✅ E-mail de novo pedido enviado — ${dadosPedido.codigoPedido} (pagamento ${paymentId}).`);
-  } catch (erro) {
-    // "configuracaoAusente" (ver enviarEmailPedido, pedido-email.js):
-    // ÚNICA fonte de verdade sobre se EMAIL_USER/EMAIL_APP_PASSWORD
-    // estão configurados — CORREÇÃO (achado do code-review): este
-    // handler chegou a checar essas 2 variáveis DE NOVO aqui antes de
-    // tentar enviar, duplicando a mesma checagem que
-    // criarTransportadorGmail() (pedido-email.js) já faz; bastava
-    // deixar ela lançar o erro e decidir o status HTTP a partir dele.
-    if (erro?.configuracaoAusente) {
-      // Reenviar a notificação não faz a variável de ambiente aparecer
-      // sozinha — responde 200 (evita o Mercado Pago martelando pra
-      // sempre) mas grita BEM alto no log: a Anasor NÃO vai saber
-      // deste pedido por e-mail (o endereço completo ainda está no
-      // metadata da Preference, visível no painel do Mercado Pago,
-      // como reserva).
-      console.error(
-        `❌ E-mail não configurado (EMAIL_USER/EMAIL_APP_PASSWORD) — não foi possível notificar a ` +
-          `Anasor do pedido ${dadosPedido.codigoPedido} (pagamento ${paymentId})! Confira o metadata ` +
-          `deste pagamento no painel do Mercado Pago pra ver o endereço de entrega.`
-      );
-      return res.sendStatus(200);
-    }
-    console.error(`❌ Falha ao enviar e-mail do pedido ${dadosPedido.codigoPedido}:`, erro?.message || erro);
-    return res.sendStatus(500); // falha de envio (SMTP/rede) pode ser passageira — vale o MP reenviar
-  }
+  // "await" ANTES de responder: numa função serverless (Vercel), o
+  // processo pode ser encerrado assim que a resposta HTTP sai — sem
+  // aguardar, os avisos arriscariam nunca terminar. notificarPedidoAprovado
+  // roda os dois canais em paralelo, cada um com timeout próprio, e
+  // NUNCA lança erro: cada falha é registrada lá só pelo TIPO (sem
+  // dados do cliente nem token) — ver backend/notificar-pedido.js.
+  await notificarPedidoAprovado(dadosPedido, { destinoEmail: EMAIL_DESTINO });
 
+  // 200 mesmo se algum aviso falhou (ver o comentário acima da rota):
+  // reenviar a notificação duplicaria o aviso do canal que funcionou,
+  // e configuração ausente não se resolve sozinha com nova tentativa.
   return res.sendStatus(200);
 });
 
