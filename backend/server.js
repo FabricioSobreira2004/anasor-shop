@@ -207,10 +207,11 @@ const MERCADOPAGO_WEBHOOK_SECRET = process.env.MERCADOPAGO_WEBHOOK_SECRET || nul
 // backend/.env.example pro passo a passo de gerar uma). EMAIL_DESTINO
 // é pra ONDE o aviso vai — normalmente a própria Anasor; separado do
 // EMAIL_USER de propósito (a conta que ENVIA não precisa ser a mesma
-// que RECEBE, embora possa ser).
+// que RECEBE, embora possa ser). O padrão é o e-mail OFICIAL da loja
+// (o mesmo do rodapé do site), pra o aviso chegar mesmo sem a variável.
 const EMAIL_USER = process.env.EMAIL_USER || null;
 const EMAIL_APP_PASSWORD = process.env.EMAIL_APP_PASSWORD || null;
-const EMAIL_DESTINO = process.env.EMAIL_DESTINO || 'ceramicaecrocheanasor@gmail.com';
+const EMAIL_DESTINO = process.env.EMAIL_DESTINO || 'contatoatelieanasor@gmail.com';
 
 // CORREÇÃO (achado do code-review): era um regex de SUBSTRING
 // (/localhost|127\.0\.0\.1/.test(BASE_URL)) — "pega" qualquer URL que

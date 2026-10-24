@@ -371,7 +371,8 @@ async function enviarEmailPedido(dadosPedido, { transportador, destino, remetent
   }
 
   const remetenteFinal = remetente || process.env.EMAIL_USER || 'nao-responda@anasor-shop.local';
-  const destinatario = destino || process.env.EMAIL_DESTINO || 'ceramicaecrocheanasor@gmail.com';
+  // Sem destino explícito nem variável, vai pro e-mail OFICIAL da loja.
+  const destinatario = destino || process.env.EMAIL_DESTINO || 'contatoatelieanasor@gmail.com';
 
   return transporte.sendMail({
     from: `"Anasor Shop" <${remetenteFinal}>`,

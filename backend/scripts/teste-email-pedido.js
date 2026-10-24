@@ -134,7 +134,7 @@ async function testarCenario(nome, pagamento) {
   const transportadorTeste = nodemailer.createTransport({ jsonTransport: true });
   const resultado = await enviarEmailPedido(dadosPedido, {
     transportador: transportadorTeste,
-    destino: 'ceramicaecrocheanasor@gmail.com',
+    destino: 'contatoatelieanasor@gmail.com',
     remetente: 'teste@anasor-shop.local',
   });
 

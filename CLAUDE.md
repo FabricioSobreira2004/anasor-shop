@@ -13,6 +13,7 @@
 - Código sempre comentado explicando o **porquê** de cada ação (preferência do Fabrício).
 
 ## Regras de negócio
+- E-mail oficial da loja: contatoatelieanasor@gmail.com
 - Cada peça de cerâmica é **única (estoque 1)**: não existe seletor de quantidade.
 - Peça indisponível: campo `disponivel: false` + botão **"Encomendar peça parecida"** pelo WhatsApp.
 - Preços e produtos ficam em `js/produtos.js`, a fonte única. O backend recalcula os valores a partir dele.
