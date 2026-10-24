@@ -104,7 +104,7 @@ async function requisitar(app, { metodo = 'POST', caminho, corpo, headers = {} }
         (res) => {
           let texto = '';
           res.on('data', (c) => (texto += c));
-          res.on('end', () => resolver({ status: res.statusCode, corpo: texto ? (() => { try { return JSON.parse(texto); } catch { return texto; } })() : null }));
+          res.on('end', () => resolver({ status: res.statusCode, headers: res.headers, corpo: texto ? (() => { try { return JSON.parse(texto); } catch { return texto; } })() : null }));
         }
       );
       req.on('error', rejeitar);
@@ -200,6 +200,23 @@ teste('webhook: id/type forjados com quebra de linha não entram crus no log', a
   // (%0A) — inofensivo; o que não pode é surgir uma linha nova forjada
   assert.ok(!log.split('\n').some((l) => l.startsWith('FALSO') || l.startsWith('✅ pago')), 'nenhuma linha de log forjada');
   assert.ok(log.includes('type=(inválido ou vazio) id=(inválido ou vazio)'), 'valores estranhos viram "(inválido ou vazio)"');
+});
+
+teste('CORS em produção: só a origem do BASE_URL; outro site não é liberado', async () => {
+  const app = carregarQuieto({ MERCADOPAGO_ACCESS_TOKEN: TOKEN_MP_FALSO, BASE_URL: 'https://loja.exemplo.com.br' });
+  const preflight = (origem) =>
+    requisitar(app, { metodo: 'OPTIONS', caminho: '/api/checkout', headers: { Origin: origem, 'Access-Control-Request-Method': 'POST', 'Access-Control-Request-Headers': 'content-type' } });
+  const doSite = await preflight('https://loja.exemplo.com.br');
+  const deFora = await preflight('https://site-malicioso.example');
+  assert.equal(doSite.headers['access-control-allow-origin'], 'https://loja.exemplo.com.br');
+  assert.notEqual(deFora.headers['access-control-allow-origin'], 'https://site-malicioso.example');
+  assert.notEqual(deFora.headers['access-control-allow-origin'], '*');
+});
+
+teste('CORS em localhost: aberto (front em outra porta no desenvolvimento)', async () => {
+  const app = carregarQuieto({ BASE_URL: 'http://localhost:8765' });
+  const r = await requisitar(app, { metodo: 'OPTIONS', caminho: '/api/checkout', headers: { Origin: 'http://127.0.0.1:5500', 'Access-Control-Request-Method': 'POST' } });
+  assert.equal(r.headers['access-control-allow-origin'], 'http://127.0.0.1:5500');
 });
 
 teste('checkout em localhost sem token: modo demonstração continua (link pedido-pendente)', async () => {

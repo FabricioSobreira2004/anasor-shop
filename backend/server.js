@@ -311,12 +311,24 @@ if (!process.env.TELEGRAM_BOT_TOKEN || !process.env.TELEGRAM_CHAT_ID) {
 
 // ---------- MIDDLEWARES (rodam antes das rotas) ----------
 
-// CORS: o front (index.html etc.) vai rodar num endereço diferente
-// do backend (outra porta agora; outro domínio depois). Sem liberar
-// CORS, o navegador BLOQUEIA o fetch do front pra cá. Por enquanto
-// liberamos geral (origin: '*'); quando for pra produção, trocar
-// por uma lista só com o domínio real do site.
-app.use(cors());
+// CORS: em DESENVOLVIMENTO o front pode rodar numa porta diferente do
+// backend (ex.: Live Server na 5500, backend na 3001) — sem liberar
+// CORS, o navegador bloqueia o fetch do front pra cá; por isso, local =
+// aberto. Em PRODUÇÃO (Vercel) front e API moram no MESMO domínio
+// (vercel.json reescreve /api/* pra cá), então o site nem precisa de
+// CORS: só a origem do BASE_URL é liberada, e outro site não consegue
+// mais chamar /api/checkout do navegador de um visitante e ler a
+// resposta (era o "trocar por uma lista só com o domínio real do site"
+// que este comentário pedia; achado do code-review). O webhook do
+// Mercado Pago é servidor-a-servidor: CORS não se aplica a ele.
+const origemDoSite = (() => {
+  try {
+    return new URL(BASE_URL).origin;
+  } catch {
+    return false; // BASE_URL inválido: não libera origem nenhuma
+  }
+})();
+app.use(cors({ origin: ambienteLocal ? true : origemDoSite }));
 
 // Lê corpo de requisição em JSON (ainda não tem POST, mas o
 // checkout futuro vai precisar — deixando já ligado).
