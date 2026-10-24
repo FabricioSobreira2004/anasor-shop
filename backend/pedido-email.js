@@ -96,21 +96,42 @@ function normalizarMetadata(metadataBruto) {
 
 // Valor MASCARADO pelo Mercado Pago (comprador visitante): o e-mail
 // chega como "XXXXXXXXXXX" e às vezes vem só parte dele com asteriscos
-// ("ma***@gmail.com"). Isso NÃO é dado — não pode ir pra nota fiscal
-// nem impedir a reserva de ser usada; é tratado igual a vazio.
+// ou x ("ma***@gmail.com", "xxxxxxx5725"). Isso NÃO é dado — não pode
+// ir pra nota fiscal; é tratado igual a vazio. Maiúsculas/minúsculas
+// tanto faz (achado do code-review: "xxxx" minúsculo passava).
 function pareceMascarado(texto) {
-  return /^[X*•]+$/i.test(texto) || /X{4,}|\*{3,}/.test(texto);
+  return /^[X*•]+$/i.test(texto) || /x{4,}|\*{3,}/i.test(texto);
 }
 
-// Primeiro valor de VERDADE entre as fontes (na ordem de preferência):
-// ignora vazio, só espaços e mascarado. "" quando nenhuma tem.
-function primeiroValorReal(...candidatos) {
-  for (const candidato of candidatos) {
-    const texto = String(candidato ?? '').trim();
+// Escolhe o valor de um campo: o NOSSO (metadata, digitado pelo
+// cliente no checkout) vence sempre que existir — e NÃO passa pelo
+// teste de máscara (achado do code-review): é texto do próprio cliente,
+// e um complemento como "Casa 2 *** portão azul" não pode sumir. As
+// reservas do Mercado Pago, sim: valor mascarado delas é ignorado.
+// "" quando nenhuma fonte tem.
+function escolherValor(nosso, ...reservasMercadoPago) {
+  const proprio = String(nosso ?? '').trim();
+  if (proprio) return proprio;
+  for (const reserva of reservasMercadoPago) {
+    const texto = String(reserva ?? '').trim();
     if (texto && !pareceMascarado(texto)) return texto;
   }
   return '';
 }
+
+// Telefone do lado do Mercado Pago ({area_code, number}). Se "number"
+// já vier com o DDD dentro (10+ dígitos), usa só ele — senão
+// concatenar daria "2121987222679" (achado do code-review).
+function telefoneDoMercadoPago(fone) {
+  if (!fone) return '';
+  const numero = soDigitos(fone.number);
+  return numero.length >= 10 ? numero : `${soDigitos(fone.area_code)}${numero}`;
+}
+
+// UF de 2 letras ou nada: a reserva shipments.receiver_address traz
+// "state_name" por EXTENSO ("São Paulo"), que viraria "São Paulo/São
+// Paulo" na nota e "SÃ" no Telegram (achado do code-review).
+const ufOuVazio = (valor) => (/^[A-Za-z]{2}$/.test(String(valor ?? '').trim()) ? String(valor).trim().toUpperCase() : '');
 
 const NOMES_TIPO_PAGAMENTO = {
   credit_card: 'Cartão de crédito',
@@ -169,24 +190,28 @@ function extrairDadosPedido(pagamento) {
   // CLIENTE: metadata (o que a PRÓPRIA PESSOA digitou no nosso checkout
   // e confirmou) primeiro; payer do Mercado Pago só quando o nosso
   // faltar — ver o comentário no topo do arquivo.
+  // additional_info.payer = eco do payer que a NOSSA Preference mandou
+  // (costuma vir mais completo que o payer do pagamento)
+  const payerEco = pagamento.additional_info?.payer || {};
   const cliente = {
-    nome: primeiroValorReal(metadata.cliente_nome, [payer.first_name, payer.last_name].filter(Boolean).join(' ')),
-    email: primeiroValorReal(metadata.cliente_email, payer.email),
-    telefone: primeiroValorReal(
-      metadata.cliente_telefone,
-      payer.phone ? `${payer.phone.area_code || ''}${payer.phone.number || ''}` : ''
+    nome: escolherValor(
+      metadata.cliente_nome,
+      [payer.first_name, payer.last_name].filter(Boolean).join(' '),
+      [payerEco.first_name, payerEco.last_name].filter(Boolean).join(' ')
     ),
-    cpf: primeiroValorReal(metadata.cliente_cpf, payer.identification?.number),
+    email: escolherValor(metadata.cliente_email, payer.email),
+    telefone: escolherValor(metadata.cliente_telefone, telefoneDoMercadoPago(payer.phone), telefoneDoMercadoPago(payerEco.phone)),
+    cpf: escolherValor(metadata.cliente_cpf, payer.identification?.number),
   };
 
   const endereco = {
-    cep: primeiroValorReal(metadata.endereco_cep, enderecoMP.zip_code, recebedorMP.zip_code),
-    rua: primeiroValorReal(metadata.endereco_rua, enderecoMP.street_name, recebedorMP.street_name),
-    numero: primeiroValorReal(metadata.endereco_numero, enderecoMP.street_number, recebedorMP.street_number),
-    complemento: primeiroValorReal(metadata.endereco_complemento),
-    bairro: primeiroValorReal(metadata.endereco_bairro),
-    cidade: primeiroValorReal(metadata.endereco_cidade, recebedorMP.city_name),
-    estado: primeiroValorReal(metadata.endereco_uf, recebedorMP.state_name),
+    cep: escolherValor(metadata.endereco_cep, enderecoMP.zip_code, recebedorMP.zip_code),
+    rua: escolherValor(metadata.endereco_rua, enderecoMP.street_name, recebedorMP.street_name),
+    numero: escolherValor(metadata.endereco_numero, enderecoMP.street_number, recebedorMP.street_number),
+    complemento: escolherValor(metadata.endereco_complemento),
+    bairro: escolherValor(metadata.endereco_bairro),
+    cidade: escolherValor(metadata.endereco_cidade, recebedorMP.city_name),
+    estado: escolherValor(metadata.endereco_uf, ufOuVazio(recebedorMP.state_name)),
   };
 
   // ITENS: preferimos additional_info.items (o Mercado Pago costuma
@@ -246,13 +271,28 @@ function extrairDadosPedido(pagamento) {
 
   // TAXA e LÍQUIDO do Mercado Pago, quando o pagamento já traz (em Pix
   // e cartão costuma vir na aprovação; se não vier, o e-mail omite a
-  // linha em vez de mostrar um valor errado). Taxa = soma das tarifas
-  // cobradas da Anasor (fee_details), não do comprador.
-  const taxas = Array.isArray(pagamento.fee_details) ? pagamento.fee_details : [];
+  // linha em vez de mostrar um valor errado). Taxa = só as tarifas
+  // cobradas da ANASOR (fee_payer "collector") — os juros do
+  // parcelamento que o COMPRADOR paga também aparecem em fee_details
+  // (fee_payer "payer") e não são custo dela (achado do code-review).
+  const taxas = (Array.isArray(pagamento.fee_details) ? pagamento.fee_details : []).filter(
+    (t) => !t.fee_payer || t.fee_payer === 'collector'
+  );
   const taxaMercadoPago = taxas.length > 0
     ? Math.round(taxas.reduce((soma, t) => soma + (Number(t.amount) || 0), 0) * 100) / 100
     : null;
   const valorLiquido = numeroOuNull(pagamento.transaction_details?.net_received_amount);
+
+  // JUROS DO PARCELAMENTO pagos pelo comprador: total_paid_amount (o que
+  // saiu do cartão dele) - transaction_amount (o valor do pedido). Sem
+  // esta linha, "3x de R$ 95,27" e "TOTAL PAGO: R$ 269,80" não fechavam
+  // a conta e pareciam erro (achado do code-review). A nota fiscal é do
+  // valor do pedido; os juros são do Mercado Pago com o comprador.
+  const totalPagoComprador = numeroOuNull(pagamento.transaction_details?.total_paid_amount);
+  const jurosComprador =
+    totalPagoComprador !== null && totalPagoComprador - valorTotal > 0.004
+      ? Math.round((totalPagoComprador - valorTotal) * 100) / 100
+      : null;
 
   return {
     // external_reference é o NOSSO código (gerado em gerarIdPedido(),
@@ -266,6 +306,7 @@ function extrairDadosPedido(pagamento) {
     valorTotal,
     formaPagamento,
     parcelas,
+    jurosComprador,
     taxaMercadoPago,
     valorLiquido,
     cliente,
@@ -305,7 +346,7 @@ const NAO_INFORMADO_HTML = '<strong style="color:#B3261E;">NÃO INFORMADO</stron
 function montarEmailPedido(dadosPedido) {
   const {
     codigoPedido, pagamentoId, dataAprovacao, status, valorTotal, formaPagamento, parcelas,
-    taxaMercadoPago, valorLiquido, cliente, endereco, itens, itensResumoTexto,
+    jurosComprador = null, taxaMercadoPago, valorLiquido, cliente, endereco, itens, itensResumoTexto,
   } = dadosPedido;
 
   const dataFormatada = new Date(dataAprovacao).toLocaleString('pt-BR', {
@@ -349,6 +390,7 @@ function montarEmailPedido(dadosPedido) {
   const blocoValores = [
     ['Frete', 'Grátis'],
     ['TOTAL PAGO', formatarReal(valorTotal)],
+    ...(jurosComprador !== null ? [['Juros do parcelamento (pagos pelo cliente ao Mercado Pago)', formatarReal(jurosComprador)]] : []),
     ...(taxaMercadoPago !== null ? [['Taxa do Mercado Pago', formatarReal(taxaMercadoPago)]] : []),
     ...(valorLiquido !== null ? [['Valor líquido a receber', formatarReal(valorLiquido)]] : []),
   ];

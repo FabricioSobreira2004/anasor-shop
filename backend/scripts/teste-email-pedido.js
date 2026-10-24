@@ -183,6 +183,50 @@ teste('pagamento sem parcelas, sem taxa e sem itens estruturados: usa o resumo d
   assert.ok(texto.includes('1x Prato Decorativo Melodia da Primavera (R$ 134,90 cada); 1x Prato Decorativo Jardim de Outono'));
 });
 
+teste('cartão com juros: taxa só do vendedor (collector) e linha de juros do cliente', () => {
+  const p = base();
+  p.transaction_details = { installment_amount: 95.27, net_received_amount: 255.79, total_paid_amount: 285.81 };
+  p.fee_details = [
+    { type: 'mercadopago_fee', fee_payer: 'collector', amount: 14.01 },
+    { type: 'financing_fee', fee_payer: 'payer', amount: 16.01 },
+  ];
+  const { texto } = email(p);
+  assert.ok(texto.includes('Taxa do Mercado Pago: R$ 14,01'), 'juros do comprador não entram na taxa');
+  assert.ok(texto.includes('TOTAL PAGO: R$ 269,80'));
+  assert.ok(texto.includes('Juros do parcelamento (pagos pelo cliente ao Mercado Pago): R$ 16,01'));
+  assert.ok(texto.includes('3x de R$ 95,27'));
+});
+
+teste('texto do PRÓPRIO cliente com *** ou xxxx não é tratado como máscara', () => {
+  const p = base();
+  p.metadata.endereco_complemento = 'Casa 2 *** portão azul';
+  p.metadata.endereco_rua = 'Rua Maxxxima';
+  const { texto } = email(p);
+  assert.ok(texto.includes('Complemento: Casa 2 *** portão azul'));
+  assert.ok(texto.includes('Rua: Rua Maxxxima'));
+});
+
+teste('reservas do Mercado Pago: máscara minúscula ignorada, telefone com DDD dentro, UF por extenso descartada', () => {
+  const p = base();
+  p.metadata = { endereco_rua: 'Rua Fictícia', endereco_numero: '7' };
+  p.payer = { email: 'jxxxxxxx@gmail.com', identification: { number: 'xxxxxxx4725' }, phone: { area_code: '21', number: '21987654321' } };
+  p.additional_info = { shipments: { receiver_address: { city_name: 'São Paulo', state_name: 'São Paulo' } } };
+  const dados = extrairDadosPedido(p);
+  const { texto } = email(p);
+  assert.ok(texto.includes('E-mail: *** NÃO INFORMADO ***') && texto.includes('CPF: *** NÃO INFORMADO ***'));
+  assert.ok(texto.includes('Telefone/WhatsApp: (21) 98765-4321'), 'não vira 2121987654321');
+  assert.ok(texto.includes('Cidade/UF: São Paulo\n') && dados.endereco.estado === '', 'UF por extenso não entra');
+});
+
+teste('reserva do telefone: eco do payer da Preference (additional_info.payer)', () => {
+  const p = base();
+  p.metadata = {};
+  p.payer = {};
+  p.additional_info.payer = { first_name: 'Ana', last_name: 'Exemplo', phone: { area_code: '31', number: '33334444' } };
+  const { texto } = email(p);
+  assert.ok(texto.includes('Nome completo: Ana Exemplo') && texto.includes('Telefone/WhatsApp: (31) 3333-4444'));
+});
+
 teste('envio (jsonTransport): Reply-To = e-mail do cliente; mascarado não vira Reply-To', async () => {
   const transportador = nodemailer.createTransport({ jsonTransport: true });
   const enviar = (p) => enviarEmailPedido(extrairDadosPedido(p), { transportador, destino: 'contatoatelieanasor@gmail.com', remetente: 'teste@anasor-shop.local' });
