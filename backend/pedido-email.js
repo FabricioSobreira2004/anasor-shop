@@ -330,14 +330,18 @@ ID do pagamento no Mercado Pago: ${pagamentoId}
 
 // ---------- ENVIO ----------
 
+// E-mail OFICIAL da loja — destino padrão do aviso de pedido. Mora AQUI,
+// num lugar só (server.js importa daqui): antes estava escrito em 2
+// arquivos e uma troca de endereço precisava lembrar dos dois.
+const EMAIL_DESTINO_PADRAO = 'contatoatelieanasor@gmail.com';
+
 // Gmail via SMTP com SENHA DE APP (não a senha normal da conta — o
 // Google exige isso pra acesso de app/SMTP desde que desativou "apps
 // menos seguros"). "service: 'gmail'" é o atalho que o nodemailer já
 // conhece (smtp.gmail.com:465, TLS) — não precisa configurar host/
 // porta na mão. Devolve null (não lança erro) quando as variáveis não
-// estão configuradas — quem chama decide o que fazer (ver server.js:
-// webhook responde 200 mesmo sem conseguir notificar por e-mail, pois
-// reenviar a notificação não vai fazer a variável aparecer sozinha).
+// estão configuradas — quem chama decide o que fazer (enviarEmailPedido,
+// abaixo, transforma isso num erro "configuracaoAusente").
 function criarTransportadorGmail() {
   const EMAIL_USER = process.env.EMAIL_USER || null;
   const EMAIL_APP_PASSWORD = process.env.EMAIL_APP_PASSWORD || null;
@@ -359,10 +363,12 @@ async function enviarEmailPedido(dadosPedido, { transportador, destino, remetent
 
   const transporte = transportador || criarTransportadorGmail();
   if (!transporte) {
-    // Erro DISTINTO de propósito (não um Error genérico) — server.js
-    // usa isto pra decidir "configuração ausente" (responde 200, não
-    // adianta o Mercado Pago reenviar) vs. "falha ao enviar de
-    // verdade" (responde 500, vale reenviar depois).
+    // Erro DISTINTO de propósito (não um Error genérico): o log do
+    // aviso (notificar-pedido.js, tipoDoErro) mostra
+    // "configuracao_ausente" em vez de um erro qualquer, e quem lê o
+    // log da Vercel sabe na hora que falta variável, não que o Gmail
+    // caiu. Pro webhook as duas coisas contam igual: canal que não
+    // entregou (se nenhum entregar, ele responde 503 — ver server.js).
     const erro = new Error(
       'Transportador de e-mail não configurado (EMAIL_USER/EMAIL_APP_PASSWORD ausentes).'
     );
@@ -372,7 +378,7 @@ async function enviarEmailPedido(dadosPedido, { transportador, destino, remetent
 
   const remetenteFinal = remetente || process.env.EMAIL_USER || 'nao-responda@anasor-shop.local';
   // Sem destino explícito nem variável, vai pro e-mail OFICIAL da loja.
-  const destinatario = destino || process.env.EMAIL_DESTINO || 'contatoatelieanasor@gmail.com';
+  const destinatario = destino || process.env.EMAIL_DESTINO || EMAIL_DESTINO_PADRAO;
 
   return transporte.sendMail({
     from: `"Anasor Shop" <${remetenteFinal}>`,
@@ -384,6 +390,7 @@ async function enviarEmailPedido(dadosPedido, { transportador, destino, remetent
 }
 
 module.exports = {
+  EMAIL_DESTINO_PADRAO,
   formatarReal,
   escaparHtml,
   normalizarMetadata,

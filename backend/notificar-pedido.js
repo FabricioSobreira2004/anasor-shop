@@ -115,7 +115,7 @@ async function notificarPedidoAprovado(
 // A Anasor ficou sabendo da venda? Só "ok" conta: "ignorado" (canal sem
 // configuração) e "falhou" não avisaram ninguém. Separada (e exportada)
 // porque o webhook decide por ela se pede ao Mercado Pago pra reenviar
-// (503) — uma regra só, testável sem Express (teste-telegram-pedido.js).
+// (503) — uma regra só, testável sem Express (teste-checkout-webhook.js).
 function algumAvisoEntregue(resumo) {
   return Object.values(resumo || {}).some((canal) => canal?.status === 'ok');
 }

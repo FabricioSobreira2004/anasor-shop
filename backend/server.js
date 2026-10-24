@@ -115,7 +115,7 @@ const {
 // Dois acessos ao MESMO catálogo: "produtos" (completo, pra buscar por
 // id) e "produtosVisiveis()" (sem as peças "oculto: true", pra listar).
 const { produtos, produtosVisiveis } = require('./data/produtos');
-const { extrairDadosPedido, formatarReal } = require('./pedido-email');
+const { extrairDadosPedido, formatarReal, EMAIL_DESTINO_PADRAO } = require('./pedido-email');
 // Envio dos avisos de pedido pago (e-mail + Telegram, isolados entre si).
 const { notificarPedidoAprovado, algumAvisoEntregue, tipoDoErro } = require('./notificar-pedido');
 
@@ -223,7 +223,7 @@ const MERCADOPAGO_WEBHOOK_SECRET = process.env.MERCADOPAGO_WEBHOOK_SECRET || nul
 // (o mesmo do rodapé do site), pra o aviso chegar mesmo sem a variável.
 const EMAIL_USER = process.env.EMAIL_USER || null;
 const EMAIL_APP_PASSWORD = process.env.EMAIL_APP_PASSWORD || null;
-const EMAIL_DESTINO = process.env.EMAIL_DESTINO || 'contatoatelieanasor@gmail.com';
+const EMAIL_DESTINO = process.env.EMAIL_DESTINO || EMAIL_DESTINO_PADRAO;
 
 // CORREÇÃO (achado do code-review): era um regex de SUBSTRING
 // (/localhost|127\.0\.0\.1/.test(BASE_URL)) — "pega" qualquer URL que
