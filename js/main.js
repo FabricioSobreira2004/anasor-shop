@@ -778,7 +778,9 @@ const DELAY_DEV_MS = 450;
 // e o resto do código (que já usa await) continua funcionando igual.
 function carregarProdutos() {
   return new Promise((resolve) => {
-    setTimeout(() => resolve(produtos), DELAY_DEV_MS);
+    // produtosVisiveis() (js/produtos.js): grades, ceramica.html e a
+    // busca leem desta lista, então peça "oculto: true" nunca entra.
+    setTimeout(() => resolve(produtosVisiveis()), DELAY_DEV_MS);
   });
 }
 
@@ -881,7 +883,9 @@ function slugificar(txt) {
 function subcategoriasCeramica() {
   return [
     ...new Set(
-      produtos
+      // produtosVisiveis(): peça oculta não pode criar bloco/card de
+      // subcategoria nem entrar nas contagens "N peças disponíveis"
+      produtosVisiveis()
         .filter((p) => p.categoria === 'ceramica')
         .map((p) => p.subcategoria)
     ),
@@ -895,7 +899,7 @@ function subcategoriasCeramica() {
 // página tem seu próprio layout de card).
 function dadosCardsSubcategoriaCeramica() {
   return subcategoriasCeramica().map((sub) => {
-    const daSub = produtos.filter((p) => p.subcategoria === sub);
+    const daSub = produtosVisiveis().filter((p) => p.subcategoria === sub);
     // até 5 fotos DISTINTAS da subcategoria (Set tira duplicatas, caso
     // duas peças usem a mesma imagem) — viram os quadros que se
     // revezam no círculo, ver iniciarRotacaoFotos() mais abaixo
@@ -2358,7 +2362,8 @@ if (bannerCarrossel) {
   // junto do número no span (lê melhor "+8" todo dourado que só "8").
   // Sem número (categoria ainda sem peças) -> frase simples, sem span.
   function textoContadorPorCategoria(categoria) {
-    const total = produtos.filter((p) => p.categoria === categoria).length;
+    // produtosVisiveis(): o contador não pode somar peça oculta
+    const total = produtosVisiveis().filter((p) => p.categoria === categoria).length;
     if (total === 0) return 'Novidades chegando em breve';
     const unidade = total === 1 ? 'peça exclusiva disponível' : 'peças exclusivas disponíveis';
     return `<span class="num-ouro">+${total}</span> ${unidade}`;
@@ -2641,7 +2646,10 @@ const IDS_CAFE_DA_TARDE = [
 // montarSelecaoEspecial, um pouco acima/abaixo neste arquivo.
 function montarVitrineCurada(grade, ids) {
   if (!grade) return;
-  const pecas = ids.map((id) => produtos.find((p) => p.id === id)).filter(Boolean);
+  // produtosVisiveis(): mesmo que um id oculto entre na curadoria por
+  // engano, ele é ignorado como se não existisse
+  const visiveis = produtosVisiveis();
+  const pecas = ids.map((id) => visiveis.find((p) => p.id === id)).filter(Boolean);
   if (pecas.length === 0) {
     const secao = grade.closest('section');
     if (secao) secao.hidden = true;
@@ -2846,7 +2854,8 @@ function montarProdutoDestaque(secao) {
   // "carregarProdutos()" (que só existe pra SIMULAR uma latência de
   // rede pro skeleton aparecer). Uma peça de destaque fixa não ganha
   // nada esperando: mostra assim que a página abre.
-  const produto = produtos.find((p) => p.id === ID_PRODUTO_DESTAQUE);
+  // produtosVisiveis(): o destaque nunca pode ser uma peça oculta
+  const produto = produtosVisiveis().find((p) => p.id === ID_PRODUTO_DESTAQUE);
   // ID trocado errado ou peça removida do catálogo: a seção continua
   // "hidden" (valor que já veio do HTML) — some sem quebrar a página.
   if (!produto) return;
@@ -3331,7 +3340,8 @@ function montarSelecaoEspecial(secao) {
   // (hidden) — 1 card solo não é "Seleção Especial", perderia o
   // sentido de comparação lado a lado que o layout em grade pede.
   const pecas = IDS_SELECAO_ESPECIAL
-    .map((id) => produtos.find((p) => p.id === id))
+    // produtosVisiveis(): id oculto na curadoria é ignorado
+    .map((id) => produtosVisiveis().find((p) => p.id === id))
     .filter(Boolean);
   if (pecas.length < 2) return;
 
@@ -3470,7 +3480,8 @@ function slidesEdicaoSurpresa(produto) {
 
 function montarEdicaoSurpresa(secao) {
   const pecas = IDS_EDICAO_SURPRESA
-    .map((id) => produtos.find((p) => p.id === id))
+    // produtosVisiveis(): id oculto na curadoria é ignorado
+    .map((id) => produtosVisiveis().find((p) => p.id === id))
     .filter(Boolean);
   if (pecas.length < 2) return;
 

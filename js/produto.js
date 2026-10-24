@@ -195,6 +195,17 @@ if (!produto) {
   const descricaoLimpa = produto.descricao.replace(/<[^>]+>/g, '').slice(0, 160);
   document.querySelector('meta[name="description"]')?.setAttribute('content', descricaoLimpa);
 
+  // Peça oculta (ex.: a de teste) só existe pelo link direto: o
+  // "noindex" pede aos buscadores (o Googlebot executa JS) que não a
+  // coloquem nos resultados — senão um cliente poderia achá-la no
+  // Google mesmo sem ela aparecer em nenhuma vitrine do site.
+  if (produto.oculto) {
+    const metaRobots = document.createElement('meta');
+    metaRobots.name = 'robots';
+    metaRobots.content = 'noindex';
+    document.head.appendChild(metaRobots);
+  }
+
   // MARCA D'ÁGUA ÚNICA DA PÁGINA (ver .produto-marca-* / main::before em
   // produto.css). Diferente das outras páginas, que LADRILHAM um motivo
   // no fundo, aqui é UMA silhueta grande só. Qual silhueta depende da
@@ -225,9 +236,12 @@ function montarBreadcrumb(produto) {
   // (main.js), a MESMA função que ceramica.html usa. O último
   // trecho (a peça) vai sem href -> vira a "página atual".
   const cat = CATEGORIAS[produto.categoria];
+  // Categoria sem página própria (ex.: "teste", da peça de teste
+  // oculta) não tem pra onde linkar: pula o trecho do meio em vez de
+  // quebrar a página inteira lendo "rotulo" de undefined.
   renderBreadcrumb(breadcrumb, [
     { rotulo: 'Home', href: 'index.html' },
-    { rotulo: cat.rotulo, href: cat.href },
+    ...(cat ? [{ rotulo: cat.rotulo, href: cat.href }] : []),
     { rotulo: produto.nome },
   ]);
 }
@@ -651,7 +665,9 @@ function montarRelacionados(produto) {
   // direita); com 4, o slide único do desktop fecha certinho. No
   // mobile (2 por slide) 4 peças viram 2 páginas — carrossel de
   // verdade também lá, sem gap nenhum.
-  const relacionados = produtos
+  // produtosVisiveis() (js/produtos.js): peça oculta nunca aparece
+  // como sugestão em "Mais Tesouros do Ateliê".
+  const relacionados = produtosVisiveis()
     .filter((p) => p.categoria === produto.categoria && p.id !== produto.id)
     .slice(0, 4);
 

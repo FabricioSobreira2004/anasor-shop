@@ -88,6 +88,18 @@
 //                    bloco "Encomende uma peça parecida". Peça SEM este
 //                    campo é tratada como disponível (o padrão) — por
 //                    isso nenhum dos produtos abaixo precisa declará-lo.
+//   oculto        -> OPCIONAL, boolean. "oculto: true" tira a peça de
+//                    TODAS as listagens (carrosséis e grades da Home,
+//                    ceramica.html e suas contagens/subcategorias,
+//                    busca, relacionados, curadorias e GET /api/produtos)
+//                    mas ela continua abrindo pelo link direto
+//                    produto.html?id=X e passando pelo carrinho/checkout
+//                    normalmente. Serve pra peças de TESTE (ex.: validar
+//                    o pagamento real com um valor baixo) sem que um
+//                    cliente esbarre nelas. Quem decide o que aparece é
+//                    UMA função só, produtosVisiveis() (fim deste
+//                    arquivo) — toda listagem passa por ela, então não
+//                    há "if (p.oculto)" espalhado pelo código.
 //
 //  CATEGORIAS VÁLIDAS: "ceramica" | "croche"
 //  Ainda não há fotos das peças de crochê. Quando houver, basta
@@ -1162,6 +1174,32 @@ const produtos = [
     cuidados: "A definir",
   },
 
+  // --- PEÇA DE TESTE (TEMPORÁRIA) ------------------------------
+  // Existe SÓ pra validar o pagamento real de ponta a ponta (Mercado
+  // Pago em produção) com um valor baixo, sem mexer no preço de
+  // nenhuma peça de verdade. "oculto: true" a tira de toda listagem
+  // (ver produtosVisiveis() no fim do arquivo); só abre pelo link
+  // direto produto.html?id=9001. id 9001: bem longe da numeração das
+  // peças reais (1, 2, 3...) pra nunca colidir com uma peça nova.
+  // categoria "teste": não é "ceramica" nem "croche", então mesmo que
+  // algum filtro escapasse ela não cairia em vitrine nenhuma. Foto
+  // reaproveitada do coador (id 44) pra não versionar arquivo novo.
+  // Entrou num commit isolado pra sair com um "git revert" simples.
+  {
+    id: 9001,
+    nome: "Peça de Teste — não comprar",
+    descricao:
+      "Produto interno usado só para testar o pagamento da loja. Não é uma peça à venda.",
+    preco: 10.0,
+    categoria: "teste",
+    subcategoria: "Teste Interno",
+    imagem: "img/produtos/coador-de-cafe-de-ceramica.jpg",
+    imagensExtras: [],
+    dimensoes: "A definir",
+    cuidados: "A definir",
+    oculto: true,
+  },
+
   // --- CROCHÊ -------------------------------------------------
   // Sem fotos ainda. Modelo para quando houver peças (copie o
   // bloco, troque os valores e some as fotos extras que tiver):
@@ -1179,3 +1217,21 @@ const produtos = [
   //   cuidados: "A definir",
   // },
 ];
+
+// ------------------------------------------------------------
+//  produtosVisiveis() — O ÚNICO FILTRO DE "O QUE O CLIENTE VÊ"
+// ------------------------------------------------------------
+// Devolve só as peças que podem aparecer em LISTAGENS (tira as com
+// "oculto: true"). Toda vitrine, contagem, busca e curadoria do site
+// — e o GET /api/produtos do backend, que executa este mesmo arquivo
+// (ver backend/data/produtos.js) — chama esta função em vez de ler
+// "produtos" direto. Por que uma função central: se amanhã surgir
+// outro motivo pra esconder uma peça, muda AQUI e vale pra tudo.
+// Quem precisa achar QUALQUER peça pelo id (página do produto,
+// carrinho, checkout no servidor) continua usando "produtos" — é
+// isso que faz a peça oculta funcionar pelo link direto.
+// O parâmetro "lista" tem padrão pra uso comum (produtosVisiveis()),
+// mas aceita outra lista caso alguém já tenha uma em mãos.
+function produtosVisiveis(lista = produtos) {
+  return lista.filter((p) => !p.oculto);
+}

@@ -45,10 +45,12 @@ function carregarProdutosDoFront() {
   vm.createContext(sandbox);
 
   // O `vm.runInContext` devolve o valor da ÚLTIMA expressão avaliada.
-  // O arquivo termina declarando `const produtos = [...]`; ao anexar
-  // uma linha final com só `produtos;`, essa expressão vira o valor
-  // de retorno — e é a lista que queremos.
-  return vm.runInContext(codigo + '\nprodutos;', sandbox, {
+  // O arquivo declara `const produtos = [...]` e a função
+  // `produtosVisiveis()`; ao anexar uma linha final que monta um
+  // objeto com os dois, essa expressão vira o valor de retorno. A
+  // função vem junto (em vez de reescrever o filtro aqui) pra a regra
+  // de "o que é oculto" continuar morando num lugar só: js/produtos.js.
+  return vm.runInContext(codigo + '\n({ produtos, produtosVisiveis });', sandbox, {
     filename: caminhoArquivoFront,
   });
 }
@@ -56,7 +58,7 @@ function carregarProdutosDoFront() {
 // Lê UMA vez, quando o servidor sobe (o arquivo não muda em runtime).
 // Se der erro de leitura/parse, é melhor o servidor NEM subir do que
 // subir servindo um catálogo vazio silenciosamente.
-const produtos = carregarProdutosDoFront();
+const { produtos, produtosVisiveis } = carregarProdutosDoFront();
 
 if (!Array.isArray(produtos) || produtos.length === 0) {
   throw new Error(
@@ -65,4 +67,7 @@ if (!Array.isArray(produtos) || produtos.length === 0) {
   );
 }
 
-module.exports = produtos;
+// produtos: catálogo COMPLETO (inclui peças ocultas) — pra achar uma
+//   peça pelo id (GET /api/produtos/:id e o cálculo do checkout).
+// produtosVisiveis: filtro das LISTAGENS públicas (GET /api/produtos).
+module.exports = { produtos, produtosVisiveis };

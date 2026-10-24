@@ -112,7 +112,9 @@ const {
   WebhookSignatureValidator,
 } = require('mercadopago');
 
-const produtos = require('./data/produtos');
+// Dois acessos ao MESMO catálogo: "produtos" (completo, pra buscar por
+// id) e "produtosVisiveis()" (sem as peças "oculto: true", pra listar).
+const { produtos, produtosVisiveis } = require('./data/produtos');
 const { extrairDadosPedido, enviarEmailPedido, formatarReal } = require('./pedido-email');
 
 const app = express();
@@ -291,7 +293,11 @@ app.get('/api/health', (_req, res) => {
 //
 // e nada mais no front precise mudar (os campos são idênticos).
 app.get('/api/produtos', (_req, res) => {
-  res.json(produtos);
+  // produtosVisiveis(): a lista PÚBLICA não pode revelar a peça de
+  // teste oculta. A rota por id (abaixo) e o checkout usam o catálogo
+  // completo de propósito — é o que faz o link direto
+  // produto.html?id=9001 e o pagamento dela funcionarem.
+  res.json(produtosVisiveis());
 });
 
 // GET /api/produtos/:id — uma peça só. Já deixo pronto porque a
