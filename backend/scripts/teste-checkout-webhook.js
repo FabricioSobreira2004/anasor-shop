@@ -119,6 +119,17 @@ async function comLog(fn) {
     Object.assign(console, originais);
   }
 }
+// Carrega o server.js sem os avisos de inicialização na saída do teste
+// (para os testes que só olham a RESPOSTA, não o log).
+function carregarQuieto(env) {
+  const originais = { log: console.log, error: console.error, warn: console.warn };
+  for (const k of Object.keys(originais)) console[k] = () => {};
+  try {
+    return carregarServidor(env);
+  } finally {
+    Object.assign(console, originais);
+  }
+}
 const semDadoPrivado = (log) => DADOS_PRIVADOS.forEach((d) => assert.ok(!log.includes(d), `log não pode conter "${d}"`));
 
 const PEDIDO = {
@@ -188,6 +199,36 @@ teste('checkout em localhost sem token: modo demonstração continua (link pedid
   assert.equal(valor.status, 200);
   assert.match(valor.corpo.checkout_url, /^http:\/\/localhost:8765\/pedido-pendente\.html\?order_id=/);
   assert.equal(valor.corpo.total, 134.9, 'total recalculado no servidor');
+});
+
+teste('checkout: cerâmica sempre 1 un. (1.5, 1e400, 5 e id repetido não multiplicam o total)', async () => {
+  const app = carregarQuieto({ BASE_URL: 'http://localhost:8765' });
+  const corpo = { ...PEDIDO, itens: [{ id: 1, quantidade: 5 }, { id: '1', quantidade: 1.5 }, { id: 2, quantidade: 1e400 }, { id: 2, quantidade: -3 }] };
+  const { valor } = await comLog(async () => requisitar(app, { caminho: '/api/checkout', corpo }));
+  const { produtos } = require('../data/produtos');
+  const esperado = Math.round((produtos.find((p) => p.id === 1).preco + produtos.find((p) => p.id === 2).preco) * 100) / 100;
+  assert.equal(valor.status, 200);
+  assert.equal(valor.corpo.total, esperado, '1 de cada peça');
+});
+
+teste('checkout: peça vendida (disponivel:false) é recusada com o nome dela', async () => {
+  const app = carregarQuieto({ BASE_URL: 'http://localhost:8765' });
+  // o server.js usa a MESMA lista (cache do require): marcar aqui vale lá
+  const peca = require('../data/produtos').produtos.find((p) => p.id === 2);
+  peca.disponivel = false;
+  try {
+    const { valor } = await comLog(async () => requisitar(app, { caminho: '/api/checkout', corpo: { ...PEDIDO, itens: [{ id: 1, quantidade: 1 }, { id: 2, quantidade: 1 }] } }));
+    assert.equal(valor.status, 400);
+    assert.ok(valor.corpo.erro.includes(peca.nome) && /vendida/.test(valor.corpo.erro));
+  } finally {
+    delete peca.disponivel;
+  }
+});
+
+teste('checkout: mais de 50 linhas no carrinho -> 400', async () => {
+  const app = carregarQuieto({ BASE_URL: 'http://localhost:8765' });
+  const { valor } = await comLog(async () => requisitar(app, { caminho: '/api/checkout', corpo: { ...PEDIDO, itens: Array.from({ length: 51 }, () => ({ id: 1, quantidade: 1 })) } }));
+  assert.equal(valor.status, 400);
 });
 
 teste('webhook: aprovado e NENHUM canal entregou (e-mail sem config, Telegram sem config) -> 503', async () => {

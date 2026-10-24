@@ -1789,7 +1789,10 @@ function adicionarAoCarrinho(card, botao) {
   // compara como texto: dataset.id sempre vem string do HTML
   const existente = carrinho.find((produto) => String(produto.id) === item.id);
   if (existente) {
-    existente.quantidade += 1;
+    // Peça única (estoque 1, ver CLAUDE.md): tocar de novo em "comprar"
+    // não soma — antes virava "2x" no carrinho de uma peça que só
+    // existe uma (o backend também corrige, ver POST /api/checkout).
+    existente.quantidade = 1;
     // Backfill: item salvo ANTES desta correção (sem "imagem" no
     // localStorage) ganha a foto agora, na primeira vez que a peça é
     // comprada de novo — sem isso, quem já tinha o item no carrinho

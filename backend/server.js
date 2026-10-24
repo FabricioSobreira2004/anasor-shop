@@ -504,20 +504,51 @@ app.post('/api/checkout', async (req, res) => {
   // id que não existe mais (peça removida do catálogo entre o
   // carrinho ser montado e o checkout ser enviado) em vez de derrubar
   // o pedido inteiro; se sobrar ZERO itens válidos, aí sim é erro.
-  const itensResolvidos = itens
-    .map((item) => {
-      const produto = produtos.find((p) => String(p.id) === String(item.id));
-      if (!produto) return null;
-      const quantidade = Math.max(1, Number(item.quantidade) || 1);
-      return {
-        id: produto.id,
-        nome: produto.nome,
-        precoUnitario: produto.preco, // <- do catálogo, NUNCA do body
-        quantidade,
-        subtotal: produto.preco * quantidade,
-      };
-    })
-    .filter(Boolean);
+  //
+  // REGRAS DE ESTOQUE (achado do code-review — antes aceitava qualquer
+  // quantidade, inclusive 1.5, 1e400 e o mesmo id repetido, e cobrava
+  // peça já vendida):
+  //   - no máximo MAX_ITENS_CARRINHO linhas (o site tem 44 peças);
+  //   - quantidade só inteira >= 1 (qualquer outra coisa vira 1);
+  //   - o mesmo id repetido vira UMA linha (soma as quantidades);
+  //   - cerâmica é peça ÚNICA (estoque 1, CLAUDE.md): quantidade
+  //     sempre 1, mesmo que o carrinho antigo mande mais; o resto
+  //     (crochê, no futuro) limitado a QTD_MAX_OUTRAS;
+  //   - peça "disponivel: false" (já vendida) recusa o pedido com o
+  //     nome dela, pra a pessoa tirar do carrinho — cobrar seria vender
+  //     algo que não existe mais.
+  const MAX_ITENS_CARRINHO = 50;
+  const QTD_MAX_OUTRAS = 10;
+  if (itens.length > MAX_ITENS_CARRINHO) {
+    return res.status(400).json({ erro: 'Carrinho com itens demais.' });
+  }
+
+  const porId = new Map();
+  for (const item of itens) {
+    const produto = produtos.find((p) => String(p.id) === String(item?.id));
+    if (!produto) continue;
+    const pedida = Number(item.quantidade);
+    const quantidade = Number.isInteger(pedida) && pedida >= 1 ? pedida : 1;
+    porId.set(produto.id, { produto, quantidade: (porId.get(produto.id)?.quantidade || 0) + quantidade });
+  }
+
+  const vendidas = [...porId.values()].filter(({ produto }) => produto.disponivel === false);
+  if (vendidas.length > 0) {
+    return res.status(400).json({
+      erro: `Esta peça já foi vendida: ${vendidas.map(({ produto }) => produto.nome).join(', ')}. Tire do carrinho para continuar.`,
+    });
+  }
+
+  const itensResolvidos = [...porId.values()].map(({ produto, quantidade: pedida }) => {
+    const quantidade = produto.categoria === 'ceramica' ? 1 : Math.min(pedida, QTD_MAX_OUTRAS);
+    return {
+      id: produto.id,
+      nome: produto.nome,
+      precoUnitario: produto.preco, // <- do catálogo, NUNCA do body
+      quantidade,
+      subtotal: produto.preco * quantidade,
+    };
+  });
 
   if (itensResolvidos.length === 0) {
     return res.status(400).json({
