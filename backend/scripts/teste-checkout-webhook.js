@@ -57,10 +57,18 @@ const DADOS_PRIVADOS = ['maria.teste@example.com', '98722', '123.456.789', 'Aven
 // "válida" quando o header x-signature é exatamente "assinatura-valida".
 const sdkFalso = {
   MercadoPagoConfig: class { constructor(opcoes) { this.opcoes = opcoes; } },
-  Preference: class { async create() { throw new Error('Preference não deveria ser criada neste teste'); } },
+  // Os 2 erros abaixo imitam a API ecoando dado do comprador na
+  // mensagem — o teste confere que essa mensagem NÃO vai pro log.
+  Preference: class {
+    async create() {
+      const e = new Error('payer.email invalid: maria.teste@example.com');
+      e.status = 400;
+      throw e;
+    }
+  },
   Payment: class {
     async get() {
-      if (consultaFalha) throw new Error('rede caiu');
+      if (consultaFalha) { const e = new Error('rede caiu ao buscar maria.teste@example.com'); e.status = 503; throw e; }
       return pagamentoFalso();
     }
   },
@@ -277,9 +285,20 @@ teste('webhook: pagamento não aprovado (pending) -> 200, sem aviso', async () =
 
 teste('webhook: falha ao consultar o pagamento -> 500 (como antes)', async () => {
   consultaFalha = true;
-  const { valor } = await comLog(async () => requisitar(carregarServidor(PRODUCAO_WEBHOOK), { caminho: WEBHOOK, headers: ASSINADO }));
+  const { valor, log } = await comLog(async () => requisitar(carregarServidor(PRODUCAO_WEBHOOK), { caminho: WEBHOOK, headers: ASSINADO }));
   consultaFalha = false;
   assert.equal(valor.status, 500);
+  assert.ok(log.includes('http_503'), 'log traz só tipo + status');
+  semDadoPrivado(log);
+});
+
+teste('checkout: falha ao criar a Preference -> 502 e log sem o e-mail que a API ecoou', async () => {
+  const { valor, log } = await comLog(async () =>
+    requisitar(carregarServidor({ MERCADOPAGO_ACCESS_TOKEN: TOKEN_MP_FALSO, BASE_URL: 'https://loja.exemplo.com.br' }), { caminho: '/api/checkout', corpo: PEDIDO })
+  );
+  assert.equal(valor.status, 502);
+  assert.ok(log.includes('Error http_400'), 'log traz só tipo + status');
+  semDadoPrivado(log);
 });
 
 (async () => {

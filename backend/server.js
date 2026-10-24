@@ -117,7 +117,17 @@ const {
 const { produtos, produtosVisiveis } = require('./data/produtos');
 const { extrairDadosPedido, formatarReal } = require('./pedido-email');
 // Envio dos avisos de pedido pago (e-mail + Telegram, isolados entre si).
-const { notificarPedidoAprovado, algumAvisoEntregue } = require('./notificar-pedido');
+const { notificarPedidoAprovado, algumAvisoEntregue, tipoDoErro } = require('./notificar-pedido');
+
+// Resumo SEGURO de um erro do SDK do Mercado Pago pra log: só o tipo
+// (rótulo simples, ver tipoDoErro) + o status HTTP. A mensagem original
+// fica de fora de propósito (achado do code-review): erro de validação
+// da API pode repetir o que foi enviado — e-mail, nome, endereço do
+// comprador — e isso iria parar nos logs da Vercel.
+function resumoErroMercadoPago(erro) {
+  const status = Number.isInteger(erro?.status) ? ` http_${erro.status}` : '';
+  return `${tipoDoErro(erro)}${status}`;
+}
 
 const app = express();
 
@@ -731,7 +741,7 @@ app.post('/api/checkout', async (req, res) => {
     // está tudo certo e nunca pagaria nada de verdade. Melhor devolver
     // um erro explícito pro front mostrar "algo deu errado" (ver
     // js/checkout.js, que já trata resposta de erro do endpoint).
-    console.error('❌ Falha ao criar Preference no Mercado Pago:', erro?.message || erro);
+    console.error('❌ Falha ao criar Preference no Mercado Pago:', resumoErroMercadoPago(erro));
     return res.status(502).json({
       erro: 'Não foi possível iniciar o pagamento no Mercado Pago. Tente novamente em instantes.',
     });
@@ -871,7 +881,7 @@ app.post('/api/webhook/mercadopago', async (req, res) => {
   try {
     pagamento = await new Payment(mp).get({ id: paymentId });
   } catch (erro) {
-    console.error(`❌ Falha ao consultar o pagamento ${paymentId} na API do Mercado Pago:`, erro?.message || erro);
+    console.error(`❌ Falha ao consultar o pagamento ${paymentId} na API do Mercado Pago:`, resumoErroMercadoPago(erro));
     return res.sendStatus(500); // pode ser falha de rede passageira — vale o MP reenviar
   }
 
