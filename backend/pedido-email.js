@@ -14,6 +14,15 @@
 //  completo), sem precisar abrir o painel do Mercado Pago e caçar o
 //  metadata do pagamento.
 //
+//  É TAMBÉM o documento que ela usa pra EMITIR A NOTA FISCAL — por isso
+//  o bloco "DADOS PARA NOTA FISCAL" e a regra de origem dos dados:
+//  o que o cliente digitou no NOSSO checkout (metadata da Preference) é
+//  a fonte principal; o "payer" do pagamento do Mercado Pago é só
+//  reserva, porque ele pode vir vazio ou MASCARADO ("XXXXXXXXXXX")
+//  quando a pessoa paga como visitante (foi o que aconteceu no pedido
+//  AS-20261024-NO9M). Dado que faltar nas duas fontes aparece como
+//  "NÃO INFORMADO", em destaque — nunca um "-" fácil de não ver.
+//
 //  Separado de server.js (não é só mais uma função lá dentro) porque:
 //   1. é testável sozinho — montarEmailPedido() é uma função PURA
 //      (recebe dados, devolve {assunto, texto, html}, não manda nada),
@@ -25,6 +34,7 @@
 // ============================================================
 
 const nodemailer = require('nodemailer');
+const { soDigitos, formatarCpf, formatarTelefone } = require('./documentos');
 
 // ---------- FORMATAÇÃO ----------
 // Mesma formatação "R$ 149,90" do front (formatarPreco, js/main.js) —
@@ -54,6 +64,12 @@ function escaparHtml(valor) {
     .replace(/'/g, '&#39;');
 }
 
+// 01310100 -> 01310-100 (como vai na etiqueta/nota)
+function formatarCep(valor) {
+  const d = soDigitos(valor);
+  return d.length === 8 ? `${d.slice(0, 5)}-${d.slice(5)}` : String(valor ?? '').trim();
+}
+
 // ---------- LEITURA DO PAGAMENTO (Mercado Pago) ----------
 
 // O metadata que ENVIAMOS (POST /api/checkout, server.js) já nasce em
@@ -78,6 +94,24 @@ function normalizarMetadata(metadataBruto) {
   return normalizado;
 }
 
+// Valor MASCARADO pelo Mercado Pago (comprador visitante): o e-mail
+// chega como "XXXXXXXXXXX" e às vezes vem só parte dele com asteriscos
+// ("ma***@gmail.com"). Isso NÃO é dado — não pode ir pra nota fiscal
+// nem impedir a reserva de ser usada; é tratado igual a vazio.
+function pareceMascarado(texto) {
+  return /^[X*•]+$/i.test(texto) || /X{4,}|\*{3,}/.test(texto);
+}
+
+// Primeiro valor de VERDADE entre as fontes (na ordem de preferência):
+// ignora vazio, só espaços e mascarado. "" quando nenhuma tem.
+function primeiroValorReal(...candidatos) {
+  for (const candidato of candidatos) {
+    const texto = String(candidato ?? '').trim();
+    if (texto && !pareceMascarado(texto)) return texto;
+  }
+  return '';
+}
+
 const NOMES_TIPO_PAGAMENTO = {
   credit_card: 'Cartão de crédito',
   debit_card: 'Cartão de débito',
@@ -100,6 +134,24 @@ function montarTextoFormaPagamento(tipoId, metodoId) {
   return metodoId && metodoId !== tipoId ? `${nomeTipo} (${metodoId})` : nomeTipo;
 }
 
+// Status do pagamento em português (o webhook só manda e-mail de
+// "approved", mas o campo existe pra nota/conferência e não custa
+// cobrir os outros).
+const NOMES_STATUS = {
+  approved: 'Aprovado',
+  authorized: 'Autorizado',
+  in_process: 'Em análise',
+  pending: 'Pendente',
+  rejected: 'Recusado',
+  refunded: 'Devolvido',
+  cancelled: 'Cancelado',
+  charged_back: 'Contestado (chargeback)',
+};
+
+// Número finito ou null — campos de valor do Mercado Pago podem faltar
+// conforme a forma de pagamento (taxa/líquido nem sempre vêm na hora).
+const numeroOuNull = (valor) => (valor !== null && valor !== '' && Number.isFinite(Number(valor)) ? Number(valor) : null);
+
 // Recebe a resposta de Payment.get() (SDK oficial, GET /v1/payments/:id
 // — ver server.js) e devolve só o que o e-mail precisa, já organizado.
 // NUNCA confia em req.body do webhook pra montar isto — quem chama
@@ -107,38 +159,34 @@ function montarTextoFormaPagamento(tipoId, metodoId) {
 function extrairDadosPedido(pagamento) {
   const metadata = normalizarMetadata(pagamento.metadata);
   const payer = pagamento.payer || {};
+  // reservas de ENDEREÇO do lado do Mercado Pago (só usadas se o nosso
+  // metadata faltar): o payer da Preference costuma voltar em
+  // additional_info.payer; shipments.receiver_address existe em
+  // integrações com frete do Mercado Pago (não é o nosso caso hoje).
+  const enderecoMP = pagamento.additional_info?.payer?.address || {};
+  const recebedorMP = pagamento.additional_info?.shipments?.receiver_address || {};
 
-  // NOME do cliente: não existe no NOSSO metadata (nunca mandamos
-  // "nome" pra lá — só telefone/cpf/endereço, ver POST /api/checkout)
-  // — vem do PRÓPRIO Mercado Pago, preenchido pela pessoa na tela do
-  // Checkout Pro. Pode vir vazio dependendo da forma de pagamento.
-  const nomeCliente =
-    [payer.first_name, payer.last_name].filter(Boolean).join(' ').trim() || null;
-  const emailCliente = payer.email || null;
-
-  // telefone/CPF: preferimos o que a PRÓPRIA PESSOA digitou no NOSSO
-  // formulário (metadata — mesmo texto que ela confirmou no checkout
-  // do site) e só caímos pro que o Mercado Pago registrou (payer) se
-  // o nosso vier vazio (ex.: campo opcional que ela pulou no site, mas
-  // preencheu lá pro Pix exigir CPF).
-  const telefoneMetadata = String(metadata.cliente_telefone || '').trim();
-  const telefonePayer = payer.phone
-    ? `${payer.phone.area_code || ''}${payer.phone.number || ''}`.trim()
-    : '';
-  const telefone = telefoneMetadata || telefonePayer;
-
-  const cpfMetadata = String(metadata.cliente_cpf || '').trim();
-  const cpfPayer = payer.identification?.number || '';
-  const cpf = cpfMetadata || cpfPayer;
+  // CLIENTE: metadata (o que a PRÓPRIA PESSOA digitou no nosso checkout
+  // e confirmou) primeiro; payer do Mercado Pago só quando o nosso
+  // faltar — ver o comentário no topo do arquivo.
+  const cliente = {
+    nome: primeiroValorReal(metadata.cliente_nome, [payer.first_name, payer.last_name].filter(Boolean).join(' ')),
+    email: primeiroValorReal(metadata.cliente_email, payer.email),
+    telefone: primeiroValorReal(
+      metadata.cliente_telefone,
+      payer.phone ? `${payer.phone.area_code || ''}${payer.phone.number || ''}` : ''
+    ),
+    cpf: primeiroValorReal(metadata.cliente_cpf, payer.identification?.number),
+  };
 
   const endereco = {
-    cep: String(metadata.endereco_cep || '').trim(),
-    rua: String(metadata.endereco_rua || '').trim(),
-    numero: String(metadata.endereco_numero || '').trim(),
-    complemento: String(metadata.endereco_complemento || '').trim(),
-    bairro: String(metadata.endereco_bairro || '').trim(),
-    cidade: String(metadata.endereco_cidade || '').trim(),
-    estado: String(metadata.endereco_uf || '').trim(),
+    cep: primeiroValorReal(metadata.endereco_cep, enderecoMP.zip_code, recebedorMP.zip_code),
+    rua: primeiroValorReal(metadata.endereco_rua, enderecoMP.street_name, recebedorMP.street_name),
+    numero: primeiroValorReal(metadata.endereco_numero, enderecoMP.street_number, recebedorMP.street_number),
+    complemento: primeiroValorReal(metadata.endereco_complemento),
+    bairro: primeiroValorReal(metadata.endereco_bairro),
+    cidade: primeiroValorReal(metadata.endereco_cidade, recebedorMP.city_name),
+    estado: primeiroValorReal(metadata.endereco_uf, recebedorMP.state_name),
   };
 
   // ITENS: preferimos additional_info.items (o Mercado Pago costuma
@@ -153,11 +201,16 @@ function extrairDadosPedido(pagamento) {
     : [];
   const itens =
     itensBrutos.length > 0
-      ? itensBrutos.map((item) => ({
-          nome: item.title || item.description || 'Item',
-          quantidade: Number(item.quantity) || 1,
-          precoUnitario: Number(item.unit_price) || 0,
-        }))
+      ? itensBrutos.map((item) => {
+          const quantidade = Number(item.quantity) || 1;
+          const precoUnitario = Number(item.unit_price) || 0;
+          return {
+            nome: item.title || item.description || 'Item',
+            quantidade,
+            precoUnitario,
+            subtotal: Math.round(quantidade * precoUnitario * 100) / 100,
+          };
+        })
       : null;
   const itensResumoTexto = String(metadata.itens_resumo || '').trim();
 
@@ -186,6 +239,21 @@ function extrairDadosPedido(pagamento) {
     ? valorMetadata
     : 0;
 
+  // PARCELAS (cartão): só interessam quando passam de 1x.
+  const numeroParcelas = Number(pagamento.installments) || 1;
+  const valorParcela = numeroOuNull(pagamento.transaction_details?.installment_amount);
+  const parcelas = numeroParcelas > 1 ? { quantidade: numeroParcelas, valor: valorParcela } : null;
+
+  // TAXA e LÍQUIDO do Mercado Pago, quando o pagamento já traz (em Pix
+  // e cartão costuma vir na aprovação; se não vier, o e-mail omite a
+  // linha em vez de mostrar um valor errado). Taxa = soma das tarifas
+  // cobradas da Anasor (fee_details), não do comprador.
+  const taxas = Array.isArray(pagamento.fee_details) ? pagamento.fee_details : [];
+  const taxaMercadoPago = taxas.length > 0
+    ? Math.round(taxas.reduce((soma, t) => soma + (Number(t.amount) || 0), 0) * 100) / 100
+    : null;
+  const valorLiquido = numeroOuNull(pagamento.transaction_details?.net_received_amount);
+
   return {
     // external_reference é o NOSSO código (gerado em gerarIdPedido(),
     // server.js, formato AS-AAAAMMDD-XXXX) — pedido_id no metadata é
@@ -194,9 +262,13 @@ function extrairDadosPedido(pagamento) {
     codigoPedido: pagamento.external_reference || metadata.pedido_id || `MP-${pagamento.id}`,
     pagamentoId: pagamento.id,
     dataAprovacao: pagamento.date_approved || pagamento.date_created || new Date().toISOString(),
+    status: NOMES_STATUS[pagamento.status] || pagamento.status || '',
     valorTotal,
     formaPagamento,
-    cliente: { nome: nomeCliente, email: emailCliente, telefone, cpf },
+    parcelas,
+    taxaMercadoPago,
+    valorLiquido,
+    cliente,
     endereco,
     itens,
     itensResumoTexto,
@@ -220,13 +292,21 @@ function montarLinkWhatsApp(telefone) {
   return `https://wa.me/55${numeroBrasil}`;
 }
 
+// O que aparece no lugar de um dado que NÃO chegou por nenhuma fonte —
+// em destaque de propósito: a Anasor precisa notar ANTES de emitir a
+// nota (e pedir o dado ao cliente), não descobrir depois.
+const NAO_INFORMADO_TEXTO = '*** NÃO INFORMADO ***';
+const NAO_INFORMADO_HTML = '<strong style="color:#B3261E;">NÃO INFORMADO</strong>';
+
 // Função PURA: recebe os dados já extraídos (extrairDadosPedido, acima)
 // e devolve {assunto, texto, html} — NÃO manda nada, não sabe nem que
 // nodemailer existe. É o que backend/scripts/teste-email-pedido.js usa
 // pra validar o FORMATO do e-mail sem precisar enviar nada de verdade.
 function montarEmailPedido(dadosPedido) {
-  const { codigoPedido, pagamentoId, dataAprovacao, valorTotal, formaPagamento, cliente, endereco, itens, itensResumoTexto } =
-    dadosPedido;
+  const {
+    codigoPedido, pagamentoId, dataAprovacao, status, valorTotal, formaPagamento, parcelas,
+    taxaMercadoPago, valorLiquido, cliente, endereco, itens, itensResumoTexto,
+  } = dadosPedido;
 
   const dataFormatada = new Date(dataAprovacao).toLocaleString('pt-BR', {
     timeZone: 'America/Sao_Paulo',
@@ -235,91 +315,121 @@ function montarEmailPedido(dadosPedido) {
   });
 
   const linkWhatsApp = montarLinkWhatsApp(cliente.telefone);
+  const formaComParcelas = parcelas
+    ? `${formaPagamento} — ${parcelas.quantidade}x${parcelas.valor !== null ? ` de ${formatarReal(parcelas.valor)}` : ''}`
+    : formaPagamento;
+  const cidadeUf = [endereco.cidade, endereco.estado].filter(Boolean).join('/');
 
-  const enderecoCompleto = endereco.rua
-    ? [
-        `${endereco.rua}${endereco.numero ? ', ' + endereco.numero : ''}`,
-        endereco.complemento,
-        endereco.bairro,
-        endereco.cidade && endereco.estado ? `${endereco.cidade}/${endereco.estado}` : endereco.cidade || endereco.estado,
-        endereco.cep ? `CEP ${endereco.cep}` : '',
-      ]
-        .filter(Boolean)
-        .join(' — ')
-    : '';
+  // Uma lista só de [rótulo, valor] por bloco, usada pelas DUAS versões
+  // (texto e HTML) — assim as duas nunca mostram campos diferentes.
+  // valor '' = não informado (vira o destaque); "opcional: true" =
+  // campo que pode não existir de verdade (complemento) e aí mostra
+  // "(sem complemento)" em vez do alerta.
+  const blocoPedido = [
+    ['Pedido', codigoPedido],
+    ['Aprovado em', dataFormatada],
+    ['Pagamento Mercado Pago nº', String(pagamentoId ?? '')],
+    ['Forma de pagamento', formaComParcelas],
+    ['Status', status],
+  ];
+  const blocoCliente = [
+    ['Nome completo', cliente.nome],
+    ['CPF', cliente.cpf ? formatarCpf(cliente.cpf) : ''],
+    ['E-mail', cliente.email],
+    ['Telefone/WhatsApp', cliente.telefone ? formatarTelefone(cliente.telefone) : ''],
+  ];
+  const blocoEndereco = [
+    ['Rua', endereco.rua],
+    ['Número', endereco.numero],
+    ['Complemento', endereco.complemento, { opcional: true }],
+    ['Bairro', endereco.bairro],
+    ['Cidade/UF', cidadeUf],
+    ['CEP', endereco.cep ? formatarCep(endereco.cep) : ''],
+  ];
+  const blocoValores = [
+    ['Frete', 'Grátis'],
+    ['TOTAL PAGO', formatarReal(valorTotal)],
+    ...(taxaMercadoPago !== null ? [['Taxa do Mercado Pago', formatarReal(taxaMercadoPago)]] : []),
+    ...(valorLiquido !== null ? [['Valor líquido a receber', formatarReal(valorLiquido)]] : []),
+  ];
 
   // --- TEXTO SIMPLES ---
+  const linhaTexto = ([rotulo, valor, opcoes]) =>
+    `${rotulo}: ${valor || (opcoes?.opcional ? '(sem complemento)' : NAO_INFORMADO_TEXTO)}`;
+  const blocoTexto = (linhas) => linhas.map(linhaTexto).join('\n');
+
   const linhasItensTexto = itens
-    ? itens.map((item) => `  - ${item.quantidade}x ${item.nome} — ${formatarReal(item.precoUnitario)} cada`).join('\n')
-    : itensResumoTexto
-    ? `  ${itensResumoTexto}`
-    : '  (detalhe dos itens indisponível — confira o pagamento no painel do Mercado Pago)';
+    ? itens
+        .map((item) => `${item.quantidade}x ${item.nome} — ${formatarReal(item.precoUnitario)} cada — subtotal ${formatarReal(item.subtotal)}`)
+        .join('\n')
+    : itensResumoTexto || `${NAO_INFORMADO_TEXTO} (confira o pagamento no painel do Mercado Pago)`;
 
   const texto = `NOVO PEDIDO PAGO — ${codigoPedido}
 
-Pagamento Mercado Pago #${pagamentoId}, aprovado em ${dataFormatada}.
+========== DADOS PARA NOTA FISCAL ==========
+
+PEDIDO
+${blocoTexto(blocoPedido)}
 
 CLIENTE
-Nome: ${cliente.nome || '(não informado pelo Mercado Pago)'}
-E-mail: ${cliente.email || '-'}
-Telefone: ${cliente.telefone || '-'}${linkWhatsApp ? `  (WhatsApp: ${linkWhatsApp})` : ''}
-CPF: ${cliente.cpf || '-'}
+${blocoTexto(blocoCliente)}${linkWhatsApp ? `\nAbrir WhatsApp: ${linkWhatsApp}` : ''}
 
 ENDEREÇO DE ENTREGA
-${enderecoCompleto || '(endereço não disponível — confira o pedido ou entre em contato com o cliente)'}
+${blocoTexto(blocoEndereco)}
 
 ITENS
 ${linhasItensTexto}
 
-Forma de pagamento: ${formaPagamento}
-TOTAL: ${formatarReal(valorTotal)}
+${blocoTexto(blocoValores)}
 
----
-Código do pedido: ${codigoPedido}
-ID do pagamento no Mercado Pago: ${pagamentoId}
+============================================
+
+Responda este e-mail ou chame o cliente pelo WhatsApp para combinar o envio.
 `;
 
   // --- HTML SIMPLES ---
   // Sem CSS externo/framework — é um e-mail, a maioria dos clientes
-  // ignora <style> em <head> mesmo; estilo inline mínimo, só pra não
-  // chegar como um bloco de texto cru sem NENHUMA hierarquia.
+  // ignora <style> em <head> mesmo; estilo inline mínimo. TUDO que vem
+  // de fora (cliente, Mercado Pago) passa por escaparHtml; só o
+  // destaque "NÃO INFORMADO" (constante nossa) entra como HTML.
+  const linhaHtml = ([rotulo, valor, opcoes]) =>
+    `<tr><td style="padding:3px 12px 3px 0;color:#5A4A3A;white-space:nowrap;vertical-align:top;">${escaparHtml(rotulo)}</td>` +
+    `<td style="padding:3px 0;">${valor ? escaparHtml(valor) : opcoes?.opcional ? '(sem complemento)' : NAO_INFORMADO_HTML}</td></tr>`;
+  const tabelaHtml = (linhas, extra = '') =>
+    `<table style="border-collapse:collapse;">${linhas.map(linhaHtml).join('')}${extra}</table>`;
+  const tituloHtml = (texto) => `<h3 style="margin:18px 0 6px;font-size:1em;letter-spacing:0.04em;">${escaparHtml(texto)}</h3>`;
+
   const linhasItensHtml = itens
     ? itens
         .map(
           (item) =>
-            `<tr><td style="padding:4px 8px 4px 0;">${escaparHtml(item.quantidade)}x ${escaparHtml(item.nome)}</td><td style="padding:4px 0;text-align:right;">${escaparHtml(formatarReal(item.precoUnitario))} cada</td></tr>`
+            `<tr><td style="padding:3px 12px 3px 0;">${escaparHtml(item.quantidade)}x ${escaparHtml(item.nome)}</td>` +
+            `<td style="padding:3px 12px 3px 0;text-align:right;white-space:nowrap;">${escaparHtml(formatarReal(item.precoUnitario))} cada</td>` +
+            `<td style="padding:3px 0;text-align:right;white-space:nowrap;">${escaparHtml(formatarReal(item.subtotal))}</td></tr>`
         )
         .join('')
-    : `<tr><td colspan="2" style="padding:4px 0;">${itensResumoTexto ? escaparHtml(itensResumoTexto) : '(detalhe dos itens indisponível — confira o pagamento no painel do Mercado Pago)'}</td></tr>`;
+    : `<tr><td style="padding:3px 0;">${itensResumoTexto ? escaparHtml(itensResumoTexto) : `${NAO_INFORMADO_HTML} (confira o pagamento no painel do Mercado Pago)`}</td></tr>`;
+
+  const linhaWhatsAppHtml = linkWhatsApp
+    ? `<tr><td></td><td style="padding:3px 0;"><a href="${escaparHtml(linkWhatsApp)}">Abrir WhatsApp</a></td></tr>`
+    : '';
 
   const html = `
-<div style="font-family:Arial,Helvetica,sans-serif;color:#3E2E22;max-width:560px;">
-  <h2 style="margin:0 0 4px;">Novo pedido pago — ${escaparHtml(codigoPedido)}</h2>
-  <p style="margin:0 0 16px;color:#5A4A3A;">Pagamento Mercado Pago #${escaparHtml(pagamentoId)}, aprovado em ${escaparHtml(dataFormatada)}.</p>
-
-  <h3 style="margin:16px 0 4px;">Cliente</h3>
-  <p style="margin:0;">
-    Nome: ${escaparHtml(cliente.nome) || '(não informado pelo Mercado Pago)'}<br>
-    E-mail: ${escaparHtml(cliente.email) || '-'}<br>
-    Telefone: ${escaparHtml(cliente.telefone) || '-'}
-    ${linkWhatsApp ? ` — <a href="${escaparHtml(linkWhatsApp)}">Abrir WhatsApp</a>` : ''}<br>
-    CPF: ${escaparHtml(cliente.cpf) || '-'}
-  </p>
-
-  <h3 style="margin:16px 0 4px;">Endereço de entrega</h3>
-  <p style="margin:0;">${escaparHtml(enderecoCompleto) || '(endereço não disponível — confira o pedido ou entre em contato com o cliente)'}</p>
-
-  <h3 style="margin:16px 0 4px;">Itens</h3>
-  <table style="border-collapse:collapse;width:100%;">${linhasItensHtml}</table>
-
-  <p style="margin:16px 0 4px;">Forma de pagamento: ${escaparHtml(formaPagamento)}</p>
-  <p style="margin:0;font-size:1.1em;"><strong>Total: ${escaparHtml(formatarReal(valorTotal))}</strong></p>
-
-  <hr style="margin:20px 0;border:none;border-top:1px solid #EFE3D0;">
-  <p style="margin:0;font-size:0.85em;color:#8A7A6A;">
-    Código do pedido: ${escaparHtml(codigoPedido)}<br>
-    ID do pagamento no Mercado Pago: ${escaparHtml(pagamentoId)}
-  </p>
+<div style="font-family:Arial,Helvetica,sans-serif;color:#3E2E22;max-width:600px;">
+  <h2 style="margin:0 0 12px;">Novo pedido pago — ${escaparHtml(codigoPedido)}</h2>
+  <div style="border:2px solid #9E4F2E;border-radius:8px;padding:12px 16px;">
+    <p style="margin:0 0 4px;font-weight:bold;letter-spacing:0.06em;color:#9E4F2E;">DADOS PARA NOTA FISCAL</p>
+    ${tituloHtml('Pedido')}
+    ${tabelaHtml(blocoPedido)}
+    ${tituloHtml('Cliente')}
+    ${tabelaHtml(blocoCliente, linhaWhatsAppHtml)}
+    ${tituloHtml('Endereço de entrega')}
+    ${tabelaHtml(blocoEndereco)}
+    ${tituloHtml('Itens')}
+    <table style="border-collapse:collapse;">${linhasItensHtml}</table>
+    <div style="margin-top:10px;">${tabelaHtml(blocoValores)}</div>
+  </div>
+  <p style="margin:16px 0 0;">Responda este e-mail ou chame o cliente pelo WhatsApp para combinar o envio.</p>
 </div>
 `;
 
@@ -353,6 +463,11 @@ function criarTransportadorGmail() {
   });
 }
 
+// E-mail simples o bastante pra virar Reply-To: um endereço só, sem
+// espaço, vírgula, aspas nem quebra de linha (nada que pudesse virar 2
+// destinatários ou um cabeçalho a mais).
+const emailSimples = (valor) => /^[^\s@,;<>"'()]+@[^\s@,;<>"'()]+\.[^\s@,;<>"'()]+$/.test(String(valor || ''));
+
 // Monta o e-mail (montarEmailPedido, acima) e manda. "transportador"
 // é injetável de propósito (parâmetro opcional) — é o que permite
 // backend/scripts/teste-email-pedido.js passar um transporte
@@ -383,6 +498,11 @@ async function enviarEmailPedido(dadosPedido, { transportador, destino, remetent
   return transporte.sendMail({
     from: `"Anasor Shop" <${remetenteFinal}>`,
     to: destinatario,
+    // Reply-To = e-mail do CLIENTE: o fim do e-mail diz "Responda este
+    // e-mail..." — sem isto, a resposta da Anasor voltaria pra própria
+    // conta que envia o aviso, não pro cliente. Só quando o endereço é
+    // simples e de verdade (não mascarado, ver primeiroValorReal).
+    ...(emailSimples(dadosPedido.cliente?.email) ? { replyTo: dadosPedido.cliente.email } : {}),
     subject: assunto,
     text: texto,
     html,
@@ -394,6 +514,7 @@ module.exports = {
   formatarReal,
   escaparHtml,
   normalizarMetadata,
+  pareceMascarado,
   extrairDadosPedido,
   montarEmailPedido,
   montarLinkWhatsApp,
