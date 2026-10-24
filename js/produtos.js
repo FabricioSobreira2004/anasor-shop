@@ -1174,6 +1174,32 @@ const produtos = [
     cuidados: "A definir",
   },
 
+  // --- PEÇA DE TESTE (TEMPORÁRIA) ------------------------------
+  // Existe SÓ pra validar o pagamento real de ponta a ponta (Mercado
+  // Pago em produção) com um valor baixo, sem mexer no preço de
+  // nenhuma peça de verdade. "oculto: true" a tira de toda listagem
+  // (ver produtosVisiveis() no fim do arquivo); só abre pelo link
+  // direto produto.html?id=9001. id 9001: bem longe da numeração das
+  // peças reais (1, 2, 3...) pra nunca colidir com uma peça nova.
+  // categoria "teste": não é "ceramica" nem "croche", então mesmo que
+  // algum filtro escapasse ela não cairia em vitrine nenhuma. Foto
+  // reaproveitada do coador (id 44) pra não versionar arquivo novo.
+  // Entrou num commit isolado pra sair com um "git revert" simples.
+  {
+    id: 9001,
+    nome: "Peça de Teste — não comprar",
+    descricao:
+      "Produto interno usado só para testar o pagamento da loja. Não é uma peça à venda.",
+    preco: 10.0,
+    categoria: "teste",
+    subcategoria: "Teste Interno",
+    imagem: "img/produtos/coador-de-cafe-de-ceramica.jpg",
+    imagensExtras: [],
+    dimensoes: "A definir",
+    cuidados: "A definir",
+    oculto: true,
+  },
+
   // --- CROCHÊ -------------------------------------------------
   // Sem fotos ainda. Modelo para quando houver peças (copie o
   // bloco, troque os valores e some as fotos extras que tiver):
