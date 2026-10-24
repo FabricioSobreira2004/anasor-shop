@@ -1757,18 +1757,26 @@ nav {
    afundar ao toque (mesma família dos botões gummy do site) e tilt
    suave no desktop com mouse de verdade (ver ativarTiltColecoes, js/
    main.js — as variáveis --tilt-x/--tilt-y abaixo vêm de lá). */
-.colecoes-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 1.75rem;
-  max-width: 1200px;
-  margin: var(--espaco-secao) auto 0;
-  /* mesmo token de respiro vertical que toda seção da Home usa —
-     ver comentário igual em .queridinhos, logo abaixo */
+/* MINI ESTEIRA: a grade virou o MESMO carrossel dos produtos da Home
+   (.produtos-grid[data-grade-produtos], mais abaixo neste arquivo —
+   trilho, slides, setas e dots vêm de lá). Aqui só o respiro acima:
+   vai no .carrossel-viewport (que o JS cria em volta da grade) e não
+   na grade, senão as setas do desktop (top:50% do viewport) ficariam
+   deslocadas pra baixo; a 2ª linha cobre o instante antes do JS rodar,
+   pra a seção não "pular". Mesmo token de respiro vertical de toda
+   seção da Home — ver comentário igual em .queridinhos, logo abaixo. */
+.categoria-cards + .carrossel-viewport,
+.categoria-cards + .colecoes-grid {
+  margin-top: var(--espaco-secao);
 }
 
 .colecao-card {
   position: relative;
+  /* min-width:0: dentro do slide (grid de 2/4 colunas) o card pode
+     encolher abaixo da largura do anel, que se ajusta (max-width no
+     .colecao-card__anel) — sem isto, em tablet o anel de 140px
+     alargaria a coluna e empurraria o 4º card pra fora do slide */
+  min-width: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1860,6 +1868,7 @@ nav {
    cabe 4 por linha no desktop sem ficar apertado. */
 .colecao-card__anel {
   width: 140px;
+  max-width: 100%; /* tablet: 4 cards por slide em ~800px não cabem 140px */
   aspect-ratio: 1 / 1;
   border-radius: 50%;
   padding: 5px;
@@ -1922,13 +1931,44 @@ nav {
   color: #7A5A26;
 }
 
-/* MOBILE: 2 colunas compactas (pedido explícito: não esticar a altura
-   da Home) — anel menor, menos respiro vertical por card. */
+/* MOBILE: 2 cards por vez, compactos (pedido explícito: não esticar a
+   altura da Home) — anel menor, menos respiro vertical por card. */
 @media (max-width: 768px) {
-  .colecoes-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1rem;
+  .categoria-cards + .carrossel-viewport,
+  .categoria-cards + .colecoes-grid {
     margin-top: var(--espaco-secao-mobile);
+  }
+  /* "ESPIADINHA": o slide (2 cards) ocupa 84% do trilho, então um
+     pedaço do próximo card aparece na borda direita e convida a
+     deslizar. O snap continua alinhando o INÍCIO de cada slide; o
+     último encaixa no fim do trilho (o JS trata esse caso nos dots e
+     no snap de segurança). Seletor com .produtos-grid pra vencer a
+     regra genérica do carrossel (mesmo seletor + 1 classe), sem
+     depender da ordem do arquivo. */
+  /* RESPIRO DA SOMBRA: o trilho precisa de overflow pra rolar, e isso
+     CORTA a sombra difusa dos cards nas bordas dele — aparecia como um
+     "retângulo" mais escuro sobre a marca-d'água da seção. O espaço
+     entre slides virou padding DENTRO de cada slide (gap 0 no trilho;
+     6px + 6px = os mesmos 0.75rem entre cards), e não padding no
+     trilho: assim o início do slide continua sendo o ponto de snap
+     (o snap de segurança e os dots medem a partir dele). Embaixo, mais
+     padding pra sombra sumir antes da borda; a sombra em si fica mais
+     curta no celular. */
+  .produtos-grid.colecoes-grid[data-grade-produtos] {
+    gap: 0;
+    padding: 0.75rem 0 1.5rem;
+  }
+  .produtos-grid.colecoes-grid[data-grade-produtos] > .carrossel-slide {
+    flex-basis: 84%;
+    gap: 0.75rem;
+    padding: 0 6px;
+  }
+  /* :not(:active): não sobrescreve a sombra "afundada" do toque */
+  .colecoes-grid .colecao-card:not(:active) {
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.7),
+      0 1px 2px rgba(62, 46, 34, 0.08),
+      0 5px 12px rgba(62, 46, 34, 0.12);
   }
   .colecao-card {
     padding: 1.1rem 0.6rem 1rem;
@@ -1950,11 +1990,26 @@ nav {
   }
 }
 
-/* TABLET (769-1024px, mesma faixa já tratada em outros pontos do
-   site): 4 colunas ficam apertadas demais — 3 cabe melhor */
+/* TABLET (769-1024px): 4 cards por slide, como os produtos — o anel
+   encolhe sozinho (max-width:100%); só o respiro lateral do card cai
+   pra sobrar espaço pra foto. */
 @media (min-width: 769px) and (max-width: 1024px) {
-  .colecoes-grid {
-    grid-template-columns: repeat(3, 1fr);
+  .colecao-card {
+    padding-left: 0.6rem;
+    padding-right: 0.6rem;
+  }
+}
+
+/* DESKTOP: mesmo "respiro da sombra" do mobile (ver comentário lá) —
+   16px + 16px de padding no slide = os 2rem de gap do carrossel, e
+   espaço embaixo pra sombra longa (0 10px 24px) não ser cortada. */
+@media (min-width: 769px) {
+  .produtos-grid.colecoes-grid[data-grade-produtos] {
+    gap: 0;
+    padding: 0.75rem 0 2.25rem;
+  }
+  .produtos-grid.colecoes-grid[data-grade-produtos] > .carrossel-slide {
+    padding: 0 16px;
   }
 }
 

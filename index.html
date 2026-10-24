@@ -368,7 +368,7 @@
             </a>
         </div>
 
-        <!-- ===== GRADE DE SUBCATEGORIAS (Etapa 3) =====
+        <!-- ===== ESTEIRA DE SUBCATEGORIAS (antes: grade, Etapa 3) =====
              Abaixo dos 2 grandes acessos (Cerâmica/Crochê, acima), uma
              grade "premium" com uma peça por SUBCATEGORIA de cerâmica
              (Pratos Artísticos, Vasos Escultóricos...) — a mesma ideia
@@ -380,8 +380,14 @@
              de nomes nem contagem escrita à mão aqui) preenche na
              carga. Crochê fica de fora da grade (ainda não tem
              subcategorias reais; o card grande "Crochê" acima já cobre
-             o acesso à categoria). -->
-        <div class="colecoes-grid" id="colecoes-grid"></div>
+             o acesso à categoria).
+             MINI ESTEIRA: virou um carrossel horizontal (a grade de 8
+             cards ocupava muita altura). data-grade-produtos +
+             data-manual = MESMO carrossel dos produtos da Home (trilho,
+             setas, dots, snap de segurança), sem um segundo mecanismo;
+             data-manual faz aplicarEExibir() deixar esta grade em paz —
+             quem a monta é montarColecoesHome(). -->
+        <div class="produtos-grid colecoes-grid" id="colecoes-grid" data-grade-produtos="colecoes" data-manual></div>
 
         <!-- "ENCOMENDE SUA PEÇA ÚNICA" (ideia da mãe da Anasor) — menção
              MUITO discreta na Home, pedido explícito pra NÃO virar uma

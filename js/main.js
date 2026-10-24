@@ -967,6 +967,10 @@ function iniciarRotacaoFotos() {
     let timer = null;
 
     function trocar() {
+      // a esteira da Home remonta os cards ao cruzar o breakpoint: card
+      // que saiu do DOM desliga o próprio intervalo (senão ficaria
+      // trocando foto de um elemento que ninguém vê, pra sempre)
+      if (!moldura.isConnected) return pausar();
       fotos[indiceAtivo].classList.remove('is-ativa');
       indiceAtivo = (indiceAtivo + 1) % fotos.length;
       fotos[indiceAtivo].classList.add('is-ativa');
@@ -1269,17 +1273,29 @@ function cardsPorSlideCarrossel() {
 // Quebra a lista de produtos em "páginas" de "porSlide" e embrulha
 // cada grupo. Generalizado (recebe porSlide) em vez de ter o "2" fixo
 // de antes — é o que permite mobile e desktop usarem a MESMA função
-// com quantidades diferentes.
-function montarSlidesCarrossel(lista, porSlide) {
+// com quantidades diferentes. "criarCard" é quem desenha CADA card
+// (padrão: card de produto) — a esteira de subcategorias da Home
+// (montarColecoesHome) passa o card de coleção e reaproveita o MESMO
+// carrossel (trilho, setas, dots, snap) em vez de ter um mecanismo só dela.
+function montarSlidesCarrossel(lista, porSlide, criarCard = criarCardProduto) {
   let html = '';
   for (let i = 0; i < lista.length; i += porSlide) {
     const grupo = lista
       .slice(i, i + porSlide)
-      .map(criarCardProduto)
+      .map((item) => criarCard(item))
       .join('');
     html += `<div class="carrossel-slide">${grupo}</div>`;
   }
   return html;
+}
+
+// Distância (px) entre o início de um slide e o do seguinte = largura
+// do slide + gap. Medida no DOM (não suposta = largura do trilho)
+// porque na esteira de subcategorias do mobile o slide é MENOR que o
+// trilho, de propósito (a "espiadinha" do próximo card).
+function passoSlideCarrossel(grade) {
+  const slides = grade.querySelectorAll('.carrossel-slide');
+  return slides.length > 1 ? slides[1].offsetLeft - slides[0].offsetLeft : grade.clientWidth;
 }
 
 // Cria (só na 1ª vez) o par de setas de navegação e o
@@ -1328,16 +1344,16 @@ function garantirSetasCarrossel(grade) {
   viewport.insertBefore(setaAnterior, grade);
   viewport.appendChild(setaProxima);
 
-  // Rola exatamente 1 "página" (a largura visível da grade) por
-  // clique — a MESMA unidade que o scroll-snap usa pra travar em cada
-  // slide, então o clique sempre aterrissa certinho no vizinho.
+  // Rola exatamente 1 "página" (o passo entre slides) por clique — a
+  // MESMA unidade que o scroll-snap usa pra travar em cada slide,
+  // então o clique sempre aterrissa certinho no vizinho.
   // scroll-behavior:smooth (CSS, item 4) faz o movimento ser suave;
   // aqui não precisa repetir isso, é propriedade do elemento que rola.
   setaAnterior.addEventListener('click', () => {
-    grade.scrollBy({ left: -grade.clientWidth, behavior: 'smooth' });
+    grade.scrollBy({ left: -passoSlideCarrossel(grade), behavior: 'smooth' });
   });
   setaProxima.addEventListener('click', () => {
-    grade.scrollBy({ left: grade.clientWidth, behavior: 'smooth' });
+    grade.scrollBy({ left: passoSlideCarrossel(grade), behavior: 'smooth' });
   });
 
   return { viewport, setaAnterior, setaProxima };
@@ -1395,7 +1411,11 @@ function ativarSnapDeSeguranca(trilho, unidades) {
       // "ur.left - r.left" sozinho é relativo a ESSE instante, não um
       // alvo absoluto de scrollLeft comparável depois. Somar
       // trilho.scrollLeft de volta devolve a coordenada absoluta.
-      const alvo = ur.left - r.left + trilho.scrollLeft;
+      // Math.min(..., máximo): quando o slide é mais estreito que o
+      // trilho (esteira com "espiadinha"), o início do ÚLTIMO slide
+      // fica além do fim da rolagem — o navegador encaixa no fim, e
+      // este alvo precisa ser o mesmo, senão a correção nunca "chega".
+      const alvo = Math.min(ur.left - r.left + trilho.scrollLeft, trilho.scrollWidth - trilho.clientWidth);
       const distancia = Math.abs(trilho.scrollLeft - alvo);
       if (distancia < menorDistancia) {
         menorDistancia = distancia;
@@ -1466,18 +1486,29 @@ function sincronizarDotsCarrossel() {
           `<span class="carrossel-dot${i === 0 ? ' is-ativo' : ''}"></span>`
       )
       .join('');
-    const pontos = dots.querySelectorAll('.carrossel-dot');
 
     // marca como ativo o dot correspondente ao slide mais "encaixado"
-    // na tela (divide o quanto já rolou pela largura de um slide e
+    // na tela (divide o quanto já rolou pelo passo entre slides e
     // arredonda) e habilita/desabilita as setas nas pontas — SEM loop
     // de propósito (ver comentário em .carrossel-seta:disabled no CSS).
+    // Chegou ao fim do trilho = último slide, mesmo que a conta dê
+    // menos (slide mais estreito que o trilho: o último nunca encosta
+    // na borda esquerda, ver passoSlideCarrossel).
     function atualizarAtivo() {
-      const larguraSlide = grade.clientWidth || 1;
-      const indice = Math.round(grade.scrollLeft / larguraSlide);
-      pontos.forEach((p, i) => p.classList.toggle('is-ativo', i === indice));
+      const total = grade.querySelectorAll('.carrossel-slide').length;
+      const fim = grade.scrollWidth - grade.clientWidth;
+      const indice = grade.scrollLeft >= fim - TOLERANCIA_SNAP_PX
+        ? total - 1
+        : Math.round(grade.scrollLeft / (passoSlideCarrossel(grade) || 1));
+      // CORREÇÃO: os pontos são buscados AQUI, a cada scroll, e não
+      // guardados de fora. O listener é ligado uma vez só (abaixo), mas
+      // esta função é chamada de novo (ex.: aplicarEExibir() logo depois
+      // da carga) e REFAZ o innerHTML dos dots — uma lista guardada na
+      // 1ª chamada apontava pra pontos que já tinham saído da tela, e o
+      // dot ativo ficava preso no primeiro em todos os carrosséis da Home.
+      dots.querySelectorAll('.carrossel-dot').forEach((p, i) => p.classList.toggle('is-ativo', i === indice));
       setaAnterior.disabled = indice <= 0;
-      setaProxima.disabled = indice >= slides.length - 1;
+      setaProxima.disabled = indice >= total - 1;
     }
 
     // liga o listener só UMA vez por grade (aplicarEExibir roda de novo
@@ -2676,6 +2707,8 @@ montarVitrineCurada(gradeCafeDaTarde, IDS_CAFE_DA_TARDE);
 window.matchMedia('(min-width: 769px)').addEventListener('change', () => {
   montarVitrineCurada(gradeQueridinhos, IDS_QUERIDINHOS_ATELIE);
   montarVitrineCurada(gradeCafeDaTarde, IDS_CAFE_DA_TARDE);
+  // a esteira de subcategorias também é "manual" (2 x 4 cards por slide)
+  montarColecoesHome();
 });
 
 // ============================================================
@@ -2695,25 +2728,37 @@ window.matchMedia('(min-width: 769px)').addEventListener('change', () => {
 // .colecao-card reaproveita a MESMA classe .subcategoria-card__foto da
 // foto circular (ceramica.html) — iniciarRotacaoFotos() (acima) já
 // funciona em cima dela sem precisar saber que roda na Home agora.
-function montarColecoesHome() {
-  const grade = document.querySelector('#colecoes-grid');
-  if (!grade) return; // só a Home tem esta grade
-
-  const cards = dadosCardsSubcategoriaCeramica()
-    .map(({ sub, fotos, rotuloQtd, href }) => `
+// MINI ESTEIRA: a grade de 8 cards ocupava muita altura (4 linhas no
+// celular). Agora os cards vão em slides do MESMO carrossel dos
+// produtos da Home (montarSlidesCarrossel + sincronizarDotsCarrossel:
+// trilho com scroll-snap, setas, dots e snap de segurança) — 4 por vez
+// no desktop, 2 no celular com a "espiadinha" do próximo (só CSS, ver
+// .colecoes-grid em style.css). A grade é data-manual, então
+// aplicarEExibir()/renderizarVitrines() não mexem nela.
+function colecaoCardHTML({ sub, fotos, rotuloQtd, href }) {
+  return `
       <a href="${href}" class="colecao-card reveal">
         <div class="colecao-card__anel">
           <div class="subcategoria-card__foto">${fotosSubcategoriaHTML(fotos, sub)}</div>
         </div>
         <h3 class="colecao-card__nome">${sub}</h3>
         <p class="colecao-card__qtd">${rotuloQtd}</p>
-      </a>`)
-    .join('');
+      </a>`;
+}
 
-  grade.innerHTML = cards;
+function montarColecoesHome() {
+  const grade = document.querySelector('#colecoes-grid');
+  if (!grade) return; // só a Home tem esta grade
+
+  grade.innerHTML = montarSlidesCarrossel(
+    dadosCardsSubcategoriaCeramica(),
+    cardsPorSlideCarrossel(),
+    colecaoCardHTML
+  );
   escanearReveal();
   iniciarRotacaoFotos();
   ativarTiltColecoes();
+  sincronizarDotsCarrossel();
 }
 montarColecoesHome();
 
