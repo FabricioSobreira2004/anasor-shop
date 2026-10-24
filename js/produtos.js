@@ -237,7 +237,7 @@ const produtos = [
     id: 6,
     nome: "Vaso Escultórico Silhueta e Poesia",
     descricao:
-      "Vaso escultórico em cerâmica <span class='realce'>modelado à mão</span>, no formato de uma silhueta feminina de braços cruzados sobre base evasê. O acabamento é um <span class='realce--ouro'>esmalte escuro iridescente</span>, entre o preto e a berinjela, salpicado de brilho — muda de tom conforme a luz do ambiente. É <span class='realce'>peça de autor</span>: funciona com um galho seco dentro ou sozinha, como escultura, numa mesa lateral, no hall ou na estante da sala.",
+      "Vaso escultórico em cerâmica <span class='realce'>modelado à mão</span>, no formato de uma silhueta feminina de braços cruzados sobre base evasê. É feito em <span class='realce--ouro'>massa cerâmica preta, queimada em alta temperatura</span>, sob um vidrado transparente brilhoso — o tom escuro é da própria massa, e o brilho acompanha a luz do ambiente. É <span class='realce'>peça de autor</span>: funciona com um galho seco dentro ou sozinha, como escultura, numa mesa lateral, no hall ou na estante da sala.",
     // DESCONTO DOS VASOS ESCULTÓRICOS: diferente dos pratos (que têm
     // um "de/por" único e redondo), aqui cada vaso ganha um desconto
     // PROPORCIONAL ao próprio valor — mantém o preço cheio como
@@ -264,14 +264,17 @@ const produtos = [
       "img/produtos/angulos-extras/vaso-escultorico-silhueta-e-poesia-11.jpg",
       "img/produtos/angulos-extras/vaso-escultorico-silhueta-e-poesia-12.jpg",
     ],
-    dimensoes: "A definir",
+    // Medidas e matéria-prima informadas pela Anasor (fonte da verdade);
+    // a descrição acima foi ajustada pra não contradizê-las.
+    dimensoes: "Altura: 23 cm · Largura na parte de cima: 37 cm · Largura na saia: 46 cm",
+    materiaPrima: "Massa cerâmica preta, queimada em alta temperatura, com vidrado transparente brilhoso.",
     cuidados: "A definir",
   },
   {
     id: 7,
     nome: "Vaso Escultórico Copos-de-Leite em Flor",
     descricao:
-      "Vaso escultórico em cerâmica <span class='realce'>feito à mão</span>, de corpo cilíndrico em esmaltes mel e verde-oliva. Da borda saem <span class='realce'>copos-de-leite brancos modelados em alto-relevo</span>, com folhas que abraçam a peça — a flor faz parte do vaso, não é pintura. É um <span class='realce'>centro de mesa</span> que já vem florido: bonito com flores frescas, com secas ou vazio. Presente marcante pra quem cozinha e gosta de receber em casa.",
+      "Vaso escultórico em cerâmica <span class='realce'>feito à mão</span>, de corpo cilíndrico em esmaltes mel e verde-oliva. Da borda saem <span class='realce'>copos-de-leite brancos modelados em alto-relevo</span>, com folhas que abraçam a peça — a flor faz parte do vaso, não é pintura. É um <span class='realce'>centro de mesa</span> que já vem florido: bonito com flores frescas, com secas ou vazio. Presente marcante para quem gosta de florir a casa.",
     // Desconto proporcional dos vasos (ver id 6): de 229,00 por
     // 169,90 (~26% OFF) — AJUSTADO (Etapa 2): preco era 189,90
     // (~17% OFF), mesma popularização de ~10% dos demais.
@@ -287,14 +290,17 @@ const produtos = [
       "img/produtos/angulos-extras/vaso-escultorico-copos-de-leite-em-flor-5.jpg",
       "img/produtos/angulos-extras/vaso-escultorico-copos-de-leite-em-flor-6.jpg",
     ],
-    dimensoes: "A definir",
+    // Medidas e matéria-prima informadas pela Anasor (fonte da verdade);
+    // a descrição acima não fala de massa nem de medida.
+    dimensoes: "Altura: 30 cm · Largura: 59 cm",
+    materiaPrima: "Massa cerâmica bege.",
     cuidados: "A definir",
   },
   {
     id: 8,
     nome: "Vaso Escultórico Manto de Folhas",
     descricao:
-      "Vaso escultórico em cerâmica <span class='realce'>modelado à mão</span>, formado por duas grandes folhas curvadas que se envolvem para criar o recipiente. O acabamento é um <span class='realce--ouro'>bronze escuro metálico com nervuras douradas</span>, que reluz de perto e recolhe a luz no escuro. Orgânico e escultural, pede um lugar de <span class='realce'>decoração autoral</span> — mesa de entrada, nicho, estante — e combina tanto com folhagens grandes quanto com nada dentro.",
+      "Vaso escultórico em cerâmica <span class='realce'>modelado à mão</span>, formado por duas grandes folhas curvadas que se envolvem para criar o recipiente. O acabamento é um <span class='realce--ouro'>bronze escuro metálico</span>, que reluz de perto e recolhe a luz no escuro. Orgânico e escultural, é <span class='realce'>decoração autoral</span> para a mesa de entrada, um nicho ou a estante. Sua casa pede uma peça como esta na decoração: o vaso se destaca tanto com um arranjo quanto sozinho.",
     // Desconto proporcional dos vasos (ver id 6): de 219,00 por
     // 159,90 (~27% OFF) — AJUSTADO (Etapa 2): preco era 179,90
     // (~18% OFF), mesma popularização de ~10% dos demais.
