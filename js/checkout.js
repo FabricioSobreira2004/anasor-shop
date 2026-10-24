@@ -174,7 +174,13 @@ function ligarValidacaoForm(itensCarrinho) {
   }
 
   function formatarTelefone(v) {
-    const d = soDigitos(v).slice(0, 11);
+    // "+55 21 98722-2679" (autopreenchimento/colar) tem 13 dígitos: tira
+    // o código do país antes de cortar em 11 — senão virava
+    // "(55) 21987-2226" e o campo obrigatório travava a compra. Só
+    // quando sobra dígito demais (55 também é DDD do RS). Mesma regra
+    // de normalizarTelefone() em backend/documentos.js.
+    const todos = soDigitos(v);
+    const d = (todos.length > 11 && todos.startsWith('55') ? todos.slice(2) : todos).slice(0, 11);
     if (d.length === 0) return '';
     const ddd = d.slice(0, 2);
     const resto = d.slice(2);

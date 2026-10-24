@@ -360,6 +360,22 @@ teste('checkout: Preference leva os dados do formulário no metadata e no payer 
   assert.deepEqual(Object.keys(valor.corpo).sort(), ['checkout_url', 'frete', 'ok', 'orderId', 'subtotal', 'total']);
 });
 
+teste('checkout: nome com TAB vira espaço (não "MariaTeste") e telefone com +55 é aceito', async () => {
+  const corpo = { ...PEDIDO, cliente: { ...PEDIDO.cliente, nome: 'Maria\tTeste', telefone: '+55 (21) 98722-2679' } };
+  const { valor } = await comLog(async () => requisitar(carregarServidor({ MERCADOPAGO_ACCESS_TOKEN: TOKEN_MP_FALSO, BASE_URL: 'https://loja.exemplo.com.br' }), { caminho: '/api/checkout', corpo }));
+  assert.equal(valor.status, 200);
+  assert.equal(ultimaPreferencia.metadata.cliente_nome, 'Maria Teste');
+  assert.equal(ultimaPreferencia.payer.surname, 'Teste');
+  assert.equal(ultimaPreferencia.metadata.cliente_telefone, '21987222679');
+});
+
+teste('checkout: nome que a limpeza reduz a UMA palavra é recusado', async () => {
+  const app = carregarQuieto({ BASE_URL: 'http://localhost:8765' });
+  const corpo = { ...PEDIDO, cliente: { ...PEDIDO.cliente, nome: `${'A'.repeat(130)} Silva` } };
+  const { valor } = await comLog(async () => requisitar(app, { caminho: '/api/checkout', corpo }));
+  assert.equal(valor.status, 400);
+});
+
 teste('checkout: número "S/N" não vira street_number (a API espera inteiro)', async () => {
   const corpo = { ...PEDIDO, endereco: { ...PEDIDO.endereco, numero: 'S/N' } };
   await comLog(async () => requisitar(carregarServidor({ MERCADOPAGO_ACCESS_TOKEN: TOKEN_MP_FALSO, BASE_URL: 'https://loja.exemplo.com.br' }), { caminho: '/api/checkout', corpo }));
@@ -368,11 +384,17 @@ teste('checkout: número "S/N" não vira street_number (a API espera inteiro)', 
 });
 
 teste('checkout: falha ao criar a Preference -> 502 e log sem o e-mail que a API ecoou', async () => {
+  // try/finally: se algo lançar no meio, a flag não fica ligada e não
+  // derruba os testes seguintes por um motivo que não é deles
   preferenciaFalha = true;
-  const { valor, log } = await comLog(async () =>
-    requisitar(carregarServidor({ MERCADOPAGO_ACCESS_TOKEN: TOKEN_MP_FALSO, BASE_URL: 'https://loja.exemplo.com.br' }), { caminho: '/api/checkout', corpo: PEDIDO })
-  );
-  preferenciaFalha = false;
+  let valor, log;
+  try {
+    ({ valor, log } = await comLog(async () =>
+      requisitar(carregarServidor({ MERCADOPAGO_ACCESS_TOKEN: TOKEN_MP_FALSO, BASE_URL: 'https://loja.exemplo.com.br' }), { caminho: '/api/checkout', corpo: PEDIDO })
+    ));
+  } finally {
+    preferenciaFalha = false;
+  }
   assert.equal(valor.status, 502);
   assert.ok(log.includes('Error http_400'), 'log traz só tipo + status');
   semDadoPrivado(log);

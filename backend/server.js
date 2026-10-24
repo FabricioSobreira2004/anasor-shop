@@ -116,7 +116,7 @@ const {
 // id) e "produtosVisiveis()" (sem as peças "oculto: true", pra listar).
 const { produtos, produtosVisiveis } = require('./data/produtos');
 const { extrairDadosPedido, formatarReal, EMAIL_DESTINO_PADRAO } = require('./pedido-email');
-const { cpfValido, telefoneValido, nomeCompletoValido, separarNome, soDigitos } = require('./documentos');
+const { cpfValido, telefoneValido, nomeCompletoValido, separarNome, soDigitos, normalizarTelefone } = require('./documentos');
 // Envio dos avisos de pedido pago (e-mail + Telegram, isolados entre si).
 const { notificarPedidoAprovado, algumAvisoEntregue, tipoDoErro } = require('./notificar-pedido');
 
@@ -497,21 +497,6 @@ app.post('/api/checkout', async (req, res) => {
     });
   }
 
-  // Dados da NOTA FISCAL: nome com sobrenome, CPF real (dígitos
-  // verificadores) e telefone com DDD — regras em documentos.js (as
-  // mesmas do navegador, js/checkout.js). Mensagem diz QUAL campo
-  // corrigir: o checkout mostra este texto direto pro cliente.
-  const problemasCliente = [
-    !nomeCompletoValido(cliente.nome) && 'nome completo (nome e sobrenome)',
-    !cpfValido(cliente.cpf) && 'CPF',
-    !telefoneValido(cliente.telefone) && 'telefone com DDD',
-  ].filter(Boolean);
-  if (problemasCliente.length > 0) {
-    return res.status(400).json({
-      erro: `Confira: ${problemasCliente.join(', ')}.`,
-    });
-  }
-
   // Sanitização/limite de tamanho: corta qualquer campo de texto num
   // comprimento razoável (defesa contra alguém mandar um body gigante
   // via curl/fetch direto, ignorando os limites que o <input> do
@@ -526,14 +511,36 @@ app.post('/api/checkout', async (req, res) => {
       .slice(0, max);
 
   const clienteSaneado = {
-    nome: limitar(cliente.nome, 120),
+    // nome: caractere de controle (tab, quebra de linha) vira ESPAÇO
+    // antes do limitar() — apagá-lo juntaria "Maria\tSilva" em
+    // "MariaSilva", uma palavra só na nota fiscal (achado do code-review)
+    nome: limitar(String(cliente.nome || '').replace(/[\x00-\x1F\x7F\s]+/g, ' '), 120),
     email: limitar(cliente.email, 180).toLowerCase(),
-    // só DÍGITOS (já validados acima): é o formato que o payer da
-    // Preference espera (area_code/number, identification.number) e o
-    // e-mail formata na hora de mostrar (documentos.js)
-    telefone: soDigitos(cliente.telefone).slice(0, 11),
+    // só DÍGITOS: é o formato que o payer da Preference espera
+    // (area_code/number, identification.number) e o e-mail formata na
+    // hora de mostrar (documentos.js). Telefone sem o "+55" de
+    // autopreenchimento (normalizarTelefone).
+    telefone: normalizarTelefone(cliente.telefone).slice(0, 11),
     cpf: soDigitos(cliente.cpf).slice(0, 11),
   };
+
+  // Dados da NOTA FISCAL: nome com sobrenome, CPF real (dígitos
+  // verificadores) e telefone com DDD — regras em documentos.js (as
+  // mesmas do navegador, js/checkout.js). Conferidos DEPOIS da limpeza
+  // acima, sobre o valor que de fato vai pra Preference e pra nota
+  // (achado do code-review: validar o texto cru deixava passar um nome
+  // que a limpeza depois transformava numa palavra só). Mensagem diz
+  // QUAL campo corrigir: o checkout mostra este texto direto pro cliente.
+  const problemasCliente = [
+    !nomeCompletoValido(clienteSaneado.nome) && 'nome completo (nome e sobrenome)',
+    !cpfValido(clienteSaneado.cpf) && 'CPF',
+    !telefoneValido(clienteSaneado.telefone) && 'telefone com DDD',
+  ].filter(Boolean);
+  if (problemasCliente.length > 0) {
+    return res.status(400).json({
+      erro: `Confira: ${problemasCliente.join(', ')}.`,
+    });
+  }
   const enderecoSaneado = {
     cep: limitar(endereco.cep, 9),
     rua: limitar(endereco.rua, 200),
@@ -681,6 +688,9 @@ app.post('/api/checkout', async (req, res) => {
     // subdomínio de staging como "não público" também).
     const baseUrlEhPublica = !baseUrlEhLocalhost;
 
+    // nome/sobrenome separados UMA vez (o payer usa os dois campos)
+    const nomeSeparado = separarNome(clienteSaneado.nome);
+
     const preferencia = await new Preference(mp).create({
       body: {
         items: itensResolvidos.map((item) => ({
@@ -701,8 +711,8 @@ app.post('/api/checkout', async (req, res) => {
         // inteiro, e "S/N"/"12A" poderiam derrubar a Preference inteira
         // (o endereço completo, como digitado, vai no metadata).
         payer: {
-          name: separarNome(clienteSaneado.nome).nome,
-          surname: separarNome(clienteSaneado.nome).sobrenome,
+          name: nomeSeparado.nome,
+          surname: nomeSeparado.sobrenome,
           email: clienteSaneado.email,
           phone: { area_code: clienteSaneado.telefone.slice(0, 2), number: clienteSaneado.telefone.slice(2) },
           identification: { type: 'CPF', number: clienteSaneado.cpf },

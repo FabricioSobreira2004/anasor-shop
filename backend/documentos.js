@@ -31,11 +31,21 @@ function cpfValido(valor) {
   return digitoVerificador(d.slice(0, 9)) === Number(d[9]) && digitoVerificador(d.slice(0, 10)) === Number(d[10]);
 }
 
+// Só os dígitos do telefone, SEM o código do país: autopreenchimento e
+// "colar" costumam trazer "+55 21 98722-2679" (13 dígitos), que senão
+// seria recusado (achado do code-review). Só corta o 55 quando sobram
+// dígitos demais pra um número nacional — 55 também é DDD de verdade
+// (RS), e "55 9xxxx-xxxx" (11 dígitos) fica como está.
+function normalizarTelefone(valor) {
+  const d = soDigitos(valor);
+  return d.length > 11 && d.startsWith('55') ? d.slice(2) : d;
+}
+
 // Telefone brasileiro com DDD: 10 dígitos (fixo) ou 11 (celular, que
 // sempre começa com 9 depois do DDD). DDD não começa com 0. Só a
 // FORMA — não dá pra saber se o número existe.
 function telefoneValido(valor) {
-  const d = soDigitos(valor);
+  const d = normalizarTelefone(valor);
   if (!/^[1-9]\d/.test(d)) return false;
   return d.length === 10 || (d.length === 11 && d[2] === '9');
 }
@@ -70,4 +80,4 @@ function formatarTelefone(valor) {
   return String(valor ?? '').trim();
 }
 
-module.exports = { soDigitos, cpfValido, telefoneValido, nomeCompletoValido, separarNome, formatarCpf, formatarTelefone };
+module.exports = { soDigitos, normalizarTelefone, cpfValido, telefoneValido, nomeCompletoValido, separarNome, formatarCpf, formatarTelefone };
