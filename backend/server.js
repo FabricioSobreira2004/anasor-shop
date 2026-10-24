@@ -116,6 +116,7 @@ const {
 // id) e "produtosVisiveis()" (sem as peças "oculto: true", pra listar).
 const { produtos, produtosVisiveis } = require('./data/produtos');
 const { extrairDadosPedido, formatarReal, EMAIL_DESTINO_PADRAO } = require('./pedido-email');
+const { cpfValido, telefoneValido, nomeCompletoValido, separarNome, soDigitos } = require('./documentos');
 // Envio dos avisos de pedido pago (e-mail + Telegram, isolados entre si).
 const { notificarPedidoAprovado, algumAvisoEntregue, tipoDoErro } = require('./notificar-pedido');
 
@@ -457,7 +458,10 @@ app.post('/api/checkout', async (req, res) => {
   // aqui direto via fetch/curl, ignorando o navegador inteiro. NUNCA
   // confia só na validação do front: é só a primeira camada, feita
   // pra UX; esta aqui é quem de fato decide o que entra.
-  const camposClienteObrigatorios = ['nome', 'email'];
+  // telefone e CPF viraram OBRIGATÓRIOS (pedido da Anasor): ela emite
+  // nota fiscal com esses dados e precisa do WhatsApp pra combinar a
+  // entrega — o formato de cada um é conferido logo abaixo.
+  const camposClienteObrigatorios = ['nome', 'email', 'telefone', 'cpf'];
   const camposEnderecoObrigatorios = ['cep', 'rua', 'numero', 'bairro', 'cidade', 'estado'];
 
   const clienteIncompleto =
@@ -490,6 +494,21 @@ app.post('/api/checkout', async (req, res) => {
   if (!emailValido || !cepValido || !estadoValido) {
     return res.status(400).json({
       erro: 'Dados do pedido inválidos (confira e-mail, CEP e UF).',
+    });
+  }
+
+  // Dados da NOTA FISCAL: nome com sobrenome, CPF real (dígitos
+  // verificadores) e telefone com DDD — regras em documentos.js (as
+  // mesmas do navegador, js/checkout.js). Mensagem diz QUAL campo
+  // corrigir: o checkout mostra este texto direto pro cliente.
+  const problemasCliente = [
+    !nomeCompletoValido(cliente.nome) && 'nome completo (nome e sobrenome)',
+    !cpfValido(cliente.cpf) && 'CPF',
+    !telefoneValido(cliente.telefone) && 'telefone com DDD',
+  ].filter(Boolean);
+  if (problemasCliente.length > 0) {
+    return res.status(400).json({
+      erro: `Confira: ${problemasCliente.join(', ')}.`,
     });
   }
 

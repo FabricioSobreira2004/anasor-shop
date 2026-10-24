@@ -141,7 +141,8 @@ function carregarQuieto(env) {
 const semDadoPrivado = (log) => DADOS_PRIVADOS.forEach((d) => assert.ok(!log.includes(d), `log não pode conter "${d}"`));
 
 const PEDIDO = {
-  cliente: { nome: 'Maria Teste', email: 'maria.teste@example.com', telefone: '21987222679', cpf: '12345678900' },
+  // CPF FICTÍCIO com dígitos verificadores válidos (gerado, não é de ninguém)
+  cliente: { nome: 'Maria Teste', email: 'maria.teste@example.com', telefone: '21987222679', cpf: '529.982.247-25' },
   endereco: { cep: '01310100', rua: 'Avenida Paulista', numero: '1000', bairro: 'Bela Vista', cidade: 'São Paulo', estado: 'SP' },
   itens: [{ id: 1, quantidade: 1 }],
 };
@@ -249,6 +250,27 @@ teste('checkout: peça vendida (disponivel:false) é recusada com o nome dela', 
     delete peca.disponivel;
   }
 });
+
+// Dados da nota fiscal recusados no servidor (o navegador pode ser
+// pulado via curl): cada caso troca UM campo do pedido válido.
+for (const [descricao, troca, campoNaMensagem] of [
+  ['CPF com dígito verificador errado', { cpf: '529.982.247-24' }, 'CPF'],
+  ['CPF com todos os dígitos iguais', { cpf: '111.111.111-11' }, 'CPF'],
+  ['CPF vazio', { cpf: '' }, null],
+  ['nome sem sobrenome', { nome: 'Maria' }, 'nome completo'],
+  ['nome com número no lugar do sobrenome', { nome: 'Maria 2' }, 'nome completo'],
+  ['telefone sem DDD', { telefone: '987222679' }, 'telefone'],
+  ['telefone vazio', { telefone: '' }, null],
+]) {
+  teste(`checkout recusa ${descricao} -> 400`, async () => {
+    const app = carregarQuieto({ BASE_URL: 'http://localhost:8765' });
+    const corpo = { ...PEDIDO, cliente: { ...PEDIDO.cliente, ...troca } };
+    const { valor } = await comLog(async () => requisitar(app, { caminho: '/api/checkout', corpo }));
+    assert.equal(valor.status, 400);
+    if (campoNaMensagem) assert.ok(valor.corpo.erro.includes(campoNaMensagem), `mensagem cita "${campoNaMensagem}": ${valor.corpo.erro}`);
+    assert.ok(!JSON.stringify(valor.corpo).includes('maria.teste@example.com'), 'resposta não devolve dado do cliente');
+  });
+}
 
 teste('checkout: mais de 50 linhas no carrinho -> 400', async () => {
   const app = carregarQuieto({ BASE_URL: 'http://localhost:8765' });

@@ -215,21 +215,39 @@ function ligarValidacaoForm(itensCarrinho) {
   // CAMPOS OBRIGATÓRIOS (Etapa 3, AJUSTADO — pedido explícito): nome,
   // e-mail, CEP, rua, número, bairro, cidade e UF — sem endereço
   // completo a Anasor não consegue enviar a peça (o CEP sozinho não
-  // bastava de verdade). Telefone, complemento e CPF continuam
-  // opcionais. Rua/bairro/cidade/UF chegam quase sempre PRONTOS pelo
+  // bastava de verdade). Só o complemento continua opcional (telefone
+  // e CPF viraram obrigatórios, ver abaixo). Rua/bairro/cidade/UF chegam quase sempre PRONTOS pelo
   // autopreenchimento do ViaCEP (ver buscarEnderecoPorCep, mais
   // abaixo) — exigi-los não é o mesmo atrito de digitar tudo à mão.
-  const opcional = (formatoValido) => (v) => v.trim() === '' || formatoValido(v);
+  //
+  // ATUALIZADO (nota fiscal): telefone e CPF passaram a ser
+  // OBRIGATÓRIOS — a Anasor emite a nota com nome completo + CPF e
+  // combina a entrega pelo WhatsApp. As MESMAS regras rodam no servidor
+  // (backend/documentos.js); aqui é só pra pessoa ver o erro na hora.
   const obrigatorio = (formatoValido) => (v) => v.trim() !== '' && formatoValido(v);
   const textoLivre = (v) => v.trim().length > 0;
+
+  // CPF real: 11 dígitos, não todos iguais e os 2 dígitos verificadores
+  // conferem (módulo 11, algoritmo público da Receita). Mesmo cálculo de
+  // cpfValido() em backend/documentos.js.
+  function cpfValido(v) {
+    const d = soDigitos(v);
+    if (d.length !== 11 || /^(\d)\1{10}$/.test(d)) return false;
+    const digitoVerificador = (base) => {
+      const soma = [...base].reduce((total, n, i) => total + Number(n) * (base.length + 1 - i), 0);
+      const resto = (soma * 10) % 11;
+      return resto === 10 ? 0 : resto;
+    };
+    return digitoVerificador(d.slice(0, 9)) === Number(d[9]) && digitoVerificador(d.slice(0, 10)) === Number(d[10]);
+  }
 
   const campos = [
     {
       el: form.querySelector('[name="nome"]'),
       erroEl: document.querySelector('#erro-nome'),
-      // "nome COMPLETO": exige pelo menos um espaço (nome + sobrenome),
-      // não só qualquer texto não-vazio. OBRIGATÓRIO.
-      valida: (v) => v.trim().split(/\s+/).filter(Boolean).length >= 2,
+      // "nome COMPLETO": pelo menos 2 palavras com letra (nome +
+      // sobrenome) — "Maria 2" não passa. OBRIGATÓRIO (vai na nota).
+      valida: (v) => v.trim().split(/\s+/).filter((p) => /\p{L}/u.test(p)).length >= 2,
       msg: 'Digite seu nome completo (nome e sobrenome).',
     },
     {
@@ -243,23 +261,20 @@ function ligarValidacaoForm(itensCarrinho) {
     {
       el: form.querySelector('[name="telefone"]'),
       erroEl: document.querySelector('#erro-telefone'),
-      // OPCIONAL: aceita (XX) XXXX-XXXX (fixo) OU (XX) XXXXX-XXXX
-      // (celular) — é exatamente o formato que formatarTelefone() produz.
-      valida: opcional((v) => /^\(\d{2}\) \d{4,5}-\d{4}$/.test(v.trim())),
-      msg: 'Digite um telefone válido, com DDD (ou deixe em branco).',
+      // OBRIGATÓRIO: (XX) XXXX-XXXX (fixo) ou (XX) 9XXXX-XXXX (celular)
+      // — o formato que formatarTelefone() produz; DDD não começa com 0.
+      // Mesma regra de telefoneValido() em backend/documentos.js.
+      valida: (v) => /^\([1-9]\d\) (\d{4}|9\d{4})-\d{4}$/.test(v.trim()),
+      msg: 'Digite seu telefone/WhatsApp com DDD, ex.: (21) 98722-2679.',
     },
     {
       el: form.querySelector('[name="cpf"]'),
       erroEl: document.querySelector('#erro-cpf'),
-      // OPCIONAL. Quando preenchido, só o FORMATO (3-3-3-2 dígitos com
-      // pontuação) é validado aqui.
-      // TODO: validar o DÍGITO VERIFICADOR de verdade — os 2 últimos
-      // números são calculados a partir dos 9 primeiros por um
-      // algoritmo público (módulo 11); vale a pena implementar quando
-      // o CPF passar a ser usado pra algo que exija ele ser real de
-      // fato (ex.: emissão de nota fiscal), não só formatado.
-      valida: opcional((v) => /^\d{3}\.\d{3}\.\d{3}-\d{2}$/.test(v.trim())),
-      msg: 'Digite um CPF válido, no formato 000.000.000-00 (ou deixe em branco).',
+      // OBRIGATÓRIO (vai na nota fiscal): formato 000.000.000-00 E
+      // dígitos verificadores corretos — pega o erro de digitação aqui,
+      // não na hora de emitir a nota.
+      valida: (v) => /^\d{3}\.\d{3}\.\d{3}-\d{2}$/.test(v.trim()) && cpfValido(v),
+      msg: 'CPF inválido. Confira os números (formato 000.000.000-00).',
     },
     {
       el: form.querySelector('[name="cep"]'),
@@ -317,6 +332,11 @@ function ligarValidacaoForm(itensCarrinho) {
   function validarCampo(campo, mostrar) {
     const ok = campo.valida(campo.el.value);
     campo.el.classList.toggle('invalido', !ok && mostrar);
+    // aria-invalid: leitor de tela anuncia "inválido" no próprio campo
+    // (a mensagem em si já é lida pelo aria-describedby + aria-live do
+    // <span> de erro, ver checkout.html)
+    if (!ok && mostrar) campo.el.setAttribute('aria-invalid', 'true');
+    else campo.el.removeAttribute('aria-invalid');
     campo.erroEl.textContent = !ok && mostrar ? campo.msg : '';
     return ok;
   }
