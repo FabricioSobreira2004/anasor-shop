@@ -528,8 +528,11 @@ app.post('/api/checkout', async (req, res) => {
   const clienteSaneado = {
     nome: limitar(cliente.nome, 120),
     email: limitar(cliente.email, 180).toLowerCase(),
-    telefone: limitar(cliente.telefone, 20),
-    cpf: limitar(cliente.cpf, 14),
+    // só DÍGITOS (já validados acima): é o formato que o payer da
+    // Preference espera (area_code/number, identification.number) e o
+    // e-mail formata na hora de mostrar (documentos.js)
+    telefone: soDigitos(cliente.telefone).slice(0, 11),
+    cpf: soDigitos(cliente.cpf).slice(0, 11),
   };
   const enderecoSaneado = {
     cep: limitar(endereco.cep, 9),
@@ -687,9 +690,28 @@ app.post('/api/checkout', async (req, res) => {
           unit_price: item.precoUnitario,
           currency_id: 'BRL',
         })),
-        // "name" recebe o nome completo direto — o Mercado Pago aceita
-        // (não EXIGE separar em first/last name pro Checkout Pro).
-        payer: { name: clienteSaneado.nome, email: clienteSaneado.email },
+        // PAYER completo com o que a pessoa digitou no NOSSO formulário
+        // (pedido AS-20261024-NO9M: comprador pagou como visitante e o
+        // pagamento voltou com nome vazio e e-mail mascarado). Mandar
+        // tudo aqui ajuda o Checkout Pro a já vir preenchido e o
+        // pagamento a registrar o comprador certo — mas NÃO é garantia:
+        // por isso o webhook lê primeiro o metadata (abaixo), e o payer
+        // do pagamento fica só de reserva (ver extrairDadosPedido).
+        // street_number só quando é número de verdade: a API espera
+        // inteiro, e "S/N"/"12A" poderiam derrubar a Preference inteira
+        // (o endereço completo, como digitado, vai no metadata).
+        payer: {
+          name: separarNome(clienteSaneado.nome).nome,
+          surname: separarNome(clienteSaneado.nome).sobrenome,
+          email: clienteSaneado.email,
+          phone: { area_code: clienteSaneado.telefone.slice(0, 2), number: clienteSaneado.telefone.slice(2) },
+          identification: { type: 'CPF', number: clienteSaneado.cpf },
+          address: {
+            zip_code: soDigitos(enderecoSaneado.cep),
+            street_name: enderecoSaneado.rua,
+            ...(/^\d{1,6}$/.test(enderecoSaneado.numero) ? { street_number: Number(enderecoSaneado.numero) } : {}),
+          },
+        },
         back_urls: {
           success: `${BASE_URL}/pedido-confirmado.html?order_id=${orderId}`,
           pending: `${BASE_URL}/pedido-pendente.html?order_id=${orderId}`,
@@ -718,8 +740,19 @@ app.post('/api/checkout', async (req, res) => {
         // espera pares chave/valor simples, não objetos dentro de
         // objetos. "|| ''" NÃO entra aqui: limitar() (acima) sempre
         // devolve string ("" no mínimo), nunca undefined/null.
+        //
+        // FONTE PRINCIPAL dos dados do cliente no e-mail (nota fiscal):
+        // nome e e-mail entraram aqui porque o payer do pagamento pode
+        // vir vazio/mascarado ("XXXXXXXXXXX") quando a pessoa paga como
+        // visitante — o metadata volta exatamente o que mandamos. Chaves
+        // já em snake_case minúsculo (o Mercado Pago pode converter, e
+        // normalizarMetadata em pedido-email.js lê de qualquer jeito).
+        // Tamanho: cada campo já passou por limitar() (nome 120, e-mail
+        // 180, rua 200...) — o metadata inteiro fica em ~1,5 KB.
         metadata: {
           pedido_id: orderId,
+          cliente_nome: clienteSaneado.nome,
+          cliente_email: clienteSaneado.email,
           cliente_telefone: clienteSaneado.telefone,
           cliente_cpf: clienteSaneado.cpf,
           endereco_cep: enderecoSaneado.cep,

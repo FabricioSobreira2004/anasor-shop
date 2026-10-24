@@ -40,6 +40,8 @@ const VARIAVEIS = [
 // mudam por cenário. Dados pessoais aqui = o que NÃO pode ir pro log.
 let statusPagamento = 'approved';
 let consultaFalha = false;
+let preferenciaFalha = false;
+let ultimaPreferencia = null;
 const pagamentoFalso = () => ({
   id: 123,
   status: statusPagamento,
@@ -60,10 +62,14 @@ const sdkFalso = {
   // Os 2 erros abaixo imitam a API ecoando dado do comprador na
   // mensagem — o teste confere que essa mensagem NÃO vai pro log.
   Preference: class {
-    async create() {
-      const e = new Error('payer.email invalid: maria.teste@example.com');
-      e.status = 400;
-      throw e;
+    async create({ body }) {
+      if (preferenciaFalha) {
+        const e = new Error('payer.email invalid: maria.teste@example.com');
+        e.status = 400;
+        throw e;
+      }
+      ultimaPreferencia = body; // o teste confere metadata/payer enviados
+      return { init_point: 'https://mercadopago.exemplo/checkout/falso' };
     }
   },
   Payment: class {
@@ -331,10 +337,42 @@ teste('webhook: falha ao consultar o pagamento -> 500 (como antes)', async () =>
   semDadoPrivado(log);
 });
 
+teste('checkout: Preference leva os dados do formulário no metadata e no payer (sem devolvê-los na resposta)', async () => {
+  ultimaPreferencia = null;
+  const corpo = { ...PEDIDO, endereco: { ...PEDIDO.endereco, complemento: 'Apto 12' } };
+  const { valor } = await comLog(async () =>
+    requisitar(carregarServidor({ MERCADOPAGO_ACCESS_TOKEN: TOKEN_MP_FALSO, BASE_URL: 'https://loja.exemplo.com.br' }), { caminho: '/api/checkout', corpo })
+  );
+  assert.equal(valor.status, 200);
+  const m = ultimaPreferencia.metadata;
+  assert.deepEqual(
+    [m.cliente_nome, m.cliente_email, m.cliente_telefone, m.cliente_cpf, m.endereco_cep, m.endereco_rua, m.endereco_numero, m.endereco_complemento, m.endereco_bairro, m.endereco_cidade, m.endereco_uf],
+    ['Maria Teste', 'maria.teste@example.com', '21987222679', '52998224725', '01310100', 'Avenida Paulista', '1000', 'Apto 12', 'Bela Vista', 'São Paulo', 'SP']
+  );
+  assert.deepEqual(ultimaPreferencia.payer, {
+    name: 'Maria', surname: 'Teste', email: 'maria.teste@example.com',
+    phone: { area_code: '21', number: '987222679' },
+    identification: { type: 'CPF', number: '52998224725' },
+    address: { zip_code: '01310100', street_name: 'Avenida Paulista', street_number: 1000 },
+  });
+  assert.ok(JSON.stringify(ultimaPreferencia).length < 4000, 'Preference de tamanho razoável');
+  // a resposta pro navegador NÃO ecoa dado pessoal (só pedido, valores e o link)
+  assert.deepEqual(Object.keys(valor.corpo).sort(), ['checkout_url', 'frete', 'ok', 'orderId', 'subtotal', 'total']);
+});
+
+teste('checkout: número "S/N" não vira street_number (a API espera inteiro)', async () => {
+  const corpo = { ...PEDIDO, endereco: { ...PEDIDO.endereco, numero: 'S/N' } };
+  await comLog(async () => requisitar(carregarServidor({ MERCADOPAGO_ACCESS_TOKEN: TOKEN_MP_FALSO, BASE_URL: 'https://loja.exemplo.com.br' }), { caminho: '/api/checkout', corpo }));
+  assert.equal(ultimaPreferencia.payer.address.street_number, undefined);
+  assert.equal(ultimaPreferencia.metadata.endereco_numero, 'S/N');
+});
+
 teste('checkout: falha ao criar a Preference -> 502 e log sem o e-mail que a API ecoou', async () => {
+  preferenciaFalha = true;
   const { valor, log } = await comLog(async () =>
     requisitar(carregarServidor({ MERCADOPAGO_ACCESS_TOKEN: TOKEN_MP_FALSO, BASE_URL: 'https://loja.exemplo.com.br' }), { caminho: '/api/checkout', corpo: PEDIDO })
   );
+  preferenciaFalha = false;
   assert.equal(valor.status, 502);
   assert.ok(log.includes('Error http_400'), 'log traz só tipo + status');
   semDadoPrivado(log);
