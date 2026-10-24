@@ -310,6 +310,33 @@
   margin-top: 0.8rem;
 }
 
+/* Botão do WhatsApp quando o pagamento está fora do ar (criado por
+   mostrarPagamentoIndisponivel, js/checkout.js). MESMO visual
+   "fantasma" do .btn-whatsapp da página da peça (css/produto.css, que
+   esta página não carrega): contorno na cor secundária, sem o verde do
+   WhatsApp, que não está na paleta. */
+.checkout-whatsapp {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  margin-top: 0.6rem;
+  padding: 0.8rem 1.5rem;
+  border: 1.5px solid var(--cor-secundaria);
+  border-radius: 30px;
+  color: var(--cor-secundaria);
+  font-family: var(--fonte-texto);
+  font-size: 0.95rem;
+  text-decoration: none;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.checkout-whatsapp:hover {
+  background-color: var(--cor-secundaria);
+  color: #FFF;
+}
+
 /* ============================================================
    COLUNA DIREITA — resumo do pedido
    ============================================================ */

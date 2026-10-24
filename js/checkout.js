@@ -493,6 +493,29 @@ function ligarValidacaoForm(itensCarrinho) {
 
   atualizarBotao(); // começa desabilitado (form vazio)
 
+  // Pagamento fora do ar (503 do backend): mensagem curta + botão do
+  // WhatsApp logo abaixo, com as peças do carrinho já na mensagem — a
+  // venda não se perde, vira conversa com a Anasor. O botão é criado
+  // UMA vez só (um 2º clique em "Ir para Pagamento" não duplica).
+  // WHATSAPP_NUMERO vem de js/main.js, carregado antes deste arquivo.
+  function mostrarPagamentoIndisponivel() {
+    erroEnvioEl.textContent = 'Pagamento indisponível no momento. Fale com a gente pelo WhatsApp.';
+    if (document.querySelector('#whatsapp-pagamento-indisponivel')) return;
+    const pecas = itensCarrinho.map((item) => item.nome).filter(Boolean).join(', ');
+    const mensagem =
+      'Olá, Anasor! Tentei finalizar uma compra no site, mas o pagamento estava indisponível.' +
+      (pecas ? ` Peça(s): ${pecas}.` : '') +
+      ' Pode me ajudar?';
+    const link = document.createElement('a');
+    link.id = 'whatsapp-pagamento-indisponivel';
+    link.className = 'checkout-whatsapp';
+    link.href = `https://wa.me/${WHATSAPP_NUMERO}?text=${encodeURIComponent(mensagem)}`;
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+    link.textContent = '📱 Falar pelo WhatsApp';
+    erroEnvioEl.after(link);
+  }
+
   // ---------- ENVIO: manda pro backend, que devolve o link de pagamento ----------
   form.addEventListener('submit', async (evento) => {
     evento.preventDefault(); // nunca deixa o navegador recarregar a página
@@ -541,7 +564,13 @@ function ligarValidacaoForm(itensCarrinho) {
       if (!resposta.ok) {
         // o backend respondeu, mas com erro (ex.: 400 por item inválido)
         const erroBody = await resposta.json().catch(() => ({}));
-        throw new Error(erroBody.erro || `O servidor recusou o pedido (HTTP ${resposta.status}).`);
+        const erro = new Error(erroBody.erro || `O servidor recusou o pedido (HTTP ${resposta.status}).`);
+        // 503 + "pagamento_indisponivel": o site está no ar, mas sem o
+        // Mercado Pago configurado (ver o começo de POST /api/checkout
+        // em backend/server.js). Não é falha de conexão — a saída certa
+        // pro cliente é o WhatsApp, não "tente de novo".
+        erro.pagamentoIndisponivel = resposta.status === 503 && erroBody.codigo === 'pagamento_indisponivel';
+        throw erro;
       }
 
       const dados = await resposta.json();
@@ -556,9 +585,13 @@ function ligarValidacaoForm(itensCarrinho) {
       window.location.href = dados.checkout_url;
     } catch (erro) {
       console.error('Erro ao iniciar o checkout:', erro);
-      erroEnvioEl.textContent =
-        'Não foi possível conectar ao servidor de pagamento agora. ' +
-        'Verifique se o backend está rodando (cd backend && npm start) e tente de novo.';
+      if (erro.pagamentoIndisponivel) {
+        mostrarPagamentoIndisponivel();
+      } else {
+        erroEnvioEl.textContent =
+          'Não foi possível conectar ao servidor de pagamento agora. ' +
+          'Verifique se o backend está rodando (cd backend && npm start) e tente de novo.';
+      }
       botaoEnviar.disabled = false;
       botaoEnviar.textContent = textoOriginal;
     }

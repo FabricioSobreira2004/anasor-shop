@@ -103,7 +103,7 @@ async function notificarPedidoAprovado(
 
   // Os DOIS falharam: a Anasor não foi avisada por canal nenhum. O
   // endereço continua no metadata do pagamento, no painel do MP.
-  if (nomes.every((nome) => resumo[nome].status !== 'ok')) {
+  if (!algumAvisoEntregue(resumo)) {
     console.error(
       `❌ Pedido ${codigo} pago SEM aviso entregue — confira o painel do Mercado Pago (metadata do pagamento).`
     );
@@ -112,4 +112,12 @@ async function notificarPedidoAprovado(
   return resumo;
 }
 
-module.exports = { TIMEOUTS_PADRAO, comTimeout, tipoDoErro, notificarPedidoAprovado };
+// A Anasor ficou sabendo da venda? Só "ok" conta: "ignorado" (canal sem
+// configuração) e "falhou" não avisaram ninguém. Separada (e exportada)
+// porque o webhook decide por ela se pede ao Mercado Pago pra reenviar
+// (503) — uma regra só, testável sem Express (teste-telegram-pedido.js).
+function algumAvisoEntregue(resumo) {
+  return Object.values(resumo || {}).some((canal) => canal?.status === 'ok');
+}
+
+module.exports = { TIMEOUTS_PADRAO, comTimeout, tipoDoErro, algumAvisoEntregue, notificarPedidoAprovado };

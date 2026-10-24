@@ -117,7 +117,7 @@ const {
 const { produtos, produtosVisiveis } = require('./data/produtos');
 const { extrairDadosPedido, formatarReal } = require('./pedido-email');
 // Envio dos avisos de pedido pago (e-mail + Telegram, isolados entre si).
-const { notificarPedidoAprovado } = require('./notificar-pedido');
+const { notificarPedidoAprovado, algumAvisoEntregue } = require('./notificar-pedido');
 
 const app = express();
 
@@ -175,7 +175,9 @@ const mp = MERCADOPAGO_ACCESS_TOKEN
 
 if (!MERCADOPAGO_ACCESS_TOKEN) {
   console.warn(
-    '⚠️  MERCADOPAGO_ACCESS_TOKEN não configurado — POST /api/checkout vai devolver ' +
+    // "em localhost": em produção a rota responde 503 (ver
+    // checkoutDemoPermitido, mais abaixo, e o erro que sobe logo depois)
+    '⚠️  MERCADOPAGO_ACCESS_TOKEN não configurado — em localhost, POST /api/checkout vai devolver ' +
       'um checkout_url FAKE (ver backend/.env.example).'
   );
 } else if (MERCADOPAGO_ACCESS_TOKEN.startsWith('APP_USR-')) {
@@ -238,6 +240,23 @@ function calcularBaseUrlEhLocalhost(url) {
   }
 }
 const baseUrlEhLocalhost = calcularBaseUrlEhLocalhost(BASE_URL);
+
+// MODO DEMONSTRAÇÃO (checkout sem token) SÓ na máquina de quem
+// desenvolve. Sem token, o /api/checkout devolvia um link FAKE pra
+// pedido-pendente.html — em PRODUÇÃO isso mostraria "Pagamento em
+// análise" a um cliente que não pagou nada (ele acharia que comprou).
+// VERCEL_ENV === 'production' entra junto de propósito: se um dia o
+// BASE_URL sumir das variáveis da Vercel, ele cai no padrão
+// "http://localhost:8765" (ver a constante acima) e, sem esta 2ª
+// checagem, o site no ar voltaria a aceitar o modo demonstração.
+const checkoutDemoPermitido = baseUrlEhLocalhost && process.env.VERCEL_ENV !== 'production';
+
+if (!MERCADOPAGO_ACCESS_TOKEN && !checkoutDemoPermitido) {
+  console.error(
+    '❌ MERCADOPAGO_ACCESS_TOKEN não configurado em produção — POST /api/checkout vai responder ' +
+      '503 ("pagamento indisponível") em vez do link de demonstração.'
+  );
+}
 
 if (!MERCADOPAGO_WEBHOOK_SECRET && !baseUrlEhLocalhost) {
   // Erro (não aviso): em produção, sem o segredo, o webhook REJEITA
@@ -379,6 +398,21 @@ app.post('/api/checkout', async (req, res) => {
   // logo abaixo (criar a Preference é uma requisição de rede — não
   // dá pra fazer isso de forma síncrona). O resto da função (validação,
   // cálculo de preço/frete) continua exatamente igual a antes.
+
+  // Produção SEM token: recusa logo de cara, antes de validar ou salvar
+  // qualquer coisa — não existe como cobrar, e o link de demonstração
+  // enganaria o cliente (ver checkoutDemoPermitido, lá em cima). O
+  // "codigo" é o que o front (js/checkout.js) usa pra trocar o aviso
+  // genérico de erro pelo botão do WhatsApp.
+  if (!MERCADOPAGO_ACCESS_TOKEN && !checkoutDemoPermitido) {
+    console.error('❌ Checkout recusado (503): MERCADOPAGO_ACCESS_TOKEN não configurado em produção.');
+    return res.status(503).json({
+      ok: false,
+      codigo: 'pagamento_indisponivel',
+      erro: 'Pagamento indisponível no momento. Fale com a gente pelo WhatsApp.',
+    });
+  }
+
   const { cliente, endereco, itens } = req.body || {};
 
   // Validação de entrada (Etapa 3, AJUSTADA — antes só checava
@@ -519,6 +553,8 @@ app.post('/api/checkout', async (req, res) => {
   // é a resposta mais honesta possível sem um pagamento de verdade
   // ter acontecido. Isso preserva o modo "stub" pra quem clonar o
   // projeto sem credenciais (ver o aviso no console, lá em cima).
+  // Só chega aqui em localhost: produção sem token já saiu com 503 no
+  // começo desta rota.
   if (!MERCADOPAGO_ACCESS_TOKEN) {
     return res.json({
       ok: true,
@@ -688,11 +724,16 @@ app.post('/api/checkout', async (req, res) => {
 //      responder (numa função serverless a execução para assim que a
 //      resposta sai — sem o "await", os avisos poderiam nunca sair).
 // Responde 200 sempre que não há nada de recuperável a fazer (tipo
-// errado, pagamento não aprovado) e também depois dos avisos, MESMO se
-// um ou os dois falharem: um 500 ali faria o Mercado Pago reenviar e o
-// canal que deu certo mandaria o aviso DUPLICADO. Só devolve 500 quando
-// a falha é ao CONSULTAR o pagamento (aí nenhum aviso saiu ainda e a
-// nova tentativa do Mercado Pago pode resolver).
+// errado, pagamento não aprovado) e também depois dos avisos quando
+// PELO MENOS UM canal entregou: um erro ali faria o Mercado Pago
+// reenviar e o canal que deu certo mandaria o aviso DUPLICADO. Devolve
+// 5xx em 2 casos, pro Mercado Pago tentar de novo mais tarde:
+//   - 500: falha ao CONSULTAR o pagamento (nenhum aviso saiu ainda);
+//   - 503: pagamento aprovado mas NENHUM canal entregou (falha ou não
+//     configurado) — a Anasor não ficou sabendo da venda. Na nova
+//     tentativa, um canal que falhou por instabilidade pode funcionar;
+//     se o e-mail já tiver saído numa tentativa anterior que estourou o
+//     timeout, pode chegar DUPLICADO — aceitável, perder venda não é.
 app.post('/api/webhook/mercadopago', async (req, res) => {
   // Formato da notificação (documentado, mas já mudou de versão pra
   // versão no passado — por isso checar os 2 formatos conhecidos pro
@@ -805,11 +846,19 @@ app.post('/api/webhook/mercadopago', async (req, res) => {
   // roda os dois canais em paralelo, cada um com timeout próprio, e
   // NUNCA lança erro: cada falha é registrada lá só pelo TIPO (sem
   // dados do cliente nem token) — ver backend/notificar-pedido.js.
-  await notificarPedidoAprovado(dadosPedido, { destinoEmail: EMAIL_DESTINO });
+  const resumoAvisos = await notificarPedidoAprovado(dadosPedido, { destinoEmail: EMAIL_DESTINO });
 
-  // 200 mesmo se algum aviso falhou (ver o comentário acima da rota):
-  // reenviar a notificação duplicaria o aviso do canal que funcionou,
-  // e configuração ausente não se resolve sozinha com nova tentativa.
+  // NENHUM canal entregou: 503 pro Mercado Pago reenviar a notificação
+  // (ver o comentário acima da rota). O log tem só o id do pagamento —
+  // o detalhe de cada canal (só o TIPO do erro) já saiu em
+  // notificarPedidoAprovado.
+  if (!algumAvisoEntregue(resumoAvisos)) {
+    console.error(`❌ Pagamento ${paymentId}: nenhum aviso entregue — respondendo 503 pro Mercado Pago tentar de novo.`);
+    return res.sendStatus(503);
+  }
+
+  // 200 se pelo menos 1 aviso saiu: reenviar duplicaria o aviso do
+  // canal que funcionou.
   return res.sendStatus(200);
 });
 
