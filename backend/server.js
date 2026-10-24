@@ -245,11 +245,22 @@ const baseUrlEhLocalhost = calcularBaseUrlEhLocalhost(BASE_URL);
 // desenvolve. Sem token, o /api/checkout devolvia um link FAKE pra
 // pedido-pendente.html — em PRODUÇÃO isso mostraria "Pagamento em
 // análise" a um cliente que não pagou nada (ele acharia que comprou).
-// VERCEL_ENV === 'production' entra junto de propósito: se um dia o
-// BASE_URL sumir das variáveis da Vercel, ele cai no padrão
-// "http://localhost:8765" (ver a constante acima) e, sem esta 2ª
-// checagem, o site no ar voltaria a aceitar o modo demonstração.
-const checkoutDemoPermitido = baseUrlEhLocalhost && process.env.VERCEL_ENV !== 'production';
+// VERCEL_ENV entra junto de propósito: se um dia o BASE_URL sumir das
+// variáveis da Vercel, ele cai no padrão "http://localhost:8765" (ver
+// a constante acima) e, sem esta 2ª checagem, o site no ar voltaria a
+// aceitar o modo demonstração. "preview" conta como público também
+// (achado do code-review): deploy de preview tem URL aberta na
+// internet, e o visitante de lá não pode cair num pagamento de mentira.
+// "development" (vercel dev, na máquina) continua local.
+const naVercelPublica = ['production', 'preview'].includes(process.env.VERCEL_ENV);
+const ambienteLocal = baseUrlEhLocalhost && !naVercelPublica;
+
+// ambienteLocal decide as DUAS coisas que só podem existir em
+// desenvolvimento: o checkout de demonstração (aqui) e o webhook sem
+// assinatura (modo permissivo, no handler do webhook). Uma regra só —
+// antes o webhook olhava só o BASE_URL e ficaria permissivo num deploy
+// de produção que perdesse o BASE_URL e o segredo ao mesmo tempo.
+const checkoutDemoPermitido = ambienteLocal;
 
 if (!MERCADOPAGO_ACCESS_TOKEN && !checkoutDemoPermitido) {
   console.error(
@@ -258,7 +269,7 @@ if (!MERCADOPAGO_ACCESS_TOKEN && !checkoutDemoPermitido) {
   );
 }
 
-if (!MERCADOPAGO_WEBHOOK_SECRET && !baseUrlEhLocalhost) {
+if (!MERCADOPAGO_WEBHOOK_SECRET && !ambienteLocal) {
   // Erro (não aviso): em produção, sem o segredo, o webhook REJEITA
   // toda notificação (ver o handler, mais abaixo) — sem isso, qualquer
   // um que descobrisse a URL poderia forjar "paguei!" pra Anasor. Só
@@ -770,7 +781,11 @@ app.post('/api/webhook/mercadopago', async (req, res) => {
   const dataIdQuery = primeiroValorQuery(req.query?.['data.id']) || primeiroValorQuery(req.query?.id);
   const paymentId = dataIdQuery;
 
-  console.log(`📩 Webhook Mercado Pago recebido: type=${tipo || '(vazio)'} id=${paymentId || '(vazio)'}`);
+  // tipo/id ainda NÃO passaram pela assinatura: vão pro log só se forem
+  // identificadores simples — senão qualquer um forjaria linhas de log
+  // (quebra de linha codificada na URL) ou poria lixo nele.
+  const paraLog = (valor) => (/^[A-Za-z0-9_.-]{1,64}$/.test(String(valor || '')) ? valor : '(inválido ou vazio)');
+  console.log(`📩 Webhook Mercado Pago recebido: type=${paraLog(tipo)} id=${paraLog(paymentId)}`);
 
   // Notificação de outro tipo (ex.: merchant_order) ou sem id nenhum
   // -> nada a processar; 200 evita o Mercado Pago reenviar pra sempre
@@ -801,7 +816,7 @@ app.post('/api/webhook/mercadopago', async (req, res) => {
       );
       return res.sendStatus(401);
     }
-  } else if (!baseUrlEhLocalhost) {
+  } else if (!ambienteLocal) {
     // Produção sem o segredo configurado: REJEITA tudo (não dá pra
     // confirmar que a notificação é legítima). Ver o aviso que já
     // sobe no console na inicialização do servidor, mais acima.

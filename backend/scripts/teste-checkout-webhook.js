@@ -160,6 +160,29 @@ teste('checkout na Vercel em produção sem BASE_URL (cai no padrão localhost) 
   assert.equal(valor.corpo.codigo, 'pagamento_indisponivel');
 });
 
+teste('checkout em deploy de PREVIEW da Vercel (URL pública) sem token: 503', async () => {
+  const { valor } = await comLog(async () => requisitar(carregarServidor({ VERCEL_ENV: 'preview' }), { caminho: '/api/checkout', corpo: PEDIDO }));
+  assert.equal(valor.status, 503);
+});
+
+teste('webhook na Vercel em produção sem BASE_URL e sem segredo: 401 (nunca modo permissivo)', async () => {
+  const { valor, log } = await comLog(async () =>
+    requisitar(carregarServidor({ VERCEL_ENV: 'production', MERCADOPAGO_ACCESS_TOKEN: TOKEN_MP_FALSO }), { caminho: WEBHOOK })
+  );
+  assert.equal(valor.status, 401);
+  assert.ok(!log.includes('modo permissivo'), 'não pode aceitar notificação sem assinatura');
+});
+
+teste('webhook: id/type forjados com quebra de linha não entram crus no log', async () => {
+  const { log } = await comLog(async () =>
+    requisitar(carregarServidor(PRODUCAO_WEBHOOK), { caminho: '/api/webhook/mercadopago?type=payment%0AFALSO&data.id=1%0A%E2%9C%85%20pago', headers: ASSINADO })
+  );
+  // req.url (log de cada requisição) continua com o texto CODIFICADO
+  // (%0A) — inofensivo; o que não pode é surgir uma linha nova forjada
+  assert.ok(!log.split('\n').some((l) => l.startsWith('FALSO') || l.startsWith('✅ pago')), 'nenhuma linha de log forjada');
+  assert.ok(log.includes('type=(inválido ou vazio) id=(inválido ou vazio)'), 'valores estranhos viram "(inválido ou vazio)"');
+});
+
 teste('checkout em localhost sem token: modo demonstração continua (link pedido-pendente)', async () => {
   const { valor } = await comLog(async () => requisitar(carregarServidor({ BASE_URL: 'http://localhost:8765' }), { caminho: '/api/checkout', corpo: PEDIDO }));
   assert.equal(valor.status, 200);
