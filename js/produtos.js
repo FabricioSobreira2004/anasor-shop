@@ -81,6 +81,13 @@
 //                    placeholder — a Anasor mede e preenche depois.
 //   cuidados      -> como limpar/conservar a peça (texto livre).
 //                    Também "A definir" por enquanto.
+//   materiaPrima  -> OPCIONAL, texto. De que a peça é feita (massa,
+//                    queima, vidrado...), nas palavras da Anasor.
+//                    Aparece como bloco "Matéria-prima" em "Detalhes da
+//                    Peça" SÓ quando existe e tem texto — peça sem o
+//                    campo não mostra nada (nem "Em breve"): a Anasor
+//                    vai preenchendo peça por peça, e um placeholder
+//                    em 40 peças pareceria site incompleto.
 //   disponivel    -> OPCIONAL, boolean. Cada peça é única (estoque 1);
 //                    quando UMA vende, a Anasor marca o objeto dela
 //                    com "disponivel: false" (em vez de apagar/esconder

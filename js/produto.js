@@ -389,6 +389,17 @@ function montarDetalhe(produto) {
             <dd>${produto.dimensoes}</dd>
           </div>`;
 
+  // Matéria-prima: campo OPCIONAL (só algumas peças têm). Mesma regra
+  // das Dimensões — sem texto real, a linha nem entra no DOM, porque
+  // não existe matéria-prima "genérica" verdadeira pra toda peça.
+  const materiaPrimaHTML = ehIndefinido(produto.materiaPrima)
+    ? ''
+    : `
+          <div class="detalhes-peca__linha">
+            <dt>Matéria-prima</dt>
+            <dd>${produto.materiaPrima}</dd>
+          </div>`;
+
   // Cuidados: indefinido -> texto PADRÃO da categoria (sempre
   // verdadeiro, não precisa esperar a Anasor escrever um texto
   // específico pra esta peça); "|| .ceramica": fallback defensivo se
@@ -585,7 +596,7 @@ function montarDetalhe(produto) {
            montado por renderSelosConfianca(), igual ao da Home. -->
       ${renderSelosConfianca()}
 
-      <!-- DETALHES DA PEÇA: dimensoes/cuidados vêm de produtos.js. <dl>
+      <!-- DETALHES DA PEÇA: dimensoes/materiaPrima/cuidados vêm de produtos.js. <dl>
            (lista de descrição) é a tag semântica certa pra pares
            "rótulo / valor". O <h2> fica FORA do <dl> porque <dl> só
            aceita <dt>, <dd> e <div> como filhos. dimensoesHTML/
@@ -595,7 +606,7 @@ function montarDetalhe(produto) {
            padrão da categoria). -->
       <div class="detalhes-peca">
         <h2 class="detalhes-peca__titulo">Detalhes da Peça</h2>
-        <dl>${dimensoesHTML}
+        <dl>${dimensoesHTML}${materiaPrimaHTML}
           <div class="detalhes-peca__linha">
             <dt>Cuidados</dt>
             <dd>${textoCuidados}</dd>
