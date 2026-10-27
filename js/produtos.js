@@ -571,16 +571,9 @@ const produtos = [
     nome: "Kit Jogo de Chá Pétala — Bule, Leiteira e 3 Xícaras",
     descricao:
       "Um kit completo e raro: bule, leiteira e três xícaras com pires em formato de pétala, todos <span class='realce'>modelados e esmaltados à mão</span> no mesmo tom terroso, com flores rosadas aplicadas uma a uma — nenhuma peça sai do forno igual à outra, e aqui elas se encontram formando um conjunto verdadeiramente <span class='realce'>único</span>. É o tipo de peça que transforma um cafezinho corriqueiro num pequeno ritual, perfeita para receber visitas ou para aquele momento só seu. Composto por 8 peças (bule, leiteira e 3 conjuntos de xícara com pires), é uma <span class='realce--ouro'>peça de coleção</span> — depois que este sair do ateliê, não haverá outro conjunto idêntico.",
-    // precoOriginal NOVO: um dos poucos produtos deste lote escolhidos
-    // pra simular promoção (mesma lógica "de/por" já usada no resto do
-    // catálogo — ver renderBlocoPreco, js/main.js). Critério de escolha:
-    // peça de destaque do lote (maior kit, mais peças), sem exagerar —
-    // só uma peça por subcategoria ganhou desconto, não o lote inteiro.
-    // AJUSTADO (Etapa 2, popularização de preços): preco era 449,90,
-    // caiu pra 399,90 (~11% OFF sobre o "preco" anterior; exemplo
-    // explícito do dono — "conjuntos de R$449 -> R$399").
-    // precoOriginal=549,90 não muda.
-    precoOriginal: 549.9,
+    // "De" = preço praticado antes do corte de ~10% de 20/10 (commit
+    // 48f9cd9). O selo "Lançamento -N%" é calculado no main.js.
+    precoOriginal: 449.9,
     preco: 399.9,
     categoria: "ceramica",
     // RENOMEADO de "Kits" (nome vago, destoava do padrão elaborado das
@@ -1085,10 +1078,9 @@ const produtos = [
     nome: "Kit 2 Copos Ondas do Mar",
     descricao:
       "Dois copos com esmalte em degradê de azul-marinho para branco, como o movimento de uma onda quebrando na areia — perfeitos para servir água, suco ou vinho tinto numa mesa que pede um toque de mar. A textura levemente irregular do esmalte reforça o efeito de movimento, tornando cada copo <span class='realce'>ligeiramente diferente</span> do outro, mesmo nascendo do mesmo lote. Um kit de 2 peças, ideal para presentear em par — <span class='realce--ouro'>peça exclusiva</span>, sem produção em série.",
-    // precoOriginal NOVO: 2º kit escolhido pra simular promoção (ver
-    // critério completo no comentário da id 17) — sem exagerar,
-    // "Kits" ficou com 2 peças em promoção entre as 8 do lote.
-    precoOriginal: 179.9,
+    // "De" = preço praticado antes do corte de ~10% de 20/10 (commit
+    // 48f9cd9). O selo "Lançamento -N%" é calculado no main.js.
+    precoOriginal: 149.9,
     preco: 134.9,
     categoria: "ceramica",
     subcategoria: "Conjuntos Artesanais",
