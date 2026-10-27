@@ -1,0 +1,213 @@
+/* ============================================
+   PÁGINA /links (links.html) — substitui o Linktree da bio do Instagram.
+   Arquivo separado porque só esta página usa estas regras; cores e
+   fontes vêm das variáveis de :root em style.css, então a identidade
+   continua uma só.
+   ============================================ */
+
+.links-pagina {
+  /* Coluna estreita e centralizada: no celular ocupa a tela com 16px de
+     respiro; no desktop não vira uma faixa larga demais para ler. */
+  max-width: 440px;
+  margin: 0 auto;
+  padding: 2.5rem 16px 2rem;
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---- TOPO: avatar, nome e subtítulo ---- */
+.links-topo {
+  text-align: center;
+  margin-bottom: 1.75rem;
+}
+
+.links-avatar {
+  /* Recorte redondo da ilustração do ateliê: "cover" + posição baixa
+     mantém o rosto da Anasor no centro do círculo. */
+  width: 112px;
+  height: 112px;
+  border-radius: 50%;
+  object-fit: cover;
+  object-position: 45% 75%;
+  /* Anel creme + contorno terracota: moldura de "prato", sem imagem nova */
+  border: 4px solid var(--cor-card);
+  box-shadow: 0 0 0 2px var(--cor-destaque), 0 6px 18px rgba(62, 46, 34, 0.18);
+  display: block;
+  margin: 0 auto 1rem;
+}
+
+.links-nome {
+  font-family: var(--fonte-titulo);
+  font-size: 1.9rem;
+  font-weight: 600;
+  line-height: 1.15;
+  color: var(--cor-texto);
+  margin: 0;
+}
+
+.links-subtitulo {
+  font-size: 1.05rem;
+  color: var(--cor-destaque);
+  margin: 0.35rem 0 0;
+}
+
+.links-arroba {
+  font-size: 0.95rem;
+  color: var(--cor-secundaria);
+  margin: 0.25rem 0 0;
+}
+
+/* ---- LISTA DE BOTÕES ---- */
+.links-lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  /* Espaço extra abaixo de cada botão: o "degrau" 3D (box-shadow de 5px)
+     precisa de folga para não encostar no botão seguinte. */
+  gap: 1.1rem;
+}
+
+/* Botão gummy 3D: mesma técnica do .btn-comprar (degrau sólido via
+   box-shadow sem blur), mas em largura total e maior, porque aqui o
+   botão é o conteúdo principal e precisa ser fácil de tocar. */
+.links-btn {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  min-height: 56px;          /* acima dos 48px mínimos de área de toque */
+  padding: 0.85rem 1.25rem;
+  border-radius: 999px;
+  font-family: var(--fonte-texto);
+  font-size: 1.05rem;        /* ≥ 16px: legível e evita zoom no iOS */
+  font-weight: 500;
+  line-height: 1.25;
+  text-decoration: none;
+  color: var(--cor-texto);
+  background-color: var(--cor-card);
+  border: 1.5px solid var(--cor-fundo-alt);
+  box-shadow: 0 5px 0 #D9C6A8;
+  /* Transição curta: o "afundar" do gummy precisa responder no mesmo
+     instante do toque, senão parece lento. */
+  transition: transform 0.1s ease-out, box-shadow 0.1s ease-out;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Texto centralizado mesmo com ícone à esquerda: o espaçador invisível
+   à direita tem a largura do ícone e equilibra a linha. */
+.links-btn__texto {
+  flex: 1;
+  text-align: center;
+}
+
+.links-btn__icone,
+.links-btn::after {
+  flex: 0 0 22px;
+  width: 22px;
+  height: 22px;
+}
+
+.links-btn::after {
+  content: "";
+}
+
+/* Reflexo que atravessa o botão no hover, igual aos botões da loja */
+.links-btn::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(115deg, transparent 30%, rgba(255, 255, 255, 0.45) 50%, transparent 70%);
+  transform: translateX(-120%);
+  transition: transform 0.5s ease;
+  pointer-events: none;
+}
+
+.links-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 7px 0 #D9C6A8;
+}
+
+.links-btn:hover::before {
+  transform: translateX(120%);
+}
+
+/* Ao tocar, o botão desce até o "chão" do degrau: é o efeito gummy */
+.links-btn:active {
+  transform: translateY(5px);
+  box-shadow: 0 0 0 #D9C6A8;
+}
+
+.links-btn:focus-visible {
+  outline: 3px solid var(--cor-ouro);
+  outline-offset: 4px;
+}
+
+/* Variante principal (loja): terracota, a ação mais importante da bio */
+.links-btn--destaque {
+  background-color: var(--cor-destaque);
+  border-color: var(--cor-destaque);
+  color: #FFF;
+  box-shadow: 0 5px 0 var(--cor-destaque-escuro);
+}
+
+.links-btn--destaque:hover {
+  box-shadow: 0 7px 0 var(--cor-destaque-escuro);
+}
+
+.links-btn--destaque:active {
+  box-shadow: 0 0 0 var(--cor-destaque-escuro);
+}
+
+/* Variante encomenda: verde-oliva, a mesma cor dos botões de WhatsApp do site */
+.links-btn--oliva {
+  background-color: var(--cor-secundaria);
+  border-color: var(--cor-secundaria);
+  color: #FFF;
+  box-shadow: 0 5px 0 var(--cor-secundaria-escuro);
+}
+
+.links-btn--oliva:hover {
+  box-shadow: 0 7px 0 var(--cor-secundaria-escuro);
+}
+
+.links-btn--oliva:active {
+  box-shadow: 0 0 0 var(--cor-secundaria-escuro);
+}
+
+/* ---- RODAPÉ: lembretes reais da loja (políticas.html) ---- */
+.links-rodape {
+  margin-top: auto;
+  padding-top: 2rem;
+  text-align: center;
+  font-size: 0.9rem;
+  color: var(--cor-texto);
+  opacity: 0.8;
+}
+
+.links-rodape p {
+  margin: 0.2rem 0;
+}
+
+.links-rodape a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .links-btn,
+  .links-btn::before {
+    transition: none;
+  }
+
+  .links-btn:hover,
+  .links-btn:active {
+    transform: none;
+  }
+}
