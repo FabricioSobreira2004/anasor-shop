@@ -29,6 +29,10 @@
 ## Testes
 - Mobile: sempre com emulação real de dispositivo (Playwright, **iPhone 15, 393×852**) e gestos de toque reais.
 - Pagamento: sem `MERCADOPAGO_ACCESS_TOKEN`, o backend roda em **modo demonstração**. **Nunca gerar pagamento real em teste.**
+- **Testar sem risco, sem editar nem mover `backend/.env`:** suba o servidor com `FORCAR_DEMO=1` (dentro de `backend`, PowerShell: `$env:FORCAR_DEMO='1'; npm start`). Isso faz o servidor ignorar `MERCADOPAGO_ACCESS_TOKEN`/`MERCADOPAGO_PUBLIC_KEY` mesmo que venham do `.env`, e cair em modo demonstração. Em produção (`VERCEL_ENV=production`/`preview` ou `NODE_ENV=production`) o interruptor é **ignorado** — o site no ar nunca entra em modo demo sozinho.
+  - **CONFIRME no log** a linha `🔒 MODO DEMONSTRAÇÃO FORÇADO: Mercado Pago desativado` antes de abrir qualquer página. Se não aparecer, **pare**.
+  - **Nunca** faça `$env:MERCADOPAGO_ACCESS_TOKEN=''` (ou de qualquer outra variável) pra tentar "zerar" uma credencial: no PowerShell isso **remove** a variável, não a deixa vazia — o `--env-file-if-exists=.env` do `server.js` carrega o `.env` de qualquer jeito e a chave real de produção volta. Use `FORCAR_DEMO=1`.
+  - Teste offline correspondente: `node backend/scripts/teste-forcar-demo.js` (confere, sem internet, que `FORCAR_DEMO=1` nunca deixa uma chamada real ao Mercado Pago acontecer, mesmo com um token de produção falso no ambiente).
 
 ## Skills
 - Usar `frontend-design`, `impeccable`, `code-review` e `security-review` quando fizer sentido.

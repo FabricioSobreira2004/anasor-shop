@@ -153,8 +153,30 @@ const PORT = process.env.PORT || 3001;
 // não resolvesse — o próprio README/.env.example do backend também
 // descreve esse fluxo sem dotenv. Se um dia o deploy escolhido não
 // suportar a flag (serviços bem antigos), aí sim vale reconsiderar.
-const MERCADOPAGO_ACCESS_TOKEN = process.env.MERCADOPAGO_ACCESS_TOKEN || null;
-const MERCADOPAGO_PUBLIC_KEY = process.env.MERCADOPAGO_PUBLIC_KEY || null;
+// FORCAR_DEMO: interruptor de teste (ver "testar sem risco" no
+// CLAUDE.md). Criado porque, no PowerShell, "$env:VAR=''" REMOVE a
+// variável (não deixa ela vazia) — então "--env-file-if-exists=.env"
+// (comentário acima) carrega o backend/.env de qualquer jeito, trazendo
+// a chave REAL de volta mesmo depois de "zerar" a variável no shell.
+// Com FORCAR_DEMO=1, as credenciais do Mercado Pago são ignoradas aqui
+// mesmo que venham do .env, sem precisar editar ou mover esse arquivo.
+// Ignorado em produção (VERCEL_ENV=production ou NODE_ENV=production):
+// o interruptor é só pra testar na própria máquina — o site no ar nunca
+// pode "entrar em modo demonstração" sozinho.
+const producaoDeVerdade =
+  process.env.VERCEL_ENV === 'production' || process.env.NODE_ENV === 'production';
+const FORCAR_DEMO = process.env.FORCAR_DEMO === '1' && !producaoDeVerdade;
+
+if (process.env.FORCAR_DEMO === '1' && producaoDeVerdade) {
+  console.warn(
+    '⚠️  FORCAR_DEMO=1 ignorado: isso é produção, as credenciais reais do Mercado Pago continuam ativas.'
+  );
+} else if (FORCAR_DEMO) {
+  console.log('🔒 MODO DEMONSTRAÇÃO FORÇADO: Mercado Pago desativado (FORCAR_DEMO=1).');
+}
+
+const MERCADOPAGO_ACCESS_TOKEN = FORCAR_DEMO ? null : process.env.MERCADOPAGO_ACCESS_TOKEN || null;
+const MERCADOPAGO_PUBLIC_KEY = FORCAR_DEMO ? null : process.env.MERCADOPAGO_PUBLIC_KEY || null;
 // BASE_URL = endereço público do site (front-end E backend juntos —
 // ver nota abaixo). É a partir dele que montamos os "back_urls"
 // (success/failure/pending) que o Mercado Pago usa pra mandar o
