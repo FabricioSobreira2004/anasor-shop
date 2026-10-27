@@ -79,7 +79,7 @@
   overflow: hidden;
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  justify-content: center;
   width: 100%;
   min-height: 56px;          /* acima dos 48px mínimos de área de toque */
   padding: 0.85rem 1.25rem;
@@ -99,22 +99,24 @@
   -webkit-tap-highlight-color: transparent;
 }
 
-/* Texto centralizado mesmo com ícone à esquerda: o espaçador invisível
-   à direita tem a largura do ícone e equilibra a linha. */
 .links-btn__texto {
-  flex: 1;
   text-align: center;
 }
 
-.links-btn__icone,
-.links-btn::after {
-  flex: 0 0 22px;
-  width: 22px;
-  height: 22px;
+/* Emoji decorativo (botões, subtítulo e rodapé). A pilha de fontes de
+   emoji garante a versão colorida em iOS, Android e Windows, e o
+   line-height 1 impede que o glifo, mais alto que o texto, aumente a
+   altura da linha e deixe um botão maior que os outros. */
+.links-emoji {
+  font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
+  line-height: 1;
+  margin-right: 0.45em;
 }
 
-.links-btn::after {
-  content: "";
+/* Emoji no fim do texto (assinatura 🤎, 📦): o respiro fica à esquerda */
+.links-emoji--fim {
+  margin-right: 0;
+  margin-left: 0.35em;
 }
 
 /* Reflexo que atravessa o botão no hover, igual aos botões da loja */
