@@ -360,7 +360,8 @@ function formatarPreco(preco) {
 function estaEmPromocao(produto) {
   return typeof produto.precoOriginal === 'number'
     && produto.precoOriginal > produto.preco
-    // peça vendida não tem "de/por"; desconto menor que isso não vale selo
+    // peça vendida não tem "de/por"; abaixo de 5% o riscado e o selo
+    // somem juntos (um "de" quase igual ao "por" só confunde)
     && !estaVendida(produto)
     && descontoPercentual(produto) >= DESCONTO_MINIMO_SELO;
 }
@@ -1852,6 +1853,20 @@ function salvarCarrinho(itens) {
   if (miniCarrinho && miniCarrinho.classList.contains('is-aberto')) {
     renderMiniCarrinho();
   }
+  sincronizarBotoesCarrinho(itens);
+}
+
+// O "No carrinho ✓" é decidido quando o card nasce; tirar a peça no
+// mini-carrinho tem que devolver o botão a "Adicionar" sem recarregar.
+// O "Adicionado ✓" (feedback de 1,2s) fica de fora para não piscar.
+function sincronizarBotoesCarrinho(itens) {
+  const noCarrinho = new Set(itens.map((item) => String(item.id)));
+  document.querySelectorAll('[data-id] > button.btn-comprar, .produto-detalhe__acoes button.btn-comprar').forEach((botao) => {
+    if (botao.disabled) return;
+    const id = botao.closest('[data-id]')?.dataset.id;
+    if (!id) return;
+    botao.textContent = noCarrinho.has(id) ? TEXTO_NO_CARRINHO : 'Adicionar ao Carrinho';
+  });
 }
 
 function atualizarContadorCarrinho() {
@@ -2802,13 +2817,6 @@ const IDS_CAFE_DA_TARDE = [
   26, // Caneca Artística Passarinhos do Amor
 ];
 
-// Monta uma grade-carrossel a partir de uma lista de IDS, NA ORDEM
-// dada (diferente de filter(), que preservaria a ordem de produtos.js,
-// não a da curadoria) — por isso o .map(id => produtos.find(...))
-// abaixo, e não um .filter(). .filter(Boolean) descarta ids que não
-// existirem mais no catálogo (peça removida um dia) sem quebrar a
-// seção inteira — mesma robustez de montarProdutoDestaque/
-// montarSelecaoEspecial, um pouco acima/abaixo neste arquivo.
 // ------------------------------------------------------------------
 //  HOME SEM PEÇA REPETIDA
 // ------------------------------------------------------------------
@@ -2828,6 +2836,19 @@ function reservarPecasHome(secao, pecas) {
   return livres;
 }
 
+// Seção que acabou escondida devolve as peças: senão elas sumiriam
+// das seções seguintes sem aparecer em lugar nenhum.
+function liberarPecasHome(secao) {
+  pecasPorSecaoHome.delete(secao);
+}
+
+// Monta uma grade-carrossel a partir de uma lista de IDS, NA ORDEM
+// dada (diferente de filter(), que preservaria a ordem de produtos.js,
+// não a da curadoria) — por isso o .map(id => produtos.find(...))
+// abaixo, e não um .filter(). .filter(Boolean) descarta ids que não
+// existirem mais no catálogo (peça removida um dia) sem quebrar a
+// seção inteira — mesma robustez de montarProdutoDestaque/
+// montarSelecaoEspecial, um pouco acima/abaixo neste arquivo.
 function montarVitrineCurada(grade, ids) {
   if (!grade) return;
   // produtosVisiveis(): mesmo que um id oculto entre na curadoria por
@@ -3549,7 +3570,10 @@ function montarSelecaoEspecial(secao) {
     // produtosVisiveis(): id oculto na curadoria é ignorado
     .map((id) => produtosVisiveis().find((p) => p.id === id))
     .filter((p) => p && !estaVendida(p)));
-  if (pecas.length < 2) return;
+  if (pecas.length < 2) {
+    liberarPecasHome('selecao-especial');
+    return;
+  }
 
   const cardsHTML = pecas
     .map((produto) => {
@@ -3690,7 +3714,10 @@ function montarEdicaoSurpresa(secao) {
     // produtosVisiveis(): id oculto na curadoria é ignorado
     .map((id) => produtosVisiveis().find((p) => p.id === id))
     .filter((p) => p && !estaVendida(p)));
-  if (pecas.length < 2) return;
+  if (pecas.length < 2) {
+    liberarPecasHome('edicao-surpresa');
+    return;
+  }
 
   const cardsHTML = pecas
     .map((produto) => {
@@ -3925,6 +3952,12 @@ renderizarVitrines();         // monta a vitrine; quando os cards ficam
 escanearReveal();             // elementos .reveal que JÁ estão no HTML
                               // (títulos de seção, cards de categoria,
                               // "Quem Somos", "Fale com a gente")
-removerVendidasDoCarrinho();  // antes do contador, para ele já sair certo
+// try/catch: se o navegador recusar gravar (armazenamento cheio ou
+// bloqueado), o resto da inicialização da página não pode parar aqui
+try {
+  removerVendidasDoCarrinho(); // antes do contador, para ele já sair certo
+} catch (erro) {
+  console.warn('Não foi possível limpar o carrinho salvo:', erro);
+}
 atualizarContadorCarrinho();  // mostra o total caso já haja itens salvos
 montarDropdownCeramica();     // monta o submenu de subcategorias no header

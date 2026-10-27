@@ -135,8 +135,8 @@ const produtos = [
     descricao:
       "Prato decorativo em cerâmica, <span class='realce'>torneado e pintado à mão</span> no ateliê. Sobre um fundo marfim acetinado, um pássaro amarelo pousa num ramo de roseiras silvestres cor-de-rosa — as pinceladas ficam soltas, quase de aquarela, e a <span class='realce'>borda em terracota natural</span>, sem esmalte, dá o contraste rústico. Fica bem pendurado na parede, apoiado num aparador ou compondo a mesa posta. É daqueles <span class='realce--ouro'>presentes</span> que a pessoa guarda por anos, porque não existe outro igual.",
     // "De" = preço praticado antes do corte de ~10% de 20/10 (commit
-    // 48f9cd9); o selo "Lançamento -N%" sai calculado no main.js.
-    precoOriginal: 149.9, // preço praticado antes do corte de 20/10 (commit 48f9cd9)
+    // 48f9cd9). O selo "Lançamento -N%" é calculado no main.js.
+    precoOriginal: 149.9,
     preco: 134.9,
     categoria: "ceramica",
     subcategoria: "Pratos Artísticos",
@@ -158,8 +158,9 @@ const produtos = [
     nome: "Prato Buquê de Calla Rubra",
     descricao:
       "Prato decorativo grande em cerâmica, <span class='realce'>modelado e pintado à mão</span>. No centro, um buquê de copos-de-leite em vermelho e terracota se abre sobre folhagem dourada e um <span class='realce'>fundo azul-e-branco marmorizado</span>, rematado por borda branca e pela assinatura da artesã. Pelo tamanho e pelo contraste de cores, é uma <span class='realce'>peça de conversa</span>: pede lugar de destaque num aparador, numa estante alta ou na parede da sala de jantar. Bonito de dar e de receber.",
-    // Mesma promoção da linha de pratos decorativos (ver id 1).
-    precoOriginal: 149.9, // preço praticado antes do corte de 20/10 (commit 48f9cd9)
+    // "De" = preço praticado antes do corte de ~10% de 20/10 (commit
+    // 48f9cd9). O selo "Lançamento -N%" é calculado no main.js.
+    precoOriginal: 149.9,
     preco: 134.9,
     categoria: "ceramica",
     subcategoria: "Pratos Artísticos",
@@ -182,8 +183,9 @@ const produtos = [
     nome: "Prato Decorativo Cerejeira Coral",
     descricao:
       "Prato decorativo em cerâmica com pintura <span class='realce'>à mão em traço fino</span>: flores coral de estames delicados e folhas verde-oliva, em <span class='realce'>estilo aquarela sobre esmalte creme</span>. A borda natural em terracota e a assinatura da artesã fecham a peça. É leve e discreto — combina com paredes claras, prateleiras de livros e mesas de canto — e faz um <span class='realce--ouro'>presente</span> delicado pra quem gosta de ter flores por perto o ano inteiro.",
-    // Mesma promoção da linha de pratos decorativos (ver id 1).
-    precoOriginal: 149.9, // preço praticado antes do corte de 20/10 (commit 48f9cd9)
+    // "De" = preço praticado antes do corte de ~10% de 20/10 (commit
+    // 48f9cd9). O selo "Lançamento -N%" é calculado no main.js.
+    precoOriginal: 149.9,
     preco: 134.9,
     categoria: "ceramica",
     subcategoria: "Pratos Artísticos",
@@ -204,8 +206,9 @@ const produtos = [
     nome: "Prato Decorativo Girassóis ao Sol",
     descricao:
       "Prato decorativo em cerâmica <span class='realce'>pintado à mão</span>, com girassóis de miolo ferrugem e folhas verde-oliva sobre um <span class='realce'>fundo azul-céu mesclado</span>. É a peça mais quente e luminosa da série — acende um canto apagado da casa na hora. Use na parede como quadro, de apoio numa cômoda ou como <span class='realce'>fruteira decorativa</span> no centro da mesa. Um bom <span class='realce--ouro'>presente</span> pra quem ama a estética de campo.",
-    // Mesma promoção da linha de pratos decorativos (ver id 1).
-    precoOriginal: 149.9, // preço praticado antes do corte de 20/10 (commit 48f9cd9)
+    // "De" = preço praticado antes do corte de ~10% de 20/10 (commit
+    // 48f9cd9). O selo "Lançamento -N%" é calculado no main.js.
+    precoOriginal: 149.9,
     preco: 134.9,
     categoria: "ceramica",
     subcategoria: "Pratos Artísticos",
@@ -249,15 +252,9 @@ const produtos = [
     nome: "Vaso Escultórico Silhueta e Poesia",
     descricao:
       "Vaso escultórico em cerâmica <span class='realce'>modelado à mão</span>, no formato de uma silhueta feminina de braços cruzados sobre base evasê. É feito em <span class='realce--ouro'>massa cerâmica preta, queimada em alta temperatura</span>, sob um vidrado transparente brilhoso — o tom escuro é da própria massa, e o brilho acompanha a luz do ambiente. É <span class='realce'>peça de autor</span>: funciona com um galho seco dentro ou sozinha, como escultura, numa mesa lateral, no hall ou na estante da sala.",
-    // DESCONTO DOS VASOS ESCULTÓRICOS: diferente dos pratos (que têm
-    // um "de/por" único e redondo), aqui cada vaso ganha um desconto
-    // PROPORCIONAL ao próprio valor — mantém o preço cheio como
-    // referência real (não inventa um número "de" inflado). Este: de
-    // 239,00 por 179,90 (~25% OFF, calculado pelo main.js) — AJUSTADO
-    // (Etapa 2): preco era 199,90 (~16% OFF), caiu mais ~10% na
-    // popularização de preços (ver tabela completa no relatório desta
-    // rodada); precoOriginal (239,00) não muda, só o "por".
-    precoOriginal: 199.9, // preço praticado antes do corte de 20/10 (commit 48f9cd9)
+    // "De" = preço praticado antes do corte de ~10% de 20/10 (commit
+    // 48f9cd9). O selo "Lançamento -N%" é calculado no main.js.
+    precoOriginal: 199.9,
     preco: 179.9,
     categoria: "ceramica",
     subcategoria: "Vasos Escultóricos",
@@ -286,10 +283,9 @@ const produtos = [
     nome: "Vaso Escultórico Copos-de-Leite em Flor",
     descricao:
       "Vaso escultórico em cerâmica <span class='realce'>feito à mão</span>, de corpo cilíndrico em esmaltes mel e verde-oliva. Da borda saem <span class='realce'>copos-de-leite brancos modelados em alto-relevo</span>, com folhas que abraçam a peça — a flor faz parte do vaso, não é pintura. É um <span class='realce'>centro de mesa</span> que já vem florido: bonito com flores frescas, com secas ou vazio. Presente marcante para quem gosta de florir a casa.",
-    // Desconto proporcional dos vasos (ver id 6): de 229,00 por
-    // 169,90 (~26% OFF) — AJUSTADO (Etapa 2): preco era 189,90
-    // (~17% OFF), mesma popularização de ~10% dos demais.
-    precoOriginal: 189.9, // preço praticado antes do corte de 20/10 (commit 48f9cd9)
+    // "De" = preço praticado antes do corte de ~10% de 20/10 (commit
+    // 48f9cd9). O selo "Lançamento -N%" é calculado no main.js.
+    precoOriginal: 189.9,
     preco: 169.9,
     categoria: "ceramica",
     subcategoria: "Vasos Escultóricos",
@@ -313,10 +309,9 @@ const produtos = [
     nome: "Vaso Escultórico Manto de Folhas",
     descricao:
       "Vaso escultórico em cerâmica <span class='realce'>modelado à mão</span>, formado por duas grandes folhas curvadas que se envolvem para criar o recipiente. O acabamento é um <span class='realce--ouro'>bronze escuro metálico</span>, que reluz de perto e recolhe a luz no escuro. Orgânico e escultural, é <span class='realce'>decoração autoral</span> para a mesa de entrada, um nicho ou a estante. Sua casa pede uma peça como esta na decoração: o vaso se destaca tanto com um arranjo quanto sozinho.",
-    // Desconto proporcional dos vasos (ver id 6): de 219,00 por
-    // 159,90 (~27% OFF) — AJUSTADO (Etapa 2): preco era 179,90
-    // (~18% OFF), mesma popularização de ~10% dos demais.
-    precoOriginal: 179.9, // preço praticado antes do corte de 20/10 (commit 48f9cd9)
+    // "De" = preço praticado antes do corte de ~10% de 20/10 (commit
+    // 48f9cd9). O selo "Lançamento -N%" é calculado no main.js.
+    precoOriginal: 179.9,
     preco: 159.9,
     categoria: "ceramica",
     subcategoria: "Vasos Escultóricos",
@@ -351,11 +346,9 @@ const produtos = [
     nome: "Prato Decorativo Flor de Pessegueiro",
     descricao:
       "Prato decorativo em cerâmica, <span class='realce'>torneado e pintado à mão</span> no ateliê — nasceu de uma tarde observando o pessegueiro do quintal abrir os primeiros botões depois do inverno. Sobre um fundo marfim acetinado, um ramo carregado de flores <span class='realce'>rosa-salmão em botão e flor aberta</span> se espalha em pinceladas soltas, quase de aquarela, com folhas verde-oliva pontuando o desenho. A borda em terracota natural, sem esmalte, fecha a peça com o contraste rústico que assina o ateliê. Fica bem pendurado na parede, apoiado num aparador ou compondo a mesa posta — um <span class='realce--ouro'>presente</span> para quem gosta de ver a primavera chegar cedo em casa.",
-    // Entra na MESMA campanha "de/por" da linha de pratos florais
-    // (ver id 1): mesmo porte e mesma densidade de pintura das
-    // outras peças da linha, então o mesmo par de preços se aplica
-    // sem inventar um número novo.
-    precoOriginal: 149.9, // preço praticado antes do corte de 20/10 (commit 48f9cd9)
+    // "De" = preço praticado antes do corte de ~10% de 20/10 (commit
+    // 48f9cd9). O selo "Lançamento -N%" é calculado no main.js.
+    precoOriginal: 149.9,
     preco: 134.9,
     categoria: "ceramica",
     subcategoria: "Pratos Artísticos",
@@ -377,10 +370,9 @@ const produtos = [
     nome: "Prato Decorativo Ave da Alvorada",
     descricao:
       "Prato decorativo em cerâmica, <span class='realce'>torneado e pintado à mão</span> no ateliê, inspirado no instante em que os primeiros pássaros começam a cantar, ainda no cinza da madrugada. Uma avezinha em tons de <span class='realce'>azul-acinzentado e branco</span> pousa entre flores rosa-claro e folhas verde-oliva, pintadas em traço solto sobre um fundo marfim. A borda em terracota natural, sem esmalte, mantém o contraste rústico típico da casa. Fica bem na parede, num aparador ou compondo a mesa posta — um <span class='realce--ouro'>presente</span> sereno para começar o dia com calma.",
-    // Mesma campanha da linha de pratos florais (ver id 1) — mesmo
-    // porte, composição equivalente (1 pássaro + flores) à
-    // "Melodia da Primavera".
-    precoOriginal: 149.9, // preço praticado antes do corte de 20/10 (commit 48f9cd9)
+    // "De" = preço praticado antes do corte de ~10% de 20/10 (commit
+    // 48f9cd9). O selo "Lançamento -N%" é calculado no main.js.
+    precoOriginal: 149.9,
     preco: 134.9,
     categoria: "ceramica",
     subcategoria: "Pratos Artísticos",
@@ -400,10 +392,9 @@ const produtos = [
     nome: "Prato Decorativo Ninho Encantado",
     descricao:
       "Prato decorativo em cerâmica, <span class='realce'>torneado e pintado à mão</span> no ateliê, inspirado na cena de um ninho recém-feito, com ovos ainda quentes, escondido entre os galhos. Um pássaro azul-turquesa de peito amarelo vigia de perto, cercado por flores pêssego sobre um <span class='realce'>fundo aquarelado em tons de azul</span> que lembra o céu do início da manhã. A assinatura da artesã fecha a peça. Combina com berçário, sala de estar ou como <span class='realce--ouro'>presente</span> para quem está esperando — ou comemorando — uma novidade.",
-    // Mesma campanha da linha de pratos florais (ver id 1) — o
-    // motivo do ninho é um detalhe a mais na composição, mas a
-    // área pintada e o porte da peça são equivalentes aos demais.
-    precoOriginal: 149.9, // preço praticado antes do corte de 20/10 (commit 48f9cd9)
+    // "De" = preço praticado antes do corte de ~10% de 20/10 (commit
+    // 48f9cd9). O selo "Lançamento -N%" é calculado no main.js.
+    precoOriginal: 149.9,
     preco: 134.9,
     categoria: "ceramica",
     subcategoria: "Pratos Artísticos",
@@ -535,10 +526,9 @@ const produtos = [
     nome: "Prato Decorativo Renda Portuguesa",
     descricao:
       "Prato decorativo em cerâmica, <span class='realce'>torneado e pintado à mão</span> no ateliê, inspirado nos azulejos portugueses que forram tantas fachadas e igrejas — a mesma treliça em losango, aqui reinventada com um medalhão central que lembra <span class='realce'>renda antiga</span>. Tudo pintado em azul-marinho sobre esmalte branco, num traço miúdo e paciente. É a peça mais gráfica do ateliê, sem flores nem bichos — só padrão e simetria. Combina com decoração clássica, cozinhas de fazenda ou paredes de galeria, e é um <span class='realce--ouro'>presente</span> elegante para quem prefere o desenho geométrico ao floral.",
-    // Mesma campanha da linha de pratos florais (ver id 1) — mesmo
-    // porte da linha padrão, só o estilo (geométrico, não floral)
-    // é diferente; isso não muda o preço.
-    precoOriginal: 149.9, // preço praticado antes do corte de 20/10 (commit 48f9cd9)
+    // "De" = preço praticado antes do corte de ~10% de 20/10 (commit
+    // 48f9cd9). O selo "Lançamento -N%" é calculado no main.js.
+    precoOriginal: 149.9,
     preco: 134.9,
     categoria: "ceramica",
     subcategoria: "Pratos Artísticos",
@@ -750,10 +740,9 @@ const produtos = [
     nome: "Boleira Jardim de Morangos",
     descricao:
       "Uma boleira com tampa em cerâmica bege, coroada por um pequeno puxador em formato de flor e cercada por uma grinalda de <span class='realce'>morangos e florzinhas pintados à mão</span>. Além de proteger o bolo da poeira e das moscas, é uma peça de presença própria mesmo fechada — ideal para o café da tarde, para presentear quem ama receber visitas, ou simplesmente para deixar à mostra na cozinha como <span class='realce'>objeto decorativo</span>. Uma peça grande e de acabamento generoso, <span class='realce--ouro'>rara</span> no formato tradicional de boleira com tampa em cerâmica artesanal.",
-    // precoOriginal NOVO: peça de destaque escolhida pra simular
-    // promoção em "Objetos Decorativos" (ver critério completo no
-    // comentário da id 17).
-    precoOriginal: 259.9, // preço praticado antes do corte de 20/10 (commit 48f9cd9)
+    // "De" = preço praticado antes do corte de ~10% de 20/10 (commit
+    // 48f9cd9). O selo "Lançamento -N%" é calculado no main.js.
+    precoOriginal: 259.9,
     preco: 234.9,
     categoria: "ceramica",
     subcategoria: "Objetos Decorativos",
@@ -789,10 +778,9 @@ const produtos = [
     nome: "Caneca Artística Passarinhos do Amor",
     descricao:
       "Um casal de passarinhos amarelos pousa sobre um galho florido nesta caneca, pintado à mão com a palavra <span class='realce'>&ldquo;LOVE&rdquo;</span> e pequenos corações ao lado — um presente carregado de significado para quem se ama. A superfície em relevo dá volume aos passarinhos, um detalhe que só se percebe (e se aprecia de verdade) ao segurar a peça nas mãos. Perfeita para presentear no Dia dos Namorados, em aniversários de casamento, ou simplesmente para lembrar alguém querido todos os dias — uma <span class='realce--ouro'>peça única</span>, sem repetição no ateliê.",
-    // precoOriginal NOVO: peça de destaque escolhida pra simular
-    // promoção em "Canecas Artísticas" (ver critério completo no
-    // comentário da id 17).
-    precoOriginal: 139.9, // preço praticado antes do corte de 20/10 (commit 48f9cd9)
+    // "De" = preço praticado antes do corte de ~10% de 20/10 (commit
+    // 48f9cd9). O selo "Lançamento -N%" é calculado no main.js.
+    precoOriginal: 139.9,
     preco: 124.9,
     categoria: "ceramica",
     subcategoria: "Canecas Artísticas",
@@ -1118,10 +1106,9 @@ const produtos = [
     nome: "Prato Decorativo Canário e Flor de Outono",
     descricao:
       "Dois canários em pleno voo se encontram sobre um ramo de flores alaranjadas neste prato decorativo, pintado à mão sobre um fundo de barro cru com sombreado suave, quase como uma pintura a carvão. É uma peça pensada para pendurar na parede ou apoiar num cavalete, trazendo movimento e cor para qualquer ambiente. Combina com decoração rústica ou boho, e é um <span class='realce--ouro'>presente</span> e tanto para quem ama a vida no campo e o canto dos pássaros — peça <span class='realce'>pintada à mão</span>, sem duas iguais.",
-    // precoOriginal NOVO: peça de destaque escolhida pra simular
-    // promoção em "Pratos Artísticos" (ver critério completo no
-    // comentário da id 17) — único prato do lote novo com desconto.
-    precoOriginal: 169.9, // preço praticado antes do corte de 20/10 (commit 48f9cd9)
+    // "De" = preço praticado antes do corte de ~10% de 20/10 (commit
+    // 48f9cd9). O selo "Lançamento -N%" é calculado no main.js.
+    precoOriginal: 169.9,
     preco: 154.9,
     categoria: "ceramica",
     subcategoria: "Pratos Artísticos",
@@ -1199,11 +1186,9 @@ const produtos = [
     nome: "Vaso Escultórico Elo Noturno",
     descricao:
       "Um vaso de corpo arredondado em esmalte preto brilhante, com duas alças em formato de <span class='realce'>correntes esculpidas à mão</span> — um design ousado que rompe com o floral predominante do ateliê e aposta numa estética mais gráfica e contemporânea. É uma peça de presença forte, perfeita para quem busca um ponto focal de decoração numa sala ou hall de entrada. Uma peça <span class='realce--ouro'>escultórica e única</span>, com acabamento vitrificado espelhado que reflete a luz do ambiente.",
-    // precoOriginal NOVO: peça de destaque escolhida pra simular
-    // promoção em "Vasos Escultóricos" (ver critério completo no
-    // comentário da id 17) — última das 6 peças do lote com desconto,
-    // uma por subcategoria (exceto "Kits", maior delas, com 2).
-    precoOriginal: 219.9, // preço praticado antes do corte de 20/10 (commit 48f9cd9)
+    // "De" = preço praticado antes do corte de ~10% de 20/10 (commit
+    // 48f9cd9). O selo "Lançamento -N%" é calculado no main.js.
+    precoOriginal: 219.9,
     preco: 199.9,
     categoria: "ceramica",
     subcategoria: "Vasos Escultóricos",
