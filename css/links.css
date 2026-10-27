@@ -265,6 +265,14 @@ body.pagina-links::before {
   text-underline-offset: 2px;
 }
 
+/* Fundo claro aqui: o crédito usa o oliva do site (≈ 5,3:1), sem a
+   opacidade pensada para o rodapé escuro das outras páginas */
+.links-rodape .credito-dev {
+  margin-top: 0.75rem;
+  color: var(--cor-secundaria);
+  opacity: 1;
+}
+
 /* ---- ENTRADA: um único momento orquestrado ----
    O topo aparece primeiro e os botões sobem em sequência curta (60ms
    entre eles, via --i no HTML). A animação fica no <li>, não no <a>,
