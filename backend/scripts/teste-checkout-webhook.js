@@ -250,11 +250,31 @@ teste('checkout: peça vendida (disponivel:false) é recusada com o nome dela', 
   peca.disponivel = false;
   try {
     const { valor } = await comLog(async () => requisitar(app, { caminho: '/api/checkout', corpo: { ...PEDIDO, itens: [{ id: 1, quantidade: 1 }, { id: 2, quantidade: 1 }] } }));
-    assert.equal(valor.status, 400);
+    assert.equal(valor.status, 409);
+    assert.equal(valor.corpo.codigo, 'peca_vendida');
     assert.ok(valor.corpo.erro.includes(peca.nome) && /vendida/.test(valor.corpo.erro));
+    assert.ok(!valor.corpo.checkout_url, 'nenhum pagamento é iniciado');
   } finally {
     delete peca.disponivel;
   }
+});
+
+teste('checkout: peça vendida do catálogo real (Pote Bruma Dourada) -> 409', async () => {
+  const app = carregarQuieto({ BASE_URL: 'http://localhost:8765' });
+  const pote = require('../data/produtos').produtos.find((p) => p.nome === 'Pote Decorativo Bruma Dourada');
+  assert.equal(pote.disponivel, false, 'o Pote está marcado como vendido em js/produtos.js');
+  const { valor } = await comLog(async () => requisitar(app, { caminho: '/api/checkout', corpo: { ...PEDIDO, itens: [{ id: pote.id, quantidade: 1 }] } }));
+  assert.equal(valor.status, 409);
+  assert.equal(valor.corpo.codigo, 'peca_vendida');
+});
+
+teste('GET /api/produtos continua listando a peça vendida, com disponivel:false', async () => {
+  const app = carregarQuieto({ BASE_URL: 'http://localhost:8765' });
+  const { valor } = await comLog(async () => requisitar(app, { metodo: 'GET', caminho: '/api/produtos' }));
+  assert.equal(valor.status, 200);
+  const pote = valor.corpo.find((p) => p.nome === 'Pote Decorativo Bruma Dourada');
+  assert.ok(pote, 'a vendida não some da API');
+  assert.equal(pote.disponivel, false);
 });
 
 // Dados da nota fiscal recusados no servidor (o navegador pode ser

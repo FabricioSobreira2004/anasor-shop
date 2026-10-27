@@ -584,8 +584,12 @@ app.post('/api/checkout', async (req, res) => {
   }
 
   const vendidas = [...porId.values()].filter(({ produto }) => produto.disponivel === false);
+  // 409 (conflito com o estado do catálogo), não 400: o pedido estava
+  // bem formado, a peça é que deixou de estar à venda. O "codigo" deixa
+  // o front tratar o caso sem depender do texto da mensagem.
   if (vendidas.length > 0) {
-    return res.status(400).json({
+    return res.status(409).json({
+      codigo: 'peca_vendida',
       erro: `Esta peça já foi vendida: ${vendidas.map(({ produto }) => produto.nome).join(', ')}. Tire do carrinho para continuar.`,
     });
   }
