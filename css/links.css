@@ -71,13 +71,14 @@ body.pagina-links::before {
 }
 
 .links-avatar {
-  /* Recorte redondo da ilustração do ateliê: "cover" + posição baixa
-     mantém o rosto da Anasor no centro do círculo. */
+  /* Logo floral já centralizada com margem de segurança (gerada
+     1080x1080) — "cover" + posição central, sem precisar compensar
+     nenhum rosto fora do centro como na ilustração antiga. */
   width: 120px;
   height: 120px;
   border-radius: 50%;
   object-fit: cover;
-  object-position: 45% 75%;
+  object-position: 50% 50%;
   /* Aro creme + filete terracota + halo bem leve: lembra a borda de um
      prato, a peça mais conhecida do ateliê. */
   border: 5px solid var(--cor-card);
