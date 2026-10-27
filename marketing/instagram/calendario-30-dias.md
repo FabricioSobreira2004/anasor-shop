@@ -3,6 +3,8 @@
 Ritmo: **4 posts por semana**, alternando Reels e feed (foto ou carrossel).
 Dias fixos: **segunda (Reels) · quarta (feed) · sexta (Reels) · domingo (feed)**. O "Dia 1" é a primeira segunda-feira em que a conta começar a postar.
 
+Todas as legendas e os CTAs dos Reels fecham com a assinatura 🤎 (ver `legendas.md`).
+
 As legendas são as de `legendas.md` (nº) e os roteiros os de `reels-ideias.md` (R).
 
 **Antes de cada post de peça:** confira no site se ela ainda está disponível e se o preço segue o mesmo. Se já foi vendida, use outra peça da reserva (lista no fim).

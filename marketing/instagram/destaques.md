@@ -2,7 +2,19 @@
 
 Cada destaque tem de 3 a 5 stories curtos. Os textos usam apenas informações reais da loja: `politicas.html` (compra, envio, trocas, cuidados e FAQ) e `js/produtos.js` (peças e preços). **Nada de prazo de encomenda inventado:** prazo e valor de encomenda são sempre combinados pelo WhatsApp.
 
-Sugestão de capas: círculo bege (#EFE3D0) com um ícone de traço marrom (#3E2E22), igual aos ícones do site.
+## Capas dos destaques
+
+Círculo bege (#EFE3D0) com o emoji no centro, sem texto. O 🤎 da capa de Cuidados é a mesma assinatura do site e da bio.
+
+| Destaque | Emoji da capa |
+|---|---|
+| Peças Únicas | 🏺 |
+| Bastidores | 🎬 |
+| Como Comprar | 🛍️ |
+| Encomendas | ✨ |
+| Cuidados com a Peça | 🤎 |
+
+**Emojis nos stories:** no máximo um por story, e o último story de cada destaque termina com a assinatura 🤎.
 
 ---
 
@@ -21,7 +33,7 @@ Sugestão de capas: círculo bege (#EFE3D0) com um ícone de traço marrom (#3E2
 
 **Story 4**
 > Pratos pintados, canecas com surpresa no fundo, vasos escultóricos, travessas e conjuntos.
-> Veja o que ainda está disponível 👉 link na bio
+> Veja o que ainda está disponível no link na bio 🤎
 
 ---
 
@@ -38,9 +50,9 @@ Sugestão de capas: círculo bege (#EFE3D0) com um ícone de traço marrom (#3E2
 
 **Story 4**
 > Na queima, o esmalte reage e cria efeitos que nunca se repetem.
-> É por isso que nenhuma peça sai igual à outra.
+> É por isso que nenhuma peça sai igual à outra 🤎
 
-> 📌 Usar vídeos e fotos reais do ateliê (torno, pintura, forno). Ver "pendências de mídia" no fim deste arquivo.
+> **Nota:** usar vídeos e fotos reais do ateliê (torno, pintura, forno). Ver "pendências de mídia" no fim deste arquivo.
 
 ---
 
@@ -64,7 +76,7 @@ Sugestão de capas: círculo bege (#EFE3D0) com um ícone de traço marrom (#3E2
 
 **Story 5**
 > Você pode se arrepender da compra em até 7 dias corridos depois de receber a peça, como garante o Código de Defesa do Consumidor.
-> Políticas completas no site 👉 link na bio
+> Políticas completas no link na bio 🤎
 
 ---
 
@@ -81,7 +93,7 @@ Sugestão de capas: círculo bege (#EFE3D0) com um ícone de traço marrom (#3E2
 > As encomendas são combinadas direto comigo pelo WhatsApp: detalhes, prazo e valor, tudo conversado com você.
 
 **Story 4**
-> Toque em "Encomende sua peça única" no link da bio e me mande uma mensagem 💬
+> Toque em "Encomende sua peça única" no link da bio e me mande uma mensagem 🤎
 
 ---
 
@@ -101,7 +113,7 @@ Sugestão de capas: círculo bege (#EFE3D0) com um ícone de traço marrom (#3E2
 
 **Story 5**
 > Chegou com avaria do transporte ou defeito de fabricação?
-> Fale comigo pelo WhatsApp em até 7 dias do recebimento e resolvemos juntos, com reparo, troca ou reembolso.
+> Fale comigo pelo WhatsApp em até 7 dias do recebimento e resolvemos juntos, com reparo, troca ou reembolso 🤎
 
 ---
 
@@ -109,4 +121,4 @@ Sugestão de capas: círculo bege (#EFE3D0) com um ícone de traço marrom (#3E2
 
 - Fotos/vídeos reais do ateliê para "Bastidores" (torno, pintura, forno, embalagem).
 - Fotos das peças já existem em `img/produtos/` e podem ilustrar "Peças Únicas".
-- Capas dos destaques (5 ícones) ainda não foram feitas.
+- Capas dos destaques: os emojis estão definidos acima, falta montar as 5 imagens.
