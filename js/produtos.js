@@ -2,6 +2,9 @@
 //  CATÁLOGO DE PRODUTOS — Anasor Sobreira
 // ============================================================
 //
+//  Para marcar uma peça como vendida: disponivel: false. Nunca apague.
+//  (A peça vendida vira portfólio e gera encomenda; ver "disponivel".)
+//
 //  POR QUE UM ARRAY DE OBJETOS?
 //  ---------------------------------------------------------
 //  Um "array" é uma lista ordenada. Cada item dessa lista é um
@@ -47,9 +50,12 @@
 //                    preço "cheio", de ANTES do desconto — o número
 //                    que aparece riscado no card e na página da peça.
 //                    Fica FORA do carrinho de propósito: serve só
-//                    pra exibição do "de R$ X por R$ Y". A partir
+//                    pra exibição do "de R$ X por R$ Y". Precisa ser
+//                    um preço que a peça teve DE VERDADE (hoje: o
+//                    praticado antes do corte de 20/10); sem preço
+//                    anterior real, não use o campo. A partir
 //                    dele e de "preco", o main.js calcula sozinho a
-//                    porcentagem do selo "X% OFF" (não guardamos a
+//                    porcentagem do selo "Lançamento -X%" (não guardamos a
 //                    porcentagem aqui pra ela nunca ficar
 //                    dessincronizada dos dois valores). Peça sem
 //                    este campo = peça sem promoção: nada muda na
@@ -95,6 +101,14 @@
 //                    bloco "Encomende uma peça parecida". Peça SEM este
 //                    campo é tratada como disponível (o padrão) — por
 //                    isso nenhum dos produtos abaixo precisa declará-lo.
+//   selo          -> OPCIONAL. Texto ou lista com um ou mais de:
+//                    "mais-vendido" | "queridinho" | "novidade" |
+//                    "assinada". O card mostra UM selo só, pela
+//                    prioridade: vendido > mais-vendido > assinada >
+//                    queridinho > novidade (ver SELOS em main.js).
+//                    Só use o que for verdade: "mais-vendido" exige
+//                    vendas reais confirmadas; "assinada" só quando a
+//                    peça tem a assinatura da artesã.
 //   oculto        -> OPCIONAL, boolean. "oculto: true" tira a peça de
 //                    TODAS as listagens (carrosséis e grades da Home,
 //                    ceramica.html e suas contagens/subcategorias,
@@ -120,19 +134,13 @@ const produtos = [
     nome: "Prato Decorativo Melodia da Primavera",
     descricao:
       "Prato decorativo em cerâmica, <span class='realce'>torneado e pintado à mão</span> no ateliê. Sobre um fundo marfim acetinado, um pássaro amarelo pousa num ramo de roseiras silvestres cor-de-rosa — as pinceladas ficam soltas, quase de aquarela, e a <span class='realce'>borda em terracota natural</span>, sem esmalte, dá o contraste rústico. Fica bem pendurado na parede, apoiado num aparador ou compondo a mesa posta. É daqueles <span class='realce--ouro'>presentes</span> que a pessoa guarda por anos, porque não existe outro igual.",
-    // PROMOÇÃO DOS PRATOS DECORATIVOS (menos o Pavão Real): os 4
-    // pratos entram na mesma campanha, com o MESMO "de/por" pra a
-    // comunicação ficar redonda ("Pratos decorativos por R$ 134,90").
-    // precoOriginal 200,00 é o valor cheio de referência da linha;
-    // preco 134,90 é o que será cobrado (carrinho/WhatsApp leem ESTE)
-    // — AJUSTADO (Etapa 2, popularização de preços): era 149,90, caiu
-    // ~10% (ver tabela completa no relatório desta rodada). O selo
-    // "33% OFF" NÃO é escrito aqui — o main.js calcula a partir
-    // destes dois números (1 - 134.9/200 = 0.3255 -> 33%).
-    precoOriginal: 200.0,
+    // "De" = preço praticado antes do corte de ~10% de 20/10 (commit
+    // 48f9cd9); o selo "Lançamento -N%" sai calculado no main.js.
+    precoOriginal: 149.9, // preço praticado antes do corte de 20/10 (commit 48f9cd9)
     preco: 134.9,
     categoria: "ceramica",
     subcategoria: "Pratos Artísticos",
+    selo: "queridinho",
     imagem: "img/produtos/prato-melodia-da-primavera.jpg",
     imagensExtras: [
       "img/produtos/angulos-extras/prato-melodia-da-primavera-2.jpg",
@@ -151,10 +159,11 @@ const produtos = [
     descricao:
       "Prato decorativo grande em cerâmica, <span class='realce'>modelado e pintado à mão</span>. No centro, um buquê de copos-de-leite em vermelho e terracota se abre sobre folhagem dourada e um <span class='realce'>fundo azul-e-branco marmorizado</span>, rematado por borda branca e pela assinatura da artesã. Pelo tamanho e pelo contraste de cores, é uma <span class='realce'>peça de conversa</span>: pede lugar de destaque num aparador, numa estante alta ou na parede da sala de jantar. Bonito de dar e de receber.",
     // Mesma promoção da linha de pratos decorativos (ver id 1).
-    precoOriginal: 200.0,
+    precoOriginal: 149.9, // preço praticado antes do corte de 20/10 (commit 48f9cd9)
     preco: 134.9,
     categoria: "ceramica",
     subcategoria: "Pratos Artísticos",
+    selo: "assinada",
     imagem: "img/produtos/prato-buque-de-calla-rubra.jpg",
     imagensExtras: [
       "img/produtos/angulos-extras/prato-buque-de-calla-rubra-2.jpg",
@@ -174,10 +183,11 @@ const produtos = [
     descricao:
       "Prato decorativo em cerâmica com pintura <span class='realce'>à mão em traço fino</span>: flores coral de estames delicados e folhas verde-oliva, em <span class='realce'>estilo aquarela sobre esmalte creme</span>. A borda natural em terracota e a assinatura da artesã fecham a peça. É leve e discreto — combina com paredes claras, prateleiras de livros e mesas de canto — e faz um <span class='realce--ouro'>presente</span> delicado pra quem gosta de ter flores por perto o ano inteiro.",
     // Mesma promoção da linha de pratos decorativos (ver id 1).
-    precoOriginal: 200.0,
+    precoOriginal: 149.9, // preço praticado antes do corte de 20/10 (commit 48f9cd9)
     preco: 134.9,
     categoria: "ceramica",
     subcategoria: "Pratos Artísticos",
+    selo: "assinada",
     imagem: "img/produtos/prato-cerejeira-coral.jpg",
     imagensExtras: [
       "img/produtos/angulos-extras/prato-cerejeira-coral-2.jpg",
@@ -195,7 +205,7 @@ const produtos = [
     descricao:
       "Prato decorativo em cerâmica <span class='realce'>pintado à mão</span>, com girassóis de miolo ferrugem e folhas verde-oliva sobre um <span class='realce'>fundo azul-céu mesclado</span>. É a peça mais quente e luminosa da série — acende um canto apagado da casa na hora. Use na parede como quadro, de apoio numa cômoda ou como <span class='realce'>fruteira decorativa</span> no centro da mesa. Um bom <span class='realce--ouro'>presente</span> pra quem ama a estética de campo.",
     // Mesma promoção da linha de pratos decorativos (ver id 1).
-    precoOriginal: 200.0,
+    precoOriginal: 149.9, // preço praticado antes do corte de 20/10 (commit 48f9cd9)
     preco: 134.9,
     categoria: "ceramica",
     subcategoria: "Pratos Artísticos",
@@ -221,6 +231,7 @@ const produtos = [
     preco: 174.9,
     categoria: "ceramica",
     subcategoria: "Pratos Artísticos",
+    selo: ["assinada", "queridinho"],
     imagem: "img/produtos/prato-pavao-real.jpg",
     imagensExtras: [
       "img/produtos/angulos-extras/prato-pavao-real-2.jpg",
@@ -246,7 +257,7 @@ const produtos = [
     // (Etapa 2): preco era 199,90 (~16% OFF), caiu mais ~10% na
     // popularização de preços (ver tabela completa no relatório desta
     // rodada); precoOriginal (239,00) não muda, só o "por".
-    precoOriginal: 239.0,
+    precoOriginal: 199.9, // preço praticado antes do corte de 20/10 (commit 48f9cd9)
     preco: 179.9,
     categoria: "ceramica",
     subcategoria: "Vasos Escultóricos",
@@ -278,10 +289,11 @@ const produtos = [
     // Desconto proporcional dos vasos (ver id 6): de 229,00 por
     // 169,90 (~26% OFF) — AJUSTADO (Etapa 2): preco era 189,90
     // (~17% OFF), mesma popularização de ~10% dos demais.
-    precoOriginal: 229.0,
+    precoOriginal: 189.9, // preço praticado antes do corte de 20/10 (commit 48f9cd9)
     preco: 169.9,
     categoria: "ceramica",
     subcategoria: "Vasos Escultóricos",
+    selo: "queridinho",
     imagem: "img/produtos/vaso-escultorico-copos-de-leite-em-flor.jpg",
     imagensExtras: [
       "img/produtos/angulos-extras/vaso-escultorico-copos-de-leite-em-flor-2.jpg",
@@ -304,10 +316,11 @@ const produtos = [
     // Desconto proporcional dos vasos (ver id 6): de 219,00 por
     // 159,90 (~27% OFF) — AJUSTADO (Etapa 2): preco era 179,90
     // (~18% OFF), mesma popularização de ~10% dos demais.
-    precoOriginal: 219.0,
+    precoOriginal: 179.9, // preço praticado antes do corte de 20/10 (commit 48f9cd9)
     preco: 159.9,
     categoria: "ceramica",
     subcategoria: "Vasos Escultóricos",
+    selo: "queridinho",
     imagem: "img/produtos/vaso-escultorico-manto-de-folhas.jpg",
     imagensExtras: [
       "img/produtos/angulos-extras/vaso-escultorico-manto-de-folhas-2.jpg",
@@ -342,7 +355,7 @@ const produtos = [
     // (ver id 1): mesmo porte e mesma densidade de pintura das
     // outras peças da linha, então o mesmo par de preços se aplica
     // sem inventar um número novo.
-    precoOriginal: 200.0,
+    precoOriginal: 149.9, // preço praticado antes do corte de 20/10 (commit 48f9cd9)
     preco: 134.9,
     categoria: "ceramica",
     subcategoria: "Pratos Artísticos",
@@ -367,7 +380,7 @@ const produtos = [
     // Mesma campanha da linha de pratos florais (ver id 1) — mesmo
     // porte, composição equivalente (1 pássaro + flores) à
     // "Melodia da Primavera".
-    precoOriginal: 200.0,
+    precoOriginal: 149.9, // preço praticado antes do corte de 20/10 (commit 48f9cd9)
     preco: 134.9,
     categoria: "ceramica",
     subcategoria: "Pratos Artísticos",
@@ -390,10 +403,11 @@ const produtos = [
     // Mesma campanha da linha de pratos florais (ver id 1) — o
     // motivo do ninho é um detalhe a mais na composição, mas a
     // área pintada e o porte da peça são equivalentes aos demais.
-    precoOriginal: 200.0,
+    precoOriginal: 149.9, // preço praticado antes do corte de 20/10 (commit 48f9cd9)
     preco: 134.9,
     categoria: "ceramica",
     subcategoria: "Pratos Artísticos",
+    selo: "assinada",
     imagem: "img/produtos/prato-ninho-encantado.jpg",
     imagensExtras: [
       "img/produtos/angulos-extras/prato-ninho-encantado-2.jpg",
@@ -414,6 +428,7 @@ const produtos = [
     preco: 159.9,
     categoria: "ceramica",
     subcategoria: "Pratos Artísticos",
+    selo: "queridinho",
     imagem: "img/produtos/prato-serenata-a-dois.jpg",
     imagensExtras: [
       "img/produtos/angulos-extras/prato-serenata-a-dois-2.jpg",
@@ -445,6 +460,7 @@ const produtos = [
     // blocos de ceramica.html descobrem subcategorias sozinhos, a
     // partir dos valores que aparecem aqui.
     subcategoria: "Travessas Decorativas",
+    selo: "queridinho",
     // FOTO PRINCIPAL TROCADA (2ª correção): o recorte manual do turno
     // anterior passou do ponto e cortava a travessa nas laterais,
     // mostrando só uma fatia estreita dela. Em vez de recortar de novo
@@ -501,6 +517,7 @@ const produtos = [
     preco: 159.9,
     categoria: "ceramica",
     subcategoria: "Pratos Artísticos",
+    selo: "queridinho",
     // FOTO PRINCIPAL RECORTADA (revisão geral do catálogo): mesmo caso
     // da travessa Asas do Paraíso — peça desalinhada à esquerda,
     // recortei o excesso de parede vazia à direita pra recentralizar.
@@ -521,7 +538,7 @@ const produtos = [
     // Mesma campanha da linha de pratos florais (ver id 1) — mesmo
     // porte da linha padrão, só o estilo (geométrico, não floral)
     // é diferente; isso não muda o preço.
-    precoOriginal: 200.0,
+    precoOriginal: 149.9, // preço praticado antes do corte de 20/10 (commit 48f9cd9)
     preco: 134.9,
     categoria: "ceramica",
     subcategoria: "Pratos Artísticos",
@@ -678,6 +695,7 @@ const produtos = [
     preco: 169.9,
     categoria: "ceramica",
     subcategoria: "Jarras",
+    selo: "queridinho",
     imagem: "img/produtos/vaso-jarra-floral-pintada-a-mao.jpg",
     imagensExtras: [
       "img/produtos/angulos-extras/vaso-jarra-floral-pintada-a-mao-2.jpg",
@@ -735,7 +753,7 @@ const produtos = [
     // precoOriginal NOVO: peça de destaque escolhida pra simular
     // promoção em "Objetos Decorativos" (ver critério completo no
     // comentário da id 17).
-    precoOriginal: 309.9,
+    precoOriginal: 259.9, // preço praticado antes do corte de 20/10 (commit 48f9cd9)
     preco: 234.9,
     categoria: "ceramica",
     subcategoria: "Objetos Decorativos",
@@ -755,6 +773,7 @@ const produtos = [
     preco: 179.9,
     categoria: "ceramica",
     subcategoria: "Vasos Escultóricos",
+    selo: "queridinho",
     imagem: "img/produtos/vaso-escultorico-silhueta-e-flor-branca.jpg",
     imagensExtras: [
       "img/produtos/angulos-extras/vaso-escultorico-silhueta-e-flor-branca-2.jpg",
@@ -773,7 +792,7 @@ const produtos = [
     // precoOriginal NOVO: peça de destaque escolhida pra simular
     // promoção em "Canecas Artísticas" (ver critério completo no
     // comentário da id 17).
-    precoOriginal: 169.9,
+    precoOriginal: 139.9, // preço praticado antes do corte de 20/10 (commit 48f9cd9)
     preco: 124.9,
     categoria: "ceramica",
     subcategoria: "Canecas Artísticas",
@@ -885,6 +904,7 @@ const produtos = [
     preco: 134.9,
     categoria: "ceramica",
     subcategoria: "Canecas Artísticas",
+    selo: "queridinho",
     // FOTO PRINCIPAL TROCADA DE NOVO: a troca do turno anterior ainda
     // deixava a peça descentralizada (deslocada pra direita, pássaro
     // cortado na borda esquerda). Entre as extras havia uma opção
@@ -944,8 +964,10 @@ const produtos = [
     descricao:
       "Um pote com tampa em esmalte verde-oliva e dourado, com textura irregular que lembra musgo sobre pedra — o acabamento reativo da queima cria manchas únicas em cada peça, impossíveis de planejar ou repetir. É perfeito para guardar pequenos tesouros (chaves, joias, doces) ou simplesmente como <span class='realce'>objeto decorativo</span> sobre uma mesa ou estante. Uma peça de forte <span class='realce--ouro'>caráter artesanal</span>, para quem valoriza texturas cruas e imperfeições que contam uma história.",
     preco: 134.9,
+    disponivel: false, // vendida: continua no site como portfólio
     categoria: "ceramica",
     subcategoria: "Objetos Decorativos",
+    selo: "queridinho",
     imagem: "img/produtos/pote-decorativo-com-tampa-verde-oliva.jpg",
     imagensExtras: [
       "img/produtos/angulos-extras/pote-decorativo-com-tampa-verde-oliva-2.jpg",
@@ -1006,6 +1028,7 @@ const produtos = [
     preco: 334.9,
     categoria: "ceramica",
     subcategoria: "Conjuntos Artesanais",
+    selo: "queridinho",
     // FOTO PRINCIPAL TROCADA: a antiga (agora extra nº2) só mostrava 3
     // das 4 casinhas claramente. Esta (conteúdo trocado, nome do
     // arquivo igual) mostra as 4 peças do kit lado a lado, o que
@@ -1081,6 +1104,7 @@ const produtos = [
     preco: 134.9,
     categoria: "ceramica",
     subcategoria: "Conjuntos Artesanais",
+    selo: "novidade",
     imagem: "img/produtos/kit-2-copos-ondas-azuis.jpg",
     imagensExtras: [
       "img/produtos/angulos-extras/kit-2-copos-ondas-azuis-2.jpg",
@@ -1097,10 +1121,11 @@ const produtos = [
     // precoOriginal NOVO: peça de destaque escolhida pra simular
     // promoção em "Pratos Artísticos" (ver critério completo no
     // comentário da id 17) — único prato do lote novo com desconto.
-    precoOriginal: 209.9,
+    precoOriginal: 169.9, // preço praticado antes do corte de 20/10 (commit 48f9cd9)
     preco: 154.9,
     categoria: "ceramica",
     subcategoria: "Pratos Artísticos",
+    selo: "novidade",
     imagem: "img/produtos/prato-passaros-e-flores-alaranjadas.jpg",
     imagensExtras: [
       "img/produtos/angulos-extras/prato-passaros-e-flores-alaranjadas-2.jpg",
@@ -1126,6 +1151,7 @@ const produtos = [
     preco: 109.9,
     categoria: "ceramica",
     subcategoria: "Peças de Devoção",
+    selo: "novidade",
     imagem: "img/produtos/terco-de-mesa-graos-de-oracao.jpg",
     imagensExtras: [
       "img/produtos/angulos-extras/terco-de-mesa-graos-de-oracao-2.jpg",
@@ -1141,6 +1167,7 @@ const produtos = [
     preco: 159.9,
     categoria: "ceramica",
     subcategoria: "Objetos Decorativos",
+    selo: "novidade",
     imagem: "img/produtos/anjo-guardiao-porta-incenso.jpg",
     imagensExtras: [
       "img/produtos/angulos-extras/anjo-guardiao-porta-incenso-2.jpg",
@@ -1158,6 +1185,7 @@ const produtos = [
     preco: 99.9,
     categoria: "ceramica",
     subcategoria: "Objetos Decorativos",
+    selo: "novidade",
     imagem: "img/produtos/coador-de-cafe-de-ceramica.jpg",
     imagensExtras: [
       "img/produtos/angulos-extras/coador-de-cafe-de-ceramica-2.jpg",
@@ -1175,10 +1203,11 @@ const produtos = [
     // promoção em "Vasos Escultóricos" (ver critério completo no
     // comentário da id 17) — última das 6 peças do lote com desconto,
     // uma por subcategoria (exceto "Kits", maior delas, com 2).
-    precoOriginal: 259.9,
+    precoOriginal: 219.9, // preço praticado antes do corte de 20/10 (commit 48f9cd9)
     preco: 199.9,
     categoria: "ceramica",
     subcategoria: "Vasos Escultóricos",
+    selo: "novidade",
     imagem: "img/produtos/vaso-escultorico-preto-com-alcas-em-elo.jpg",
     imagensExtras: [
       "img/produtos/angulos-extras/vaso-escultorico-preto-com-alcas-em-elo-2.jpg",

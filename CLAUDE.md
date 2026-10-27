@@ -16,6 +16,9 @@
 - E-mail oficial da loja: contatoatelieanasor@gmail.com
 - Cada peça de cerâmica é **única (estoque 1)**: não existe seletor de quantidade.
 - Peça indisponível: campo `disponivel: false` + botão **"Encomendar peça parecida"** pelo WhatsApp.
+- **Peça vendida nunca sai do site:** marque `disponivel: false` em `js/produtos.js` e **nunca apague** a peça. Ela vira portfólio (foto desbotada, selo "Vendido", fim das listas, seção "Já encontraram um lar") e gera encomenda. O front e o `POST /api/checkout` (409) bloqueiam a compra.
+- **Selos:** campo opcional `selo` em `js/produtos.js` (`"mais-vendido"`, `"queridinho"`, `"novidade"`, `"assinada"`, ou uma lista). Um selo por card, prioridade vendido > mais-vendido > assinada > queridinho > novidade. Só o que for verdade: "mais-vendido" só com vendas confirmadas; "assinada" só com assinatura da artesã.
+- **"De" riscado (`precoOriginal`):** só um preço que a peça realmente teve. O selo mostra "Lançamento -N%" e some abaixo de 5%.
 - Preços e produtos ficam em `js/produtos.js`, a fonte única. O backend recalcula os valores a partir dele.
 - O frete é **grátis**, embutido no preço.
 
