@@ -359,7 +359,66 @@ function formatarPreco(preco) {
 // alguém preencher os dois campos com o mesmo número por engano.
 function estaEmPromocao(produto) {
   return typeof produto.precoOriginal === 'number'
-    && produto.precoOriginal > produto.preco;
+    && produto.precoOriginal > produto.preco
+    // peça vendida não tem "de/por"; desconto menor que isso não vale selo
+    && !estaVendida(produto)
+    && descontoPercentual(produto) >= DESCONTO_MINIMO_SELO;
+}
+
+const DESCONTO_MINIMO_SELO = 5;
+
+// ------------------------------------------------------------------
+//  PEÇA VENDIDA (disponivel: false)
+// ------------------------------------------------------------------
+// Regra da loja: a peça vendida nunca sai do site. Ela vira portfólio
+// (foto desbotada + "Encomendar peça parecida") e vai para o fim das
+// listas, para não ocupar o lugar de quem ainda pode ser comprada.
+function estaVendida(produto) {
+  return produto.disponivel === false;
+}
+
+// sort é estável: entre as disponíveis (e entre as vendidas) a ordem
+// original de cada lista é preservada.
+function vendidasNoFim(lista) {
+  return [...lista].sort((a, b) => estaVendida(a) - estaVendida(b));
+}
+
+// Link de WhatsApp para encomendar uma peça parecida. Mora aqui (e não
+// em produto.js) porque o card vendido usa o mesmo link e a mesma
+// mensagem em todas as páginas. O link aponta para a página da peça,
+// para a Anasor ver de qual se trata.
+function linkEncomendaWhatsApp(produto, { indisponivel = false } = {}) {
+  const urlPagina = new URL(`produto.html?id=${produto.id}`, window.location.href).href;
+  const msg = indisponivel
+    ? `Olá, Anasor! Vi a peça "${produto.nome}" no site, mas essa peça já foi vendida — gostaria de encomendar uma parecida. Podemos conversar sobre valores e prazo? ${urlPagina}`
+    : `Olá, Anasor! Vi a peça "${produto.nome}" no site e gostaria de encomendar uma peça única parecida. Podemos conversar sobre valores e prazo? ${urlPagina}`;
+  return `https://wa.me/${WHATSAPP_NUMERO}?text=${encodeURIComponent(msg)}`;
+}
+
+// ------------------------------------------------------------------
+//  SELOS DA PEÇA (campo "selo" em produtos.js)
+// ------------------------------------------------------------------
+// Um selo só por peça, para a foto não virar mural de etiquetas. A
+// ordem abaixo é a prioridade: "vendido" ganha de tudo porque muda o
+// que o cliente pode fazer com a peça.
+const SELOS_PECA = {
+  vendido: 'Vendido',
+  'mais-vendido': 'Mais Vendido',
+  assinada: 'Peça Assinada',
+  queridinho: 'Queridinha do Ateliê',
+  novidade: 'Novidade',
+};
+
+function seloDaPeca(produto) {
+  const selos = new Set([].concat(produto.selo || []));
+  if (estaVendida(produto)) selos.add('vendido');
+  return Object.keys(SELOS_PECA).find((chave) => selos.has(chave)) || null;
+}
+
+function renderSeloPeca(produto, classeExtra = '') {
+  const chave = seloDaPeca(produto);
+  if (!chave) return '';
+  return `<span class="selo-peca selo-peca--${chave} ${classeExtra}">${SELOS_PECA[chave]}</span>`;
 }
 
 // Porcentagem de desconto, ARREDONDADA e como número inteiro (25, não
@@ -379,17 +438,20 @@ function descontoPercentual(produto) {
 //   de tela como "R$ 200,00") + o valor com desconto em destaque.
 //   O selo "X% OFF" fica só no CARD (parâmetro comSelo), como pedido.
 function renderBlocoPreco(produto, { classeExtra = '', comSelo = false } = {}) {
+  // Vendida: o valor fica só como referência, discreto e sem "de/por"
+  if (estaVendida(produto)) {
+    return `<p class="preco preco--vendida ${classeExtra}">${formatarPreco(produto.preco)}</p>`;
+  }
+
   if (!estaEmPromocao(produto)) {
     return `<p class="preco ${classeExtra}">${formatarPreco(produto.preco)}</p>`;
   }
 
-  // dentro do selo, SÓ o número (ex.: "25") vai em dourado
-  // (.num-ouro) — o "% OFF" segue branco. Parte do sistema de acento
-  // --cor-ouro (ver :root / style.css).
+  // Texto todo numa cor só: o número em dourado sobre o terracota não
+  // tinha contraste AA. "Lançamento" diz de onde vem o desconto (o "de"
+  // é o preço praticado antes do corte de outubro).
   const selo = comSelo
-    ? `<span class="preco-selo-off"><span class="num-ouro">${descontoPercentual(
-        produto
-      )}</span>% OFF</span>`
+    ? `<span class="preco-selo-off">Lançamento -${descontoPercentual(produto)}%</span>`
     : '';
 
   return `
@@ -743,21 +805,56 @@ function ativarGiro360(container, imagens) {
 // essas imagens quando elas se aproximam da tela -> a página abre
 // mais rápido e gasta menos dados de quem não rola até lá.
 function criarCardProduto(produto) {
+  const vendida = estaVendida(produto);
+
+  // Vendida: um botão só, para encomendar. É <a> (não <button>), então
+  // o listener do carrinho, que escuta button.btn-comprar, nunca pega.
+  const acoesHTML = vendida
+    ? `<a class="btn-comprar btn-encomendar" href="${linkEncomendaWhatsApp(produto, { indisponivel: true })}"
+          target="_blank" rel="noopener noreferrer"
+          aria-label="Encomendar uma peça parecida com ${produto.nome} pelo WhatsApp">Encomendar peça parecida 🤎</a>`
+    : `<button class="btn-comprar">${estaNoCarrinho(produto.id) ? TEXTO_NO_CARRINHO : 'Adicionar ao Carrinho'}</button>
+      <button class="btn-comprar-agora">Comprar Agora</button>`;
+
   return `
-    <div class="produto-card reveal"
+    <div class="produto-card reveal ${vendida ? 'produto-card--vendida' : ''}"
          data-id="${produto.id}"
          data-nome="${produto.nome}"
          data-preco="${produto.preco}"
          data-imagem="${produto.imagem}">
       <a class="produto-card__link" href="produto.html?id=${produto.id}">
+        ${renderSeloPeca(produto, 'selo-peca--card')}
         <img src="${produto.imagem}" alt="${produto.nome}" loading="lazy">
         <h3>${produto.nome}</h3>
         ${renderBlocoPreco(produto, { comSelo: true })}
       </a>
-      <button class="btn-comprar">Adicionar ao Carrinho</button>
-      <button class="btn-comprar-agora">Comprar Agora</button>
+      ${acoesHTML}
     </div>
   `;
+}
+
+const TEXTO_NO_CARRINHO = 'No carrinho ✓';
+
+// Vitrine de portfólio das peças vendidas (fim de ceramica.html e das
+// subcategorias): mostra o que o ateliê já fez e puxa encomenda.
+function renderSecaoVendidas(vendidas) {
+  if (vendidas.length === 0) return '';
+  return `
+    <section class="ja-tem-lar" aria-labelledby="ja-tem-lar-titulo">
+      <h2 id="ja-tem-lar-titulo">Já encontraram um lar 🤎</h2>
+      <p class="ja-tem-lar__texto">Cada peça é única. Gostou de alguma? Encomende a sua, do seu jeitinho.</p>
+      <div class="produtos-grid">${vendidas.map(criarCardProduto).join('')}</div>
+    </section>`;
+}
+
+// try/catch: o card pode ser montado antes de o carrinho existir no
+// localStorage (ou com ele corrompido), e isso não pode quebrar a vitrine.
+function estaNoCarrinho(id) {
+  try {
+    return lerCarrinho().some((item) => String(item.id) === String(id));
+  } catch {
+    return false;
+  }
 }
 
 // ------------------------------------------------------------------
@@ -899,12 +996,14 @@ function subcategoriasCeramica() {
 // página tem seu próprio layout de card).
 function dadosCardsSubcategoriaCeramica() {
   return subcategoriasCeramica().map((sub) => {
-    const daSub = produtosVisiveis().filter((p) => p.subcategoria === sub);
+    // vendidasNoFim: as fotos de capa da coleção priorizam peças à venda
+    const daSub = vendidasNoFim(produtosVisiveis().filter((p) => p.subcategoria === sub));
     // até 5 fotos DISTINTAS da subcategoria (Set tira duplicatas, caso
     // duas peças usem a mesma imagem) — viram os quadros que se
     // revezam no círculo, ver iniciarRotacaoFotos() mais abaixo
     const fotos = [...new Set(daSub.map((p) => p.imagem))].slice(0, 5);
-    const qtd = daSub.length;
+    // O rótulo promete "disponíveis": só conta o que dá para comprar
+    const qtd = daSub.filter((p) => !estaVendida(p)).length;
     const rotuloQtd = `${qtd} ${qtd === 1 ? 'peça disponível' : 'peças disponíveis'}`;
     return { sub, fotos, qtd, rotuloQtd, href: `ceramica.html?sub=${slugificar(sub)}` };
   });
@@ -1115,7 +1214,9 @@ function filtrarProdutos(lista, criterios) {
   }
   // 'relevancia' -> mantém a ordem que veio (a do array)
 
-  return resultado;
+  // Depois de qualquer ordenação: vendidas sempre no fim (busca,
+  // listagens e carrosséis passam todos por aqui)
+  return vendidasNoFim(resultado);
 }
 
 // Parágrafo mostrado quando a busca/filtros não devolvem nenhuma peça.
@@ -1808,12 +1909,37 @@ function adicionarAoCarrinho(card, botao) {
   botao.textContent = 'Adicionado ✓';
   botao.disabled = true;
   setTimeout(() => {
-    botao.textContent = textoOriginal;
+    // "Adicionar" vira "No carrinho ✓": peça única não soma quantidade,
+    // então o botão passa a contar o estado em vez de convidar de novo
+    botao.textContent = botao.classList.contains('btn-comprar') ? TEXTO_NO_CARRINHO : textoOriginal;
     botao.disabled = false;
   }, 1200);
 
   // 2) feedback GLOBAL: toast com o nome da peça (some sozinho em ~3s)
   mostrarToast(`✓ ${item.nome} adicionado ao carrinho`);
+}
+
+// Peça vendida não entra no carrinho por nenhum caminho (card antigo
+// em cache, barra, HTML editado): a checagem é pelo catálogo, não pelo
+// botão. O servidor recusa de novo no checkout (defesa em profundidade).
+function pecaVendidaPorId(id) {
+  const produto = produtos.find((p) => String(p.id) === String(id));
+  return Boolean(produto && estaVendida(produto));
+}
+
+// Carrinho salvo antes da venda: tira a peça e avisa, em vez de deixar
+// o cliente descobrir só no pagamento.
+function removerVendidasDoCarrinho() {
+  const carrinho = lerCarrinho();
+  const restantes = carrinho.filter((item) => !pecaVendidaPorId(item.id));
+  const removidas = carrinho.length - restantes.length;
+  if (removidas === 0) return;
+  salvarCarrinho(restantes);
+  mostrarToast(
+    removidas === 1
+      ? 'Uma peça do seu carrinho foi vendida e saiu dele 🤎'
+      : `${removidas} peças do seu carrinho foram vendidas e saíram dele 🤎`
+  );
 }
 
 // DELEGAÇÃO DE EVENTO: em vez de dar addEventListener em cada botão
@@ -1843,6 +1969,11 @@ document.addEventListener('click', (evento) => {
   // lógica de carrinho serve pras duas telas, sem duplicar código.
   const card = botao.closest('[data-id]');
   if (!card) return;
+
+  if (pecaVendidaPorId(card.dataset.id)) {
+    mostrarToast('Esta peça já foi vendida. Que tal encomendar uma parecida? 🤎');
+    return;
+  }
 
   adicionarAoCarrinho(card, botao);
 
@@ -2678,12 +2809,34 @@ const IDS_CAFE_DA_TARDE = [
 // existirem mais no catálogo (peça removida um dia) sem quebrar a
 // seção inteira — mesma robustez de montarProdutoDestaque/
 // montarSelecaoEspecial, um pouco acima/abaixo neste arquivo.
+// ------------------------------------------------------------------
+//  HOME SEM PEÇA REPETIDA
+// ------------------------------------------------------------------
+// Cada seção da Home reserva as peças que mostra; peça já reservada por
+// uma seção anterior não volta em outra, mesmo que alguém a coloque em
+// duas curadorias. A chave por seção deixa a mesma seção ser remontada
+// (troca de breakpoint) sem disputar as peças consigo mesma.
+const pecasPorSecaoHome = new Map();
+
+function reservarPecasHome(secao, pecas) {
+  const usadasEmOutras = new Set();
+  pecasPorSecaoHome.forEach((ids, outra) => {
+    if (outra !== secao) ids.forEach((id) => usadasEmOutras.add(id));
+  });
+  const livres = pecas.filter((p) => !usadasEmOutras.has(p.id));
+  pecasPorSecaoHome.set(secao, livres.map((p) => p.id));
+  return livres;
+}
+
 function montarVitrineCurada(grade, ids) {
   if (!grade) return;
   // produtosVisiveis(): mesmo que um id oculto entre na curadoria por
   // engano, ele é ignorado como se não existisse
   const visiveis = produtosVisiveis();
-  const pecas = ids.map((id) => visiveis.find((p) => p.id === id)).filter(Boolean);
+  const pecas = vendidasNoFim(reservarPecasHome(
+    grade.dataset.gradeProdutos,
+    ids.map((id) => visiveis.find((p) => p.id === id)).filter(Boolean)
+  ));
   if (pecas.length === 0) {
     const secao = grade.closest('section');
     if (secao) secao.hidden = true;
@@ -2906,7 +3059,10 @@ function montarProdutoDestaque(secao) {
   const produto = produtosVisiveis().find((p) => p.id === ID_PRODUTO_DESTAQUE);
   // ID trocado errado ou peça removida do catálogo: a seção continua
   // "hidden" (valor que já veio do HTML) — some sem quebrar a página.
-  if (!produto) return;
+  // Vendida também: um destaque com "Comprar" de peça que não existe
+  // mais confundiria; ela segue visível nas vitrines, desbotada.
+  if (!produto || estaVendida(produto)) return;
+  if (reservarPecasHome('destaque', [produto]).length === 0) return;
 
   // Lista de fotos = principal + extras, MESMA ideia de montarDetalhe
   // (produto.js): a principal entra como 1º item da galeria.
@@ -3387,10 +3543,12 @@ function montarSelecaoEspecial(secao) {
   // quebra a seção); se sobrarem MENOS de 2, a seção inteira some
   // (hidden) — 1 card solo não é "Seleção Especial", perderia o
   // sentido de comparação lado a lado que o layout em grade pede.
-  const pecas = IDS_SELECAO_ESPECIAL
+  // Vendida fica de fora (seção de vitrine com botão de compra) e
+  // reservarPecasHome evita repetir peça de outra seção da Home
+  const pecas = reservarPecasHome('selecao-especial', IDS_SELECAO_ESPECIAL
     // produtosVisiveis(): id oculto na curadoria é ignorado
     .map((id) => produtosVisiveis().find((p) => p.id === id))
-    .filter(Boolean);
+    .filter((p) => p && !estaVendida(p)));
   if (pecas.length < 2) return;
 
   const cardsHTML = pecas
@@ -3527,10 +3685,11 @@ function slidesEdicaoSurpresa(produto) {
 }
 
 function montarEdicaoSurpresa(secao) {
-  const pecas = IDS_EDICAO_SURPRESA
+  // Mesmas regras da Seleção Especial: sem vendida e sem repetir peça
+  const pecas = reservarPecasHome('edicao-surpresa', IDS_EDICAO_SURPRESA
     // produtosVisiveis(): id oculto na curadoria é ignorado
     .map((id) => produtosVisiveis().find((p) => p.id === id))
-    .filter(Boolean);
+    .filter((p) => p && !estaVendida(p)));
   if (pecas.length < 2) return;
 
   const cardsHTML = pecas
@@ -3766,5 +3925,6 @@ renderizarVitrines();         // monta a vitrine; quando os cards ficam
 escanearReveal();             // elementos .reveal que JÁ estão no HTML
                               // (títulos de seção, cards de categoria,
                               // "Quem Somos", "Fale com a gente")
+removerVendidasDoCarrinho();  // antes do contador, para ele já sair certo
 atualizarContadorCarrinho();  // mostra o total caso já haja itens salvos
 montarDropdownCeramica();     // monta o submenu de subcategorias no header

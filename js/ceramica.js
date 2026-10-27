@@ -99,7 +99,9 @@ function renderVisaoGeral() {
   // nome/contagem abaixo; continua sem usar --raio-organico pelo
   // mesmo motivo de sempre: nomes mais longos, tipo "Pratos
   // Artísticos", ficariam apertados naquela forma estreita/assimétrica).
-  conteudoEl.innerHTML = `<div class="categoria-cards">${cards}</div>`;
+  // No fim da visão geral, as vendidas de todas as subcategorias
+  const vendidas = produtosVisiveis().filter((p) => p.categoria === 'ceramica' && estaVendida(p));
+  conteudoEl.innerHTML = `<div class="categoria-cards">${cards}</div>${renderSecaoVendidas(vendidas)}`;
 
   // os cards acima nasceram com a classe .reveal -> registra eles
   // no IntersectionObserver do main.js pra animarem ao entrar na tela
@@ -146,10 +148,15 @@ function aplicarFiltrosListagem() {
   if (produtosDaSub.length === 0) return; // ainda carregando
 
   const visiveis = filtrarProdutos(produtosDaSub, criterios);
+  // À venda na grade principal; vendidas numa seção própria no fim,
+  // como portfólio (a busca e os filtros valem para as duas)
+  const aVenda = visiveis.filter((p) => !estaVendida(p));
+  const vendidas = visiveis.filter(estaVendida);
   conteudoEl.innerHTML =
     visiveis.length === 0
       ? mensagemVazia()
-      : `<div class="produtos-grid">${visiveis.map(criarCardProduto).join('')}</div>`;
+      : (aVenda.length ? `<div class="produtos-grid">${aVenda.map(criarCardProduto).join('')}</div>` : '')
+        + renderSecaoVendidas(vendidas);
 
   // criarCardProduto() já traz a classe .reveal nos cards; registra
   // eles no observador (main.js) pra animarem ao rolar

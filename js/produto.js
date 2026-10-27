@@ -55,23 +55,8 @@ const relacionadosSecao = document.querySelector('#produtos-relacionados');
 // "Identifier 'WHATSAPP_NUMERO' has already been declared" (os dois
 // arquivos compartilham o mesmo escopo de top-level no navegador).
 
-// ---------- "ENCOMENDE SUA PEÇA ÚNICA" — link de WhatsApp ----------
-// Usado em 2 lugares desta página: o bloco .produto-encomenda (dentro
-// de montarDetalhe) e a barra flutuante "Comprar Agora" no mobile
-// (montarBarraCompraFlutuante, mais abaixo) — uma função só, pra não
-// duplicar a mensagem/URL nos dois lugares.
-// indisponivel:true troca a mensagem pra reconhecer que a peça já
-// vendeu (mesma ideia de pedido, só o texto muda).
-function linkEncomendaWhatsApp(produto, { indisponivel = false } = {}) {
-  // URL da PRÓPRIA página (já inclui "?id=..."): usamos a URL de
-  // verdade do navegador, não montamos "produto.html?id=" na mão, pra
-  // nunca desalinhar se o domínio/caminho mudar.
-  const urlPagina = window.location.href;
-  const msg = indisponivel
-    ? `Olá, Anasor! Vi a peça "${produto.nome}" no site, mas essa peça já foi vendida — gostaria de encomendar uma parecida. Podemos conversar sobre valores e prazo? ${urlPagina}`
-    : `Olá, Anasor! Vi a peça "${produto.nome}" no site e gostaria de encomendar uma peça única parecida. Podemos conversar sobre valores e prazo? ${urlPagina}`;
-  return `https://wa.me/${WHATSAPP_NUMERO}?text=${encodeURIComponent(msg)}`;
-}
+// linkEncomendaWhatsApp() mora em js/main.js: o card de peça vendida
+// (todas as páginas) usa o mesmo link e a mesma mensagem.
 
 // Como o breadcrumb deve linkar cada categoria: as duas já têm
 // página própria agora (croche.html foi criada — antes apontava pra
@@ -336,19 +321,21 @@ function montarDetalhe(produto) {
           Pedir orçamento pelo WhatsApp
         </a>
       </div>`
+    // Vendida: o bloco vira a ação principal da página, logo abaixo da
+    // descrição (ver template). Botão gummy grande, sem prazo nem preço.
     : `
       <div class="produto-encomenda produto-encomenda--indisponivel">
-        <p class="produto-encomenda__status">Esta peça já encontrou um lar.</p>
+        <p class="produto-encomenda__status">Esta peça já encontrou um lar 🤎</p>
         <p class="produto-encomenda__texto">
-          Mas você pode pedir uma parecida, feita especialmente para você.
+          Gostou? Faça a sua encomenda do jeitinho que você quer.
         </p>
         <a
-          class="btn-principal produto-encomenda__btn"
+          class="btn-comprar-agora produto-encomenda__btn produto-encomenda__btn--grande"
           href="${linkEncomendaIndisponivel}"
           target="_blank"
           rel="noopener noreferrer"
-          aria-label="Encomendar uma peça parecida com ${produto.nome} pelo WhatsApp">
-          Encomendar peça parecida
+          aria-label="Encomendar uma peça como ${produto.nome} pelo WhatsApp">
+          Encomendar uma peça assim
         </a>
       </div>`;
 
@@ -522,7 +509,12 @@ function montarDetalhe(produto) {
         Peça Única &mdash; Feita à Mão
       </p>
 
-      <h1>${produto.nome}</h1>
+      <!-- Selo da peça (Vendido, Peça Assinada...) ao lado do título,
+           o mesmo que aparece na foto do card -->
+      <div class="produto-detalhe__titulo-linha">
+        <h1>${produto.nome}</h1>
+        ${renderSeloPeca(produto, 'selo-peca--titulo')}
+      </div>
 
       <!-- Texto de autenticidade. Tom inspirado na própria loja da
            Anasor (lírico, "moldada à mão com carinho"), somado ao
@@ -537,6 +529,10 @@ function montarDetalhe(produto) {
       </p>
 
       <p class="produto-detalhe__descricao">${produto.descricao}</p>
+
+      <!-- Vendida: o convite para encomendar sobe para logo depois da
+           descrição, porque é a única ação possível com esta peça -->
+      ${produtoDisponivel ? '' : encomendaHTML}
 
       <!-- MINI-VITRINE: 2-3 fotos extras da peça (outros ângulos),
            logo abaixo do texto, cada uma na moldura de quadro
@@ -564,8 +560,8 @@ function montarDetalhe(produto) {
            preço promocional (riscado + valor com desconto) existir num
            lugar só. comSelo:false: o selo "X% OFF" é coisa do card
            (grade), aqui na página da peça o "de/por" já basta. -->
-      ${renderBlocoPreco(produto, { classeExtra: 'produto-detalhe__preco' })}
-      ${renderSeloEscassez()}
+      ${produtoDisponivel ? renderBlocoPreco(produto, { classeExtra: 'produto-detalhe__preco' }) : ''}
+      ${produtoDisponivel ? renderSeloEscassez() : ''}
 
       <!-- AÇÕES: sem seletor de quantidade de propósito — cada peça é
            única, o estoque é sempre 1. "Adicionar ao Carrinho" só
@@ -573,8 +569,11 @@ function montarDetalhe(produto) {
            false) não tem o que comprar, então o botão some e o bloco
            "Encomende sua peça única" (logo abaixo) vira a ação
            principal da página (ver encomendaHTML, mais acima). -->
+      <!-- Vendida: sem bloco de ações. A mensagem de "Tirar dúvidas"
+           cita o preço, e a única ação é a encomenda, que já está acima. -->
+      ${produtoDisponivel ? `
       <div class="produto-detalhe__acoes">
-        ${produtoDisponivel ? `<button class="btn-comprar">Adicionar ao Carrinho</button>` : ''}
+        <button class="btn-comprar">${estaNoCarrinho(produto.id) ? TEXTO_NO_CARRINHO : 'Adicionar ao Carrinho'}</button>
 
         <!-- Botão WhatsApp: target="_blank" abre em nova aba;
              rel="noopener" impede que a nova aba acesse esta via
@@ -583,13 +582,12 @@ function montarDetalhe(produto) {
           <span aria-hidden="true">&#128172;</span>
           Tirar dúvidas sobre esta peça
         </a>
-      </div>
+      </div>` : ''}
 
       <!-- "ENCOMENDE SUA PEÇA ÚNICA" (ideia da mãe da Anasor, pedido
-           explícito): em toda peça, disponível ou não — ver
-           encomendaHTML, montado mais acima com o texto/estilo certo
-           pra cada caso. -->
-      ${encomendaHTML}
+           explícito): na peça disponível fica aqui; na vendida já
+           apareceu logo depois da descrição. -->
+      ${produtoDisponivel ? encomendaHTML : ''}
 
       <!-- SELOS DE CONFIANÇA: logo ABAIXO do botão de compra (pedido) —
            é onde o "posso confiar nessa compra?" bate mais forte. HTML
@@ -667,24 +665,68 @@ function montarDetalhe(produto) {
 // ============================================================
 //  PRODUTOS RELACIONADOS — carrossel "premium", igual ao da Home
 // ============================================================
+// Hash FNV-1a do par (peça aberta, candidata). Desempata a afinidade
+// de um jeito que muda de uma página para outra, mas é sempre o mesmo
+// na mesma página: nada pisca nem muda ao recarregar.
+function hashPar(idAberta, idCandidata) {
+  let h = 2166136261;
+  for (const c of `${idAberta}:${idCandidata}`) {
+    h ^= c.charCodeAt(0);
+    h = Math.imul(h, 16777619);
+  }
+  return h >>> 0;
+}
+
+// Upsell por afinidade: mesma subcategoria (+3) vem antes de mesma
+// categoria (+1), e preço parecido (±35%, +1) desempata dentro de cada
+// grupo. Como a subcategoria sempre implica a categoria, ela soma 4 e
+// nunca perde para uma peça só da mesma categoria (máximo 2): a lista
+// já sai "subcategoria, depois categoria, depois o resto".
+// Vendidas ficam fora: aqui a ideia é sugerir o que dá para comprar.
+// Limite como parâmetro (e não const de módulo): montarRelacionados()
+// roda no topo deste arquivo, antes de uma const declarada aqui existir.
+function escolherRelacionados(produto, catalogo = produtosVisiveis(), limite = 8) {
+  const pontos = (p) =>
+    (p.subcategoria === produto.subcategoria ? 3 : 0)
+    + (p.categoria === produto.categoria ? 1 : 0)
+    + (Math.abs(p.preco - produto.preco) <= produto.preco * 0.35 ? 1 : 0);
+  return catalogo
+    .filter((p) => p.id !== produto.id && !estaVendida(p))
+    .map((p) => ({ p, pontos: pontos(p), desempate: hashPar(produto.id, p.id) }))
+    .sort((a, b) => b.pontos - a.pontos || a.desempate - b.desempate)
+    .slice(0, limite)
+    .map(({ p }) => p);
+}
+
+// "Ver todos os pratos artísticos" / "Ver todas as canecas artísticas":
+// o artigo segue o gênero da 1ª palavra da subcategoria (plural em -as).
+function rotuloVerTodos(sub) {
+  const feminino = /as$/i.test(sub.split(' ')[0]);
+  return `Ver ${feminino ? 'todas as' : 'todos os'} ${sub.toLowerCase()}`;
+}
+
+function linkDaSubcategoria(produto) {
+  return produto.categoria === 'ceramica'
+    ? `ceramica.html?sub=${slugificar(produto.subcategoria)}`
+    : 'croche.html';
+}
+
 function montarRelacionados(produto) {
-  // filter(): mesma categoria E id diferente do atual.
-  // slice(0, 4): no máximo 4 — ERA 3 antes de existir o carrossel
-  // desktop aqui. Trocado pra 4 porque cardsPorSlideCarrossel()
-  // mostra 4 por slide no desktop (ver main.js): com 3 peças, a
-  // última coluna do grid de 4 ficaria vazia (um "buraco" visual à
-  // direita); com 4, o slide único do desktop fecha certinho. No
-  // mobile (2 por slide) 4 peças viram 2 páginas — carrossel de
-  // verdade também lá, sem gap nenhum.
-  // produtosVisiveis() (js/produtos.js): peça oculta nunca aparece
-  // como sugestão em "Mais Tesouros do Ateliê".
-  const relacionados = produtosVisiveis()
-    .filter((p) => p.categoria === produto.categoria && p.id !== produto.id)
-    .slice(0, 4);
+  const relacionados = escolherRelacionados(produto);
 
   // Categoria com poucas peças pode não sobrar nenhuma: deixa a
   // seção escondida.
   if (relacionados.length === 0) return;
+
+  const hrefSub = linkDaSubcategoria(produto);
+  const verTodos = rotuloVerTodos(produto.subcategoria);
+  // Último "card" do carrossel leva à subcategoria inteira: quem chegou
+  // ao fim das sugestões ainda quer ver mais do mesmo tipo
+  const cardVerTodos = `
+    <a class="produto-card produto-card--ver-todos reveal" href="${hrefSub}">
+      <span class="produto-card--ver-todos__texto">${verTodos}</span>
+    </a>`;
+  const criarCard = (item) => (item === null ? cardVerTodos : criarCardProduto(item));
 
   // data-grade-produtos + data-manual: o PRIMEIRO atributo é o que
   // main.js usa pra reconhecer "esta é uma grade-carrossel" (mesmo
@@ -721,11 +763,12 @@ function montarRelacionados(produto) {
           <path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/>
           <path d="M20 3v4"/><path d="M22 5h-4"/><path d="M4 17v2"/><path d="M5 18H3"/>
         </svg>
-        Mais Tesouros do Ateliê
+        Mais ${produto.subcategoria} do Ateliê
       </span>
     </h2>
+    <p class="relacionados__ver-todos reveal"><a href="${hrefSub}">${verTodos}</a></p>
     <div class="produtos-grid" data-grade-produtos="relacionados" data-manual>
-      ${montarSlidesCarrossel(relacionados, cardsPorSlideCarrossel())}
+      ${montarSlidesCarrossel([...relacionados, null], cardsPorSlideCarrossel(), criarCard)}
     </div>
   `;
   relacionadosSecao.hidden = false;
@@ -881,7 +924,10 @@ function montarBarraCompraFlutuante(produto) {
   // riscado + o atual; senão, só o preço. Reaproveita a mesma ideia
   // do renderBlocoPreco, mas aqui é uma versão enxuta pra caber na
   // barra estreita (sem selo, textos menores — ver .barra-compra__preco).
-  const precoHTML = estaEmPromocao(produto)
+  // Vendida: nada de preço na barra, só o estado da peça
+  const precoHTML = !disponivel
+    ? '<strong>Peça vendida</strong>'
+    : estaEmPromocao(produto)
     ? `<s>${formatarPreco(produto.precoOriginal)}</s>
        <strong>${formatarPreco(produto.preco)}</strong>`
     : `<strong>${formatarPreco(produto.preco)}</strong>`;
@@ -967,7 +1013,10 @@ function montarBarraCompraFlutuante(produto) {
   //   assim que o "Adicionar ao Carrinho" sai de vista.
 
   const imagemPrincipal = document.querySelector('.galeria__principal');
-  const botaoReal = document.querySelector('.produto-detalhe__acoes');
+  // Peça vendida não tem bloco de ações: a referência passa a ser o
+  // convite de encomenda, que ocupa o mesmo papel na página
+  const botaoReal = document.querySelector('.produto-detalhe__acoes')
+    || document.querySelector('.produto-encomenda--indisponivel');
 
   // LIMIAR de rolagem da condição (A): ~60% da altura renderizada da
   // imagem principal (com um piso de 160px pra peças com foto baixa).
@@ -984,10 +1033,23 @@ function montarBarraCompraFlutuante(produto) {
   // observer, ele é derivado direto da rolagem.
   let botaoRealForaDaTela = false;
 
-  // Fonte única que liga/desliga a barra a partir das duas condições.
+  // Condição (C): a barra some enquanto os cards de "Mais ... do Ateliê"
+  // ou o rodapé estão na tela. No desktop o cartão do canto cobria o
+  // botão do último card; ali cada card já tem a própria compra.
+  const zonasSemBarra = new Set();
+  if ('IntersectionObserver' in window) {
+    const observadorZonas = new IntersectionObserver((entradas) => {
+      entradas.forEach((e) => (e.isIntersecting ? zonasSemBarra.add(e.target) : zonasSemBarra.delete(e.target)));
+      atualizarBarra();
+    });
+    [relacionadosSecao, document.querySelector('footer')].filter(Boolean)
+      .forEach((zona) => observadorZonas.observe(zona));
+  }
+
+  // Fonte única que liga/desliga a barra a partir das três condições.
   function atualizarBarra() {
     const jaPassouImagem = window.scrollY > LIMIAR_ROLAGEM;
-    const deveMostrar = jaPassouImagem && botaoRealForaDaTela;
+    const deveMostrar = jaPassouImagem && botaoRealForaDaTela && zonasSemBarra.size === 0;
     barra.classList.toggle('is-visivel', deveMostrar);
     // .tem-barra-compra no <body> = o produto.css sobe o "voltar ao
     // topo" e o toast pra não ficarem escondidos atrás da barra.

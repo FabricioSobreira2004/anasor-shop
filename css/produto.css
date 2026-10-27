@@ -1046,3 +1046,43 @@ body.produto-marca-flor main { background-image: var(--marca-flor); }
      (style.css), que já são ladrilhados, também não têm nenhum
      override de marca d'água no mobile. */
 }
+
+
+/* ============================================================
+   TÍTULO + SELO DA PEÇA (Vendido, Peça Assinada...)
+   flex-wrap: em tela estreita o selo desce para baixo do título em
+   vez de espremer o nome da peça.
+   ============================================================ */
+/* min-width:0 nas colunas: sem isso, a largura do título + selo numa
+   linha só alarga a trilha do grid e gera scroll lateral no celular */
+.produto-detalhe__info,
+.produto-detalhe__midia {
+  min-width: 0;
+}
+
+.produto-detalhe__titulo-linha {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 0.75rem;
+  margin-bottom: 1rem;     /* o espaço que antes era do próprio h1 */
+}
+
+.produto-detalhe__titulo-linha h1 {
+  margin-bottom: 0;
+}
+
+.selo-peca--titulo {
+  font-size: 0.85rem;
+}
+
+/* Peça vendida: o convite de encomenda é a ação principal da página,
+   então o botão gummy ocupa a largura toda e cresce para o toque. */
+.produto-encomenda__btn--grande {
+  display: block;
+  width: 100%;
+  margin-top: 0.9rem;
+  padding: 1rem 1.5rem;
+  font-size: 1.05rem;
+  text-align: center;
+}
