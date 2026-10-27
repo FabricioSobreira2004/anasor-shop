@@ -33,3 +33,7 @@ desktop.ini
 # Artes do Instagram geradas por marketing/instagram/gerar-posts.js: são
 # regeneradas em qualquer PC a partir do repositório, não precisam de versão.
 /marketing/instagram/posts/
+
+# Prints das verificações com Playwright: ficam no projeto (sem precisar de
+# permissão para ler fora dele), mas nunca vão para o git.
+/_prints/
