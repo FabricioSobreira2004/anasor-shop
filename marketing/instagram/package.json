@@ -1,0 +1,14 @@
+{
+  "name": "anasor-instagram-artes",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Gera as artes (PNG 1080x1350) dos posts do Instagram a partir de js/produtos.js. Separado do package.json da raiz para o Playwright não entrar no deploy da Vercel.",
+  "type": "commonjs",
+  "scripts": {
+    "posts": "node gerar-posts.js"
+  },
+  "devDependencies": {
+    "playwright": "1.56.1"
+  },
+  "license": "UNLICENSED"
+}

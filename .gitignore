@@ -29,3 +29,7 @@ npm-debug.log*
 .DS_Store
 Thumbs.db
 desktop.ini
+
+# Artes do Instagram geradas por marketing/instagram/gerar-posts.js: são
+# regeneradas em qualquer PC a partir do repositório, não precisam de versão.
+/marketing/instagram/posts/

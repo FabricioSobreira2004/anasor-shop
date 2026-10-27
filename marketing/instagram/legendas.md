@@ -377,3 +377,15 @@ Para água, suco ou vinho, numa mesa que pede um toque de mar. Ideal para presen
 R$ 134,90 com frete grátis. Link na bio 🤎
 
 #copoartesanal #ceramicaartesanal #mesaposta #presenteapar #pecaunica #feitoamao
+
+---
+
+### 31. 🏺 Vaso Escultórico Manto de Folhas — R$ 159,90
+
+Duas grandes folhas curvadas que se envolvem e, juntas, viram o vaso 🍂
+
+Modelado à mão, com acabamento em bronze escuro metálico que reluz de perto e recolhe a luz no escuro. Fica lindo com um arranjo ou sozinho, na mesa de entrada, num nicho ou na estante.
+
+R$ 159,90 com frete grátis para todo o Brasil. Link na bio 🤎
+
+#vasoescultorico #ceramicaautoral #decoracaodeinteriores #ceramicaartesanal #pecaunica #feitoamao
