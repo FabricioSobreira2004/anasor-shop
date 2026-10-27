@@ -1,0 +1,5 @@
+# Material interno de marketing (textos do Instagram e o gerador de artes,
+# que tem package.json próprio com Playwright). Não faz parte do site:
+# fora do deploy, a Vercel não publica esses arquivos nem enxerga aquele
+# package.json.
+/marketing
