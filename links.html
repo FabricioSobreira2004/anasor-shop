@@ -29,12 +29,13 @@
     <!-- style.css traz cores, fontes e a textura do fundo; links.css só o
          layout desta página. Caminhos absolutos ("/css/...") porque a
          página também é servida em /links (sem .html). -->
-    <link rel="stylesheet" href="/css/style.css?v=41">
-    <link rel="stylesheet" href="/css/links.css?v=41">
+    <link rel="stylesheet" href="/css/style.css?v=42">
+    <link rel="stylesheet" href="/css/links.css?v=42">
 
 </head>
 
-<body>
+<!-- pagina-links: liga o fundo com monograma de css/links.css -->
+<body class="pagina-links">
 
     <main class="links-pagina">
 
@@ -54,7 +55,7 @@
 
                 <!-- utm_source/utm_medium: marcam no analytics que a visita
                      veio da bio do Instagram, para medir os cliques depois. -->
-                <li>
+                <li style="--i: 0">
                     <!-- Emojis em span aria-hidden: enfeitam sem o leitor de tela ler
                      "coração marrom" no meio do rótulo. O 🤎 é o mesmo
                      U+1F90E do botão "Ir para Pagamento", assinatura do site. -->
@@ -63,13 +64,13 @@
                     </a>
                 </li>
 
-                <li>
+                <li style="--i: 1">
                     <a class="links-btn" href="/ceramica.html?utm_source=instagram&amp;utm_medium=bio">
                         <span class="links-btn__texto"><span class="links-emoji" aria-hidden="true">🏺</span>Cerâmica</span>
                     </a>
                 </li>
 
-                <li>
+                <li style="--i: 2">
                     <a class="links-btn" href="/croche.html?utm_source=instagram&amp;utm_medium=bio">
                         <span class="links-btn__texto"><span class="links-emoji" aria-hidden="true">🧶</span>Crochê</span>
                     </a>
@@ -77,19 +78,19 @@
 
                 <!-- Mensagem pré-preenchida: a Anasor já sabe que é encomenda
                      e que veio do Instagram, sem precisar perguntar. -->
-                <li>
+                <li style="--i: 3">
                     <a class="links-btn links-btn--oliva" href="https://wa.me/5521987222679?text=Ol%C3%A1%2C%20Anasor!%20Vim%20pelo%20Instagram%20e%20gostaria%20de%20encomendar%20uma%20pe%C3%A7a%20%C3%BAnica.%20Podemos%20conversar%20sobre%20valores%20e%20prazo%3F" target="_blank" rel="noopener">
                         <span class="links-btn__texto"><span class="links-emoji" aria-hidden="true">✨</span>Encomende sua peça única</span>
                     </a>
                 </li>
 
-                <li>
+                <li style="--i: 4">
                     <a class="links-btn" href="https://wa.me/5521987222679" target="_blank" rel="noopener">
                         <span class="links-btn__texto"><span class="links-emoji" aria-hidden="true">💬</span>Falar no WhatsApp</span>
                     </a>
                 </li>
 
-                <li>
+                <li style="--i: 5">
                     <a class="links-btn" href="https://instagram.com/anasor.ceramica" target="_blank" rel="noopener">
                         <span class="links-btn__texto"><span class="links-emoji" aria-hidden="true">📷</span>Instagram</span>
                     </a>

@@ -1,48 +1,100 @@
 /* ============================================
    PÁGINA /links (links.html) — substitui o Linktree da bio do Instagram.
-   Arquivo separado porque só esta página usa estas regras; cores e
-   fontes vêm das variáveis de :root em style.css, então a identidade
-   continua uma só.
+   Arquivo separado porque só esta página usa estas regras; cores, fontes
+   e marcas d'água vêm das variáveis de :root em style.css, então a
+   identidade continua uma só.
    ============================================ */
+
+/* Fundo: o mesmo monograma "AS" fraco das seções da Home, ladrilhado
+   em 220px sobre o grão de papel. A versão "fraca" (opacidade 0.035)
+   dá textura sem competir com o texto. */
+body.pagina-links::before {
+  /* Camada fixa própria (e não background do body) para poder baixar
+     ainda mais a opacidade: aqui o monograma fica atrás do nome, e na
+     força original cruzava as letras do título. */
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: var(--marca-monograma-fraca) repeat;
+  background-size: 220px;
+  opacity: 0.6;
+  pointer-events: none;
+}
 
 .links-pagina {
   /* Coluna estreita e centralizada: no celular ocupa a tela com 16px de
      respiro; no desktop não vira uma faixa larga demais para ler. */
   max-width: 440px;
   margin: 0 auto;
-  padding: 2.5rem 16px 2rem;
+  padding: 2.75rem 16px 1.5rem;
   min-height: 100vh;
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
+  /* A flor girada do topo passa um pouco da borda em telas estreitas:
+     recorta só na horizontal para não gerar scroll lateral. "clip"
+     (sem criar área de rolagem) onde houver suporte; "hidden" como
+     reserva para navegadores antigos. */
+  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 /* ---- TOPO: avatar, nome e subtítulo ---- */
 .links-topo {
+  position: relative;
+  /* isolation cria um contexto próprio: a flor (z-index -1) fica atrás
+     do avatar, mas não "afunda" para trás do fundo da página. */
+  isolation: isolate;
   text-align: center;
-  margin-bottom: 1.75rem;
+  margin-bottom: 2.25rem;
+}
+
+/* Flor grande e clara atrás da foto: a mesma --marca-flor do site,
+   ampliada e com opacidade extra, para emoldurar sem virar desenho. */
+.links-topo::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  top: -2.25rem;
+  left: 50%;
+  width: 300px;
+  height: 300px;
+  transform: translateX(-38%) rotate(-12deg);
+  background: var(--marca-flor) center / contain no-repeat;
+  opacity: 0.75;
+  /* O talo da flor desceria sobre o subtítulo: a máscara esmaece a
+     parte de baixo, e a flor fica só atrás da foto. */
+  -webkit-mask-image: linear-gradient(to bottom, #000 45%, transparent 72%);
+  mask-image: linear-gradient(to bottom, #000 45%, transparent 72%);
+  pointer-events: none;
 }
 
 .links-avatar {
   /* Recorte redondo da ilustração do ateliê: "cover" + posição baixa
      mantém o rosto da Anasor no centro do círculo. */
-  width: 112px;
-  height: 112px;
+  width: 120px;
+  height: 120px;
   border-radius: 50%;
   object-fit: cover;
   object-position: 45% 75%;
-  /* Anel creme + contorno terracota: moldura de "prato", sem imagem nova */
-  border: 4px solid var(--cor-card);
-  box-shadow: 0 0 0 2px var(--cor-destaque), 0 6px 18px rgba(62, 46, 34, 0.18);
+  /* Aro creme + filete terracota + halo bem leve: lembra a borda de um
+     prato, a peça mais conhecida do ateliê. */
+  border: 5px solid var(--cor-card);
+  box-shadow:
+    0 0 0 1.5px var(--cor-destaque),
+    0 0 0 9px rgba(158, 79, 46, 0.07),
+    0 10px 24px rgba(62, 46, 34, 0.16);
   display: block;
-  margin: 0 auto 1rem;
+  margin: 0 auto 1.25rem;
 }
 
 .links-nome {
   font-family: var(--fonte-titulo);
-  font-size: 1.9rem;
+  font-size: 2.2rem;
   font-weight: 600;
-  line-height: 1.15;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
   color: var(--cor-texto);
   margin: 0;
 }
@@ -50,13 +102,14 @@
 .links-subtitulo {
   font-size: 1.05rem;
   color: var(--cor-destaque);
-  margin: 0.35rem 0 0;
+  margin: 0.5rem 0 0;
 }
 
 .links-arroba {
   font-size: 0.95rem;
+  letter-spacing: 0.01em;
   color: var(--cor-secundaria);
-  margin: 0.25rem 0 0;
+  margin: 0.2rem 0 0;
 }
 
 /* ---- LISTA DE BOTÕES ---- */
@@ -73,8 +126,12 @@
 
 /* Botão gummy 3D: mesma técnica do .btn-comprar (degrau sólido via
    box-shadow sem blur), mas em largura total e maior, porque aqui o
-   botão é o conteúdo principal e precisa ser fácil de tocar. */
+   botão é o conteúdo principal e precisa ser fácil de tocar.
+   As variáveis --degrau e --brilho deixam cada variante trocar só a
+   cor, sem repetir a pilha de sombras em todos os estados. */
 .links-btn {
+  --degrau: #D9C6A8;
+  --brilho: rgba(255, 255, 255, 0.9);
   position: relative;
   overflow: hidden;
   display: flex;
@@ -90,9 +147,12 @@
   line-height: 1.25;
   text-decoration: none;
   color: var(--cor-texto);
+  /* Brilho suave: luz vinda de cima, como esmalte vitrificado. O
+     gradiente é bem curto e quase transparente, para não "plastificar". */
   background-color: var(--cor-card);
+  background-image: linear-gradient(to bottom, rgba(255, 255, 255, 0.13), rgba(255, 255, 255, 0) 55%);
   border: 1.5px solid var(--cor-fundo-alt);
-  box-shadow: 0 5px 0 #D9C6A8;
+  box-shadow: inset 0 1px 0 var(--brilho), 0 5px 0 var(--degrau);
   /* Transição curta: o "afundar" do gummy precisa responder no mesmo
      instante do toque, senão parece lento. */
   transition: transform 0.1s ease-out, box-shadow 0.1s ease-out;
@@ -132,7 +192,7 @@
 
 .links-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 7px 0 #D9C6A8;
+  box-shadow: inset 0 1px 0 var(--brilho), 0 7px 0 var(--degrau);
 }
 
 .links-btn:hover::before {
@@ -142,7 +202,7 @@
 /* Ao tocar, o botão desce até o "chão" do degrau: é o efeito gummy */
 .links-btn:active {
   transform: translateY(5px);
-  box-shadow: 0 0 0 #D9C6A8;
+  box-shadow: inset 0 1px 0 var(--brilho), 0 0 0 var(--degrau);
 }
 
 .links-btn:focus-visible {
@@ -152,44 +212,47 @@
 
 /* Variante principal (loja): terracota, a ação mais importante da bio */
 .links-btn--destaque {
+  --degrau: var(--cor-destaque-escuro);
+  --brilho: rgba(255, 255, 255, 0.28);
   background-color: var(--cor-destaque);
   border-color: var(--cor-destaque);
   color: #FFF;
-  box-shadow: 0 5px 0 var(--cor-destaque-escuro);
-}
-
-.links-btn--destaque:hover {
-  box-shadow: 0 7px 0 var(--cor-destaque-escuro);
-}
-
-.links-btn--destaque:active {
-  box-shadow: 0 0 0 var(--cor-destaque-escuro);
 }
 
 /* Variante encomenda: verde-oliva, a mesma cor dos botões de WhatsApp do site */
 .links-btn--oliva {
+  --degrau: var(--cor-secundaria-escuro);
+  --brilho: rgba(255, 255, 255, 0.25);
   background-color: var(--cor-secundaria);
   border-color: var(--cor-secundaria);
   color: #FFF;
-  box-shadow: 0 5px 0 var(--cor-secundaria-escuro);
 }
 
-.links-btn--oliva:hover {
-  box-shadow: 0 7px 0 var(--cor-secundaria-escuro);
-}
-
-.links-btn--oliva:active {
-  box-shadow: 0 0 0 var(--cor-secundaria-escuro);
-}
-
-/* ---- RODAPÉ: lembretes reais da loja (políticas.html) ---- */
+/* ---- RODAPÉ: lembretes reais da loja (politicas.html) ---- */
 .links-rodape {
+  position: relative;
+  isolation: isolate;
   margin-top: auto;
-  padding-top: 2rem;
+  padding: 3rem 0 1rem;
   text-align: center;
   font-size: 0.9rem;
   color: var(--cor-texto);
+}
+
+/* Silhueta de vaso atrás do rodapé: fecha a página com a outra marca
+   do ateliê, centralizada e baixa para não cruzar os botões. */
+.links-rodape::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  left: 50%;
+  bottom: -0.5rem;
+  width: 170px;
+  height: 170px;
+  transform: translateX(-50%);
+  background: var(--marca-vaso) center / contain no-repeat;
   opacity: 0.8;
+  pointer-events: none;
 }
 
 .links-rodape p {
@@ -202,7 +265,45 @@
   text-underline-offset: 2px;
 }
 
+/* ---- ENTRADA: um único momento orquestrado ----
+   O topo aparece primeiro e os botões sobem em sequência curta (60ms
+   entre eles, via --i no HTML). A animação fica no <li>, não no <a>,
+   para não disputar o transform do efeito gummy. "both" mantém o
+   estado inicial durante o atraso, sem piscar. */
+@keyframes links-entrada {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.links-topo,
+.links-lista > li,
+.links-rodape {
+  animation: links-entrada 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+.links-lista > li {
+  animation-delay: calc(150ms + var(--i, 0) * 60ms);
+}
+
+.links-rodape {
+  animation-delay: 550ms;
+}
+
+/* Quem pede menos movimento recebe a página pronta, sem entrada,
+   reflexo nem deslocamento no toque. */
 @media (prefers-reduced-motion: reduce) {
+  .links-topo,
+  .links-lista > li,
+  .links-rodape {
+    animation: none;
+  }
+
   .links-btn,
   .links-btn::before {
     transition: none;
