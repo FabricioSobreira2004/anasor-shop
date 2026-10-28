@@ -17,3 +17,9 @@ Formato: `AAAA-MM-DD HH:MM — decisão — motivo`
 
 2026-10-28 — ERRO (registrado, não escondido): testei o motor de Reels v2 rodando `node reel.js --nome r1-caneca-surpresa-gatinho` ANTES de mover a rodada v1 inteira pra `reels\_v1\` — isso sobrescreveu `r1-caneca-surpresa-gatinho.mp4` (e seus quadros de conferência) com a versão v2, sem arquivar a v1 antes. Os outros 5 reels v1 foram arquivados corretamente logo em seguida, sem o mesmo erro. A v1 do r1 não ficou de fato perdida: o código do motor ANTES da rodada v2 (sem parallax/brilho/vinheta-grão) continua no histórico do git (commit 8d6e2a8) — se precisar da v1 exata do r1 de volta, dá pra gerar de novo revertendo componentes.js/Apresentacao.js pra aquele commit e rodando o mesmo comando.
 2026-10-28 — Reels v2: 2 camadas de parallax (fundo desfocado/escurecido se movendo mais devagar que a foto nítida) em vez de recorte/segmentação do objeto — segmentação de verdade pediria ferramenta de remoção de fundo além do padrão do projeto (ffmpeg/Remotion/Playwright), fora do escopo "só ferramentas padrão" pedido.
+
+---
+
+2026-10-28 — Kit de postagem, dia 12 (calendário pedia Reels "cuidados: como lavar", roteiro R8): sem filmagem pra virar Reel ainda, usei o carrossel "Cuidados com a peça" (post-11) no lugar — MESMA legenda nº4, mesmos fatos, só formato diferente. Documentado no LEIA-ME.md pra trocar pelo Reel assim que ele existir.
+2026-10-28 — Kit de postagem, dias 14 e 28 (prova social): NÃO inventei depoimento nem usei um post de reserva como substituto — ficaram PENDENTE.md de verdade. Prova social falsa quebraria a credibilidade da própria coisa que o post tenta provar.
+2026-10-28 — Kit de postagem, dia 19 (Reels "encomenda: como funciona", roteiro R5): fiquei PENDENTE em vez de reaproveitar post-13 (que já está alocado no dia 7, legenda nº6) — usar o mesmo carrossel em 2 dias diferentes do calendário duplicaria conteúdo pros mesmos seguidores em 12 dias de intervalo.

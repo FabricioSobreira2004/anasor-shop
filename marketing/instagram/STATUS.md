@@ -42,10 +42,20 @@ v1 (5 reels — o 6º, r1, foi sobrescrito sem arquivar por um erro de
 processo, ver DECISOES.md) arquivada em `reels\_v1\` (+ `_conferencia`).
 Saída: `E:\projetos\site-mae\reels\` + `reels\_conferencia\`.
 
-## C) Kit de postagem — ❌ NÃO COMEÇADO
+## C) Kit de postagem — ✅ CONCLUÍDO
 
-`E:\projetos\site-mae\kit-postagem\`, organizado por
-`calendario-30-dias.md` — uma pasta por dia + `LEIA-ME.md`.
+`marketing/instagram/montar-kit-postagem.js` monta
+`E:\projetos\site-mae\kit-postagem\` a partir do que `gerar-posts.js`/
+`reel.js` já deixaram em `site-mae\` — 17 pastas (`dia-01-...` a
+`dia-29-...`), cada uma com mídia + `legenda.txt` + `info.txt` +
+`checklist-antes-de-postar.txt`, OU `PENDENTE.md` quando falta gravar.
+**10 de 17 dias prontos pra postar**; os outros 7 têm legenda pronta
+mas precisam de filmagem real (bastidores: torno/pintura/queima/
+apresentação da Anasor) ou depoimento real com autorização (prova
+social) — NENHUM foi inventado/substituído por conteúdo genérico,
+ver `DECISOES.md`. `LEIA-ME.md` (raiz do kit) tem a ordem de postagem,
+o checklist e a seção "reserva" (conteúdo extra, fora do calendário de
+30 dias, pronto pra repor peça vendida ou abrir o mês 2).
 
 ## D) Fechamento — ❌ NÃO COMEÇADO
 
