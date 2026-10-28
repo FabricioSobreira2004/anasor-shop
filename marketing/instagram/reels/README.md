@@ -61,7 +61,7 @@ sem precisar mexer no C:.
   FotoKenBurns + nome cada), fecho único no final. Pede `--ids` (ou um
   roteiro com `pecaIds`), não `--id`.
 
-## Os 6 Reels desta rodada
+## Os 6 Reels da rodada v1 (histórico — movidos pra `reels\_v1\`)
 
 | Roteiro | Peça | Template | Observação |
 |---|---|---|---|
@@ -105,3 +105,48 @@ que levam o movimento de câmera em tela cheia (`FotoKenBurns`).
 Mova a saída anterior pra `site-mae\reels\_v1\` (ou `_v2\`, etc.) antes
 de rodar nomes que já existiam — `reel.js` só sobrescreve o arquivo com
 o MESMO nome que está gerando, nunca apaga a pasta `reels\` inteira.
+
+## v2 — parallax, brilho de esmalte, vinheta/grão, área segura, 12 Reels
+
+- **`FotoParallax`** (`src/componentes.js`): 2 camadas da MESMA foto —
+  fundo desfocado/escurecido se movendo mais devagar, frente nítida
+  (`FotoKenBurns`) se movendo mais rápido. Sem recorte/segmentação do
+  objeto (decisão registrada em `DECISOES.md`: ferramenta de remoção de
+  fundo ficaria fora do "só ferramentas padrão" pedido).
+- **`BrilhoEsmalte`**: faixa de luz diagonal (`mix-blend-mode: screen`)
+  que atravessa a cena 1x, imitando reflexo de esmalte/vidrado.
+- **`VinhetaGrao`**: overlay único por cima de TUDO — vinheta
+  (radial-gradient nos cantos) + grão de filme (ruído SVG `feTurbulence`,
+  opacidade ~0.05, jitter determinístico por frame).
+- **Easing refinado**: `EASE_CAMERA` (bezier 0.16,1,0.3,1 — "easeOutExpo")
+  em todo movimento de câmera, trocando o `Easing.inOut(Easing.ease)` da
+  v1.
+- **Área segura**: selo a partir de `top:260`, marca d'água/faixa de
+  confiança/nome (Coleção) a partir de `bottom:430` — nada importante
+  nos 250px do topo nem nos 420px de baixo (onde o Instagram desenha a
+  própria interface do Reels).
+
+### Os 12 Reels desta rodada
+
+6 refeitos com o motor v2 (mesmos roteiros/peças da v1 — ver tabela
+antiga, movida pra `reels\_v1\`) + 6 novos:
+
+| Arquivo | Peça | Template | Observação |
+|---|---|---|---|
+| `caneca-surpresa-cachorrinho` | id 19 | apresentação | roteiro padrão (sem o truque de reverter vídeo do R1 — não confirmado que o vídeo-fonte desta peça tem o mesmo enquadramento) |
+| `kit-canequinhas-arlequim` | id 23 | detalhes | peça colorida, categoria "Conjuntos" ainda sem Reel |
+| `anjo-guardiao-porta-incenso` | id 43 | apresentação | objeto decorativo, variedade de categoria |
+| `kit-copos-ondas-do-mar` | id 40 | detalhes | peça com vídeo, tema azul |
+| `prato-ave-da-alvorada` | id 10 | apresentação | SEM vídeo-fonte — testa o caminho só-foto do roteiro padrão |
+| `colecao-pecas-de-alma` | ids 32, 37, 45 | coleção | 2ª coleção da rodada, peças ainda não usadas em Reel nenhum |
+
+## Mídia: vídeos com marca "Ateliê Anasor" embutida
+
+Pedido explícito da rodada v2: não usar vídeos com a marca antiga
+"Ateliê Anasor" (antes do rebrand pra "Anasor Sobreira") embutida na
+imagem. Este motor só lê `videoUrl` de `js/produtos.js` — são os
+MESMOS vídeos já publicados nas páginas de produto do site no ar hoje
+(não há vídeo "cru"/não revisado nesta pasta); nenhum deles tem marca
+d'água visível nas conferências feitas nesta rodada. Fontes de vídeo
+fora de `produtos.js` (ex.: a pasta `_contato\` de `site-mae`, com
+fotos/vídeos originais da artesã) NUNCA são usadas por este motor.

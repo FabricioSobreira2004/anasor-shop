@@ -9,7 +9,8 @@ const React = require('react');
 const { AbsoluteFill, Img, interpolate, useCurrentFrame } = require('remotion');
 const {
   MarcaDagua, SeloAnimado, FaixaConfianca, TituloCinetico,
-  LegendaPalavras, FotoKenBurns, VideoInserto, MascaraCircular, BotaoGummyFinal, resolverSrc,
+  LegendaPalavras, FotoKenBurns, FotoParallax, BrilhoEsmalte, VinhetaGrao,
+  VideoInserto, MascaraCircular, BotaoGummyFinal, resolverSrc,
 } = require('../componentes');
 
 // Brilho noturno: escurece a foto (filter) e sobrepõe 2-3 "luzes"
@@ -63,7 +64,10 @@ function Apresentacao({ produto, cores, logoUri, selo, cenas, fps }) {
 
       if (cena.tipo === 'titulo') {
         conteudo.push(
-          React.createElement(FotoKenBurns, {
+          // FotoParallax (não FotoKenBurns puro): a cena de abertura é a
+          // que fica mais tempo parada na tela (título lendo) — é onde a
+          // profundidade do parallax mais se nota. v2/B1.
+          React.createElement(FotoParallax, {
             key: 'kb', src: cena.src, inicioFrame: cena.inicio, duracaoFrames: cena.duracao,
             de: { escala: 1.08, x: 0, y: 0 }, para: { escala: 1.0, x: 0, y: -1 },
             objectPosition: cena.objectPosition || '50% 50%',
@@ -71,6 +75,7 @@ function Apresentacao({ produto, cores, logoUri, selo, cenas, fps }) {
           React.createElement('div', {
             key: 'vel', style: { position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(0,0,0,0.12), rgba(0,0,0,0.42) 100%)' },
           }),
+          React.createElement(BrilhoEsmalte, { key: 'brilho', inicioFrame: cena.inicio + 10 }),
           selo && React.createElement(SeloAnimado, { key: 'selo', selo, entradaFrame: cena.inicio + 14 }),
           React.createElement('div', {
             key: 'tit', style: { position: 'absolute', left: 60, right: 60, top: '72%', transform: 'translateY(-50%)' },
@@ -99,10 +104,13 @@ function Apresentacao({ produto, cores, logoUri, selo, cenas, fps }) {
           key: 'noite', src: cena.src, objectPosition: cena.objectPosition, pontos: cena.pontos, inicioFrame: cena.inicio,
         }));
       } else if (cena.tipo === 'foto') {
-        conteudo.push(React.createElement(FotoKenBurns, {
-          key: 'kb', src: cena.src, inicioFrame: cena.inicio, duracaoFrames: cena.duracao,
-          de: cena.de, para: cena.para, objectPosition: cena.objectPosition || '50% 50%',
-        }));
+        conteudo.push(
+          React.createElement(FotoParallax, {
+            key: 'kb', src: cena.src, inicioFrame: cena.inicio, duracaoFrames: cena.duracao,
+            de: cena.de, para: cena.para, objectPosition: cena.objectPosition || '50% 50%',
+          }),
+          React.createElement(BrilhoEsmalte, { key: 'brilho', inicioFrame: cena.inicio + Math.round(cena.duracao * 0.35) })
+        );
       } else if (cena.tipo === 'cta') {
         conteudo.push(
           React.createElement('div', { key: 'bg', style: { position: 'absolute', inset: 0, backgroundColor: cores.fundo } }),
@@ -148,7 +156,11 @@ function Apresentacao({ produto, cores, logoUri, selo, cenas, fps }) {
           : React.createElement(MascaraCircular, { progresso: progressoWipe }, conteudo)
       );
     }),
-    React.createElement(MarcaDagua, { src: logoUri })
+    React.createElement(MarcaDagua, { src: logoUri }),
+    // VinhetaGrao por ÚLTIMO (zIndex 9, maior que tudo acima): cobre
+    // toda cena e toda transição, incluindo a marca d'água — pedido
+    // explícito de v2/B1 ("leve vinheta e grão de filme").
+    React.createElement(VinhetaGrao, { key: 'vinheta' })
   );
 }
 

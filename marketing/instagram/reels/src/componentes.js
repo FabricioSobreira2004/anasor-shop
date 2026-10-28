@@ -72,7 +72,10 @@ function MarcaDagua({ src, tamanho = 150 }) {
     style: {
       position: 'absolute',
       right: 48,
-      bottom: 64,
+      // 430 (não 64): pedido explícito de v2/B3 — "nada importante nos
+      // 420px de baixo" (área do Instagram: legenda/@conta/música no
+      // Reels de verdade). 64 cairia bem no meio dessa faixa.
+      bottom: 430,
       width: tamanho,
       height: 'auto',
       opacity: opacidade,
@@ -105,7 +108,10 @@ function SeloAnimado({ selo, entradaFrame, duracao = null }) {
     {
       style: {
         position: 'absolute',
-        top: 64,
+        // 260 (não 64): pedido explícito de v2/B3 — "nada importante
+        // nos 250px do topo" (no Reels de verdade, o Instagram desenha
+        // nome da conta/menu ali em cima).
+        top: 260,
         left: 48,
         zIndex: 5,
         transform: `scale(${0.85 + pop * 0.15}) translateY(${(1 - pop) * -14}px)`,
@@ -152,7 +158,9 @@ function FaixaConfianca({ cores, entradaFrame, sobreClaro = false }) {
     'div',
     {
       style: {
-        position: 'absolute', left: 0, right: 0, bottom: 150, zIndex: 5,
+        // 430 (não 150): mesma área segura de MarcaDagua/SeloAnimado —
+        // pedido explícito de v2/B3.
+        position: 'absolute', left: 0, right: 0, bottom: 430, zIndex: 5,
         display: 'flex', justifyContent: 'center', gap: 52,
       },
     },
@@ -256,6 +264,13 @@ function LegendaPalavras({ palavras, inicioFrame, duracao = 60, cor = '#FFF', fu
   );
 }
 
+// easeOutExpo-ish (bezier próximo do padrão de motion design "premium":
+// arranca rápido, desacelera bem no fim, sem o "respiro" morto do meio
+// que Easing.inOut(Easing.ease) tinha) — v2/B1, pedido explícito de
+// "easing refinado". Usado em TODO movimento de câmera (Ken Burns e o
+// parallax de fundo, abaixo).
+const EASE_CAMERA = Easing.bezier(0.16, 1, 0.3, 1);
+
 // ---------------------------------------------------------------
 // Foto com movimento de câmera (Ken Burns): interpola scale/translate
 // entre `de` e `para` ao longo da duração da cena.
@@ -263,7 +278,7 @@ function LegendaPalavras({ palavras, inicioFrame, duracao = 60, cor = '#FFF', fu
 function FotoKenBurns({ src, inicioFrame, duracaoFrames, de, para, objectPosition = '50% 50%' }) {
   const frame = useCurrentFrame();
   const t = interpolate(frame, [inicioFrame, inicioFrame + duracaoFrames], [0, 1], {
-    extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.ease),
+    extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: EASE_CAMERA,
   });
   const escala = de.escala + (para.escala - de.escala) * t;
   const x = de.x + (para.x - de.x) * t;
@@ -275,6 +290,107 @@ function FotoKenBurns({ src, inicioFrame, duracaoFrames, de, para, objectPositio
       objectPosition, transform: `scale(${escala}) translate(${x}%, ${y}%)`,
     },
   });
+}
+
+// ---------------------------------------------------------------
+// Parallax em 2 camadas — v2/B1 ("câmera com zoom/pan e parallax em
+// camadas"). SEM recorte/segmentação do objeto (pedido explícito:
+// "se não for viável, mantenha camadas simples e registre a decisão" —
+// ver DECISOES.md): a MESMA foto vira 2 camadas —
+//   - fundo: desfocada, mais escura, ESCALA maior e se move DEVAGAR
+//     (menos %) — simula estar "mais longe";
+//   - frente: nítida (FotoKenBurns de verdade), se move mais rápido.
+// A diferença de velocidade entre as duas é o que lê como profundidade,
+// mesmo sem uma camada "real" separada do objeto.
+function FotoParallax({ src, inicioFrame, duracaoFrames, de, para, objectPosition = '50% 50%' }) {
+  const frame = useCurrentFrame();
+  const t = interpolate(frame, [inicioFrame, inicioFrame + duracaoFrames], [0, 1], {
+    extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: EASE_CAMERA,
+  });
+  // fundo: 40% do deslocamento da frente, escala sempre maior (cobre o
+  // blur de borda) — "mais longe" = move menos E já começa mais perto.
+  const xFundo = (de.x + (para.x - de.x) * t) * 0.4;
+  const yFundo = (de.y + (para.y - de.y) * t) * 0.4;
+  const escalaFundo = 1.25 + (de.escala + (para.escala - de.escala) * t - 1) * 0.6;
+  return React.createElement(
+    React.Fragment,
+    null,
+    React.createElement(Img, {
+      src: resolverSrc(src),
+      style: {
+        position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition,
+        transform: `scale(${escalaFundo}) translate(${xFundo}%, ${yFundo}%)`,
+        filter: 'blur(18px) brightness(0.75) saturate(1.05)',
+      },
+    }),
+    React.createElement(FotoKenBurns, { src, inicioFrame, duracaoFrames, de, para, objectPosition })
+  );
+}
+
+// ---------------------------------------------------------------
+// Brilho de esmalte — uma faixa de luz diagonal que atravessa a cena
+// UMA vez (pedido explícito: "faixa de luz que percorre a peça"),
+// imitando o reflexo que esmalte/vidrado de verdade faz. `screen`
+// clareia só onde já tem alguma luz (não lava a cena inteira de
+// branco). Dispara uma vez em `inicioFrame`, sem repetir.
+function BrilhoEsmalte({ inicioFrame, duracaoFrames = 34 }) {
+  const frame = useCurrentFrame();
+  const t = frame - inicioFrame;
+  if (t < 0 || t > duracaoFrames) return null;
+  // -30% a 130%: a faixa entra e sai inteira da tela (nunca "corta" nas bordas)
+  const pos = interpolate(t, [0, duracaoFrames], [-30, 130], { easing: Easing.inOut(Easing.ease) });
+  return React.createElement('div', {
+    style: {
+      position: 'absolute', inset: 0, zIndex: 3, pointerEvents: 'none', overflow: 'hidden',
+    },
+  }, React.createElement('div', {
+    style: {
+      position: 'absolute', top: '-20%', bottom: '-20%', left: `${pos}%`, width: '22%',
+      transform: 'rotate(18deg)', mixBlendMode: 'screen',
+      background: 'linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.55) 50%, rgba(255,255,255,0) 100%)',
+    },
+  }));
+}
+
+// ---------------------------------------------------------------
+// Vinheta + grão de filme — overlay ÚNICO, por cima de TUDO (toda cena,
+// toda transição), pedido explícito de v2/B1. Vinheta: radial-gradient
+// escurecendo só os cantos (sutil — não é pra notar como "efeito", é
+// pra parecer cinema). Grão: ruído SVG (feTurbulence) em baixíssima
+// opacidade, com leve CINTILAÇÃO (a posição do tile pula por frame,
+// baseado só no número do frame — determinístico, sem Math.random(),
+// pra um render ser IGUAL ao outro com os mesmos props).
+const GRAO_SVG = `<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'>
+  <filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter>
+  <rect width='100%' height='100%' filter='url(#n)'/>
+</svg>`;
+const GRAO_DATA_URI = `data:image/svg+xml,${encodeURIComponent(GRAO_SVG)}`;
+
+function VinhetaGrao() {
+  const frame = useCurrentFrame();
+  // Jitter determinístico (não é ruído de verdade frame a frame, é só
+  // pra "tremer" a posição do tile — suficiente pro olho ler como grão
+  // vivo, não uma textura estática colada na tela).
+  const jx = (frame * 47) % 180;
+  const jy = (frame * 83) % 180;
+  return React.createElement(
+    React.Fragment,
+    null,
+    React.createElement('div', {
+      style: {
+        position: 'absolute', inset: 0, zIndex: 9, pointerEvents: 'none',
+        background: 'radial-gradient(ellipse at center, rgba(0,0,0,0) 58%, rgba(0,0,0,0.32) 100%)',
+      },
+    }),
+    React.createElement('div', {
+      style: {
+        position: 'absolute', inset: 0, zIndex: 9, pointerEvents: 'none',
+        opacity: 0.05, mixBlendMode: 'overlay',
+        backgroundImage: `url("${GRAO_DATA_URI}")`,
+        backgroundPosition: `${-jx}px ${-jy}px`,
+      },
+    })
+  );
 }
 
 // ---------------------------------------------------------------
@@ -371,6 +487,9 @@ module.exports = {
   TituloCinetico,
   LegendaPalavras,
   FotoKenBurns,
+  FotoParallax,
+  BrilhoEsmalte,
+  VinhetaGrao,
   VideoInserto,
   MascaraCircular,
   BotaoGummyFinal,

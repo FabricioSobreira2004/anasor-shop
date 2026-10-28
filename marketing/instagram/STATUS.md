@@ -24,15 +24,23 @@ antigo) e continuar do que está marcado 🟡/❌.
 - **Pendente de verificação:** nenhuma — todos os slides foram abertos e
   revisados nesta sessão.
 
-## B) Reels v2 — ❌ NÃO COMEÇADO
+## B) Reels v2 — ✅ CONCLUÍDO
 
-Motor em `marketing/instagram/reels/`. Falta: tipografia cinética,
-legendas palavra por palavra, zoom/pan + parallax, máscaras circulares,
-brilho de esmalte, vinheta/grão, selo animado, faixa de confiança
-animada, CTA final "Link na bio" com botão pressionado. 12 Reels no
-total (6 atuais refeitos + 6 novos), 3 templates. Saída:
-`E:\projetos\site-mae\reels\` (v1 pra `reels\_v1\`), quadros de
-conferência em `reels\_conferencia\`.
+A base v1 já tinha tipografia cinética, legendas palavra-por-palavra,
+Ken Burns, máscara circular (vídeo em moldura), selo/faixa de confiança
+animados e CTA com botão gummy — mais do que o esperado. v2 adicionou:
+`FotoParallax` (2 camadas), `BrilhoEsmalte` (faixa de luz diagonal),
+`VinhetaGrao` (overlay único), easing refinado (`EASE_CAMERA`) e área
+segura corrigida (selo/marca d'água/faixa fora dos 250px do topo e
+420px de baixo — achado da crítica visual, rodada 2).
+
+12 Reels gerados (6 refeitos com o motor v2 + 6 novos, 3 templates:
+7 apresentação, 3 detalhes, 2 coleção) — todos 1080×1920, H.264 High,
+yuv420p, 30fps, sem áudio, 12,2–14,5s, 2,7–3,7MB (limite 30MB), nada
+importante nos 250px topo/420px baixo. ffprobe conferido em todos.
+v1 (5 reels — o 6º, r1, foi sobrescrito sem arquivar por um erro de
+processo, ver DECISOES.md) arquivada em `reels\_v1\` (+ `_conferencia`).
+Saída: `E:\projetos\site-mae\reels\` + `reels\_conferencia\`.
 
 ## C) Kit de postagem — ❌ NÃO COMEÇADO
 

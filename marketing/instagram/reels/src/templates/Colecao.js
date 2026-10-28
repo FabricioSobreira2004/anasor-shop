@@ -6,7 +6,8 @@
 const React = require('react');
 const { AbsoluteFill, interpolate, useCurrentFrame } = require('remotion');
 const {
-  MarcaDagua, TituloCinetico, FotoKenBurns, MascaraCircular, BotaoGummyFinal, FaixaConfianca,
+  MarcaDagua, TituloCinetico, FotoParallax, BrilhoEsmalte, VinhetaGrao,
+  MascaraCircular, BotaoGummyFinal, FaixaConfianca,
 } = require('../componentes');
 
 function Colecao({ cores, logoUri, cenas }) {
@@ -24,17 +25,20 @@ function Colecao({ cores, logoUri, cenas }) {
 
       if (cena.tipo === 'peca') {
         conteudo.push(
-          React.createElement(FotoKenBurns, {
+          React.createElement(FotoParallax, {
             key: 'kb', src: cena.src, inicioFrame: cena.inicio, duracaoFrames: cena.duracao,
             de: { escala: 1.12, x: 1, y: 0 }, para: { escala: 1.0, x: -1, y: 0 },
             objectPosition: cena.objectPosition || '50% 50%',
           }),
+          React.createElement(BrilhoEsmalte, { key: 'brilho', inicioFrame: cena.inicio + Math.round(cena.duracao * 0.3) }),
           React.createElement('div', {
             key: 'vel', style: { position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.5), rgba(0,0,0,0) 46%)' },
           }),
           React.createElement('div', {
+            // bottom: 430 (não 110): área segura de v2/B3 — "nada
+            // importante nos 420px de baixo".
             key: 'nome',
-            style: { position: 'absolute', left: 60, right: 60, bottom: 110 },
+            style: { position: 'absolute', left: 60, right: 60, bottom: 430 },
           }, React.createElement(TituloCinetico, { texto: cena.nome, entradaFrame: cena.inicio + 8, tamanho: 58 }))
         );
       } else if (cena.tipo === 'cta') {
@@ -63,7 +67,8 @@ function Colecao({ cores, logoUri, cenas }) {
         i === 0 ? conteudo : React.createElement(MascaraCircular, { progresso: progressoWipe }, conteudo)
       );
     }),
-    React.createElement(MarcaDagua, { src: logoUri })
+    React.createElement(MarcaDagua, { src: logoUri }),
+    React.createElement(VinhetaGrao, { key: 'vinheta' })
   );
 }
 
