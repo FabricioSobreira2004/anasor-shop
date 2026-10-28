@@ -30,9 +30,13 @@ npm-debug.log*
 Thumbs.db
 desktop.ini
 
-# Artes do Instagram geradas por marketing/instagram/gerar-posts.js: são
-# regeneradas em qualquer PC a partir do repositório, não precisam de versão.
+# Artes do Instagram: geradas por marketing/instagram/gerar-posts.js
+# direto em E:\projetos\site-mae\instagram-posts\ (fora deste repo, nunca
+# aparece aqui) — regeneradas em qualquer PC a partir do repositório, não
+# precisam de versão. folha-contato.png é a ferramenta de revisão em lote
+# (marketing/instagram/folha-contato.js), também gerada, nunca comitada.
 /marketing/instagram/posts/
+/marketing/instagram/folha-contato.png
 
 # Prints das verificações com Playwright: ficam no projeto (sem precisar de
 # permissão para ler fora dele), mas nunca vão para o git.
