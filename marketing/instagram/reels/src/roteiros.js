@@ -150,6 +150,72 @@ const ROTEIROS = {
       { tipo: 'cta', duracao: 90, titulo: 'Objetos com alma' },
     ]),
   },
+
+  // ============================================================
+  // Template D — "Conteúdo": Reels só de motion graphics, sem foto/
+  // vídeo de peça nenhuma (rodada 3, pedido explícito). Fatos SÓ de
+  // politicas.html/js/produtos.js — mesma fonte usada nos carrosséis
+  // de conteúdo equivalentes (gerar-posts.js, ver comentário lá sobre
+  // cada frase). Ver src/templates/Conteudo.js pro renderer.
+  // ============================================================
+
+  // Mesmos 3 passos do carrossel "Como comprar" (gerar-posts.js) —
+  // #como-comprar/#prazo-envio de politicas.html.
+  'como-comprar-conteudo': {
+    template: 'conteudo',
+    cenas: () => montarCenas([
+      { tipo: 'titulo-conteudo', duracao: 60, icone: 'credit-card', eyebrow: 'Guia rápido', titulo: 'Como comprar' },
+      { tipo: 'passo', duracao: 100, numero: 1, total: 3, icone: 'gem', titulo: 'Escolha sua peça', texto: 'Cada peça é única, modelada e pintada à mão.' },
+      { tipo: 'passo', duracao: 100, numero: 2, total: 3, icone: 'credit-card', titulo: 'Pague com Pix, crédito ou débito', texto: 'Tudo com segurança, pelo Mercado Pago.' },
+      { tipo: 'passo', duracao: 100, numero: 3, total: 3, icone: 'package', titulo: 'Receba com frete grátis', texto: 'Produzimos e enviamos em até 7 dias úteis, pelos Correios.' },
+      { tipo: 'cta-conteudo', duracao: 90, titulo: 'Pronta pra escolher a sua?' },
+    ]),
+  },
+
+  // Mesmos fatos do carrossel "Cuidados com a peça" (politicas.html
+  // #cuidados + FAQ) — o slide de lavagem + o de variações já fundido
+  // (ver VARIACOES_TITULO/TEXTO em gerar-posts.js, mesmo texto aqui).
+  'cuidados-conteudo': {
+    template: 'conteudo',
+    cenas: () => montarCenas([
+      { tipo: 'titulo-conteudo', duracao: 60, icone: 'droplet', eyebrow: 'Guia rápido', titulo: 'Cuidados com a peça' },
+      { tipo: 'lista-conteudo', duracao: 130, titulo: 'Como lavar', itens: [
+        'Água morna e sabão neutro',
+        'Evite a lava-louças',
+        'Evite mudanças bruscas de temperatura',
+      ] },
+      { tipo: 'paragrafo-conteudo', duracao: 130, titulo: 'As variações são a assinatura', texto: 'Pequenas variações de cor, textura e formato em relação às fotos são normais — fazem parte da autenticidade do trabalho manual, não são defeito.' },
+      { tipo: 'cta-conteudo', duracao: 90, titulo: 'Cuide bem da sua peça' },
+    ]),
+  },
+
+  // Mesmos fatos do carrossel "Peça única: o que significa" — CLAUDE.md
+  // (estoque 1) + politicas.html #cuidados/#trocas-devolucoes.
+  'peca-unica-conteudo': {
+    template: 'conteudo',
+    cenas: () => montarCenas([
+      { tipo: 'titulo-conteudo', duracao: 60, icone: 'gem', eyebrow: 'Por dentro do ateliê', titulo: 'O que é "peça única"' },
+      { tipo: 'paragrafo-conteudo', duracao: 120, titulo: 'Estoque sempre 1', texto: 'Cada peça existe numa única unidade. Quando vende, não tem reposição — vira portfólio, não volta pra vitrine.' },
+      { tipo: 'paragrafo-conteudo', duracao: 120, titulo: 'As variações são a assinatura', texto: 'Cada peça é única e pode ter pequenas variações de cor, textura e formato — isso é parte da autenticidade do trabalho manual, não é defeito, é processo artesanal.' },
+      { tipo: 'paragrafo-conteudo', duracao: 120, titulo: 'Não existe uma troca "idêntica"', texto: 'Como cada peça é única e feita à mão, não existe estoque de reposição igual.' },
+      { tipo: 'cta-conteudo', duracao: 90, titulo: 'Encontrou a sua?' },
+    ]),
+  },
+
+  // Mesmos 4 passos da legenda nº19/carrossel "Encomende a sua" — SEM
+  // prazo nem preço fixo (pedido explícito): "a gente combina" é o
+  // máximo prometido, igual linkEncomendaWhatsApp() em js/main.js.
+  'encomenda-conteudo': {
+    template: 'conteudo',
+    cenas: () => montarCenas([
+      { tipo: 'titulo-conteudo', duracao: 60, icone: 'message-circle', eyebrow: 'Encomende a sua', titulo: 'Como funciona uma encomenda' },
+      { tipo: 'passo', duracao: 90, numero: 1, total: 4, icone: 'message-circle', titulo: 'Chame no WhatsApp pelo link na bio', texto: null },
+      { tipo: 'passo', duracao: 90, numero: 2, total: 4, icone: 'gem', titulo: 'Conte a ideia ou mostre a peça que amou', texto: null },
+      { tipo: 'passo', duracao: 90, numero: 3, total: 4, icone: 'shield-check', titulo: 'A gente combina os detalhes, o prazo e o valor', texto: null },
+      { tipo: 'passo', duracao: 90, numero: 4, total: 4, icone: 'sparkles', titulo: 'Eu faço a sua peça à mão, do começo ao fim', texto: null },
+      { tipo: 'cta-conteudo', duracao: 90, titulo: 'Encomende a sua peça única' },
+    ]),
+  },
 };
 
 module.exports = { ROTEIROS, montarCenas, duracaoTotal, FPS };

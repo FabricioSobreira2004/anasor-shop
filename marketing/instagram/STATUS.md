@@ -83,3 +83,38 @@ o checklist e a seção "reserva" (conteúdo extra, fora do calendário de
   /links, /api/health, sem precisar bump de `?v=` (nada publicado).
 
 **Rodada 2 completa — A, B, C e D concluídos.**
+
+---
+
+# Rodada 3 — correções + Reels de conteúdo (modo autônomo)
+
+Pedido do Fabrício em 2026-10-28, depois da Rodada 2. 6 itens, todos
+concluídos — decisões em `DECISOES.md`.
+
+1. **"Pelos Correios"** — conferido em politicas.html (#prazo-envio: "via
+   Correios"), é verdade, mantido sem alteração.
+2. **Slides de variações fundidos** — "As variações são a assinatura" +
+   "Não é defeito, é processo" viraram 1 slide só, reaproveitado nos
+   carrosséis "Cuidados com a peça" (post-11, 5→4 slides) e "Peça única"
+   (post-12, mesmo slide count, conteúdo mais completo).
+3. **4 Reels de CONTEÚDO** (motion graphics puro, sem filmagem) — novo
+   template `reels/src/templates/Conteudo.js` + 4 roteiros em
+   roteiros.js: `como-comprar-conteudo`, `cuidados-conteudo`,
+   `peca-unica-conteudo`, `encomenda-conteudo`. 2 bugs achados e
+   corrigidos em teste (cenas sem fundo opaco próprio deixavam a cena
+   anterior vazar por baixo; halo da marca d'água sobre fundo chapado
+   escuro — mesmo bug dos posts, corrigido com um chip, só neste
+   template). ffprobe conferido nos 4 (13,7–17s, 1–1,33MB, 1080×1920,
+   H.264, yuv420p, sem áudio).
+4. **Ligados ao kit de postagem**: dia 12 (post-11→cuidados-conteudo.mp4,
+   agora Reel de verdade em vez de carrossel-substituto) e dia 19 (saiu
+   de PENDENTE para encomenda-conteudo.mp4). "Como comprar" e "Peça
+   única" ficaram na Reserva (nenhum dia do calendário corresponde a
+   eles). **11 de 17 dias agora prontos** (era 10).
+5. **Aviso de Pix no LEIA-ME.md** — seção própria + linha condicional no
+   checklist de cada dia (`citaPix`), avisando pra confirmar a chave Pix
+   cadastrada no Mercado Pago e o Pix aparecendo de verdade no checkout
+   antes de postar qualquer coisa que cite Pix.
+6. **Fechamento**: code-review + simplify no código novo, `node --check`
+   em todos os scripts, testes offline do backend, git limpo, push sem
+   force — ver detalhes abaixo de onde rodou.

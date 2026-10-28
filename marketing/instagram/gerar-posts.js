@@ -987,6 +987,15 @@ ${hashtags}
 `;
 }
 
+// v3.1: slide "variações" único, reaproveitado pelos carrosséis
+// "Cuidados com a peça" E "Peça única" — ANTES cada um tinha o fato
+// espalhado em 2 frases quase idênticas (post-11: "As variações são a
+// assinatura" + "Não é defeito, é processo"; post-12 repetia a 1ª
+// sozinha) — mesmos 2 fatos (politicas.html #cuidados + FAQ), fundidos
+// numa frase só. Pedido explícito do Fabrício (rodada 3, modo autônomo).
+const VARIACOES_TITULO = 'As variações são a assinatura';
+const VARIACOES_TEXTO = 'Cada peça de cerâmica é única e pode apresentar pequenas variações de cor, textura e formato em relação às fotos — isso é parte da autenticidade do trabalho manual. Modelada e pintada à mão, cada peça carrega essas diferenças: não é defeito, é processo artesanal.';
+
 // ---- v3/A3: os 4 carrosséis de CONTEÚDO (não são de uma peça) ----
 // Gerados DEPOIS dos 9 posts de peça, numeração contínua (post-10 a
 // post-13) — mesma pasta de saída, mesmo padrão de nome de arquivo.
@@ -1064,14 +1073,9 @@ A gente produz e embala com cuidado antes de enviar: até 7 dias úteis, pelos C
       ], logoUri),
         'lista', 'Como lavar: água morna, sabão neutro, sem lava-louças, sem mudança brusca de temperatura',
         'Como lavar: água morna e sabão neutro, evite lava-louças e mudanças bruscas de temperatura');
-      await salvar(slideParagrafo(v, 'As variações são a assinatura',
-        'Cada peça de cerâmica é única e pode apresentar pequenas variações de cor, textura e formato em relação às fotos — isso é parte da autenticidade do trabalho manual.', logoUri),
-        'paragrafo', 'Pequenas variações de cor/textura/formato são normais e fazem parte da autenticidade',
-        'Pequenas variações de cor, textura e formato em relação às fotos são normais e fazem parte da autenticidade do trabalho manual');
-      await salvar(slideParagrafo(v, 'Não é defeito, é processo',
-        'Cada peça é modelada e pintada à mão, então pequenas variações entre uma peça e outra fazem parte do processo artesanal.', logoUri),
-        'paragrafo', 'Variações entre peças fazem parte do processo artesanal, não são defeito',
-        'Pequenas variações entre uma peça e outra fazem parte do processo artesanal, não são defeito');
+      await salvar(slideParagrafo(v, VARIACOES_TITULO, VARIACOES_TEXTO, logoUri),
+        'paragrafo', 'Pequenas variações são normais e fazem parte da autenticidade do trabalho manual, não são defeito',
+        'Pequenas variações de cor, textura e formato em relação às fotos são normais, fazem parte da autenticidade do trabalho manual — não são defeito');
       await salvar(slideChamada(v, logoUri),
         'chamada', '"Peça única / Link na bio" + faixa de confiança', 'Peça única, feita à mão — @anasor.ceramica, link na bio');
     },
@@ -1103,10 +1107,9 @@ Salve este post para não esquecer. Mais dicas no link na bio 🤎`,
         'Cada peça de cerâmica no site existe numa única unidade. Quando ela vende, não tem reposição — ela vira portfólio e não volta pra vitrine.', logoUri),
         'paragrafo', 'Cada peça existe em estoque único (1 unidade), sem reposição',
         'Cada peça de cerâmica existe em uma única unidade — sem reposição quando vende');
-      await salvar(slideParagrafo(v, 'As variações são a assinatura',
-        'Cada peça de cerâmica é única e pode apresentar pequenas variações de cor, textura e formato em relação às fotos — isso é parte da autenticidade do trabalho manual.', logoUri),
-        'paragrafo', 'Pequenas variações fazem parte da autenticidade do trabalho manual',
-        'Pequenas variações de cor, textura e formato fazem parte da autenticidade do trabalho manual');
+      await salvar(slideParagrafo(v, VARIACOES_TITULO, VARIACOES_TEXTO, logoUri),
+        'paragrafo', 'Pequenas variações são normais e fazem parte da autenticidade do trabalho manual, não são defeito',
+        'Pequenas variações de cor, textura e formato em relação às fotos são normais, fazem parte da autenticidade do trabalho manual — não são defeito');
       await salvar(slideParagrafo(v, 'Por isso não existe uma troca “idêntica”',
         'Como cada peça é única e feita à mão, não trabalhamos com troca por uma peça idêntica — não existe estoque de reposição igual.', logoUri),
         'paragrafo', 'Não há troca por peça idêntica: não existe estoque de reposição igual',

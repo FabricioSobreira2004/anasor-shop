@@ -64,25 +64,40 @@ function IconeLinha({ nome, tamanho = 32, cor = 'currentColor' }) {
 // reel.js, em Node, antes do render) — nenhum componente aqui lê
 // arquivo nem faz processamento de imagem: só recebe a prop e desenha.
 // ---------------------------------------------------------------
-function MarcaDagua({ src, tamanho = 150 }) {
+// `comChip`: embrulha a logo num círculo creme translúcido — mesmo
+// motivo do chip em gerar-posts.js (v3 dos posts): o corte por
+// luminância da logo (reel.js, removerFundoLogo) deixa uma faixa de
+// transição que segue o ruído de compressão JPEG do arquivo-fonte —
+// invisível sobre foto/vídeo (sempre há textura por trás), mas vira um
+// halo quadrado visível sobre uma cena de FUNDO CHAPADO escuro (achado
+// testando o template Conteudo.js, rodada 3 — os outros templates
+// nunca mostram a marca d'água sobre fundo chapado, só foto/vídeo ou
+// o CTA em --cor-fundo claro, por isso nunca precisaram disso antes).
+function MarcaDagua({ src, tamanho = 150, comChip = false }) {
   const frame = useCurrentFrame();
   const opacidade = interpolate(frame, [0, 20], [0, 0.85], { extrapolateRight: 'clamp' });
-  return React.createElement(Img, {
-    src: resolverSrc(src),
+  if (!comChip) {
+    return React.createElement(Img, {
+      src: resolverSrc(src),
+      style: {
+        position: 'absolute', right: 48,
+        // 430 (não 64): pedido explícito de v2/B3 — "nada importante
+        // nos 420px de baixo" (área do Instagram: legenda/@conta/
+        // música no Reels de verdade). 64 cairia bem no meio dessa faixa.
+        bottom: 430, width: tamanho, height: 'auto', opacity: opacidade,
+        filter: 'drop-shadow(0 3px 10px rgba(0,0,0,0.35))', zIndex: 5,
+      },
+    });
+  }
+  return React.createElement('div', {
     style: {
-      position: 'absolute',
-      right: 48,
-      // 430 (não 64): pedido explícito de v2/B3 — "nada importante nos
-      // 420px de baixo" (área do Instagram: legenda/@conta/música no
-      // Reels de verdade). 64 cairia bem no meio dessa faixa.
-      bottom: 430,
-      width: tamanho,
-      height: 'auto',
-      opacity: opacidade,
-      filter: 'drop-shadow(0 3px 10px rgba(0,0,0,0.35))',
-      zIndex: 5,
+      position: 'absolute', right: 48, bottom: 430, zIndex: 5,
+      width: tamanho, height: tamanho, borderRadius: '50%',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      background: 'rgba(251,246,239,0.95)', opacity: opacidade,
+      boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
     },
-  });
+  }, React.createElement(Img, { src: resolverSrc(src), style: { width: '72%', height: 'auto' } }));
 }
 
 // ---------------------------------------------------------------

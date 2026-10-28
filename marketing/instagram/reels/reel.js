@@ -250,6 +250,12 @@ async function main() {
         return { ...c, src: peca.fotoPrincipal };
       });
       props = { template, cores: v, logoUri, cenas, fps: FPS, duracaoTotal: duracaoTotal(cenas) };
+    } else if (template === 'conteudo') {
+      // Reel de CONTEÚDO (rodada 3): nenhuma peça por trás — as cenas já
+      // vêm prontas do roteiro (ícone + texto, nada simbólico pra
+      // resolver em produtos.js), então nem monta contexto de produto.
+      const cenas = roteiro.cenas();
+      props = { template, cores: v, logoUri, cenas, fps: FPS, duracaoTotal: duracaoTotal(cenas) };
     } else {
       const ctx = await montarContextoProduto(produtos, roteiro.produtoId, v);
       if (roteiro.reverterVideo && ctx.video) {

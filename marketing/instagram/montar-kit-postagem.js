@@ -65,15 +65,21 @@ const DIAS = [
   { dia: 8, semana: 2, diaSemana: 'Segunda', formato: 'Reels', tema: 'Bastidores: do barro ao prato', legenda: 2,
     pendente: 'Filmagem real do torno (roteiro R2 em reels-ideias.md) — cena de barro/mãos modelando, não existe ainda.' },
   { dia: 10, semana: 2, diaSemana: 'Quarta', formato: 'Carrossel', tema: 'Peça: Vaso Escultórico Silhueta e Poesia', legenda: 5, post: 'post-02', produtoId: 6 },
-  { dia: 12, semana: 2, diaSemana: 'Sexta', formato: 'Reels (trocado por Carrossel)', tema: 'Cuidados: como lavar sua cerâmica', legenda: 4, post: 'post-11',
-    nota: 'O calendário pedia Reels (roteiro R8) — ainda não existe filmagem própria de "como lavar" pra virar Reel. Carrossel "Cuidados com a peça" (mesmos fatos, mesma legenda nº4) cobre o conteúdo até lá.' },
+  // Reel de CONTEÚDO (cuidados-conteudo.mp4, motion graphics puro — ver
+  // reels/src/roteiros.js) no lugar do carrossel: cobre o formato Reels
+  // que o calendário pedia (roteiro R8 nunca existiu como filmagem
+  // própria, e não precisa mais — o Reel de conteúdo preenche o mesmo
+  // papel). post-11 (carrossel) continua pronto na Reserva, se um dia
+  // fizer sentido postar os dois.
+  { dia: 12, semana: 2, diaSemana: 'Sexta', formato: 'Reels', tema: 'Cuidados: como lavar sua cerâmica', legenda: 4, reel: 'cuidados-conteudo' },
   { dia: 14, semana: 2, diaSemana: 'Domingo', formato: 'Foto/Carrossel', tema: 'Prova social: chegou!', legenda: 8,
     pendente: 'Depoimento REAL de uma cliente, com autorização dela pra publicar (a legenda já tem o espaço reservado "[entre colchetes]").' },
   { dia: 15, semana: 3, diaSemana: 'Segunda', formato: 'Reels', tema: 'Bastidores: a pintura', legenda: 10,
     pendente: 'Filmagem real da pintura à mão (roteiro R3 em reels-ideias.md).' },
   { dia: 17, semana: 3, diaSemana: 'Quarta', formato: 'Carrossel', tema: 'Peça: Prato Pavão Real', legenda: 9, post: 'post-03', produtoId: 5 },
-  { dia: 19, semana: 3, diaSemana: 'Sexta', formato: 'Reels', tema: 'Encomenda: como funciona', legenda: 19,
-    pendente: 'Reel próprio (roteiro R5) ainda não existe. O carrossel "Encomende a sua" (post-13, dia 7) já cobre os mesmos 4 passos em formato de feed — pode servir de referência de conteúdo até o Reel ser gravado/roteirizado.' },
+  // Reel de CONTEÚDO (encomenda-conteudo.mp4) — os mesmos 4 passos da
+  // legenda nº19, em motion graphics, sem prazo nem preço fixo.
+  { dia: 19, semana: 3, diaSemana: 'Sexta', formato: 'Reels', tema: 'Encomenda: como funciona', legenda: 19, reel: 'encomenda-conteudo' },
   { dia: 21, semana: 3, diaSemana: 'Domingo', formato: 'Foto', tema: 'Peça: Boleira Jardim de Morangos', legenda: 13, post: 'post-04', produtoId: 24 },
   { dia: 22, semana: 4, diaSemana: 'Segunda', formato: 'Reels', tema: 'Bastidores: a queima', legenda: 16,
     pendente: 'Filmagem real do forno/queima (roteiro R4 em reels-ideias.md).' },
@@ -89,9 +95,10 @@ const HORARIO_SUGERIDO = { Reels: '19h', default: '12h' };
 // de uso do Instagram, não um número tirado de Insights desta conta.
 
 // Pelo `diaInfo.reel` (o que REALMENTE vai ser postado), não pelo texto
-// de `formato` — o dia 12 tem formato "Reels (trocado por Carrossel)"
-// mas `post` é o que de fato existe; usar o texto de `formato` dava
-// 19h (horário de Reels) pra um carrossel de feed.
+// de `formato` — achado do code-review: um dia com `formato` dizendo
+// "Reels" mas na prática virando `post` (carrossel) pegava 19h (horário
+// de Reels) em vez de 12h. Hoje nenhum dia está nessa situação, mas o
+// texto de `formato` é só descritivo, não confiável pra essa decisão.
 function horarioPara(diaInfo) {
   return diaInfo.reel ? HORARIO_SUGERIDO.Reels : HORARIO_SUGERIDO.default;
 }
@@ -132,12 +139,18 @@ function montarChecklistTxt(diaInfo) {
   const linhaDisponibilidade = diaInfo.vendidaDeProposito
     ? '[ ] A peça ainda existe no catálogo (não foi apagada)? Ela DEVE continuar "disponivel: false" — o post é sobre isso.'
     : '[ ] A peça ainda está disponível no site? (js/produtos.js ou o próprio site)';
+  // citaPix: pedido explícito (rodada 3) — nenhum dos 17 dias do
+  // calendário cita Pix hoje (só o conteúdo de reserva "Como comprar"),
+  // mas o flag existe pra qualquer dia futuro que citar.
+  const linhaPix = diaInfo.citaPix
+    ? '[ ] Pix: a chave está cadastrada no Mercado Pago e o Pix aparece de verdade no checkout? (confira em checkout.html, ou pedindo pra alguém simular uma compra)\n'
+    : '';
   return `Antes de publicar:
 ${linhaDisponibilidade}
 [ ] O preço na legenda ainda bate com o preço do site?
 [ ] O link da bio está correto? (https://anasor-sobreira.vercel.app/links)
 [ ] Se é prova social: o depoimento é real e tem autorização da cliente?
-`;
+${linhaPix}`;
 }
 
 function nomePasta(diaInfo) {
