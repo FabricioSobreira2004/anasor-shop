@@ -40,7 +40,6 @@ const RAIZ = path.resolve(__dirname, '..', '..');
 // usuário já usa essa pasta como "banco" de mídia do Instagram).
 const SAIDA = path.resolve(RAIZ, '..', 'site-mae', 'instagram-posts');
 const SAIDA_STORIES = path.join(SAIDA, 'stories');
-const SAIDA_V1 = path.join(SAIDA, '_v1');
 const LARGURA = 1080;
 const ALTURA = 1350;
 const ALTURA_STORY = 1920;

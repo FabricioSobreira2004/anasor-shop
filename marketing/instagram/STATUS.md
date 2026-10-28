@@ -57,8 +57,22 @@ ver `DECISOES.md`. `LEIA-ME.md` (raiz do kit) tem a ordem de postagem,
 o checklist e a seção "reserva" (conteúdo extra, fora do calendário de
 30 dias, pronto pra repor peça vendida ou abrir o mês 2).
 
-## D) Fechamento — ❌ NÃO COMEÇADO
+## D) Fechamento — 🟡 em andamento
 
-simplify + code-review no código novo, `node --check`, testes offline
-do backend, `?v=` pro próximo número se mexer no site, deploy
-confirmado, relatório final.
+- `node --check` nos 12 scripts tocados nesta rodada: ✅ todos OK.
+- Testes offline do backend: ✅ 66/66 passaram, nenhuma chamada de rede.
+- Nenhum arquivo do site (html/css/js/backend) foi tocado nesta rodada
+  — só `marketing/instagram/**` — então `?v=` e deploy não se aplicam.
+- Produção (/, /ceramica.html, /produto.html?id=33, /links, /api/health):
+  ✅ confirmada 200 de novo, sem mudança (nada publicado pelo site).
+- code-review (nível medium): ✅ rodou nos 2 commits novos (posts v3,
+  reels v2) e no kit de postagem — achou 8 problemas reais em
+  `montar-kit-postagem.js` (nenhum nos outros arquivos), todos
+  corrigidos: horário sugerido errado pro dia 12 (lia o texto de
+  `formato` em vez de checar o que de fato seria postado), aviso de
+  "confira disponibilidade" incoerente no dia 7 (a peça É a vendida de
+  exemplo), cópia de mídia sem checar se a origem existe (podia travar
+  o script inteiro ou contar um dia vazio como "pronto"), pasta do dia
+  não limpa entre execuções (mídia velha podia sobrar junto da nova, ou
+  uma pasta órfã se o nome mudasse) e 2 comentários imprecisos.
+- `node --check` de novo em todos os 13 scripts após os fixes: ✅ OK.
