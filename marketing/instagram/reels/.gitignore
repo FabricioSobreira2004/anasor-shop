@@ -1,0 +1,6 @@
+# .tmp/: TEMP/TMP redirecionado pra cá pros renders (ver README.md —
+# o disco C: deste PC enche fácil). public/: copiado do zero a cada
+# "node reel.js" a partir de img/produtos/ e produtos.js — nunca é a
+# fonte de verdade, só o que o Remotion precisa servir pra renderizar.
+.tmp/
+public/
