@@ -68,6 +68,27 @@ versões antigas) antes de rodar de novo. O script em si só limpa o que
 ele mesmo criaria (arquivos `post-*` nas pastas de saída), nunca uma
 `_v1\`/`_v2\` já existente.
 
+## v3 — 4 layouts de capa + grade do perfil + carrosséis de conteúdo
+
+- **4 layouts de capa** (ver `LAYOUT_CAPA_POR_POSICAO`/`slideCapaPorLayout`):
+  1. foto cheia + faixa (o layout v2 original);
+  2. editorial dividida (foto 58% + bloco `--cor-fundo-alt` com o nome
+     grande e a faixa de confiança em coluna);
+  3. peça em círculo sobre `--cor-fundo-alt`, com uma sombra elíptica de
+     "pedestal" embaixo (referência ao suporte de vidro das fotos reais);
+  4. fundo `--cor-texto` (marrom) com o nome em dourado (`DOURADO`,
+     mesmo hex do selo "Mais Vendido") e a peça num medalhão circular.
+  Alternados posição a posição pra nenhum vizinho da grade 3×3 do
+  perfil repetir layout — ver o comentário em `LAYOUT_CAPA_POR_POSICAO`.
+- **Grade do perfil**: `instagram-posts\_grade-perfil.png`, recorte 3:4
+  das 9 capas (como o Instagram mostra no perfil), pra bater o olho na
+  harmonia de cores/layouts antes de postar.
+- **4 carrosséis de CONTEÚDO** (`post-10` a `post-13`, não são de uma
+  peça específica): "Como comprar", "Cuidados com a peça", "Peça única:
+  o que significa" e "Encomende a sua" (exemplo: Pote Decorativo Bruma
+  Dourada, id 33, vendido). Só fatos de `politicas.html`/`produtos.js` —
+  ver `gerarCarrosseisConteudo()` pra a fonte de cada frase.
+
 ## Ferramenta de revisão (não faz parte do fluxo normal)
 
 `node folha-contato.js` gera `folha-contato.png` nesta pasta (fora do
