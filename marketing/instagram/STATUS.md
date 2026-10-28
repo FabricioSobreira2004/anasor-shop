@@ -57,7 +57,7 @@ ver `DECISOES.md`. `LEIA-ME.md` (raiz do kit) tem a ordem de postagem,
 o checklist e a seção "reserva" (conteúdo extra, fora do calendário de
 30 dias, pronto pra repor peça vendida ou abrir o mês 2).
 
-## D) Fechamento — 🟡 em andamento
+## D) Fechamento — ✅ CONCLUÍDO
 
 - `node --check` nos 12 scripts tocados nesta rodada: ✅ todos OK.
 - Testes offline do backend: ✅ 66/66 passaram, nenhuma chamada de rede.
@@ -76,3 +76,10 @@ o checklist e a seção "reserva" (conteúdo extra, fora do calendário de
   não limpa entre execuções (mídia velha podia sobrar junto da nova, ou
   uma pasta órfã se o nome mudasse) e 2 comentários imprecisos.
 - `node --check` de novo em todos os 13 scripts após os fixes: ✅ OK.
+- git limpo, nada pendente, push feito (main sem force). Nenhum
+  processo node/chrome aberto. `backend/.env` intacto (não tocado).
+  Nenhuma mídia no git. Nenhum arquivo do site tocado nesta rodada —
+  produção confirmada 200 em /, /ceramica.html, /produto.html?id=33,
+  /links, /api/health, sem precisar bump de `?v=` (nada publicado).
+
+**Rodada 2 completa — A, B, C e D concluídos.**
