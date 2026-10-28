@@ -810,10 +810,29 @@ function criarCardProduto(produto) {
 
   // Vendida: um botão só, para encomendar. É <a> (não <button>), então
   // o listener do carrinho, que escuta button.btn-comprar, nunca pega.
+  //
+  // Por que um <div> embrulhando status+botão, em vez do <a> sozinho
+  // (como antes)? Medido com Playwright: a .produtos-grid iguala a
+  // ALTURA de todo card da fileira ao maior deles — e um card vendido
+  // (1 botão) é bem mais raso que um card normal (2 botões), então
+  // margin-top:auto (ver .btn-comprar) sobra MUITO espaço vazio entre
+  // o preço e o botão só no card vendido ("vão estranho" visto no
+  // celular). Em vez de tirar o margin-top:auto (o botão precisa
+  // continuar colado na base, alinhado com os outros da fileira),
+  // a sobra de espaço agora vai pro WRAPPER (que recebe o
+  // margin-top:auto) e uma frase curta preenche esse espaço — mesmo
+  // TOM/ideia da frase que produto.js já usa pra peça vendida ("Esta
+  // peça já encontrou um lar 🤎", produto.js:328), mas SEM o 🤎 aqui:
+  // o card já tem o emoji no botão logo abaixo, dois na mesma área
+  // pequena ficava repetitivo. O vazio vira conteúdo com propósito,
+  // não arrumação visual vazia.
   const acoesHTML = vendida
-    ? `<a class="btn-comprar btn-encomendar" href="${linkEncomendaWhatsApp(produto, { indisponivel: true })}"
-          target="_blank" rel="noopener noreferrer"
-          aria-label="Encomendar uma peça parecida com ${produto.nome} pelo WhatsApp">Encomendar peça parecida 🤎</a>`
+    ? `<div class="produto-card__acoes-vendida">
+        <p class="produto-card__status-vendida">Esta peça já encontrou um lar.</p>
+        <a class="btn-comprar btn-encomendar" href="${linkEncomendaWhatsApp(produto, { indisponivel: true })}"
+           target="_blank" rel="noopener noreferrer"
+           aria-label="Encomendar uma peça parecida com ${produto.nome} pelo WhatsApp">Encomendar peça parecida&nbsp;🤎</a>
+      </div>`
     : `<button class="btn-comprar">${estaNoCarrinho(produto.id) ? TEXTO_NO_CARRINHO : 'Adicionar ao Carrinho'}</button>
       <button class="btn-comprar-agora">Comprar Agora</button>`;
 

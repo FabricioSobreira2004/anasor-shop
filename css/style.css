@@ -5929,6 +5929,16 @@ footer {
     margin-top: 0.4rem;
   }
 
+  /* "Encomendar peça parecida 🤎" (texto fixo, ver CLAUDE.md) é mais
+     longo que "Adicionar ao Carrinho" — medido com Playwright: com o
+     padding lateral acima (0.5rem = 8px de cada lado) o texto vazava
+     9px da caixa no card mais estreito do carrossel (169px). Reduzido
+     só aqui, nada mais: o botão continua ≥44px de altura. */
+  .produto-card .btn-encomendar {
+    padding-left: 0.2rem;
+    padding-right: 0.2rem;
+  }
+
   /* skeleton (card "fantasma" de carregamento, main.js): precisa
      combinar com o tamanho do card real acima, senão o layout "pula"
      (CLS) no instante em que os produtos de verdade chegam. */
@@ -5949,6 +5959,18 @@ footer {
      em QUALQUER largura, escondendo as setas também no desktop. */
   .carrossel-seta {
     display: none;
+  }
+}
+
+/* Mesmo com o padding reduzido acima, "Encomendar peça parecida 🤎"
+   (texto fixo, ver CLAUDE.md) ainda vaza a caixa nos celulares mais
+   estreitos — medido com Playwright: cabe numa linha a partir de
+   390px, não cabe mais a 385px (card do carrossel ~161-165px ali).
+   SÓ nessa faixa estreita a fonte baixa um pouco (ainda ~10.9px,
+   legível); nos outros botões e larguras maiores nada muda. */
+@media (max-width: 388px) {
+  .produto-card .btn-encomendar {
+    font-size: 0.68rem;
   }
 }
 
@@ -6339,10 +6361,48 @@ footer {
   font-weight: 500;
 }
 
+/* Embrulha a frase + o botão de encomenda: é ESTE bloco que recebe o
+   margin-top:auto (não mais o botão sozinho) — ver o comentário em
+   criarCardProduto() (main.js) sobre o "vão estranho" medido. */
+.produto-card__acoes-vendida {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: auto;
+}
+
+.produto-card__status-vendida {
+  /* mesma ideia do .preco--vendida: tom neutro, sem competir com o
+     preço acima. padding lateral evita colar nas bordas do card em
+     telas estreitas (card não tem padding horizontal próprio). */
+  font-size: 0.82rem;
+  font-style: italic;
+  color: var(--cor-secundaria);
+  padding: 0 1rem;
+  margin-bottom: 0.6rem;
+  /* 0.6rem = mesmo respiro que .btn-comprar-agora usa até o botão
+     de cima (consistência de ritmo vertical entre os dois tipos de card) */
+}
+
 /* O botão de encomenda é <a> com o visual do .btn-comprar (gummy). */
 .btn-encomendar {
   display: inline-block;
   text-align: center;
+  margin-top: 0;
+  /* zera o margin-top:auto que .btn-comprar define (ali ele empurra o
+     PAR de botões pro rodapé do card) — aqui quem já faz esse trabalho
+     é o wrapper .produto-card__acoes-vendida, então o botão só precisa
+     ficar colado embaixo da frase, sem auto-margin duplicado */
+  /* SEM white-space:nowrap aqui, de propósito: medido com Playwright
+     que em ~820px o carrossel já deixa o próprio "Adicionar ao
+     Carrinho" quebrar em 2 linhas (card de carrossel bem estreito
+     nessa largura específica) — forçar nowrap só neste botão fazia
+     ele estourar pra fora do card (overflow visível) exatamente onde
+     o card já é apertado demais pra 1 linha. Mesmo comportamento dos
+     outros botões: quebra se precisar. O "🤎" não fica órfão numa
+     linha sozinha porque o HTML usa um espaço INQUEBRÁVEL antes dele
+     (ver criarCardProduto, main.js) — se quebrar, quebra ANTES de
+     "parecida 🤎", nunca entre os dois. */
 }
 
 /* ============================================
