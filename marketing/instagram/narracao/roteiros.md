@@ -23,6 +23,12 @@ loop do README fica mudo, não tem roteiro aqui).
   CONTEÚDO: paráfrase das legendas já existentes e já checadas em
   `reels/src/roteiros.js` (mesmos fatos, não reinventados). Tour:
   descreve recursos reais do site, sem citar preço de peça nenhuma.
+- Cada texto é escrito como 1 frase só (vírgulas, não pontos) sempre
+  que possível, com o NOME DA PEÇA logo no começo — importante
+  porque o corte automático (`narrar.js`, quando o texto não cabe na
+  duração) solta a última cláusula (depois da última vírgula), nunca
+  a primeira: o nome da peça precisa estar numa cláusula que NUNCA é
+  cortada. Achado testando o pipeline — ver `DECISOES.md`.
 
 Se, ao gerar o áudio de verdade, um texto não couber na duração do
 vídeo com folga (ver `narracao/narrar.js`), ele é cortado (nunca
@@ -36,62 +42,62 @@ acelerado além de 1,1×) e a mudança fica registrada em
 ### r1-caneca-surpresa-gatinho (14,50 s)
 Peça: Caneca Artística Surpresa Gatinho (produto id 20)
 
-> Tem um segredo escondido nesta caneca. A Caneca Artística Surpresa Gatinho revela, aos poucos, um gatinho pintado à mão no fundo, enquanto você bebe. Link na bio, no arroba anasor ponto cerâmica.
+> A Caneca Artística Surpresa Gatinho esconde um gatinho pintado à mão no fundo, revelado aos poucos enquanto você bebe, peça única. Link na bio, no arroba anasor ponto cerâmica.
 
 ### r7-casinhas-de-fada (13,50 s)
 Peça: Kit 4 Casinhas de Fada Luminária (produto id 36)
 
-> Quatro casinhas, uma luz só pra encantar. O Kit 4 Casinhas de Fada Luminária é modelado e pintado à mão, peça por peça. Link na bio, no arroba anasor ponto cerâmica.
+> O Kit 4 Casinhas de Fada Luminária encanta com uma luz suave em cada casinha, modelado e pintado à mão, peça única. Link na bio, no arroba anasor ponto cerâmica.
 
 ### prato-canario-flor-de-outono (12,83 s)
 Peça: Prato Decorativo Canário e Flor de Outono (produto id 41)
 
-> Um canário pousa entre flores de outono. O Prato Decorativo Canário e Flor de Outono é pintado à mão, uma peça única no ateliê. Link na bio, no arroba anasor ponto cerâmica.
+> O Prato Decorativo Canário e Flor de Outono traz um canário pousado entre flores, pintado à mão, peça única no ateliê. Link na bio, no arroba anasor ponto cerâmica.
 
 ### vaso-refugio-de-petalas (13,50 s)
 Peça: Vaso Escultórico Refúgio de Pétalas (produto id 25)
 
-> Um refúgio esculpido em pétalas. O Vaso Escultórico Refúgio de Pétalas é moldado à mão, sem igual no ateliê da Anasor. Link na bio, no arroba anasor ponto cerâmica.
+> O Vaso Escultórico Refúgio de Pétalas é esculpido como um refúgio de pétalas, moldado à mão, peça única no ateliê. Link na bio, no arroba anasor ponto cerâmica.
 
 ### caneca-passaro-azul (12,17 s)
 Peça: Caneca Artística Pássaro Azul ao Amanhecer (produto id 28)
 
-> Um pássaro observa o amanhecer nesta caneca. A Caneca Artística Pássaro Azul ao Amanhecer é pintada à mão, peça única. Link na bio, no arroba anasor ponto cerâmica.
+> A Caneca Artística Pássaro Azul ao Amanhecer traz um pássaro observando o amanhecer, pintada à mão, peça única. Link na bio, no arroba anasor ponto cerâmica.
 
 ### colecao-objetos-decorativos (13,00 s)
 Peças: Porta-Joias Jacaré das Águas Azuis (id 39), Anjo Guardião Porta-Incenso (id 43), Saboneteira Folha e Pássaro Dourado (id 38)
 
-> Três peças, uma só alma: Porta-Joias Jacaré das Águas Azuis, Anjo Guardião Porta-Incenso e Saboneteira Folha e Pássaro Dourado. Link na bio, no arroba anasor ponto cerâmica.
+> Três peças com alma própria: o Porta-Joias Jacaré das Águas Azuis, o Anjo Guardião Porta-Incenso, e a Saboneteira Folha e Pássaro Dourado. Link na bio, no arroba anasor ponto cerâmica.
 
 ### caneca-surpresa-cachorrinho (13,50 s)
 Peça: Caneca Artística Surpresa Cachorrinho (produto id 19)
 
-> Um cachorrinho se revela no fundo da caneca. A Caneca Artística Surpresa Cachorrinho é pintada à mão, peça por peça. Link na bio, no arroba anasor ponto cerâmica.
+> A Caneca Artística Surpresa Cachorrinho revela um cachorrinho pintado à mão no fundo, conforme você bebe, peça única. Link na bio, no arroba anasor ponto cerâmica.
 
 ### kit-canequinhas-arlequim (12,67 s)
 Peça: Kit 4 Canequinhas Arlequim Marmorizado (produto id 23)
 
-> Cores marmorizadas, feitas pra combinar. O Kit 4 Canequinhas Arlequim Marmorizado é modelado à mão, sempre em peça única. Link na bio, no arroba anasor ponto cerâmica.
+> O Kit 4 Canequinhas Arlequim Marmorizado traz cores marmorizadas em cada canequinha, modelado à mão, peça única. Link na bio, no arroba anasor ponto cerâmica.
 
 ### anjo-guardiao-porta-incenso (13,50 s)
 Peça: Anjo Guardião Porta-Incenso (produto id 43)
 
-> Um guardião silencioso pra sua casa. O Anjo Guardião Porta-Incenso é esculpido à mão, com acabamento único. Link na bio, no arroba anasor ponto cerâmica.
+> O Anjo Guardião Porta-Incenso é esculpido à mão como um guardião silencioso pra sua casa, peça única. Link na bio, no arroba anasor ponto cerâmica.
 
 ### kit-copos-ondas-do-mar (12,67 s)
 Peça: Kit 2 Copos Ondas do Mar (produto id 40)
 
-> O mar em forma de cerâmica. O Kit 2 Copos Ondas do Mar é modelado à mão, peça única no ateliê. Link na bio, no arroba anasor ponto cerâmica.
+> O Kit 2 Copos Ondas do Mar traz o mar em forma de cerâmica, modelado à mão, peça única no ateliê. Link na bio, no arroba anasor ponto cerâmica.
 
 ### prato-ave-da-alvorada (12,50 s)
 Peça: Prato Decorativo Ave da Alvorada (produto id 10)
 
-> Uma ave anuncia o começo do dia. O Prato Decorativo Ave da Alvorada é pintado à mão, peça única. Link na bio, no arroba anasor ponto cerâmica.
+> O Prato Decorativo Ave da Alvorada mostra uma ave anunciando o começo do dia, pintado à mão, peça única. Link na bio, no arroba anasor ponto cerâmica.
 
 ### colecao-pecas-de-alma (13,00 s)
 Peças: Kit 3 Xícaras de Café Terra Escura (id 32), Saboneteira Pássaro Azul-Noite (id 37), Vaso Escultórico Elo Noturno (id 45)
 
-> Peças com história pra contar: Kit 3 Xícaras de Café Terra Escura, Saboneteira Pássaro Azul-Noite e Vaso Escultórico Elo Noturno. Link na bio, no arroba anasor ponto cerâmica.
+> Peças com história pra contar: o Kit 3 Xícaras de Café Terra Escura, a Saboneteira Pássaro Azul-Noite, e o Vaso Escultórico Elo Noturno. Link na bio, no arroba anasor ponto cerâmica.
 
 ---
 
@@ -103,22 +109,22 @@ Paráfrase das legendas já existentes em `reels/src/roteiros.js`
 ### cuidados-conteudo (13,67 s)
 Fonte: lista "Como lavar" + "As variações são a assinatura"
 
-> Sua peça pede um cuidado simples. Lave com água morna e sabão neutro, evite a lava-louças e mudanças bruscas de temperatura. E lembre-se: pequenas variações fazem parte da assinatura de cada peça única. Link na bio, no arroba anasor ponto cerâmica.
+> Sua peça pede um cuidado simples: lave com água morna e sabão neutro, evite a lava-louças e mudanças bruscas de temperatura, e lembre-se que pequenas variações são a assinatura de cada peça única. Link na bio, no arroba anasor ponto cerâmica.
 
 ### como-comprar-conteudo (15,00 s)
 Fonte: 3 passos "Como comprar" (sem citar Pix, ao contrário da legenda na tela)
 
-> Comprar na Anasor é simples. Escolha sua peça única, pague com segurança pelo Mercado Pago, e receba em casa com frete grátis, em até sete dias úteis. Link na bio, no arroba anasor ponto cerâmica.
+> Comprar na Anasor é simples: escolha sua peça única, pague com segurança pelo Mercado Pago, e receba em casa com frete grátis, em até sete dias úteis. Link na bio, no arroba anasor ponto cerâmica.
 
 ### peca-unica-conteudo (17,00 s)
 Fonte: "Estoque sempre 1" + "As variações são a assinatura" + "Não existe troca idêntica"
 
-> Aqui, nenhuma peça se repete. Cada peça existe numa única unidade: quando vende, não tem reposição, vira parte do portfólio do ateliê. Pequenas variações de cor e formato são a assinatura do trabalho manual, não um defeito. Link na bio, no arroba anasor ponto cerâmica.
+> Aqui, nenhuma peça se repete: cada peça existe numa única unidade e, quando vende, vira parte do portfólio do ateliê, porque pequenas variações de cor e formato são a assinatura do trabalho manual, não um defeito. Link na bio, no arroba anasor ponto cerâmica.
 
 ### encomenda-conteudo (17,00 s)
 Fonte: 4 passos "Como funciona uma encomenda" (sem prazo nem preço fixo, igual à legenda na tela)
 
-> Quer uma peça pensada pra você? Chame no WhatsApp pelo link na bio, conte sua ideia, e a gente combina juntos os detalhes, o prazo e o valor. Depois, eu faço a sua peça à mão, do começo ao fim. Link na bio, no arroba anasor ponto cerâmica.
+> Quer uma peça pensada pra você? Chame no WhatsApp pelo link na bio, conte sua ideia, a gente combina juntos os detalhes, o prazo e o valor, e eu faço a sua peça à mão, do começo ao fim. Link na bio, no arroba anasor ponto cerâmica.
 
 ---
 

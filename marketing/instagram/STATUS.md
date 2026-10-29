@@ -276,6 +276,35 @@ pastas em `E:\projetos\_tmp\c-maiores-pastas.txt`. Detalhes em
   `E:\projetos\site-mae\instagram-perfil\v2\` (v1 mantida). Mapeamento
   capa→destaque documentado no `LEIA-ME.md` do kit.
 
-## 4) Narração em todos os vídeos — ❌ PENDENTE
+## 4) Narração em todos os vídeos — ✅ CONCLUÍDO
+
+- Voz: Microsoft Maria Desktop (pt-BR, feminina, SAPI/System.Speech
+  do Windows), `Rate=2` — Piper TTS não foi tentado (motivo em
+  `DECISOES.md`). Mesma voz em todos os 18 vídeos.
+- Roteiros (texto, committado): `marketing/instagram/narracao/roteiros.md`
+  — 1 por vídeo, só fatos reais de `js/produtos.js`/`politicas.html`,
+  sem Pix/prazo/preço fixo, nome da peça citado logo na 1ª cláusula
+  (pra sobreviver ao corte automático), fechamento fixo "Link na
+  bio, no arroba anasor ponto cerâmica." em todos.
+- Script reproduzível: `marketing/instagram/narracao/narrar.js` +
+  `sintetizar-voz.ps1` (síntese) — `node narrar.js` regenera tudo
+  depois de qualquer edição em `roteiros.md`. README curto em
+  `marketing/instagram/narracao/README.md`.
+- Mixagem (ffmpeg): voz começa em 0,3s, `loudnorm` a -16 LUFS (pico
+  máx. -1,5dB, sem estourar), AAC 48kHz estéreo 128kbps, vídeo
+  `-c:v copy` (sem recompressão). Mudo original arquivado em
+  `E:\projetos\site-mae\reels\_mudo\` e `...\tour\_mudo\` (nunca
+  apagado).
+- Rodado nos 18 vídeos (12 Reels de peça + 4 de conteúdo +
+  `tour-instagram` + `tour-portfolio`; `tour-loop.mp4` continua
+  mudo, de propósito). Todos passaram nas 4 checagens (1 faixa de
+  áudio + 1 de vídeo, sem silêncio total, sem estouro, voz mais
+  curta que o vídeo) — valores completos em
+  `E:\projetos\_tmp\narracao-relatorio.txt`.
+- 11 dos 18 precisaram de corte automático de texto (nunca
+  aceleração) pra caber na duração real; 2 Reels de coleção
+  (`colecao-objetos-decorativos`, `colecao-pecas-de-alma`) perderam
+  o nome da 3ª peça só na narração (continuam visíveis na tela) —
+  detalhe em `DECISOES.md`.
 
 ## 5) Kit e fechamento final — ❌ PENDENTE
