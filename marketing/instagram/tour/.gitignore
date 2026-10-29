@@ -1,0 +1,7 @@
+# .tmp/: TEMP/TMP redirecionado pra cá (frames de captura, cache do
+# bundle do Remotion) — ver README.md sobre o disco C: deste PC.
+# public/: copiado do zero a cada render a partir das capturas — nunca
+# é a fonte de verdade.
+.tmp/
+public/
+capturas/

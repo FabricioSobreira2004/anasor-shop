@@ -389,3 +389,15 @@ Modelado à mão, com acabamento em bronze escuro metálico que reluz de perto e
 R$ 159,90 com frete grátis para todo o Brasil. Link na bio 🤎
 
 #vasoescultorico #ceramicaautoral #decoracaodeinteriores #ceramicaartesanal #pecaunica #feitoamao
+
+---
+
+### 32. 🎥 Tour pelo site — conheça a loja completa
+
+Um passeio rápido pela loja: fotos, vídeo e medidas de cada peça, o carrinho lateral e um checkout que preenche o endereço sozinho, só com o CEP. 🏺
+
+Compra protegida pelo Mercado Pago, frete grátis para todo o Brasil e cada peça é única — a vendida continua no site como portfólio, nunca some.
+
+Vem dar uma volta: link na bio 🤎
+
+#ceramicaartesanal #lojaonline #feitoamao #pecaunica #ateliedeceramica #tourpelosite

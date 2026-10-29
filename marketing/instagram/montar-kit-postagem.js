@@ -21,6 +21,7 @@ const RAIZ = path.resolve(__dirname, '..', '..');
 const SITE_MAE = path.resolve(RAIZ, '..', 'site-mae');
 const POSTS_DIR = path.join(SITE_MAE, 'instagram-posts');
 const REELS_DIR = path.join(SITE_MAE, 'reels');
+const TOUR_DIR = path.join(SITE_MAE, 'tour');
 const SAIDA = path.join(SITE_MAE, 'kit-postagem');
 
 // Parser de legendas.md PRÓPRIO deste script — parecido com o de
@@ -162,6 +163,40 @@ function nomePasta(diaInfo) {
   return `dia-${String(diaInfo.dia).padStart(2, '0')}-${slug}`;
 }
 
+// Item extra de Reserva (Rodada 4, fora do calendário de 30 dias):
+// Tour do Site, Versão A (Instagram), gerado por marketing/instagram/
+// tour/tour.js. Pasta própria (não é um "dia") — mesma legenda nº32
+// de legendas.md (sem preço, sem Pix, sem prazo: a legenda é sobre o
+// site como um todo, não uma peça ou campanha com data).
+function montarExtraTour(legendas) {
+  const legenda = legendas[32];
+  if (!legenda) {
+    console.warn('extra-tour-do-site: legenda nº32 não encontrada em legendas.md — pulado.');
+    return;
+  }
+  const prefixo = 'extra-tour-do-site';
+  const pastaExtra = path.join(SAIDA, prefixo);
+  fs.rmSync(pastaExtra, { recursive: true, force: true });
+  fs.mkdirSync(pastaExtra, { recursive: true });
+
+  fs.writeFileSync(path.join(pastaExtra, 'legenda.txt'), montarLegendaTxt(legenda));
+  const copiado = copiarArquivo(path.join(TOUR_DIR, 'tour-instagram.mp4'), path.join(pastaExtra, 'tour-instagram.mp4'));
+  fs.writeFileSync(path.join(pastaExtra, 'info.txt'), [
+    'Reserva — Tour do Site (Versão A, Instagram), fora do calendário de 30 dias',
+    'Formato: Reels (1080x1920, ~31s, sem áudio — escolha uma música ao postar)',
+    `Legenda nº ${legenda.numero} de legendas.md`,
+    'Horário sugerido: 19h (mesmo padrão dos outros Reels)',
+    'Gerado por marketing/instagram/tour/tour.js — pra regenerar, ver o README daquela pasta.',
+  ].join('\n') + '\n');
+
+  if (!copiado) {
+    fs.writeFileSync(path.join(pastaExtra, 'PROBLEMA.md'), `# Mídia não encontrada\n\nEsperava "tour-instagram.mp4" em ${TOUR_DIR}, mas o arquivo não existe. Rode "node marketing/instagram/tour/tour.js --versao a" e rode montar-kit-postagem.js outra vez.\n`);
+    console.log(`${prefixo}: Tour do Site — PROBLEMA (mídia não encontrada)`);
+  } else {
+    console.log(`${prefixo}: Tour do Site — pronto`);
+  }
+}
+
 function main() {
   const legendas = carregarLegendas();
   fs.mkdirSync(SAIDA, { recursive: true });
@@ -236,6 +271,8 @@ function main() {
 
     console.log(`dia-${String(diaInfo.dia).padStart(2, '0')}: ${diaInfo.tema} — ${status}`);
   }
+
+  montarExtraTour(legendas);
 
   console.log(`\nPronto: ${SAIDA}`);
   console.log(`${prontos} dias com mídia pronta, ${pendentes} dias pendentes (sem mídia ainda), ${problemas} com problema (mídia esperada mas não encontrada).`);

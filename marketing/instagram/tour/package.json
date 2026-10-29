@@ -1,0 +1,26 @@
+{
+  "name": "anasor-tour",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Tour do Site (@anasor.ceramica) — motion graphics a partir de capturas reais do site (Playwright) compostas em Remotion (celular/desktop flutuantes, câmera, legendas cinéticas). Pasta própria (não mexe no package.json da raiz, do backend nem do motor de Reels).",
+  "type": "commonjs",
+  "scripts": {
+    "capturar": "node src/capturar.js",
+    "tour": "node tour.js",
+    "loop": "node src/loop.js"
+  },
+  "dependencies": {
+    "@remotion/bundler": "4.0.539",
+    "@remotion/cli": "4.0.539",
+    "@remotion/google-fonts": "^4.0.539",
+    "@remotion/renderer": "4.0.539",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "remotion": "4.0.539"
+  },
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "express": "^4.19.2",
+    "playwright": "^1.64.1"
+  }
+}

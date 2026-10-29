@@ -118,3 +118,86 @@ concluídos — decisões em `DECISOES.md`.
 6. **Fechamento**: code-review + simplify no código novo, `node --check`
    em todos os scripts, testes offline do backend, git limpo, push sem
    force — ver detalhes abaixo de onde rodou.
+
+---
+
+# Rodada 4 — "Tour do Site" (modo totalmente autônomo)
+
+Pedido em 2026-10-28, Fabrício na faculdade (sem resposta por várias
+horas). **Se o PC cair ou a sessão for interrompida, uma sessão nova
+deve ler este arquivo primeiro** e continuar do que está 🟡/❌.
+
+## 0) Ambiente — ✅ CONCLUÍDO
+
+- **Achado crítico**: disco C: com 0 bytes livres neste PC — ver
+  `DECISOES.md`. Todo TEMP/cache desta rodada vai pra
+  `D:\anasor-tour-tmp\`; entregáveis finais pra
+  `E:\projetos\site-mae\tour\` (fora do git).
+- `git pull`: já estava atualizado, working tree limpo.
+- Servidor local de teste: `marketing/instagram/tour/src/servidor-local.js`
+  (porta 8765, `FORCAR_DEMO=1` obrigatório) — ver `DECISOES.md` sobre
+  por que não usei `vercel dev`.
+
+## 1) Captura — ✅ CONCLUÍDO
+
+- Pacote `marketing/instagram/tour/` criado (package.json próprio,
+  Playwright + Remotion, igual ao padrão de `reels/`).
+- Captura mobile (12 cenas, iPhone 15 real via `playwright.devices`,
+  toques reais) e desktop (4 cenas, 1440×900) concluídas —
+  `.tmp/capturas/<device>/manifest.json` com a duração real de cada
+  clipe. Nenhum pedido enviado de verdade, nenhum pagamento gerado
+  (CPF/CEP de teste, nunca clicou em "Ir para Pagamento").
+
+## 2) Composição (motion graphics) — ✅ CONCLUÍDO
+
+- `src/componentes.js`, `src/roteiro-mobile.js` + `roteiro-desktop.js`,
+  `src/templates/TourMobile.js` + `TourDesktop.js`, `src/Root.js`/
+  `index.js`, `tour.js` (CLI de render), `src/fontes.js` (Fraunces/Jost
+  via `@remotion/google-fonts` — não instaladas no Windows desta
+  máquina), `src/cli.js` (parser de CLI compartilhado) escritos.
+- **Versão A (Instagram) — ✅ APROVADA**, 2 rodadas de crítica visual
+  (achados e corrigidos: bug de performance do padding de clipe, bug
+  crítico de `<Sequence>` ausente — travava o render —, 2 bugs de área
+  segura, e a cena "card-selo" mostrando a peça vendida em vez de um
+  selo de mérito — ver DECISOES.md pra cada um). Saída final:
+  `E:\projetos\site-mae\tour\tour-instagram.mp4` — 1080×1920, H.264
+  High, yuv420p, 30fps, 31,2s, 9,9MB.
+- **Versão B (portfólio) — ✅ APROVADA**, 2 rodadas de crítica visual
+  (achado e corrigido: `DestaqueTecnico` cobria parte do mockup de
+  desktop sozinho — virou faixa centralizada no topo, ver DECISOES.md).
+  Saída final: `E:\projetos\site-mae\tour\tour-portfolio.mp4` —
+  1920×1080, H.264 High, yuv420p, 30fps, 50,0s, 10,5MB.
+- loop/GIF do README: `E:\projetos\site-mae\tour\tour-loop.gif`
+  (7,25MB) + `tour-loop.mp4` (2,04MB), 7s, conferido visualmente.
+- code-review (medium) + simplify (4 agentes) rodaram no código novo
+  — achados aplicados (bugs reais de captura, duplicação, código
+  morto, performance) ou registrados como PULADOS com o motivo — ver
+  `DECISOES.md`. Depois de cada rodada de achados, captura + render
+  completos rodaram DE NOVO do zero pra confirmar que nada quebrou
+  (`node --check` sozinho não pega erro de referência em runtime —
+  aconteceu 1x nesta rodada, corrigido na hora).
+
+## 3) Integração com o kit — ✅ CONCLUÍDO
+
+- `montar-kit-postagem.js`: função `montarExtraTour()` copia
+  `tour-instagram.mp4` pra `E:\projetos\site-mae\kit-postagem\
+  extra-tour-do-site\` com legenda nº32 de `legendas.md` (sem
+  Pix/prazo) + `info.txt`. `LEIA-ME.md` (site-mae) atualizado com a
+  seção. Script rodado com o vídeo final — pasta confirmada pronta.
+
+## 4) Qualidade e fechamento — ✅ CONCLUÍDO
+
+- `node --check` em todos os 17 scripts de `tour/`: ✅ todos OK.
+- git: só `marketing/instagram/**` tocado (DECISOES.md, STATUS.md,
+  legendas.md, montar-kit-postagem.js, tour/ inteiro) — nada do site,
+  backend ou `.env`. Commit feito, push pra `main` sem force.
+- Produção (`/`, `/ceramica.html`, `/produto.html?id=33`, `/links`,
+  `/api/health`): ✅ 200 em todas, conferido depois do push.
+- Nenhum processo node/chrome-headless meu aberto no fim da rodada.
+  `backend/.env` nunca foi tocado.
+- Nenhuma mídia no git (`.tmp/`, `public/`, `node_modules/` de `tour/`
+  ignorados; os `.mp4`/`.gif` finais vivem só em `site-mae/`, fora do
+  repositório).
+
+**Rodada 4 completa.** Ver o relatório final (mensagem de fechamento
+desta rodada) pra hashes de commit e pendências do Fabrício.
