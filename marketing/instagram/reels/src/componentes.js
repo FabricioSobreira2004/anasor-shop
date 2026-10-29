@@ -493,6 +493,62 @@ function BotaoGummyFinal({ entradaFrame, apertoFrame, cores }) {
   );
 }
 
+// ---------------------------------------------------------------
+// Retrato da Anasor em círculo com aro dourado — Rodada 5, item 2
+// (fechamento rico). `src` já vem pronto (data URI, calculado 1x em
+// reel.js, mesmo padrão da logo) — este componente só desenha.
+// ---------------------------------------------------------------
+function RetratoAnasor({ src, tamanho = 200, entradaFrame, cores }) {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+  const t = frame - entradaFrame;
+  if (t < -1) return null;
+  const pop = spring({ frame: t, fps, config: { damping: 15, stiffness: 150 } });
+  const flutuar = Math.sin(frame / 50) * 6;
+  return React.createElement(
+    'div',
+    {
+      style: {
+        width: tamanho, height: tamanho, borderRadius: '50%', overflow: 'hidden',
+        border: `5px solid ${cores.destaque}`,
+        boxShadow: '0 0 0 3px rgba(251,246,239,0.9), 0 18px 40px rgba(30,20,10,0.35)',
+        opacity: pop, transform: `translateY(${(1 - pop) * 24 + flutuar}px)`,
+        flexShrink: 0,
+      },
+    },
+    React.createElement(Img, { src: resolverSrc(src), style: { width: '100%', height: '100%', objectFit: 'cover', objectPosition: '50% 52%' } })
+  );
+}
+
+// ---------------------------------------------------------------
+// Fecho RICO — Rodada 5, item 2: retrato + título + botão gummy
+// (aperto) + handle GRANDE com coração + faixa de confiança, em
+// cascata (cada peça entra ~12 quadros depois da anterior). Junta num
+// só lugar o que os 3 templates (Apresentacao/Colecao/Conteudo)
+// faziam cada um por si (título+botão+handle-pequeno+faixa) — menos
+// duplicação E mais rico ao mesmo tempo.
+function FechoRico({ titulo, entradaFrame, duracaoFrames, cores, retratoUri, sobreClaro = false }) {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+  const popIndice = (i) => spring({ frame: frame - entradaFrame - i * 12, fps, config: { damping: 15, stiffness: 150 } });
+  const pHandle = popIndice(3);
+  const apertoFrame = duracaoFrames != null ? entradaFrame + duracaoFrames - 24 : entradaFrame + 50;
+  const corHandle = sobreClaro ? cores.texto : '#FFF';
+  return React.createElement(
+    React.Fragment, null,
+    React.createElement(RetratoAnasor, { src: retratoUri, tamanho: 170, entradaFrame, cores }),
+    React.createElement(TituloCinetico, { texto: titulo, entradaFrame: entradaFrame + 12, tamanho: 64, cor: sobreClaro ? cores.texto : '#FFF' }),
+    React.createElement(BotaoGummyFinal, { entradaFrame: entradaFrame + 24, apertoFrame, cores }),
+    React.createElement('div', {
+      style: {
+        opacity: pHandle, transform: `translateY(${(1 - pHandle) * 18}px)`,
+        fontFamily: 'Fraunces, serif', fontWeight: 600, fontSize: 40, color: corHandle,
+        display: 'flex', alignItems: 'center', gap: 12,
+      },
+    }, '@anasor.ceramica', React.createElement(Coracao, { tamanho: 30, cor: cores.destaque }))
+  );
+}
+
 module.exports = {
   Coracao,
   IconeLinha,
@@ -508,5 +564,7 @@ module.exports = {
   VideoInserto,
   MascaraCircular,
   BotaoGummyFinal,
+  RetratoAnasor,
+  FechoRico,
   resolverSrc,
 };

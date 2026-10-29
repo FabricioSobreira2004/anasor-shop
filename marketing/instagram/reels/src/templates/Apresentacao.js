@@ -10,7 +10,7 @@ const { AbsoluteFill, Img, interpolate, useCurrentFrame } = require('remotion');
 const {
   MarcaDagua, SeloAnimado, FaixaConfianca, TituloCinetico,
   LegendaPalavras, FotoKenBurns, FotoParallax, BrilhoEsmalte, VinhetaGrao,
-  VideoInserto, MascaraCircular, BotaoGummyFinal, resolverSrc,
+  VideoInserto, MascaraCircular, BotaoGummyFinal, FechoRico, resolverSrc,
 } = require('../componentes');
 
 // Brilho noturno: escurece a foto (filter) e sobrepõe 2-3 "luzes"
@@ -49,7 +49,7 @@ function GlowNoturno({ src, objectPosition, pontos, inicioFrame }) {
   );
 }
 
-function Apresentacao({ produto, cores, logoUri, selo, cenas, fps }) {
+function Apresentacao({ produto, cores, logoUri, retratoUri, selo, cenas, fps }) {
   const frame = useCurrentFrame();
 
   return React.createElement(
@@ -112,25 +112,25 @@ function Apresentacao({ produto, cores, logoUri, selo, cenas, fps }) {
           React.createElement(BrilhoEsmalte, { key: 'brilho', inicioFrame: cena.inicio + Math.round(cena.duracao * 0.35) })
         );
       } else if (cena.tipo === 'cta') {
+        // FechoRico (Rodada 5, item 2) — retrato da Anasor + título +
+        // botão gummy + handle GRANDE com coração, em cascata. Troca o
+        // que antes era título+botão+handle-pequeno-sem-animação
+        // montados à mão aqui.
         conteudo.push(
           React.createElement('div', { key: 'bg', style: { position: 'absolute', inset: 0, backgroundColor: cores.fundo } }),
           React.createElement('div', {
             key: 'conteudo',
             style: {
               position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column',
-              alignItems: 'center', justifyContent: 'center', gap: 36,
+              alignItems: 'center', justifyContent: 'center', gap: 28,
             },
           },
-            React.createElement(TituloCinetico, { texto: 'Peça única', entradaFrame: cena.inicio + 6, tamanho: 84, cor: cores.texto }),
-            React.createElement(BotaoGummyFinal, { entradaFrame: cena.inicio + 26, apertoFrame: cena.inicio + cena.duracao - 24, cores }),
-            React.createElement('div', {
-              style: {
-                opacity: interpolate(frame, [cena.inicio + 34, cena.inicio + 44], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }),
-                fontFamily: 'Jost, sans-serif', fontSize: 34, color: cores.secundaria,
-              },
-            }, '@anasor.ceramica')
+            React.createElement(FechoRico, {
+              titulo: 'Peça única', entradaFrame: cena.inicio + 6, duracaoFrames: cena.duracao - 6,
+              cores, retratoUri, sobreClaro: true,
+            })
           ),
-          React.createElement(FaixaConfianca, { key: 'fc', cores, entradaFrame: cena.inicio + 50, sobreClaro: true })
+          React.createElement(FaixaConfianca, { key: 'fc', cores, entradaFrame: cena.inicio + 58, sobreClaro: true })
         );
       }
 

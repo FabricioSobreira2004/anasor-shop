@@ -159,6 +159,15 @@ async function gerarLogoTransparente(pagina) {
   }, uri);
 }
 
+// Retrato da Anasor pro fechamento rico (Rodada 5, item 2) — mesma
+// técnica de tour/tour.js (duplicada de propósito, mesmo motivo do
+// comentário de gerarLogoTransparente acima): base64 direto, SEM
+// remover fundo (é uma ilustração com fundo próprio, não precisa).
+function gerarRetratoDataUri() {
+  const jpg = fs.readFileSync(path.join(RAIZ, 'img', 'institucional', 'quem-somos.jpg'));
+  return `data:image/jpeg;base64,${jpg.toString('base64')}`;
+}
+
 // ---- Roteiro padrão (--id/--template sem um roteiro pronto) ----
 // `temVideo`: 26 das 43 peças disponíveis hoje não têm videoUrl em
 // produtos.js (conferido na hora de escrever isto) — "qualquer peça
@@ -229,6 +238,7 @@ async function main() {
   const pagina = await browser.newPage();
   const logoUri = await gerarLogoTransparente(pagina);
   await browser.close();
+  const retratoUri = gerarRetratoDataUri();
 
   let nome, template, props;
 
@@ -249,13 +259,13 @@ async function main() {
         const peca = pecas[c.src.produtoIndice];
         return { ...c, src: peca.fotoPrincipal };
       });
-      props = { template, cores: v, logoUri, cenas, fps: FPS, duracaoTotal: duracaoTotal(cenas) };
+      props = { template, cores: v, logoUri, retratoUri, cenas, fps: FPS, duracaoTotal: duracaoTotal(cenas) };
     } else if (template === 'conteudo') {
       // Reel de CONTEÚDO (rodada 3): nenhuma peça por trás — as cenas já
       // vêm prontas do roteiro (ícone + texto, nada simbólico pra
       // resolver em produtos.js), então nem monta contexto de produto.
       const cenas = roteiro.cenas();
-      props = { template, cores: v, logoUri, cenas, fps: FPS, duracaoTotal: duracaoTotal(cenas) };
+      props = { template, cores: v, logoUri, retratoUri, cenas, fps: FPS, duracaoTotal: duracaoTotal(cenas) };
     } else {
       const ctx = await montarContextoProduto(produtos, roteiro.produtoId, v);
       if (roteiro.reverterVideo && ctx.video) {
@@ -264,7 +274,7 @@ async function main() {
       const cenasCruas = roteiro.cenas();
       const cenas = cenasCruas.map((c) => resolverCena(c, ctx));
       props = {
-        template, cores: v, logoUri, fps: FPS,
+        template, cores: v, logoUri, retratoUri, fps: FPS,
         produto: { nomeCurto: ctx.nomeCurto },
         selo: ctx.selo,
         cenas,
@@ -280,7 +290,7 @@ async function main() {
     const cenasCruas = roteiroPadrao(template, Boolean(ctx.video))();
     const cenas = cenasCruas.map((c) => resolverCena(c, ctx));
     props = {
-      template, cores: v, logoUri, fps: FPS,
+      template, cores: v, logoUri, retratoUri, fps: FPS,
       produto: { nomeCurto: ctx.nomeCurto },
       selo: ctx.selo,
       cenas,
@@ -296,7 +306,7 @@ async function main() {
       ...pecas.map((p) => ({ tipo: 'peca', duracao: 100, src: p.fotoPrincipal, nome: p.nomeCurto })),
       { tipo: 'cta', duracao: 90, titulo: 'Peças únicas' },
     ]);
-    props = { template, cores: v, logoUri, cenas, fps: FPS, duracaoTotal: duracaoTotal(cenas) };
+    props = { template, cores: v, logoUri, retratoUri, cenas, fps: FPS, duracaoTotal: duracaoTotal(cenas) };
   } else {
     throw new Error('Uso: npm run reel -- --nome <roteiro>  OU  --id <id> --template <apresentacao|detalhes>  OU  --ids <id,id,id>');
   }

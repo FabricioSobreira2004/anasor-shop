@@ -246,19 +246,23 @@ pastas em `E:\projetos\_tmp\c-maiores-pastas.txt`. Detalhes em
   saiu limpa — geometria + varredura + 8+ quadros espalhados
   conferidos à mão). Kit e loop/GIF já atualizados com o vídeo novo.
 
-## 2) Fechamento rico (tour + Reels) — 🟡 EM ANDAMENTO
+## 2) Fechamento rico (tour + Reels) — ✅ CONCLUÍDO
 
 - **Tour (Versão A e B) — ✅ CONCLUÍDO**: retrato da Anasor em círculo
   dourado, tagline, botão gummy com aperto, @handle grande + coração,
   faixa de confiança real, entrada em cascata (~2,5s). Versão B em
   layout horizontal. Vídeos re-renderizados, loop/GIF e kit já
   atualizados. Versão anterior em `site-mae\tour\_v2\`.
-- **Reels (12 de peça + 4 de conteúdo) — ❌ PENDENTE**: componente
-  ainda não replicado em `reels/src/componentes.js` (Reels já tinha
-  título+botão+handle+faixa de confiança no fecho — falta deixar o
-  handle maior com coração e somar o retrato). Depois de codificado,
-  re-renderizar 1 por vez (sem paralelizar), peça primeiro, conteúdo
-  depois.
+- **Reels (12 de peça + 4 de conteúdo) — ✅ CONCLUÍDO**: componente
+  `FechoRico` novo em `reels/src/componentes.js` (retrato + título +
+  botão + handle grande + faixa de confiança, cascata de entrada),
+  usado pelos 3 templates (Apresentacao/Colecao/Conteudo — antes cada
+  um montava o fecho à mão, duplicado). Os 16 Reels re-renderizados
+  (1 por vez, peça primeiro, depois conteúdo). Versões anteriores
+  arquivadas em `reels\_v2\` (14 — os outros 2, `r1-caneca-surpresa-
+  gatinho` e `cuidados-conteudo`, foram sobrescritos sem arquivar por
+  um erro de processo, registrado em DECISOES.md). Checado
+  visualmente nos 3 templates (Apresentacao, Colecao, Conteudo).
 
 ## 3) Capas de destaque v2 — ❌ PENDENTE
 

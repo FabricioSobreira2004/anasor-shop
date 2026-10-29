@@ -7,10 +7,10 @@ const React = require('react');
 const { AbsoluteFill, interpolate, useCurrentFrame } = require('remotion');
 const {
   MarcaDagua, TituloCinetico, FotoParallax, BrilhoEsmalte, VinhetaGrao,
-  MascaraCircular, BotaoGummyFinal, FaixaConfianca,
+  MascaraCircular, FaixaConfianca, FechoRico,
 } = require('../componentes');
 
-function Colecao({ cores, logoUri, cenas }) {
+function Colecao({ cores, logoUri, retratoUri, cenas }) {
   const frame = useCurrentFrame();
 
   return React.createElement(
@@ -42,22 +42,20 @@ function Colecao({ cores, logoUri, cenas }) {
           }, React.createElement(TituloCinetico, { texto: cena.nome, entradaFrame: cena.inicio + 8, tamanho: 58 }))
         );
       } else if (cena.tipo === 'cta') {
+        // FechoRico (Rodada 5, item 2) — ver mesmo comentário em
+        // Apresentacao.js.
         conteudo.push(
           React.createElement('div', { key: 'bg', style: { position: 'absolute', inset: 0, backgroundColor: cores.fundo } }),
           React.createElement('div', {
             key: 'conteudo',
-            style: { position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 36 },
+            style: { position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 28 },
           },
-            React.createElement(TituloCinetico, { texto: cena.titulo, entradaFrame: cena.inicio + 6, tamanho: 68, cor: cores.texto }),
-            React.createElement(BotaoGummyFinal, { entradaFrame: cena.inicio + 26, apertoFrame: cena.inicio + cena.duracao - 24, cores }),
-            React.createElement('div', {
-              style: {
-                opacity: interpolate(frame, [cena.inicio + 34, cena.inicio + 44], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }),
-                fontFamily: 'Jost, sans-serif', fontSize: 34, color: cores.secundaria,
-              },
-            }, '@anasor.ceramica')
+            React.createElement(FechoRico, {
+              titulo: cena.titulo, entradaFrame: cena.inicio + 6, duracaoFrames: cena.duracao - 6,
+              cores, retratoUri, sobreClaro: true,
+            })
           ),
-          React.createElement(FaixaConfianca, { key: 'fc', cores, entradaFrame: cena.inicio + 50, sobreClaro: true })
+          React.createElement(FaixaConfianca, { key: 'fc', cores, entradaFrame: cena.inicio + 58, sobreClaro: true })
         );
       }
 

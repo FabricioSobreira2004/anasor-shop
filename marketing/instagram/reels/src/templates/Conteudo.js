@@ -14,8 +14,8 @@
 const React = require('react');
 const { AbsoluteFill, interpolate, spring, useCurrentFrame, useVideoConfig } = require('remotion');
 const {
-  MarcaDagua, FaixaConfianca, TituloCinetico, BotaoGummyFinal,
-  MascaraCircular, VinhetaGrao, IconeLinha,
+  MarcaDagua, FaixaConfianca, TituloCinetico,
+  MascaraCircular, VinhetaGrao, IconeLinha, FechoRico,
 } = require('../componentes');
 
 // Badge circular com ícone — pop de entrada (spring), reaproveitado em
@@ -93,7 +93,7 @@ function ListaAnimada({ itens, entradaFrame, cor, corBolinha }) {
   );
 }
 
-function Conteudo({ cores, logoUri, cenas }) {
+function Conteudo({ cores, logoUri, retratoUri, cenas }) {
   const frame = useCurrentFrame();
 
   return React.createElement(
@@ -186,16 +186,12 @@ function Conteudo({ cores, logoUri, cenas }) {
               alignItems: 'center', justifyContent: 'center', gap: 36, textAlign: 'center', padding: '0 80px',
             },
           },
-            React.createElement(TituloCinetico, { texto: cena.titulo, entradaFrame: cena.inicio + 6, tamanho: 64, cor: cores.texto }),
-            React.createElement(BotaoGummyFinal, { entradaFrame: cena.inicio + 26, apertoFrame: cena.inicio + cena.duracao - 24, cores }),
-            React.createElement('div', {
-              style: {
-                opacity: interpolate(frame, [cena.inicio + 34, cena.inicio + 44], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }),
-                fontFamily: 'Jost, sans-serif', fontSize: 34, color: cores.secundaria,
-              },
-            }, '@anasor.ceramica')
+            React.createElement(FechoRico, {
+              titulo: cena.titulo, entradaFrame: cena.inicio + 6, duracaoFrames: cena.duracao - 6,
+              cores, retratoUri, sobreClaro: true,
+            })
           ),
-          React.createElement(FaixaConfianca, { key: 'fc', cores, entradaFrame: cena.inicio + 50, sobreClaro: true })
+          React.createElement(FaixaConfianca, { key: 'fc', cores, entradaFrame: cena.inicio + 58, sobreClaro: true })
         );
       }
 
