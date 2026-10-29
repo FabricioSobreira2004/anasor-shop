@@ -34,7 +34,6 @@ const { execSync } = require('child_process');
 const { FFMPEG, FFPROBE } = require('../reels/src/ffmpeg-path.js');
 
 const DIR_NARRACAO = __dirname;
-const DIR_REELS = path.resolve(DIR_NARRACAO, '..', 'reels');
 const SITE_MAE_REELS = 'E:/projetos/site-mae/reels';
 const SITE_MAE_TOUR = 'E:/projetos/site-mae/tour';
 const MUDO_REELS = path.join(SITE_MAE_REELS, '_mudo');
@@ -112,19 +111,11 @@ function contarAudioEVideo(arquivo) {
   };
 }
 
-// volumedetect roda em 2 passes (null output) e imprime no stderr;
-// extrai mean_volume/max_volume em dB.
+// volumedetect imprime o resultado no stderr; ffmpeg sai com código 0
+// mesmo assim (não é erro), então basta redirecionar stderr pro mesmo
+// fluxo capturado (2>&1) — 1 chamada só, sem rodar o ffmpeg 2x.
 function volumeDetect(arquivo) {
-  let saida;
-  try {
-    execSync(`"${FFMPEG}" -y -i "${arquivo}" -af volumedetect -f null -`, { stdio: ['ignore', 'ignore', 'pipe'] });
-  } catch (erro) {
-    saida = erro.stderr ? erro.stderr.toString() : '';
-  }
-  if (!saida) {
-    // alguns ambientes não lançam erro mesmo com -f null; tenta capturar via execSync normal
-    saida = execSync(`"${FFMPEG}" -y -i "${arquivo}" -af volumedetect -f null - 2>&1`).toString();
-  }
+  const saida = execSync(`"${FFMPEG}" -y -i "${arquivo}" -af volumedetect -f null - 2>&1`).toString();
   const mean = saida.match(/mean_volume:\s*(-?[\d.]+) dB/);
   const max = saida.match(/max_volume:\s*(-?[\d.]+) dB/);
   return {
@@ -210,7 +201,7 @@ function sintetizarComAjuste(textoOriginal, limiteSegundos, decisoes) {
     }
   }
 
-  return { arquivoWav, duracao, textoFinal: texto };
+  return { arquivoWav, duracao };
 }
 
 function mixar(video, voz, saida) {
@@ -253,11 +244,15 @@ function processarVideo(item, roteiros, relatorio) {
   const limite = duracaoVideo - OFFSET_VOZ - FOLGA_FIM;
 
   const decisoes = [];
-  const { arquivoWav, duracao: duracaoVoz, textoFinal } = sintetizarComAjuste(texto, limite, decisoes);
+  const { arquivoWav, duracao: duracaoVoz } = sintetizarComAjuste(texto, limite, decisoes);
 
+  // Mixa num arquivo temporário e só então troca pro lugar final
+  // (rename, não copy — mesmo disco E:, é só trocar a entrada no
+  // diretório, não reler/regravar os bytes todos) — se o ffmpeg
+  // falhar no meio da mixagem, arquivoAtual nunca fica corrompido.
   const saidaTmp = path.join(TMP, `${nome}-narrado.mp4`);
   mixar(arquivoMudo, arquivoWav, saidaTmp);
-  fs.copyFileSync(saidaTmp, arquivoAtual);
+  fs.renameSync(saidaTmp, arquivoAtual);
 
   const streams = contarAudioEVideo(arquivoAtual);
   const duracaoFinal = duracaoSegundos(arquivoAtual);

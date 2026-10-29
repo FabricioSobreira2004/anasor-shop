@@ -146,12 +146,17 @@ function montarChecklistTxt(diaInfo) {
   const linhaPix = diaInfo.citaPix
     ? '[ ] Pix: a chave está cadastrada no Mercado Pago e o Pix aparece de verdade no checkout? (confira em checkout.html, ou pedindo pra alguém simular uma compra)\n'
     : '';
+  // narração (rodada 5, item 4): só os dias com Reel (reel/extra de
+  // vídeo) têm áudio — carrossel/foto não.
+  const linhaNarracao = diaInfo.reel
+    ? '[ ] O vídeo tem narração — confira o som antes de postar. Quer mudo ou com música? Use a versão em marketing/instagram/reels/_mudo/.\n'
+    : '';
   return `Antes de publicar:
 ${linhaDisponibilidade}
 [ ] O preço na legenda ainda bate com o preço do site?
 [ ] O link da bio está correto? (https://anasor-sobreira.vercel.app/links)
 [ ] Se é prova social: o depoimento é real e tem autorização da cliente?
-${linhaPix}`;
+${linhaPix}${linhaNarracao}`;
 }
 
 function nomePasta(diaInfo) {
@@ -183,7 +188,7 @@ function montarExtraTour(legendas) {
   const copiado = copiarArquivo(path.join(TOUR_DIR, 'tour-instagram.mp4'), path.join(pastaExtra, 'tour-instagram.mp4'));
   fs.writeFileSync(path.join(pastaExtra, 'info.txt'), [
     'Reserva — Tour do Site (Versão A, Instagram), fora do calendário de 30 dias',
-    'Formato: Reels (1080x1920, ~31s, sem áudio — escolha uma música ao postar)',
+    'Formato: Reels (1080x1920, ~32s, com narração — pode postar mudo ou trocar por música, ver marketing/instagram/narracao/README.md)',
     `Legenda nº ${legenda.numero} de legendas.md`,
     'Horário sugerido: 19h (mesmo padrão dos outros Reels)',
     'Gerado por marketing/instagram/tour/tour.js — pra regenerar, ver o README daquela pasta.',

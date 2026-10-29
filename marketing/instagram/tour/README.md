@@ -10,15 +10,22 @@ importa direto de `reels/src`).
 
 Duas versões:
 
-- **A — Instagram** (`tour-instagram.mp4`): 1080×1920, ~31s, H.264
-  High, yuv420p, faststart, sem áudio.
+- **A — Instagram** (`tour-instagram.mp4`): 1080×1920, ~32s, H.264
+  High, yuv420p, faststart — este script não grava som.
 - **B — Portfólio/LinkedIn** (`tour-portfolio.mp4`): 1920×1080, ~50s,
   desktop e celular lado a lado, faixa de tecnologias, 4 destaques
   técnicos.
 
 Saída: `E:\projetos\site-mae\tour\` (fora do git) + quadros de
 conferência em `tour\_conferencia\` + `tour-loop.gif`/`tour-loop.mp4`
-(6-8s, pro README do GitHub).
+(6-8s, pro README do GitHub, fica sempre mudo, de propósito).
+
+**Narração (rodada 5):** `tour-instagram.mp4`/`tour-portfolio.mp4`
+ganham narração depois, com
+`node marketing/instagram/narracao/narrar.js` (sobrescreve o mesmo
+`.mp4`, arquivando o mudo original em `tour\_mudo\`) — rode de novo
+depois de regenerar o tour com `tour.js`, senão ele fica sem voz.
+`tour-loop.mp4`/`.gif` NÃO entram nessa lista (ficam mudos).
 
 ## Como rodar
 

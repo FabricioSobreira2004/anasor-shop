@@ -36,9 +36,16 @@ node reel.js --ids 39,43,38 --template colecao       # "coleção": várias peç
 ```
 
 Saída: `E:\projetos\site-mae\reels\<nome>.mp4` (1080×1920, 30fps,
-H.264 High, yuv420p, faststart, **sem áudio** — a música é escolhida
-no Instagram na hora de postar) + 5 quadros de conferência (início,
-25%, 50%, 75%, fim) em `reels\_conferencia\<nome>-N.png`.
+H.264 High, yuv420p, faststart, sem áudio — este script não grava
+som) + 5 quadros de conferência (início, 25%, 50%, 75%, fim) em
+`reels\_conferencia\<nome>-N.png`.
+
+**Narração (rodada 5):** depois de rodar `reel.js`, o arquivo ainda
+está mudo. `node marketing/instagram/narracao/narrar.js` roda por
+cima, adiciona a narração (ver `narracao/README.md`) e sobrescreve
+este mesmo `.mp4` — a versão muda original fica arquivada em
+`reels\_mudo\<nome>.mp4`. Rode `narrar.js` de novo depois de
+regenerar qualquer Reel com `reel.js`, senão ele fica sem narração.
 
 ## Por que o disco C: importa
 
