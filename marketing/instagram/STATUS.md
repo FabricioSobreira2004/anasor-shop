@@ -199,5 +199,6 @@ deve ler este arquivo primeiro** e continuar do que está 🟡/❌.
   ignorados; os `.mp4`/`.gif` finais vivem só em `site-mae/`, fora do
   repositório).
 
-**Rodada 4 completa.** Ver o relatório final (mensagem de fechamento
-desta rodada) pra hashes de commit e pendências do Fabrício.
+**Rodada 4 completa.** Commit `4ec3e58`, push feito pra `main` sem
+force. Ver o relatório final (mensagem de fechamento desta rodada,
+fora deste arquivo) pra pendências do Fabrício.
