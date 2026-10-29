@@ -34,6 +34,12 @@ const apiApp = require(path.join(RAIZ, 'backend', 'server.js')); // mesma técni
 
 const app = express();
 app.use(apiApp); // rotas /api/* já vêm prontas de dentro do app importado; o que não bater cai (next()) pro static abaixo
+// Mesma reescrita de vercel.json ("/links" -> "/links.html") — achado
+// na Rodada 5 (item 1b): sem isso, "/links" cai no 404 do Express
+// (página de erro em branco) em vez da página de verdade, e uma
+// captura que navegasse pra "/links" (igual à URL de produção)
+// gravava essa página de erro sem ninguém perceber.
+app.get('/links', (_req, res) => res.sendFile(path.join(RAIZ, 'links.html')));
 app.use(express.static(RAIZ));
 
 const PORTA = Number(process.env.PORT) || 8765;

@@ -202,3 +202,66 @@ deve ler este arquivo primeiro** e continuar do que está 🟡/❌.
 **Rodada 4 completa.** Commit `4ec3e58`, push feito pra `main` sem
 force. Ver o relatório final (mensagem de fechamento desta rodada,
 fora deste arquivo) pra pendências do Fabrício.
+
+---
+
+# Rodada 5 — bugs do tour, fechamento rico, capas v2, narração (modo autônomo)
+
+Pedido em 2026-10-29, Fabrício fora de casa, sem resposta por várias
+horas, quer postar HOJE. **Se o PC cair, uma sessão nova deve ler
+este arquivo primeiro.** Ordem pedida: 0) disco C: → 1) corrigir
+tour-instagram → 2) fechamento rico → 3) capas v2 → 4) narração em
+tudo → 5) kit final. Cada item termina com kit atualizado.
+
+## 0) Disco C: — ✅ CONCLUÍDO
+
+~1,4GB liberado (691MB → 2.100MB livres). Relatório das 15 maiores
+pastas em `E:\projetos\_tmp\c-maiores-pastas.txt`. Detalhes em
+`DECISOES.md`. TEMP/TMP dos meus processos agora apontam pra
+`E:\projetos\_tmp` (não mais `D:\anasor-tour-tmp` da Rodada 4).
+
+## 1) Corrigir tour-instagram.mp4 — ✅ CONCLUÍDO
+
+- **1a (legenda sobre o celular)**: causa raiz — câmera (zoom/panorâmica)
+  centralizada no canvas inteiro, legenda em posição fixa, sem relação
+  entre as duas. Celular ganhou geometria ANCORADA e limites de
+  câmera (`LAYOUT_CELULAR` em `componentes.js`); legenda virou `top`
+  fixo abaixo do pior caso do celular. Provado por código:
+  `src/validar-geometria.js` (✅ nas 12 cenas, rodar de novo depois de
+  qualquer mudança de câmera/roteiro).
+- **1b (tela branca no fim)**: causa raiz — a cena "links" navegava
+  pra `/links` (sem `.html`), que só funciona em produção (reescrita
+  do `vercel.json`); local, caía no 404 do Express (página em branco),
+  capturada como se fosse conteúdo real. Corrigido em `cenas-mobile.js`
+  (`/links.html` direto) e `servidor-local.js` (mesma reescrita do
+  vercel.json, fidelidade com produção). Varredura automática:
+  `src/verificar-quadros.js` (filtro `signalstats` do ffmpeg) — ✅ limpo
+  em `tour-instagram.mp4` (quadro inteiro E só a região da tela),
+  `tour-portfolio.mp4` e `tour-loop.mp4`.
+- **Achado extra na crítica visual** (não estava na lista, apareceu
+  olhando os quadros): as 2 legendas da cena "checkout" se
+  sobrepunham (números fixos incompatíveis com a duração real do
+  clipe) — corrigido calculando os tempos a partir da duração real.
+- 2 rodadas de crítica visual feitas (1ª achou o bug do checkout, 2ª
+  saiu limpa — geometria + varredura + 8+ quadros espalhados
+  conferidos à mão). Kit e loop/GIF já atualizados com o vídeo novo.
+
+## 2) Fechamento rico (tour + Reels) — 🟡 EM ANDAMENTO
+
+- **Tour (Versão A e B) — ✅ CONCLUÍDO**: retrato da Anasor em círculo
+  dourado, tagline, botão gummy com aperto, @handle grande + coração,
+  faixa de confiança real, entrada em cascata (~2,5s). Versão B em
+  layout horizontal. Vídeos re-renderizados, loop/GIF e kit já
+  atualizados. Versão anterior em `site-mae\tour\_v2\`.
+- **Reels (12 de peça + 4 de conteúdo) — ❌ PENDENTE**: componente
+  ainda não replicado em `reels/src/componentes.js` (Reels já tinha
+  título+botão+handle+faixa de confiança no fecho — falta deixar o
+  handle maior com coração e somar o retrato). Depois de codificado,
+  re-renderizar 1 por vez (sem paralelizar), peça primeiro, conteúdo
+  depois.
+
+## 3) Capas de destaque v2 — ❌ PENDENTE
+
+## 4) Narração em todos os vídeos — ❌ PENDENTE
+
+## 5) Kit e fechamento final — ❌ PENDENTE

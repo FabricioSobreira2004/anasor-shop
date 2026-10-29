@@ -41,13 +41,28 @@ function montarRoteiroMobile(manifest) {
     legendas: [{ texto: 'Carrinho lateral', atraso: 16, duracao: 60 }],
   });
 
-  push('checkout', 'checkout', {
-    de: { escala: 1.0, x: 0, y: 1 }, para: { escala: 1.06, x: 0, y: -1 },
-    legendas: [
-      { texto: 'O CEP preenche o endereço', atraso: 14, duracao: 55 },
-      { texto: 'Compra segura pelo Mercado Pago', atraso: manifest.checkout.quadros - 58, duracao: 50 },
-    ],
-  });
+  // 2 legendas sequenciais nesta cena — ACHADO NA RODADA 5 (crítica
+  // visual): os números fixos antigos (atraso 14+duração 55, depois
+  // atraso "quadros-58"+duração 50) se SOBREPUNHAM por 39 quadros
+  // sempre que o clipe de checkout tivesse menos de ~108 quadros (o
+  // capturado tem 88) — as 2 legendas apareciam ao mesmo tempo,
+  // "fantasmas" uma por cima da outra. Calculado a partir da duração
+  // REAL do clipe, dividindo o tempo disponível em 2 pedaços iguais
+  // com um vão entre eles — nunca mais se sobrepõe, não importa
+  // quanto o clipe durar.
+  (() => {
+    const total = manifest.checkout.quadros;
+    const vao = 6;
+    const folga = 12; // 6 antes da 1ª, 6 depois da 2ª
+    const cada = Math.max(20, Math.floor((total - vao - folga) / 2));
+    push('checkout', 'checkout', {
+      de: { escala: 1.0, x: 0, y: 1 }, para: { escala: 1.06, x: 0, y: -1 },
+      legendas: [
+        { texto: 'O CEP preenche o endereço', atraso: 6, duracao: cada },
+        { texto: 'Compra segura pelo Mercado Pago', atraso: 6 + cada + vao, duracao: cada },
+      ],
+    });
+  })();
 
   push('vendida-secao', 'vendida-secao', {
     de: { escala: 1.0, x: 0, y: 0 }, para: { escala: 1.06, x: 0, y: -1 },
@@ -62,12 +77,13 @@ function montarRoteiroMobile(manifest) {
     legendas: [{ texto: 'Frete grátis para todo o Brasil', atraso: 10, duracao: manifest.links.quadros - 12 }],
   });
 
-  // Fecho gráfico (sem vídeo) — 120 quadros (4s a 30fps). Duração
-  // escolhida também pra fechar o total da composição dentro de 30-40s
-  // (pedido explícito) — sem este fecho, a soma dos clipes reais dava
-  // ~29,7s, por baixo do mínimo.
-  cenas.push({ nome: 'fecho', tipo: 'fecho', inicio: acc, duracao: 120 });
-  acc += 120;
+  // Fecho gráfico (sem vídeo) — 150 quadros (5s a 30fps). Aumentado de
+  // 120 pra 150 na Rodada 5 (item 2, fechamento rico): a cascata de
+  // entrada (retrato → tagline → botão → handle → faixa) sozinha já
+  // usa uns 73 quadros — 150 deixa ~2,5s de "hold" depois de tudo
+  // aparecido, sem cortar a faixa de confiança antes da hora.
+  cenas.push({ nome: 'fecho', tipo: 'fecho', inicio: acc, duracao: 150 });
+  acc += 150;
 
   return { cenas, duracaoTotal: acc };
 }

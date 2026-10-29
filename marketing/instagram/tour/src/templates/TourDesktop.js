@@ -30,7 +30,7 @@ function TituloAbertura({ entradaFrame, cores }) {
 // CenaMobile em TourMobile.js (ver o comentário lá): sem isso, os
 // vídeos mais tarde no roteiro (checkout, fecho) tentariam buscar um
 // ponto do clipe que não existe e travariam o render inteiro.
-function CenaDesktop({ cena, i, clipesDesktop, clipesMobile, cores }) {
+function CenaDesktop({ cena, i, clipesDesktop, clipesMobile, cores, retratoUri }) {
   const frame = useCurrentFrame();
   const progressoWipe = i === 0 ? 1 : interpolate(frame, [0, 18], [0, 1], {
     extrapolateLeft: 'clamp', extrapolateRight: 'clamp',
@@ -40,7 +40,7 @@ function CenaDesktop({ cena, i, clipesDesktop, clipesMobile, cores }) {
   if (cena.tipo === 'abertura') {
     conteudo = React.createElement(TituloAbertura, { entradaFrame: 6, cores });
   } else if (cena.tipo === 'fecho') {
-    conteudo = React.createElement(FechoPortfolio, { entradaFrame: 6, cores });
+    conteudo = React.createElement(FechoPortfolio, { entradaFrame: 6, cores, retratoUri });
   } else if (cena.tipo === 'desktop-solo') {
     conteudo = React.createElement(
       DispositivoFlutuante,
@@ -73,7 +73,7 @@ function CenaDesktop({ cena, i, clipesDesktop, clipesMobile, cores }) {
   );
 }
 
-function TourDesktop({ cenas, cores, logoUri, clipesDesktop, clipesMobile, faixaTecnologias }) {
+function TourDesktop({ cenas, cores, logoUri, retratoUri, clipesDesktop, clipesMobile, faixaTecnologias }) {
   const frame = useCurrentFrame();
   const faixaVisivel = frame >= faixaTecnologias.inicio && frame <= faixaTecnologias.fim;
 
@@ -84,7 +84,7 @@ function TourDesktop({ cenas, cores, logoUri, clipesDesktop, clipesMobile, faixa
     cenas.map((cena, i) => React.createElement(
       Sequence,
       { key: i, from: cena.inicio, durationInFrames: cena.duracao, name: cena.nome, layout: 'none' },
-      React.createElement(CenaDesktop, { cena, i, clipesDesktop, clipesMobile, cores })
+      React.createElement(CenaDesktop, { cena, i, clipesDesktop, clipesMobile, cores, retratoUri })
     )),
     faixaVisivel ? React.createElement(FaixaTecnologias, { itens: TECNOLOGIAS, cores }) : null,
     React.createElement(MarcaDagua, { src: logoUri, tamanho: 100, right: 48, bottom: faixaVisivel ? 90 : 48 }),

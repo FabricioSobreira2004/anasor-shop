@@ -5,7 +5,7 @@ const React = require('react');
 const { Sequence, useCurrentFrame, interpolate } = require('remotion');
 const {
   FundoBege, MarcaDagua, SeloTour, LegendaCinetica, VinhetaGrao,
-  FechoInstagram, MascaraCircular, DispositivoFlutuante, MolduraCelular,
+  FechoInstagram, MascaraCircular, DispositivoFlutuante, MolduraCelular, LAYOUT_CELULAR,
 } = require('../componentes');
 
 // Cada cena mora dentro de um <Sequence> — ACHADO SÓ RODANDO (não
@@ -19,7 +19,7 @@ const {
 // resultado não foi um erro claro: o fetch do quadro TRAVOU (timeout
 // de 28s do Remotion), derrubando o render inteiro. <Sequence> zera o
 // frame local no início de cada cena — exatamente o que faltava.
-function CenaMobile({ cena, i, clipes, cores }) {
+function CenaMobile({ cena, i, clipes, cores, retratoUri }) {
   const frame = useCurrentFrame();
   const progressoWipe = i === 0 ? 1 : interpolate(frame, [0, 16], [0, 1], {
     extrapolateLeft: 'clamp', extrapolateRight: 'clamp',
@@ -27,12 +27,21 @@ function CenaMobile({ cena, i, clipes, cores }) {
 
   let conteudo;
   if (cena.tipo === 'fecho') {
-    conteudo = React.createElement(FechoInstagram, { entradaFrame: 6, cores });
+    conteudo = React.createElement(FechoInstagram, { entradaFrame: 6, cores, retratoUri });
   } else {
+    // `ancoragem` — Rodada 5, item 1a: celular fixo num `top` previsível
+    // (LAYOUT_CELULAR), não mais centralizado no canvas inteiro — é
+    // isso que permite provar por código que ele nunca alcança a
+    // legenda (ver LAYOUT_CELULAR em componentes.js e
+    // src/validar-geometria.js).
     conteudo = React.createElement(
       DispositivoFlutuante,
-      { inicioFrame: 0, duracaoFrames: cena.duracao, de: cena.de, para: cena.para, inclinacaoBase: i % 2 === 0 ? 7 : -7 },
-      React.createElement(MolduraCelular, { src: clipes[cena.clipe].arquivo })
+      {
+        inicioFrame: 0, duracaoFrames: cena.duracao, de: cena.de, para: cena.para,
+        inclinacaoBase: i % 2 === 0 ? 7 : -7,
+        ancoragem: { top: LAYOUT_CELULAR.TOPO, largura: LAYOUT_CELULAR.LARGURA },
+      },
+      React.createElement(MolduraCelular, { src: clipes[cena.clipe].arquivo, largura: LAYOUT_CELULAR.LARGURA, altura: LAYOUT_CELULAR.ALTURA })
     );
   }
 
@@ -48,7 +57,7 @@ function CenaMobile({ cena, i, clipes, cores }) {
   );
 }
 
-function TourMobile({ cenas, cores, logoUri, clipes }) {
+function TourMobile({ cenas, cores, logoUri, retratoUri, clipes }) {
   return React.createElement(
     'div',
     { style: { position: 'absolute', inset: 0, backgroundColor: cores.fundo } },
@@ -56,7 +65,7 @@ function TourMobile({ cenas, cores, logoUri, clipes }) {
     cenas.map((cena, i) => React.createElement(
       Sequence,
       { key: i, from: cena.inicio, durationInFrames: cena.duracao, name: cena.nome, layout: 'none' },
-      React.createElement(CenaMobile, { cena, i, clipes, cores })
+      React.createElement(CenaMobile, { cena, i, clipes, cores, retratoUri })
     )),
     React.createElement(SeloTour, { cores, texto: 'Tour do Site' }),
     React.createElement(MarcaDagua, { src: logoUri }),

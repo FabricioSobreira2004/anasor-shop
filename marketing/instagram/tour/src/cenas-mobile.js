@@ -162,9 +162,13 @@ async function capturarMobile(page, dirBase, baseUrl, manifest) {
     await manterFoto(page, dir, c, 36);
   });
 
-  // 8) /links
+  // 8) /links — ".html" direto (achado na Rodada 5, item 1b): "/links"
+  // (sem extensão, igual à URL de produção) só funciona em produção
+  // por causa da reescrita do vercel.json; aqui bateria no 404 do
+  // Express e capturava a PÁGINA DE ERRO (branca) — era essa a
+  // "tela toda branca" relatada.
   await cena('links', async (dir, c) => {
-    await page.goto(`${baseUrl}/links`, { waitUntil: 'networkidle' });
+    await page.goto(`${baseUrl}/links.html`, { waitUntil: 'networkidle' });
     await manterFoto(page, dir, c, 45);
   });
 }

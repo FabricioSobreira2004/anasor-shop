@@ -74,6 +74,15 @@ async function gerarLogoTransparente(pagina) {
   }, uri);
 }
 
+// Retrato da Anasor (img/institucional/quem-somos.jpg) pro fechamento
+// rico (Rodada 5, item 2) — SEM remover fundo (é uma ilustração com
+// fundo próprio, diferente da logo): só base64 direto, mesmo padrão
+// de leitura de arquivo da logo, sem processar nada.
+function gerarRetratoDataUri() {
+  const jpg = fs.readFileSync(path.join(RAIZ, 'img', 'institucional', 'quem-somos.jpg'));
+  return `data:image/jpeg;base64,${jpg.toString('base64')}`;
+}
+
 // Por quê um clipe às vezes precisa ser "esticado": <OffthreadVideo
 // loop> do Remotion exige um <Sequence durationInFrames> explícito
 // ("requires a finite durationInFrames" — erro só visto rodando), e
@@ -192,6 +201,7 @@ async function main() {
   const pagina = await browser.newPage();
   const logoUri = await gerarLogoTransparente(pagina);
   await browser.close();
+  const retratoUri = gerarRetratoDataUri();
 
   // Monta os props de CADA versão pedida ANTES de bundlar — o
   // bundle() do Remotion COPIA o conteúdo de publicDir pro próprio
@@ -223,13 +233,13 @@ async function main() {
 
   if (versao === 'a' || versao === 'ambas') {
     const { cenas, duracaoTotal } = montarRoteiroMobile(clipesMobile);
-    propsPorVersao.a = { cenas, duracaoTotal, fps: FPS, cores, logoUri, clipes: clipesMobile };
+    propsPorVersao.a = { cenas, duracaoTotal, fps: FPS, cores, logoUri, retratoUri, clipes: clipesMobile };
   }
 
   if (roteiroB) {
     const { cenas, duracaoTotal, faixaTecnologias } = roteiroB;
     const clipesDesktop = copiarClipesParaPublic(lerManifesto('desktop'), 'desktop', minimosMobile);
-    propsPorVersao.b = { cenas, duracaoTotal, fps: FPS, cores, logoUri, clipesDesktop, clipesMobile, faixaTecnologias };
+    propsPorVersao.b = { cenas, duracaoTotal, fps: FPS, cores, logoUri, retratoUri, clipesDesktop, clipesMobile, faixaTecnologias };
   }
 
   // 1 bundle só, reaproveitado por quantas composições forem pedidas

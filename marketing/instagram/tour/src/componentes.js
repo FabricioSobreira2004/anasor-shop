@@ -24,11 +24,43 @@ function resolverSrc(caminho) {
 const EASE_CAMERA = Easing.bezier(0.16, 1, 0.3, 1);
 
 // ---------------------------------------------------------------
+// Geometria do celular na Versão A — ACHADO NA RODADA 5 (item 1a): a
+// legenda cinética (posição fixa) podia ficar coberta pelo celular
+// quando o zoom/panorâmica da câmera crescia demais. Em vez de ajustar
+// na tentativa-e-erro, calculei os limites aqui, 1 vez, e tanto o
+// componente quanto o script de validação (src/validar-geometria.js)
+// importam os MESMOS números — nunca podem desalinhar.
+//
+// Canvas 1080×1920, zonas seguras: nada importante nos 250px do topo
+// nem nos 420px de baixo (útil só entre y:250 e y:1500). Os números
+// abaixo foram ajustados RODANDO `src/validar-geometria.js` (não só
+// na conta de cabeça — a 1ª tentativa, TOPO:280, parecia bater na
+// conta mas o script achou 246px de topo em algumas cenas, abaixo dos
+// 250 — margem de segurança insuficiente) até toda cena passar com
+// folga. Esse script é a fonte de verdade — rode ele de novo depois
+// de mexer em qualquer número aqui.
+const LAYOUT_CELULAR = {
+  TOPO: 300,
+  LARGURA: 400,
+  ALTURA: 760,
+  CAMERA_ESCALA_MIN: 0.96,
+  CAMERA_ESCALA_MAX: 1.08,
+  CAMERA_TRANSLATE_MAX_PCT: 1.6,
+  CAPTION_TOP: 1140, // abaixo do fundo máximo do celular (1082,6) + folga de ~57px
+};
+function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
+
+// ---------------------------------------------------------------
 // Marca d'água — mesma técnica de reels/src/componentes.js
 // (MarcaDagua): recebe a logo JÁ pronta (data URI com fundo removido
 // por luminância, calculada 1x em tour.js, em Node — igual reel.js).
 // ---------------------------------------------------------------
-function MarcaDagua({ src, tamanho = 130, right = 56, bottom = 56 }) {
+// bottom:460 por padrão (não 56) — ACHADO NA RODADA 5 (item 1a): o
+// padrão antigo deixava a marca d'água bem DENTRO dos 420px proibidos
+// de baixo (a área da interface do Instagram) em TourMobile.js, que
+// nunca passava um `bottom` próprio. TourDesktop.js sempre passa o
+// seu (48/90), então só o padrão precisava mudar.
+function MarcaDagua({ src, tamanho = 130, right = 56, bottom = 460 }) {
   const frame = useCurrentFrame();
   const opacidade = interpolate(frame, [0, 20], [0, 0.8], { extrapolateRight: 'clamp' });
   return React.createElement(Img, {
@@ -118,12 +150,18 @@ function SeloTour({ texto = 'Tour do Site', cores }) {
 // no celular, fora da área segura do Reels (top 250/bottom 420); no
 // desktop (paisagem), simplesmente perto do rodapé, centrada.
 // ---------------------------------------------------------------
-// bottom:460 (não 150) — ACHADO RELENDO, antes de qualquer render: a
-// área segura pedida ("fora dos 420px de baixo") exige um bottom MAIOR
-// que 420 (mais distante da borda), não menor — 150 deixava a legenda
-// bem DENTRO da zona proibida. 460 (igual à folga usada no selo/marca
-// d'água dos Reels, lá com bottom:430/440) garante a margem.
-function LegendaCinetica({ texto, inicioFrame, duracao = 70, bottom = 460, cor = '#FFF', fonte = 'Jost, sans-serif', tamanho = 62 }) {
+// top:LAYOUT_CELULAR.CAPTION_TOP (não mais `bottom`) — ACHADO NA
+// RODADA 5 (item 1a): com `bottom` fixo, a legenda cresce PRA CIMA
+// quando o texto quebra em mais de 1 linha — sem controle, podia
+// crescer até alcançar o celular. Ancorada num `top` fixo, ABAIXO do
+// pior caso do celular (ver LAYOUT_CELULAR), ela só cresce pra BAIXO,
+// sempre numa faixa que já conferimos por código que nunca encosta no
+// celular nem invade os 420px de baixo (src/validar-geometria.js).
+// Fundo do texto a 78% de opacidade (não 60%) — ACHADO: a 60%, o
+// contraste branco-sobre-fundo caía pra ~3,8:1 no pior caso (atrás de
+// algo bem claro), ainda AA pra texto grande mas sem folga; 78% deixa
+// margem confortável sem ficar "chapado" demais.
+function LegendaCinetica({ texto, inicioFrame, duracao = 70, top = LAYOUT_CELULAR.CAPTION_TOP, cor = '#FFF', fonte = 'Jost, sans-serif', tamanho = 62 }) {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   if (frame < inicioFrame - 1 || frame > inicioFrame + duracao) return null;
@@ -135,7 +173,7 @@ function LegendaCinetica({ texto, inicioFrame, duracao = 70, bottom = 460, cor =
     'div',
     {
       style: {
-        position: 'absolute', left: 60, right: 60, bottom, zIndex: 15,
+        position: 'absolute', left: 60, right: 60, top, zIndex: 15,
         display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '12px 16px',
         opacity: saida,
       },
@@ -149,7 +187,7 @@ function LegendaCinetica({ texto, inicioFrame, duracao = 70, bottom = 460, cor =
         style: {
           opacity: pop, transform: `scale(${0.75 + pop * 0.25})`, display: 'inline-block',
           fontFamily: fonte, fontWeight: 600, fontSize: tamanho, color: cor,
-          background: 'rgba(62,46,34,0.6)', padding: '8px 22px', borderRadius: 14,
+          background: 'rgba(62,46,34,0.78)', padding: '8px 22px', borderRadius: 14,
           boxShadow: '0 6px 20px rgba(0,0,0,0.25)',
         },
       }, p);
@@ -198,38 +236,143 @@ function Coracao({ tamanho = 32, cor = '#FFF' }) {
   return React.createElement('svg', { width: tamanho, height: tamanho, viewBox: '0 0 24 24', fill: cor }, React.createElement('path', { d: CORACAO_PATH }));
 }
 
-// ---------------------------------------------------------------
-// Fecho Versão A: botão gummy "Link na bio" + @anasor.ceramica.
-// ---------------------------------------------------------------
-function FechoInstagram({ entradaFrame, cores }) {
+// Ícones de linha (Lucide, mesmo traço do site/Reels) só pra faixa de
+// confiança do fecho rico — paths copiados de reels/src/icones.js
+// (arquivo puro, sem React/Remotion — mas copiado, não importado,
+// mesma razão de sempre: evitar cruzar pacotes, ver DECISOES.md).
+const ICONE_CAMINHO = {
+  truck: 'M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2 M15 18H9 M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14',
+  'shield-check': 'M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z M9 12l2 2 4-4',
+};
+function IconeLinha({ nome, tamanho = 28, cor = 'currentColor' }) {
+  return React.createElement('svg', {
+    width: tamanho, height: tamanho, viewBox: '0 0 24 24', fill: 'none', stroke: cor, strokeWidth: 2,
+    strokeLinecap: 'round', strokeLinejoin: 'round',
+  }, React.createElement('path', { d: ICONE_CAMINHO[nome] }));
+}
+
+// Retrato da Anasor em círculo com aro dourado e leve flutuação —
+// usado nos 2 fechos ricos (Rodada 5, item 2). `tamanho` em px.
+function RetratoAnasor({ src, tamanho = 260, cores }) {
   const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
-  const t = frame - entradaFrame;
-  if (t < -1) return null;
-  const pop = spring({ frame: t, fps, config: { damping: 15, stiffness: 150 } });
+  const flutuar = Math.sin(frame / 50) * 6; // período ~10,5s — bem lento, só um "respirar"
   return React.createElement(
     'div',
-    { style: { position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 30, opacity: pop, transform: `scale(${0.85 + pop * 0.15})` } },
-    React.createElement('div', { style: { display: 'flex', alignItems: 'center', gap: 20 } },
-      React.createElement('div', {
-        style: {
-          padding: '26px 64px', borderRadius: 999, background: cores.destaque, color: '#FFF',
-          fontFamily: 'Jost, sans-serif', fontWeight: 500, fontSize: 42,
-          boxShadow: `inset 0 2px 0 rgba(255,255,255,0.28), 0 10px 0 ${cores.destaqueEscuro}`,
-          backgroundImage: 'linear-gradient(to bottom, rgba(255,255,255,0.13), rgba(255,255,255,0) 55%)',
-        },
-      }, 'Link na bio'),
-      React.createElement(Coracao, { tamanho: 40, cor: cores.destaque })
-    ),
-    React.createElement('div', { style: { fontFamily: 'Jost, sans-serif', fontSize: 30, color: cores.texto } }, '@anasor.ceramica')
+    {
+      style: {
+        width: tamanho, height: tamanho, borderRadius: '50%', overflow: 'hidden',
+        border: `5px solid ${cores.destaque}`,
+        boxShadow: `0 0 0 3px rgba(251,246,239,0.9), 0 18px 40px rgba(30,20,10,0.35)`,
+        transform: `translateY(${flutuar}px)`,
+        flexShrink: 0,
+      },
+    },
+    React.createElement(Img, {
+      src: resolverSrc(src),
+      // 50% 52% (não 50% 50%) — ACHADO NO 1º RENDER: a foto tem o
+      // rosto da Anasor um pouco abaixo do centro vertical (pratos
+      // decorativos acima dela ocupam a metade de cima) — centralizar
+      // "no meio" deixava mais parede/prato que rosto dentro do
+      // círculo. 52% desloca a janela visível pra baixo, enquadrando
+      // o rosto melhor (acima disso corta o queixo).
+      style: { width: '100%', height: '100%', objectFit: 'cover', objectPosition: '50% 52%' },
+    })
+  );
+}
+
+// Faixa de confiança compacta (frete grátis · compra segura) — só
+// fatos reais do site, sem Pix nem prazo (pedido explícito).
+function FaixaConfiancaMini({ entradaFrame, cores, corTexto }) {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+  const itens = [['truck', 'Frete grátis'], ['shield-check', 'Compra segura']];
+  return React.createElement(
+    'div',
+    { style: { display: 'flex', gap: 44 } },
+    itens.map(([icone, texto], i) => {
+      const t = frame - entradaFrame - i * 5;
+      const pop = spring({ frame: t, fps, config: { damping: 16, stiffness: 150 } });
+      if (t < -1) return null;
+      return React.createElement('div', {
+        key: icone, style: { display: 'flex', alignItems: 'center', gap: 10, opacity: pop, transform: `translateY(${(1 - pop) * 14}px)` },
+      },
+        React.createElement(IconeLinha, { nome: icone, tamanho: 26, cor: corTexto }),
+        React.createElement('span', { style: { fontFamily: 'Jost, sans-serif', fontSize: 24, color: corTexto } }, texto)
+      );
+    })
   );
 }
 
 // ---------------------------------------------------------------
-// Fecho Versão B: endereço do site + nome, sem botão gummy (não é
-// Instagram) — estilo "slide final de portfólio".
+// Fecho Versão A (RICO — Rodada 5, item 2): retrato da Anasor,
+// "Peça única, feita à mão", botão gummy "pressionado", @handle
+// GRANDE com coração, faixa de confiança real. Tudo dentro da área
+// segura (nada nos 250px do topo/420px de baixo) — orçamento vertical
+// conferido à mão (retrato 220 + vãos + botão + handle + faixa ≈
+// 760px, cabe folgado nos ~1250px úteis entre as 2 zonas proibidas).
 // ---------------------------------------------------------------
-function FechoPortfolio({ entradaFrame, cores }) {
+// Cascata de entrada (retrato → tagline → botão → handle → faixa) —
+// cada elemento com seu próprio spring, ~12 quadros atrás do anterior,
+// pra ficar com cara de "animação de entrada" de verdade (pedido
+// explícito: 2,5-3,5s), não um fade só no grupo inteiro.
+function popCascata(frame, entradaFrame, indice, fps) {
+  return spring({ frame: frame - entradaFrame - indice * 12, fps, config: { damping: 15, stiffness: 150 } });
+}
+
+function FechoInstagram({ entradaFrame, cores, retratoUri }) {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+  const t = frame - entradaFrame;
+  if (t < -1) return null;
+  const pRetrato = popCascata(frame, entradaFrame, 0, fps);
+  const pTagline = popCascata(frame, entradaFrame, 1, fps);
+  const pBotao = popCascata(frame, entradaFrame, 2, fps);
+  const pHandle = popCascata(frame, entradaFrame, 3, fps);
+  // "Aperto" do botão gummy, pedido explícito — mesma linguagem do
+  // :active do site (sombra "engolida") — dispara 1x, logo depois do
+  // botão terminar de aparecer (entrada em cascata: ~4*12=48 quadros).
+  const apertoFrame = entradaFrame + 50;
+  const apertando = frame >= apertoFrame && frame < apertoFrame + 14;
+  const af = apertando ? interpolate(frame, [apertoFrame, apertoFrame + 7, apertoFrame + 14], [0, 1, 0]) : 0;
+  const sombraBotao = 10 - af * 10;
+
+  return React.createElement(
+    'div',
+    { style: { position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 26 } },
+    React.createElement('div', { style: { opacity: pRetrato, transform: `translateY(${(1 - pRetrato) * 24}px)` } },
+      React.createElement(RetratoAnasor, { src: retratoUri, tamanho: 220, cores })),
+    React.createElement('div', {
+      style: {
+        opacity: pTagline, transform: `translateY(${(1 - pTagline) * 20}px)`,
+        fontFamily: 'Jost, sans-serif', fontSize: 26, color: cores.texto, display: 'flex', alignItems: 'center', gap: 10,
+      },
+    }, 'Peça única, feita à mão', React.createElement(Coracao, { tamanho: 22, cor: cores.destaque })),
+    React.createElement('div', {
+      style: {
+        opacity: pBotao, transform: `translateY(${(1 - pBotao) * 20 + af * 5}px)`,
+        padding: '24px 58px', borderRadius: 999, background: cores.destaque, color: '#FFF',
+        fontFamily: 'Jost, sans-serif', fontWeight: 500, fontSize: 38,
+        boxShadow: `inset 0 2px 0 rgba(255,255,255,0.28), 0 ${sombraBotao}px 0 ${cores.destaqueEscuro}`,
+        backgroundImage: 'linear-gradient(to bottom, rgba(255,255,255,0.13), rgba(255,255,255,0) 55%)',
+      },
+    }, 'Link na bio'),
+    React.createElement('div', {
+      style: {
+        opacity: pHandle, transform: `translateY(${(1 - pHandle) * 20}px)`,
+        fontFamily: 'Fraunces, serif', fontWeight: 600, fontSize: 48, color: cores.texto, display: 'flex', alignItems: 'center', gap: 14,
+      },
+    }, '@anasor.ceramica', React.createElement(Coracao, { tamanho: 36, cor: cores.destaque })),
+    React.createElement(FaixaConfiancaMini, { entradaFrame: entradaFrame + 48, cores, corTexto: cores.texto })
+  );
+}
+
+// ---------------------------------------------------------------
+// Fecho Versão B (RICO, variante HORIZONTAL — Rodada 5, item 2):
+// retrato à esquerda, texto à direita (endereço do site, tagline,
+// faixa de confiança, crédito do desenvolvedor) — paisagem, não é
+// Instagram (sem botão "Link na bio"/@handle).
+// ---------------------------------------------------------------
+function FechoPortfolio({ entradaFrame, cores, retratoUri }) {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const t = frame - entradaFrame;
@@ -237,9 +380,15 @@ function FechoPortfolio({ entradaFrame, cores }) {
   const pop = spring({ frame: t, fps, config: { damping: 15, stiffness: 150 } });
   return React.createElement(
     'div',
-    { style: { position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 18, opacity: pop, transform: `translateY(${(1 - pop) * 20}px)` } },
-    React.createElement('div', { style: { fontFamily: 'Fraunces, serif', fontWeight: 600, fontSize: 56, color: cores.texto } }, 'anasorsobreira.com.br'),
-    React.createElement('div', { style: { fontFamily: 'Jost, sans-serif', fontSize: 30, color: cores.secundaria, letterSpacing: '0.04em' } }, 'Desenvolvido por FabricioSobreira')
+    { style: { position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 70, opacity: pop, transform: `translateY(${(1 - pop) * 20}px)` } },
+    React.createElement(RetratoAnasor, { src: retratoUri, tamanho: 260, cores }),
+    React.createElement('div', { style: { display: 'flex', flexDirection: 'column', gap: 16, alignItems: 'flex-start' } },
+      React.createElement('div', { style: { fontFamily: 'Fraunces, serif', fontWeight: 600, fontSize: 56, color: cores.texto } }, 'anasorsobreira.com.br'),
+      React.createElement('div', { style: { fontFamily: 'Jost, sans-serif', fontSize: 26, color: cores.texto, display: 'flex', alignItems: 'center', gap: 10 } },
+        'Peça única, feita à mão', React.createElement(Coracao, { tamanho: 22, cor: cores.destaque })),
+      React.createElement(FaixaConfiancaMini, { entradaFrame: entradaFrame + 20, cores, corTexto: cores.texto }),
+      React.createElement('div', { style: { fontFamily: 'Jost, sans-serif', fontSize: 24, color: cores.secundaria, letterSpacing: '0.04em', marginTop: 8 } }, 'Desenvolvido por FabricioSobreira')
+    )
   );
 }
 
@@ -315,21 +464,45 @@ function MascaraCircular({ children, progresso }) {
 // site nítida (ela só reamostra na escala final, 1x, não perde
 // definição por estar "dentro" de uma foto).
 // ---------------------------------------------------------------
-function DispositivoFlutuante({ children, inicioFrame, duracaoFrames, de, para, inclinacaoBase = 6 }) {
+// `ancoragem` (opcional, { top, largura }): quando presente, o grupo
+// NÃO fica mais centralizado no canvas inteiro (zoom/panorâmica
+// girando em torno do CENTRO DO CANVAS, difícil de prever) — vira uma
+// caixa do tamanho do próprio conteúdo, ancorada num `top` fixo, que
+// escala/gira em torno do PRÓPRIO centro. É isso que torna a
+// geometria previsível o bastante pra provar por código que o celular
+// nunca alcança a legenda (ver LAYOUT_CELULAR acima) — a câmera
+// também é limitada aos mesmos `CAMERA_ESCALA_*`/`CAMERA_TRANSLATE_*`
+// usados na conta, nunca ultrapassando o que foi validado. Sem
+// `ancoragem`, mantém o comportamento antigo (usado pela Versão B,
+// sem esse bug relatado).
+function DispositivoFlutuante({ children, inicioFrame, duracaoFrames, de, para, inclinacaoBase = 6, ancoragem }) {
   const frame = useCurrentFrame();
   const t = interpolate(frame, [inicioFrame, inicioFrame + duracaoFrames], [0, 1], {
     extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: EASE_CAMERA,
   });
-  const escala = de.escala + (para.escala - de.escala) * t;
-  const x = de.x + (para.x - de.x) * t;
-  const y = de.y + (para.y - de.y) * t;
+  let escala = de.escala + (para.escala - de.escala) * t;
+  let x = de.x + (para.x - de.x) * t;
+  let y = de.y + (para.y - de.y) * t;
+  if (ancoragem) {
+    escala = clamp(escala, LAYOUT_CELULAR.CAMERA_ESCALA_MIN, LAYOUT_CELULAR.CAMERA_ESCALA_MAX);
+    x = clamp(x, -LAYOUT_CELULAR.CAMERA_TRANSLATE_MAX_PCT, LAYOUT_CELULAR.CAMERA_TRANSLATE_MAX_PCT);
+    y = clamp(y, -LAYOUT_CELULAR.CAMERA_TRANSLATE_MAX_PCT, LAYOUT_CELULAR.CAMERA_TRANSLATE_MAX_PCT);
+  }
   const flutuar = Math.sin(frame / 42) * 0.7; // período ~8.8s a 30fps — lento, não compete com o movimento de câmera
+  const transformStyle = `perspective(1800px) rotateY(${inclinacaoBase + flutuar}deg) rotateX(${2 - flutuar * 0.6}deg) scale(${escala}) translate(${x}%, ${y}%)`;
+  if (ancoragem) {
+    return React.createElement(
+      'div',
+      { style: { position: 'absolute', left: '50%', top: ancoragem.top, width: ancoragem.largura, transform: `translateX(-50%) ${transformStyle}` } },
+      children
+    );
+  }
   return React.createElement(
     'div',
     {
       style: {
         position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
-        transform: `perspective(1800px) rotateY(${inclinacaoBase + flutuar}deg) rotateX(${2 - flutuar * 0.6}deg) scale(${escala}) translate(${x}%, ${y}%)`,
+        transform: transformStyle,
       },
     },
     children
@@ -381,7 +554,7 @@ function MolduraDesktop({ src, largura = 920, altura = 575 }) {
 }
 
 module.exports = {
-  EASE_CAMERA, resolverSrc,
+  EASE_CAMERA, resolverSrc, LAYOUT_CELULAR,
   MarcaDagua, FundoBege, SeloTour, LegendaCinetica, VinhetaGrao,
   FechoInstagram, FechoPortfolio, FaixaTecnologias, DestaqueTecnico,
   MascaraCircular, DispositivoFlutuante, MolduraCelular, MolduraDesktop,
