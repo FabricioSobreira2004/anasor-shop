@@ -307,4 +307,27 @@ pastas em `E:\projetos\_tmp\c-maiores-pastas.txt`. Detalhes em
   o nome da 3ª peça só na narração (continuam visíveis na tela) —
   detalhe em `DECISOES.md`.
 
-## 5) Kit e fechamento final — ❌ PENDENTE
+## 5) Kit e fechamento final — ✅ CONCLUÍDO
+
+- Kit regenerado (`node marketing/instagram/montar-kit-postagem.js`)
+  com os vídeos narrados/fechamento rico já no lugar — 11 dias com
+  mídia pronta, 6 pendentes (filmagem/depoimento real, sem mudança).
+- `E:\projetos\site-mae\kit-postagem\LEIA-ME.md`: nova seção "🔊 Os
+  Reels e o Tour agora têm narração" (explica como silenciar/trocar
+  por música), checklist por dia ganhou um item de narração pra dias
+  com Reel, aviso do Pix mantido como estava.
+- SIMPLIFY (4 agentes, via fork) + CODE-REVIEW (medium, feito por
+  mim direto depois que o subagente caiu num rate-limit de sessão)
+  no código novo da rodada (`narracao/`, `gerar-capas-destaque.js`,
+  `reels/src/componentes.js` + templates, `montar-kit-postagem.js`)
+  — achados reais aplicados, detalhe em `DECISOES.md`.
+- `node --check` em todos os scripts tocados: OK.
+- Backend offline (`node backend/scripts/teste-forcar-demo.js`): 6/6
+  testes passaram, nenhuma chamada de rede.
+- `git status`: limpo, tudo commitado e já em `origin/main`.
+- Nenhum processo meu aberto (os `node`/`chrome` encontrados são de
+  outra ferramenta do Fabrício — Codex — e do Chrome normal dele, de
+  antes desta rodada; não toquei em nenhum). `backend/.env`
+  intocado (última modificação de 15/09, bem antes desta rodada).
+- Produção: 200 em `/`, `/ceramica.html`, `/produto.html?id=33`,
+  `/links`, `/api/health`.
