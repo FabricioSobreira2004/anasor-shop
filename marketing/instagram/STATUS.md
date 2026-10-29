@@ -264,7 +264,17 @@ pastas em `E:\projetos\_tmp\c-maiores-pastas.txt`. Detalhes em
   um erro de processo, registrado em DECISOES.md). Checado
   visualmente nos 3 templates (Apresentacao, Colecao, Conteudo).
 
-## 3) Capas de destaque v2 — ❌ PENDENTE
+## 3) Capas de destaque v2 — ✅ CONCLUÍDO
+
+- `marketing/instagram/gerar-capas-destaque.js` (novo script, v1 não
+  tinha gerador no repo). 5 ícones de linha temáticos (vaso+brilho,
+  roda+peça, sacola+laço, lápis+estrela, gota+mãos), cor da marca,
+  fundo alternando bege/marrom, textura de papel, marca d'água.
+  2 rodadas de crítica visual (achado e corrigido: `file:///` não
+  carregava na folha de contato — Chromium recusava, virou `data:`
+  base64; 2ª rodada confirma série harmônica). Saída:
+  `E:\projetos\site-mae\instagram-perfil\v2\` (v1 mantida). Mapeamento
+  capa→destaque documentado no `LEIA-ME.md` do kit.
 
 ## 4) Narração em todos os vídeos — ❌ PENDENTE
 
