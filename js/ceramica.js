@@ -41,6 +41,13 @@ const breadcrumbEl = document.querySelector('#breadcrumb');
 const filtrosEl = document.querySelector('#ceramica-filtros');
 const conteudoEl = document.querySelector('#ceramica-conteudo');
 
+// contagem "N peças disponíveis" da listagem (criada uma vez só)
+const contagemEl = document.createElement('p');
+contagemEl.className = 'sub-contagem';
+contagemEl.setAttribute('aria-live', 'polite');
+contagemEl.hidden = true;
+conteudoEl.before(contagemEl);
+
 // subcategoriasCeramica() agora mora em js/main.js (compartilhada com
 // o dropdown do menu e com a grade "Explore Nossas Coleções" da Home —
 // ver dadosCardsSubcategoriaCeramica() lá). Carrega ANTES deste
@@ -152,17 +159,25 @@ function aplicarFiltrosListagem() {
   // fim, como portfólio (a busca e os filtros valem para os dois)
   const aVenda = visiveis.filter((p) => !estaVendida(p));
   const vendidas = visiveis.filter(estaVendida);
-  // o alternador só aparece onde há peça suficiente para cansar o swipe
-  const comAlternador = aVenda.length >= MINIMO_ALTERNADOR;
+  // o alternador depende do tamanho da subcategoria, não do filtro:
+  // senão ele sumiria (e o layout trocaria) no meio de uma busca
+  const comAlternador = produtosDaSub.filter((p) => !estaVendida(p)).length >= MINIMO_ALTERNADOR;
   const modo = comAlternador ? modoVitrine : 'carrossel';
+
+  // A contagem mora FORA do conteúdo recriado: um aria-live novo a cada
+  // filtro não seria anunciado. Sem peça à venda ela some ("0 peças"
+  // acima das vendidas pareceria erro).
+  contagemEl.textContent = aVenda.length
+    ? `${aVenda.length} ${aVenda.length === 1 ? 'peça disponível' : 'peças disponíveis'}`
+    : '';
+  contagemEl.hidden = aVenda.length === 0;
 
   conteudoEl.innerHTML =
     visiveis.length === 0
       ? mensagemVazia()
-      : `<p class="sub-contagem" aria-live="polite">${aVenda.length} ${aVenda.length === 1 ? 'peça disponível' : 'peças disponíveis'}</p>`
-        + (comAlternador ? alternadorHTML(modo) : '')
+      : (comAlternador ? alternadorHTML(modo) : '')
         + (aVenda.length ? vitrineHTML(aVenda, modo, 'Peças à venda') : '')
-        + renderSecaoVendidas(vendidas, vitrineHTML(vendidas, 'carrossel', 'Peças já vendidas'));
+        + (vendidas.length ? renderSecaoVendidas(vendidas, vitrineHTML(vendidas, 'carrossel', 'Peças já vendidas')) : '');
 
   // HTML novo = trilho novo, que nasce no início: filtrar/ordenar
   // sempre volta para o 1º slide. Setas, dots e snap são os da Home.

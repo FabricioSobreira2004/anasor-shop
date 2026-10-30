@@ -437,7 +437,7 @@ function montarDetalhe(produto) {
         </div>
         ${
           imagens.length > 1
-            ? `<div class="galeria__dots" role="tablist" aria-label="Selecionar foto">${dotsHTML}</div>`
+            ? `<div class="galeria__dots" role="group" aria-label="Selecionar foto">${dotsHTML}</div>`
             : ''
         }
         ${
@@ -654,10 +654,9 @@ function montarDetalhe(produto) {
   // motivo do renderSeloEscassez logo abaixo) — assim ela fica no
   // arquivo carregado nas duas páginas, pronta pra qualquer galeria
   // de miniaturas futura sem duplicar a lógica de "trocar a foto
-  // grande". (A seção "Peça em Destaque" da Home NÃO usa mais esta
-  // função — tem a sua própria, ativarGiro360(), pra arrastar/girar;
-  // ver main.js.) "imagens" já foi montado lá em cima (principal +
-  // imagensExtras).
+  // grande". A "Escolha do Ateliê" da Home usa esta mesma função:
+  // mudar aqui muda as duas galerias. "imagens" já foi montado lá em
+  // cima (principal + imagensExtras).
   ativarGaleriaDeFotos(container, imagens);
 }
 

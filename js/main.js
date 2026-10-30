@@ -1730,7 +1730,7 @@ function salvarCarrinho(itens) {
 // O "Adicionado ✓" (feedback de 1,2s) fica de fora para não piscar.
 function sincronizarBotoesCarrinho(itens) {
   const noCarrinho = new Set(itens.map((item) => String(item.id)));
-  document.querySelectorAll('[data-id] > button.btn-comprar, .produto-detalhe__acoes button.btn-comprar').forEach((botao) => {
+  document.querySelectorAll('[data-id] > button.btn-comprar, .produto-detalhe__acoes button.btn-comprar, .produto-destaque__acoes button.btn-comprar').forEach((botao) => {
     if (botao.disabled) return;
     const id = botao.closest('[data-id]')?.dataset.id;
     if (!id) return;
@@ -2963,7 +2963,7 @@ function montarProdutoDestaque(secao) {
       </button>`
     : '';
   const dotsHTML = variasFotos
-    ? `<div class="galeria__dots" role="tablist" aria-label="Selecionar foto">${imagens
+    ? `<div class="galeria__dots" role="group" aria-label="Selecionar foto">${imagens
         .map((_, i) => `<button type="button" class="galeria__dot ${i === 0 ? 'is-ativo' : ''}" aria-label="Ver foto ${i + 1} de ${imagens.length}"></button>`)
         .join('')}</div>`
     : '';
@@ -3105,7 +3105,7 @@ function carrosselCardHTML(slides, nomeProduto, overlayHTML = '') {
     : '';
 
   const dotsHTML = temVarias
-    ? `<div class="carrossel-card__dots" role="tablist" aria-label="Selecionar slide de ${nomeProduto}">
+    ? `<div class="carrossel-card__dots" role="group" aria-label="Selecionar slide de ${nomeProduto}">
           ${slides
             .map(
               (_, i) => `
