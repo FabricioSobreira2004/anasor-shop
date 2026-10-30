@@ -3192,17 +3192,6 @@ nav {
      pergaminho É um fundo claro, então o preço já nasce legível. */
 }
 
-/* botão fica sempre por ÚLTIMO dentro do pergaminho, MESMO se a frase
-   for curta: margin-top:auto (dentro do pergaminho, agora
-   display:flex column — ver .selecao-especial__pergaminho) empurra o
-   que vier depois dele pro fim do espaço disponível. Escopado a
-   ".selecao-especial__pergaminho" (não .btn-comprar-agora sozinho)
-   pra não afetar esse mesmo botão em outros lugares do site (barra-
-   compra flutuante, produto.html etc.), que não são flex column. */
-.selecao-especial__pergaminho .btn-comprar-agora {
-  margin-top: 0;
-}
-
 /* touch-action:manipulation nos botões/links destes 2 carrosséis de
    produto (correção de zoom acidental, mesmo motivo de
    .carrossel-card__seta/__dot, acima): sem isto, um toque rápido
@@ -3217,7 +3206,7 @@ nav {
 
 /* ---- BOLINHAS (dots) do carrossel de cada card ----
    MESMA estrutura/comportamento de .banner-indicador (style.css) e
-   .galeria__dot (produto.css) — área de toque 44×44 com uma bolinha
+   .galeria__dot (style.css) — área de toque 44×44 com uma bolinha
    visual pequena (9px) centralizada via ::after, só que com cores
    PRÓPRIAS: a bolinha inativa daqueles dois carrosséis usa
    --cor-fundo-alt, pensada pra ficar sobre fundo CLARO — aqui o
@@ -3524,16 +3513,8 @@ nav {
    vale para qualquer peça que entrar aqui: cards da mesma altura,
    foto e título com espaço reservado, e preço + botão colados na
    base, sempre à mesma distância um do outro. */
-.edicao-surpresa__grid,
-.selecao-especial__grid {
-  align-items: stretch;
-}
-
-.edicao-surpresa__card,
-.selecao-especial__card {
-  align-self: stretch;
-}
-
+/* altura igual: o stretch padrão do grid (e do trilho flex no
+   celular) já iguala os cards; nada pode sobrescrever align-items */
 /* caixa de altura fixa: foto em pé ou deitada ocupa o mesmo espaço */
 .edicao-surpresa .carrossel-card__foto-wrap,
 .selecao-especial .carrossel-card__foto-wrap {
@@ -3562,7 +3543,9 @@ nav {
   margin-top: auto;
 }
 
-.edicao-surpresa__card .btn-comprar-agora {
+/* o preço já empurra o par para a base: o botão só encosta nele */
+.edicao-surpresa__card .btn-comprar-agora,
+.selecao-especial__pergaminho .btn-comprar-agora {
   margin-top: 0;
 }
 
@@ -6454,6 +6437,8 @@ footer {
   padding: 0.35rem 0.65rem;
   border-radius: 999px;
   white-space: nowrap;
+  /* contorno opcional de cada tipo; o card soma a sombra a ele */
+  box-shadow: var(--selo-anel, 0 0 #0000);
 }
 
 .selo-peca--vendido {
@@ -6474,7 +6459,7 @@ footer {
 .selo-peca--queridinho {
   background-color: var(--cor-fundo);    /* terracota sobre creme: 5,4:1 */
   color: var(--cor-destaque);
-  box-shadow: inset 0 0 0 1px var(--cor-destaque);
+  --selo-anel: inset 0 0 0 1px var(--cor-destaque);
 }
 
 .selo-peca--novidade {
@@ -6485,13 +6470,13 @@ footer {
 .selo-peca--edicao-limitada {
   background-color: var(--cor-texto);      /* ouro claro sobre marrom: 5,8:1 */
   color: var(--cor-ouro-claro);
-  box-shadow: inset 0 0 0 1px var(--cor-ouro-claro);
+  --selo-anel: inset 0 0 0 1px var(--cor-ouro-claro);
 }
 
 .selo-peca--kit {
   background-color: var(--cor-fundo-alt);  /* oliva escuro sobre bege: 6,1:1 */
   color: var(--cor-secundaria-escuro);
-  box-shadow: inset 0 0 0 1px var(--cor-secundaria-escuro);
+  --selo-anel: inset 0 0 0 1px var(--cor-secundaria-escuro);
 }
 
 .selo-peca--pintada-a-mao {
@@ -6526,19 +6511,7 @@ footer {
   top: 0.75rem;
   left: 0.75rem;
   z-index: 1;
-  box-shadow: 0 2px 8px rgba(62, 46, 34, 0.18);
-}
-
-.selo-peca--queridinho.selo-peca--card {
-  box-shadow: inset 0 0 0 1px var(--cor-destaque), 0 2px 8px rgba(62, 46, 34, 0.18);
-}
-
-.selo-peca--edicao-limitada.selo-peca--card {
-  box-shadow: inset 0 0 0 1px var(--cor-ouro-claro), 0 2px 8px rgba(62, 46, 34, 0.18);
-}
-
-.selo-peca--kit.selo-peca--card {
-  box-shadow: inset 0 0 0 1px var(--cor-secundaria-escuro), 0 2px 8px rgba(62, 46, 34, 0.18);
+  box-shadow: var(--selo-anel, 0 0 #0000), 0 2px 8px rgba(62, 46, 34, 0.18);
 }
 
 /* ============================================

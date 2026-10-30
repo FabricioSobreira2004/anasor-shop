@@ -124,6 +124,7 @@ function renderVisaoGeral() {
 //  MODO 2 — LISTAGEM DE UMA SUBCATEGORIA (?sub=...)
 // ============================================================
 let produtosDaSub = []; // cache das pecas da subcategoria aberta
+let comAlternador = false; // "Carrossel | Grade" nesta subcategoria?
 
 async function renderListagem(nomeSub) {
   tituloEl.textContent = nomeSub;
@@ -145,6 +146,9 @@ async function renderListagem(nomeSub) {
   // hoje: array local + atraso de dev; amanha: fetch de uma API
   const todos = await carregarProdutos();
   produtosDaSub = todos.filter((p) => p.subcategoria === nomeSub);
+  // pelo tamanho da subcategoria, não do filtro: senão o alternador
+  // sumiria (e o layout trocaria) no meio de uma busca
+  comAlternador = produtosDaSub.filter((p) => !estaVendida(p)).length >= MINIMO_ALTERNADOR;
 
   aplicarFiltrosListagem();
 }
@@ -159,17 +163,12 @@ function aplicarFiltrosListagem() {
   // fim, como portfólio (a busca e os filtros valem para os dois)
   const aVenda = visiveis.filter((p) => !estaVendida(p));
   const vendidas = visiveis.filter(estaVendida);
-  // o alternador depende do tamanho da subcategoria, não do filtro:
-  // senão ele sumiria (e o layout trocaria) no meio de uma busca
-  const comAlternador = produtosDaSub.filter((p) => !estaVendida(p)).length >= MINIMO_ALTERNADOR;
   const modo = comAlternador ? modoVitrine : 'carrossel';
 
   // A contagem mora FORA do conteúdo recriado: um aria-live novo a cada
   // filtro não seria anunciado. Sem peça à venda ela some ("0 peças"
   // acima das vendidas pareceria erro).
-  contagemEl.textContent = aVenda.length
-    ? `${aVenda.length} ${aVenda.length === 1 ? 'peça disponível' : 'peças disponíveis'}`
-    : '';
+  contagemEl.textContent = aVenda.length ? rotuloPecasDisponiveis(aVenda.length) : '';
   contagemEl.hidden = aVenda.length === 0;
 
   conteudoEl.innerHTML =
@@ -231,7 +230,8 @@ conteudoEl.addEventListener('click', (evento) => {
 });
 
 // cruzar 768/769px muda quantos cards cabem por slide (2 x 4): remonta
-window.matchMedia('(min-width: 769px)').addEventListener('change', () => {
+// (mesma MediaQueryList do carrossel da Home, main.js)
+mqCarrosselDesktop.addEventListener('change', () => {
   if (subPedida) aplicarFiltrosListagem();
 });
 
@@ -254,12 +254,18 @@ function sincronizarCriterios() {
 ['#busca', '#filtro-preco', '#ordenar'].forEach((seletor) => {
   const el = document.querySelector(seletor);
   if (!el) return;
-  const evento = el.tagName === 'INPUT' ? 'input' : 'change';
-  el.addEventListener(evento, () => {
+  const ehBusca = el.tagName === 'INPUT';
+  let espera = null;
+  el.addEventListener(ehBusca ? 'input' : 'change', () => {
     sincronizarCriterios();
     // so mexe na tela quando estamos no modo LISTAGEM; na visao
     // geral os filtros estao escondidos e isto nao faz nada.
-    if (subPedida) aplicarFiltrosListagem();
+    if (!subPedida) return;
+    // na busca, remonta o carrossel quando a digitação pausa, não a
+    // cada tecla (cada remontagem recria trilho, setas e dots)
+    clearTimeout(espera);
+    if (ehBusca) espera = setTimeout(aplicarFiltrosListagem, 150);
+    else aplicarFiltrosListagem();
   });
 });
 

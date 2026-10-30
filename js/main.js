@@ -499,6 +499,31 @@ function renderSeloEscassez() {
 // MOVIDA de js/produto.js (era "ativarGaleria()", sem parâmetros) e
 // GENERALIZADA: recebe o CONTAINER e a lista de IMAGENS. Usada pela
 // página da peça e pela "Escolha do Ateliê" da Home.
+// Marcação da galeria que ativarGaleriaDeFotos() espera: foto grande
+// (com setas), dots e miniaturas. Um molde só para a página da peça e a
+// "Escolha do Ateliê", para as duas nunca divergirem. Devolve só o
+// miolo: quem chama decide o contêiner (a página da peça põe o vídeo
+// junto). Com 1 foto, só a foto: não há o que navegar.
+function galeriaHTML(imagens, nome, { eager = false } = {}) {
+  const varias = imagens.length > 1;
+  const rotulo = (i) => `Ver foto ${i + 1} de ${imagens.length}`;
+  const seta = (direcao, path, texto) => `
+    <button type="button" class="galeria__seta galeria__seta--${direcao}" aria-label="${texto}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${path}"/></svg>
+    </button>`;
+  return `
+    <div class="galeria__principal-wrap">
+      <img class="galeria__principal foto-emoldurada" src="${imagens[0]}" alt="${nome}" loading="${eager ? 'eager' : 'lazy'}">
+      ${varias ? seta('anterior', 'm15 18-6-6 6-6', 'Foto anterior') + seta('proxima', 'm9 18 6-6-6-6', 'Próxima foto') : ''}
+    </div>
+    ${varias ? `<div class="galeria__dots" role="group" aria-label="Selecionar foto">${imagens
+      .map((_, i) => `<button type="button" class="galeria__dot ${i === 0 ? 'is-ativo' : ''}" aria-label="${rotulo(i)}"></button>`)
+      .join('')}</div>` : ''}
+    ${varias ? `<div class="galeria__miniaturas">${imagens
+      .map((src, i) => `<button type="button" class="galeria__thumb ${i === 0 ? 'is-ativa' : ''}" aria-label="${rotulo(i)}"><img src="${src}" alt="" loading="lazy"></button>`)
+      .join('')}</div>` : ''}`;
+}
+
 function ativarGaleriaDeFotos(container, imagens) {
   const principalWrap = container.querySelector('.galeria__principal-wrap');
   const principal = container.querySelector('.galeria__principal');
@@ -527,14 +552,13 @@ function ativarGaleriaDeFotos(container, imagens) {
     // length primeiro faz o loop funcionar nos dois sentidos.
     principal.src = imagens[indiceAtual];
 
-    const thumbAtiva = miniaturas.querySelector('.is-ativa');
-    if (thumbAtiva) thumbAtiva.classList.remove('is-ativa');
-    miniaturas.children[indiceAtual]?.classList.add('is-ativa');
+    miniaturas.querySelector('.is-ativa')?.classList.remove('is-ativa');
+    const thumb = miniaturas.children[indiceAtual];
+    thumb?.classList.add('is-ativa');
     // fileira que desliza (celular): traz a miniatura ativa para o
     // centro mexendo só no scroll dela, nunca no da página
-    const thumb = miniaturas.children[indiceAtual];
     if (thumb && miniaturas.scrollWidth > miniaturas.clientWidth) {
-      miniaturas.scrollTo({ left: thumb.offsetLeft - (miniaturas.clientWidth - thumb.offsetWidth) / 2, behavior: 'smooth' });
+      miniaturas.scrollTo({ left: thumb.offsetLeft - (miniaturas.clientWidth - thumb.offsetWidth) / 2, behavior: reduzirMovimento ? 'auto' : 'smooth' });
     }
 
     const dotAtivo = dotsEl?.querySelector('.is-ativo');
@@ -703,6 +727,11 @@ function criarCardProduto(produto) {
 }
 
 const TEXTO_NO_CARRINHO = 'No carrinho ✓';
+
+// "1 peça disponível" / "N peças disponíveis": visão geral e listagem
+function rotuloPecasDisponiveis(qtd) {
+  return `${qtd} ${qtd === 1 ? 'peça disponível' : 'peças disponíveis'}`;
+}
 
 // Vitrine de portfólio das peças vendidas (fim de ceramica.html e das
 // subcategorias): mostra o que o ateliê já fez e puxa encomenda.
@@ -874,7 +903,7 @@ function dadosCardsSubcategoriaCeramica() {
     const fotos = [...new Set(daSub.map((p) => p.imagem))].slice(0, 5);
     // O rótulo promete "disponíveis": só conta o que dá para comprar
     const qtd = daSub.filter((p) => !estaVendida(p)).length;
-    const rotuloQtd = `${qtd} ${qtd === 1 ? 'peça disponível' : 'peças disponíveis'}`;
+    const rotuloQtd = rotuloPecasDisponiveis(qtd);
     return { sub, fotos, qtd, rotuloQtd, href: `ceramica.html?sub=${slugificar(sub)}` };
   });
 }
@@ -2948,42 +2977,16 @@ function montarProdutoDestaque(secao) {
 
   const vendida = estaVendida(produto);
   const imagens = [produto.imagem, ...(produto.imagensExtras || [])];
-  const variasFotos = imagens.length > 1;
-
-  // Mesma marcação (.galeria__*) da página da peça, para reaproveitar
-  // ativarGaleriaDeFotos(): setas, dots, miniaturas e swipe já saem
-  // sincronizados por um único irParaIndice().
-  const setasHTML = variasFotos
-    ? `
-      <button type="button" class="galeria__seta galeria__seta--anterior" aria-label="Foto anterior">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
-      </button>
-      <button type="button" class="galeria__seta galeria__seta--proxima" aria-label="Próxima foto">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
-      </button>`
-    : '';
-  const dotsHTML = variasFotos
-    ? `<div class="galeria__dots" role="group" aria-label="Selecionar foto">${imagens
-        .map((_, i) => `<button type="button" class="galeria__dot ${i === 0 ? 'is-ativo' : ''}" aria-label="Ver foto ${i + 1} de ${imagens.length}"></button>`)
-        .join('')}</div>`
-    : '';
-  const miniaturasHTML = variasFotos
-    ? `<div class="galeria__miniaturas">${imagens
-        .map((src, i) => `<button type="button" class="galeria__thumb ${i === 0 ? 'is-ativa' : ''}" aria-label="Ver foto ${i + 1} de ${imagens.length}"><img src="${src}" alt="" loading="lazy"></button>`)
-        .join('')}</div>`
-    : '';
 
   // Vendida continua em destaque como portfólio: sem botões de compra
   // (nada de "Comprar" de peça que não existe mais), com a encomenda.
   // O "Ver mais" vale nos dois casos: a página da peça tem os detalhes.
   const verMaisHTML = `<a class="btn-ver-mais" href="produto.html?id=${produto.id}">Ver mais sobre esta peça</a>`;
-  const acoesHTML = vendida
+  const acoesHTML = (vendida
     ? `<a class="btn-comprar btn-encomendar" href="${linkEncomendaWhatsApp(produto, { indisponivel: true })}"
-          target="_blank" rel="noopener noreferrer">Encomendar peça parecida&nbsp;🤎</a>
-       ${verMaisHTML}`
+          target="_blank" rel="noopener noreferrer">Encomendar peça parecida&nbsp;🤎</a>`
     : `<button class="btn-comprar" type="button">${estaNoCarrinho(produto.id) ? TEXTO_NO_CARRINHO : 'Adicionar ao Carrinho'}</button>
-       <button class="btn-comprar-agora" type="button">Comprar Agora</button>
-       ${verMaisHTML}`;
+       <button class="btn-comprar-agora" type="button">Comprar Agora</button>`) + verMaisHTML;
   const badgesHTML = vendida
     ? '<p class="produto-destaque__status-vendida">Esta peça já encontrou um lar. Encomende uma parecida, do seu jeitinho.</p>'
     : `<div class="produto-destaque__badges">
@@ -2994,12 +2997,7 @@ function montarProdutoDestaque(secao) {
   secao.innerHTML = `
     <div class="produto-destaque__grid">
       <div class="galeria produto-destaque__galeria">
-        <div class="galeria__principal-wrap">
-          <img class="galeria__principal foto-emoldurada" src="${produto.imagem}" alt="${produto.nome}" loading="lazy">
-          ${setasHTML}
-        </div>
-        ${dotsHTML}
-        ${miniaturasHTML}
+        ${galeriaHTML(imagens, produto.nome)}
       </div>
       <div class="produto-destaque__info">
         <p class="produto-destaque__etiqueta">&#10022; Escolha do Ateliê</p>

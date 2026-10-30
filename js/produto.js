@@ -242,39 +242,6 @@ function montarDetalhe(produto) {
   // produto não tenha o campo imagensExtras.
   const imagens = [produto.imagem, ...(produto.imagensExtras || [])];
 
-  // Miniaturas: cada uma é um <button> (controle de verdade, com
-  // foco por teclado). data-src guarda qual imagem ela carrega na
-  // foto grande ao ser clicada. A primeira já nasce "is-ativa".
-  const miniaturasHTML = imagens
-    .map(
-      (src, i) => `
-        <button
-          class="galeria__thumb ${i === 0 ? 'is-ativa' : ''}"
-          type="button"
-          data-src="${src}"
-          aria-label="Ver foto ${i + 1} de ${imagens.length}">
-          <img src="${src}" alt="" loading="lazy">
-        </button>`
-    )
-    .join('');
-
-  // Bolinhas (dots) — pedido item 1, "iguais ao estilo já usado nos
-  // outros carrosséis do site" (ex.: .banner-indicador, do carrossel
-  // do banner da Home). Cada uma só guarda a POSIÇÃO (não data-src
-  // como as miniaturas): ativarGaleriaDeFotos() (main.js) descobre o
-  // índice pela ordem entre irmãos, mesmo esquema já usado ali pras
-  // miniaturas — um jeito só de indexar em toda a galeria.
-  const dotsHTML = imagens
-    .map(
-      (_, i) => `
-        <button
-          type="button"
-          class="galeria__dot ${i === 0 ? 'is-ativo' : ''}"
-          aria-label="Ver foto ${i + 1} de ${imagens.length}">
-        </button>`
-    )
-    .join('');
-
   // Mensagem pré-preenchida do WhatsApp. encodeURIComponent()
   // transforma espaços, acentos e aspas em código seguro pra URL
   // (espaço -> %20, "ç" -> %C3%A7 ...); sem isso o link quebra.
@@ -399,52 +366,9 @@ function montarDetalhe(produto) {
   container.innerHTML = `
     <div class="produto-detalhe__midia">
       <div class="galeria">
-        <!-- .galeria__principal-wrap: existe SÓ pra ancorar as setas
-             (position:absolute precisa de um ancestral position:
-             relative do tamanho EXATO da foto — não do <div class=
-             "galeria"> inteiro, que também abriga miniaturas/dots
-             abaixo; sem este wrapper próprio, as setas ficariam
-             centralizadas na altura de TUDO, não da foto). -->
-        <div class="galeria__principal-wrap">
-          <!-- imagem grande = a primeira coisa visível ao abrir a página,
-               então SEM loading="lazy" (carrega já). As miniaturas (acima,
-               no map) são lazy: o usuário pode nem clicar nelas.
-               .foto-emoldurada = a "moldura de quadro" (css/style.css),
-               a MESMA classe usada na foto do "Quem Somos". -->
-          <img class="galeria__principal foto-emoldurada" src="${produto.imagem}" alt="${produto.nome}" loading="eager">
-          ${
-            imagens.length > 1
-              ? `
-          <!-- SETAS (pedido item 1): MESMOS paths de seta (chevron)
-               já usados no carrossel de produtos (.carrossel-seta) e
-               no banner (.banner-seta) — reaproveitando o desenho, não
-               reinventando um ícone novo. A cor/formato do botão em si
-               vem de .galeria__seta (css/produto.css), estilo próprio
-               MAS na mesma linguagem visual (círculo, sombra) dos
-               outros dois. -->
-          <button type="button" class="galeria__seta galeria__seta--anterior" aria-label="Foto anterior">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="m15 18-6-6 6-6"/>
-            </svg>
-          </button>
-          <button type="button" class="galeria__seta galeria__seta--proxima" aria-label="Próxima foto">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="m9 18 6-6-6-6"/>
-            </svg>
-          </button>`
-              : ''
-          }
-        </div>
-        ${
-          imagens.length > 1
-            ? `<div class="galeria__dots" role="group" aria-label="Selecionar foto">${dotsHTML}</div>`
-            : ''
-        }
-        ${
-          imagens.length > 1
-            ? `<div class="galeria__miniaturas">${miniaturasHTML}</div>`
-            : ''
-        }
+        <!-- foto grande (eager: é a 1ª coisa visível), setas, dots e
+             miniaturas: o mesmo molde da Home, ver galeriaHTML (main.js) -->
+        ${galeriaHTML(imagens, produto.nome, { eager: true })}
 
         <!-- VÍDEO DA PEÇA (campo opcional produto.videoUrl). DECISÃO DE
              DESIGN: em vez de misturar o vídeo como mais um "slide"
