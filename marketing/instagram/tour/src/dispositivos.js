@@ -18,6 +18,13 @@ const DESKTOP = {
 
 const FPS = 30;
 
+// Limite de velocidade de rolagem (px CSS/segundo) — pedido explícito
+// da Rodada 6, item B: rolagem "humana e delicada", nunca um arrasto
+// forçado. Validado por código (ver `validarVelocidade` em
+// captura-ferramentas.js) com o scrollY real medido quadro a quadro,
+// não só pela conta teórica.
+const VELOCIDADE_MAX_PX_S = { mobile: 450, desktop: 600 };
+
 // ---------------------------------------------------------------
 // Fixtures de captura compartilhadas entre cenas-mobile.js e
 // cenas-desktop.js (achado do simplify: estavam duplicadas em cada
@@ -34,4 +41,4 @@ const ID_PRODUTO_VENDIDO = 33;
 const CPF_TESTE = '11144477735'; // algoritmicamente válido (checksum módulo 11 conferido à mão) — NUNCA de uma pessoa real
 const CEP_TESTE = '01310100'; // Av. Paulista — endereço público conhecido, só pra ver o ViaCEP preencher a tela
 
-module.exports = { MOBILE, DESKTOP, FPS, ID_PRODUTO_PRINCIPAL, ID_PRODUTO_VENDIDO, CPF_TESTE, CEP_TESTE };
+module.exports = { MOBILE, DESKTOP, FPS, VELOCIDADE_MAX_PX_S, ID_PRODUTO_PRINCIPAL, ID_PRODUTO_VENDIDO, CPF_TESTE, CEP_TESTE };

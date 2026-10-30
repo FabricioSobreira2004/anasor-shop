@@ -21,6 +21,7 @@ const { MOBILE, DESKTOP } = require('./dispositivos');
 const { lerArgs } = require('./cli');
 const { capturarMobile } = require('./cenas-mobile');
 const { capturarDesktop } = require('./cenas-desktop');
+const { limparRegistroRolagem, salvarRelatorioRolagem } = require('./captura-ferramentas');
 
 const BASE_URL = process.env.TOUR_BASE_URL || 'http://localhost:8765';
 const DIR_CAPTURAS = path.join(__dirname, '..', '.tmp', 'capturas');
@@ -55,6 +56,7 @@ async function main() {
   const page = await contexto.newPage();
 
   const manifest = {};
+  limparRegistroRolagem(); // cada --device roda em processo próprio, mas limpa de qualquer jeito — nunca mistura relatório de outra captura
   console.log(`\nCapturando "${device}" (${perfil.viewport.width}x${perfil.viewport.height}, dpr ${perfil.deviceScaleFactor})...\n`);
   if (device === 'mobile') {
     await capturarMobile(page, dirBase, BASE_URL, manifest);
@@ -67,6 +69,20 @@ async function main() {
   const manifestoPath = path.join(dirBase, 'manifest.json');
   fs.writeFileSync(manifestoPath, JSON.stringify(manifest, null, 2));
   console.log(`\n✅ Captura "${device}" concluída. Manifesto: ${manifestoPath}`);
+
+  // Relatório de rolagem (Rodada 6, item B1): pico de velocidade/
+  // aceleração medido quadro a quadro, por cena — prova que nenhuma
+  // rolagem passou do limite (a validação em si já teria lançado erro
+  // e parado a captura antes de chegar aqui).
+  const dirTmp = 'E:/projetos/_tmp';
+  const csv = path.join(dirTmp, `tour-rolagem-${device}.csv`);
+  const resumoPath = path.join(dirTmp, `tour-rolagem-${device}-resumo.txt`);
+  const resumo = salvarRelatorioRolagem(csv, resumoPath);
+  if (resumo.length) {
+    console.log(`\nRolagem (${device}):`);
+    resumo.forEach((linha) => console.log(`  ${linha}`));
+    console.log(`  CSV completo: ${csv}`);
+  }
 }
 
 main().catch((erro) => {

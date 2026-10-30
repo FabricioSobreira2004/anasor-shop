@@ -30,9 +30,11 @@ function TituloAbertura({ entradaFrame, cores }) {
 // CenaMobile em TourMobile.js (ver o comentário lá): sem isso, os
 // vídeos mais tarde no roteiro (checkout, fecho) tentariam buscar um
 // ponto do clipe que não existe e travariam o render inteiro.
+const QUADROS_WIPE = 18;
+
 function CenaDesktop({ cena, i, clipesDesktop, clipesMobile, cores, retratoUri }) {
   const frame = useCurrentFrame();
-  const progressoWipe = i === 0 ? 1 : interpolate(frame, [0, 18], [0, 1], {
+  const progressoWipe = i === 0 ? 1 : interpolate(frame, [0, QUADROS_WIPE], [0, 1], {
     extrapolateLeft: 'clamp', extrapolateRight: 'clamp',
   });
 
@@ -81,11 +83,20 @@ function TourDesktop({ cenas, cores, logoUri, retratoUri, clipesDesktop, clipesM
     'div',
     { style: { position: 'absolute', inset: 0, backgroundColor: cores.fundo } },
     React.createElement(FundoBege, { cores }),
-    cenas.map((cena, i) => React.createElement(
-      Sequence,
-      { key: i, from: cena.inicio, durationInFrames: cena.duracao, name: cena.nome, layout: 'none' },
-      React.createElement(CenaDesktop, { cena, i, clipesDesktop, clipesMobile, cores, retratoUri })
-    )),
+    // + QUADROS_WIPE (exceto a última cena) — mesmo achado/motivo do
+    // TourMobile.js (ver o comentário lá): sem a folga, a cena
+    // anterior já tinha fechado seu Sequence no instante em que a
+    // próxima começa o wipe circular quase invisível, mostrando ~2
+    // quadros em branco em toda transição.
+    cenas.map((cena, i) => {
+      const ultima = i === cenas.length - 1;
+      const duracaoSequence = ultima ? cena.duracao : cena.duracao + QUADROS_WIPE;
+      return React.createElement(
+        Sequence,
+        { key: i, from: cena.inicio, durationInFrames: duracaoSequence, name: cena.nome, layout: 'none' },
+        React.createElement(CenaDesktop, { cena, i, clipesDesktop, clipesMobile, cores, retratoUri })
+      );
+    }),
     faixaVisivel ? React.createElement(FaixaTecnologias, { itens: TECNOLOGIAS, cores }) : null,
     React.createElement(MarcaDagua, { src: logoUri, tamanho: 100, right: 48, bottom: faixaVisivel ? 90 : 48 }),
     React.createElement(VinhetaGrao)

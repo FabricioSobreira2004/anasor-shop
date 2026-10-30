@@ -331,3 +331,79 @@ pastas em `E:\projetos\_tmp\c-maiores-pastas.txt`. Detalhes em
   intocado (última modificação de 15/09, bem antes desta rodada).
 - Produção: 200 em `/`, `/ceramica.html`, `/produto.html?id=33`,
   `/links`, `/api/health`.
+
+---
+
+# Rodada 6 — narração natural + rolagem delicada (modo totalmente autônomo)
+
+Pedido em 2026-10-29, Rodada 5 aprovada. 2 ajustes prioritários: (A)
+narração travada/lenta, (B) rolagem rápida demais no tour. A em
+paralelo (fork), B na sessão principal.
+
+## A) Narração mais natural — ✅ CONCLUÍDO
+
+- Roteiros reescritos (`narracao/roteiros.md`): texto corrido, 1
+  ponto final a cada ~12-15 palavras, hook+nome na 1ª cláusula, os 2
+  Reels de coleção citam as 3 peças completas (corrige a Rodada 5).
+- `narrar.js`: `--voz`/`--ritmo` por linha de comando; removido o
+  fallback de `atempo` (nunca mais acelera áudio); checa silêncio
+  interno ≥0,6s (`silencedetect`); acabamento com highpass 80Hz,
+  compressor, fade-out 120ms, loudnorm -16 LUFS.
+- Voz padrão de produção: SAPI Maria, Rate=4 (calibrado com texto
+  REAL, não frase de teste isolada — ver DECISOES.md). Piper TTS
+  instalado (licença MIT, 4 vozes pt_BR, todas masculinas) como
+  opção — amostras em `E:\projetos\site-mae\narracao-amostras\` pro
+  Fabrício ouvir e decidir; não virou padrão (não dá pra confirmar
+  por ouvido que o ritmo forçado não tem artefato).
+- Aplicado nos 16 Reels (`E:\projetos\site-mae\reels\`) e, depois do
+  item B terminar o re-render, também em `tour-instagram.mp4` (45,0s)
+  e `tour-portfolio.mp4` (47,0s) — ffprobe confirma 1 faixa de vídeo +
+  1 de áudio nos 2, duração e ritmo (2,8-3,1 wps) dentro do esperado.
+
+## B) Rolagem delicada no tour — ✅ CONCLUÍDO
+
+- Motor de rolagem reescrito (`captura-ferramentas.js`): perfil
+  trapézio com rampas em seno (pico ≈1,22x a média, era 3x na curva
+  cúbica antiga) — permite caber um arrasto de ~300px em ~1s sem
+  passar de 450px/s. Arrastos de 200-380px com pausa de 0,6-1,2s
+  entre eles — nunca mais 1 rolagem contínua longa. Validação por
+  código (scrollY real medido quadro a quadro) com margem de 15% pro
+  ruído de arredondamento de pixel/frame (achado testando — ver
+  DECISOES.md).
+- Teto de distância por arrasto (400px, depois de 2 ajustes — 900
+  dava 65s de vídeo, 550 ainda dava ~49,5s) — achado capturando de
+  verdade: a Home mede ~13.000px de altura no mobile, então um alvo
+  em % da altura total virava rolagem de milhares de px.
+- Carrossel horizontal com indicador de toque acompanhando o dedo;
+  toques com pausa antes/depois + ~150ms de "pressionado"; desktop
+  ganhou 1 rolagem suave (600px/s) — antes não rolava nada.
+- `loop.js` reescrito: bumerangue (ida + volta revertida) pra loop
+  perfeito sem salto, 9s (dentro de 8-10s pedido).
+- Captura mobile+desktop, render dos 2 vídeos, validação de geometria/
+  quadros brancos (`validar-geometria.js`/`verificar-quadros.js`, ✅
+  limpos nos 2), crítica visual de 10 quadros em cada (achou e
+  corrigiu o bug da transição com "quadro em branco" entre cenas —
+  `<Sequence>` esticado em `QUADROS_WIPE` além da duração oficial, ver
+  DECISOES.md) — tudo concluído. Versão anterior arquivada em
+  `tour\_v2\`. `tour-loop.mp4`/`.gif` refeitos em bumerangue (9s).
+
+## Kit e fechamento final — ✅ CONCLUÍDO
+
+- Narração (item A) aplicada nos 2 vídeos novos do tour (retomado
+  depois da queda de energia de 2026-10-29/30 — ver DECISOES.md,
+  entrada "RETOMADA" de 2026-10-30, pra como o estado foi reconstruído
+  do git/disco em vez de memória).
+- Kit regenerado (`node montar-kit-postagem.js`) — `extra-tour-do-
+  site\tour-instagram.mp4` confirmado com áudio+vídeo por ffprobe.
+  `LEIA-ME.md` (site-mae) já citava `--voz`/`--ritmo`/
+  `narracao-amostras` corretamente, nenhuma mudança necessária.
+- code-review (medium) no diff completo da rodada: achou 2 problemas
+  reais, corrigidos — `sintetizar-piper.ps1` (novo, exigido por
+  `narrar.js` pra vozes Piper) estava untracked e ficaria fora do
+  commit; comentário desatualizado em `captura-ferramentas.js`
+  (citava uma função que nunca existiu, `rolarElementoEmArrastos`).
+- `node --check` em todos os 11 scripts tocados: ✅ OK. Testes offline
+  do backend: ✅ todos passaram. git limpo, commit feito, push na
+  main sem force. Produção confirmada 200.
+
+**Rodada 6 completa — A, B e o fechamento final concluídos.**

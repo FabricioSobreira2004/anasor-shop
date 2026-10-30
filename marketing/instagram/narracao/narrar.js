@@ -1,33 +1,46 @@
 #!/usr/bin/env node
 // ============================================================
-// Narração em TODOS os vídeos (Rodada 5, item 4).
+// Narração em TODOS os vídeos (Rodada 5, item 4; refeito na Rodada
+// 6, item A — voz travada/lenta reportada pelo Fabrício).
+//
+// O QUE MUDOU NA RODADA 6 (ver DECISOES.md pros detalhes):
+//   - Ritmo agora é ajustado NA PRÓPRIA VOZ (--ritmo: Rate do SAPI
+//     ou length_scale do Piper), nunca esticando o áudio depois com
+//     atempo — isso causava o efeito "picado" relatado. Se o texto
+//     não couber nem cortado ao máximo, o script AVISA e segue (não
+//     acelera).
+//   - Suporta 2 motores — SAPI (Microsoft Maria, feminina) e Piper
+//     (vozes neurais pt_BR, masculinas — ver narracao-amostras/):
+//     node narrar.js --voz maria --ritmo 5
+//     node narrar.js --voz faber --ritmo 0.4
+//     Padrão sem --voz/--ritmo: maria, Rate=4 (~2,8-3,1 palavras/s
+//     medido com o TEXTO REAL dos roteiros — Rate=5 media bem nessa
+//     faixa numa frase de calibração isolada, mas passava de 3,1-3,8
+//     nos roteiros de verdade; ver DECISOES.md pela escolha completa).
+//   - Checa por código se a voz tem algum silêncio ≥0,6s NO MEIO da
+//     fala (silencedetect) antes de mixar — registra aviso, não
+//     bloqueia (editar o roteiro.md é o jeito de corrigir).
+//   - Acabamento: highpass 80Hz, compressão suave, fade-out de
+//     120ms no FIM da voz, loudnorm -16 LUFS (mesma cadeia de
+//     sempre). Sem reverberação — decisão registrada em
+//     DECISOES.md (não dava pra confirmar por ouvido que não ficaria
+//     artificial, então pulei em vez de arriscar).
 //
 // Lê marketing/instagram/narracao/roteiros.md (fonte única do texto
 // — editar o roteiro ali e rodar este script de novo regenera a
-// narração), sintetiza cada texto em WAV com a voz do Windows
-// (Microsoft Maria Desktop, pt-BR — ver DECISOES.md pra escolha
-// sobre o Piper) e mixa com o vídeo mudo original via ffmpeg:
+// narração). Mixa com o vídeo mudo original via ffmpeg:
 //   - voz começa ~0,3s depois do início;
-//   - loudness normalizado a -16 LUFS, pico máximo -1,5 dB (sem
-//     estourar);
 //   - áudio final AAC 48kHz estéreo 128kbps; vídeo copiado sem
 //     recompressão (-c:v copy);
 //   - a trilha de voz é "preenchida" com silêncio até o fim do
-//     vídeo (apad + -shortest limitado pelo vídeo, que é mais curto
-//     que a voz+silêncio infinito do apad).
+//     vídeo (apad + -shortest limitado pelo vídeo).
 //
 // O vídeo mudo ORIGINAL nunca é sobrescrito: antes de qualquer
-// mixagem, é arquivado em reels\_mudo\ ou tour\_mudo\ (uma vez só —
-// corridas seguintes deste script não pisam no arquivo já salvo).
+// mixagem, é arquivado em reels\_mudo\ ou tour\_mudo\ (uma vez só).
 //
-//   node narrar.js            → todos os 18
-//   node narrar.js --nome r1-caneca-surpresa-gatinho   → só 1 (teste)
-//
-// Se um texto não couber na duração do vídeo com a folga de 0,5s,
-// corta palavras do CONTEÚDO (nunca do fechamento fixo) e tenta de
-// novo; só se mesmo cortando bastante ainda não couber, acelera o
-// áudio até 1,1x (nunca mais). Qualquer corte/aceleração aplicada
-// fica no relatório final E:\projetos\_tmp\narracao-relatorio.txt.
+//   node narrar.js                                       → todos os 18
+//   node narrar.js --nome r1-caneca-surpresa-gatinho      → só 1 (teste)
+//   node narrar.js --voz faber --ritmo 0.4                → troca de voz/ritmo
 const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
@@ -39,12 +52,29 @@ const SITE_MAE_TOUR = 'E:/projetos/site-mae/tour';
 const MUDO_REELS = path.join(SITE_MAE_REELS, '_mudo');
 const MUDO_TOUR = path.join(SITE_MAE_TOUR, '_mudo');
 const TMP = 'E:/projetos/_tmp/narracao';
+const PIPER_MODELOS = 'E:/projetos/_tmp/piper-modelos';
 
-const VOZ = 'Microsoft Maria Desktop';
-const RATE = 2; // calibrado: ~2,51 palavras/segundo (ver DECISOES.md)
+// Rate=4 do SAPI mede, na MAIORIA dos roteiros reais (não numa frase
+// de calibração isolada), perto de 2,8-3,1 palavras/segundo — Rate=5
+// soa mais rápido na calibração isolada mas sistematicamente passa
+// de 3,1-3,8 wps nos roteiros de verdade (ver DECISOES.md). Os 4 modelos
+// Piper pt_BR (todos masculinos — não existe voz feminina pt_BR no
+// catálogo hoje) precisam de length_scale bem abaixo do recomendado
+// (~0,8-1,2) pra chegar nesse ritmo; ofereço como opção via --voz,
+// mas o padrão de produção continua o SAPI por not dar pra confirmar
+// por ouvido que o Piper nesse ritmo forçado não tem artefato.
+const VOZES = {
+  maria: { tipo: 'sapi', vozSapi: 'Microsoft Maria Desktop', ritmoPadrao: 4 },
+  faber: { tipo: 'piper', modelo: path.join(PIPER_MODELOS, 'pt_BR-faber-medium.onnx'), ritmoPadrao: 0.4 },
+  cadu: { tipo: 'piper', modelo: path.join(PIPER_MODELOS, 'pt_BR-cadu-medium.onnx'), ritmoPadrao: 0.4 },
+  jeff: { tipo: 'piper', modelo: path.join(PIPER_MODELOS, 'pt_BR-jeff-medium.onnx'), ritmoPadrao: 0.4 },
+  edresson: { tipo: 'piper', modelo: path.join(PIPER_MODELOS, 'pt_BR-edresson-low.onnx'), ritmoPadrao: 0.35 },
+};
+const VOZ_PADRAO = 'maria';
+
 const OFFSET_VOZ = 0.3; // segundos
 const FOLGA_FIM = 0.5; // segundos
-const ACELERACAO_MAXIMA = 1.1;
+const FADE_OUT = 0.12; // segundos, pedido explícito (A5)
 
 const VIDEOS = [
   { nome: 'r1-caneca-surpresa-gatinho', pasta: 'reels' },
@@ -71,8 +101,15 @@ const FECHAMENTO = 'Link na bio, no arroba anasor ponto cerâmica.';
 
 function lerArgs() {
   const args = process.argv.slice(2);
-  const i = args.indexOf('--nome');
-  return { nomeFiltro: i >= 0 ? args[i + 1] : null };
+  const pegar = (bandeira) => {
+    const i = args.indexOf(bandeira);
+    return i >= 0 ? args[i + 1] : null;
+  };
+  return {
+    nomeFiltro: pegar('--nome'),
+    voz: pegar('--voz') || VOZ_PADRAO,
+    ritmoArg: pegar('--ritmo'),
+  };
 }
 
 // Lê roteiros.md e extrai { nome -> texto } a partir dos cabeçalhos
@@ -90,10 +127,14 @@ function lerRoteiros() {
     }
     if (nomeAtual && linha.startsWith('> ')) {
       roteiros[nomeAtual] = linha.slice(2).trim();
-      nomeAtual = null; // já capturou o texto deste vídeo, próximo "###" é outro
+      nomeAtual = null;
     }
   }
   return roteiros;
+}
+
+function contarPalavras(texto) {
+  return texto.trim().split(/\s+/).filter(Boolean).length;
 }
 
 function duracaoSegundos(arquivo) {
@@ -107,13 +148,11 @@ function contarAudioEVideo(arquivo) {
   return {
     audio: linhas.filter((l) => l.includes('audio')).length,
     video: linhas.filter((l) => l.includes('video')).length,
-    linhas,
   };
 }
 
 // volumedetect imprime o resultado no stderr; ffmpeg sai com código 0
-// mesmo assim (não é erro), então basta redirecionar stderr pro mesmo
-// fluxo capturado (2>&1) — 1 chamada só, sem rodar o ffmpeg 2x.
+// mesmo assim, então basta redirecionar stderr pro mesmo fluxo (2>&1).
 function volumeDetect(arquivo) {
   const saida = execSync(`"${FFMPEG}" -y -i "${arquivo}" -af volumedetect -f null - 2>&1`).toString();
   const mean = saida.match(/mean_volume:\s*(-?[\d.]+) dB/);
@@ -124,62 +163,87 @@ function volumeDetect(arquivo) {
   };
 }
 
-// Corta o CONTEÚDO (nunca o fechamento fixo) de um jeito que tenta
-// preservar frases/cláusulas completas, em vez de truncar no meio
-// de uma palavra importante — por ordem de preferência: (1) solta a
-// última FRASE inteira (corta no último ". "); (2) solta a última
-// CLÁUSULA (corta na última ", "); (3) só se não houver mais nenhum
-// separador, solta a última palavra (último recurso).
+// Procura silêncio ≥0,6s DENTRO da fala (exclui o começo e o fim
+// naturais) — item A4: detectar corte abrupto/artefato por código,
+// já que não dá pra ouvir. noise=-35dB é um limiar conservador (fala
+// normal fica bem acima disso; só pausa/silêncio real cai abaixo).
+function detectarSilencioInterno(arquivoWav, duracaoVoz) {
+  const saida = execSync(`"${FFMPEG}" -i "${arquivoWav}" -af silencedetect=noise=-35dB:d=0.6 -f null - 2>&1`).toString();
+  const inicios = [...saida.matchAll(/silence_start:\s*([\d.]+)/g)].map((m) => parseFloat(m[1]));
+  const fins = [...saida.matchAll(/silence_end:\s*([\d.]+)/g)].map((m) => parseFloat(m[1]));
+  const internos = [];
+  for (let i = 0; i < inicios.length; i += 1) {
+    const inicio = inicios[i];
+    const fim = fins[i] != null ? fins[i] : duracaoVoz;
+    // ignora silêncio colado no começo (<0,3s) ou no fim (>duração-0,3s)
+    if (inicio > 0.3 && fim < duracaoVoz - 0.3) {
+      internos.push({ inicio: inicio.toFixed(2), fim: fim.toFixed(2) });
+    }
+  }
+  return internos;
+}
+
+// Corta o CONTEÚDO (nunca o fechamento fixo) preservando frases ou
+// cláusulas inteiras — (1) solta a última FRASE (último ". "); (2)
+// solta a última CLÁUSULA (última ", "); (3) só por último, palavra.
 function cortarConteudo(texto) {
-  if (!texto.endsWith(FECHAMENTO)) return texto; // nunca corta o fechamento fixo
+  if (!texto.endsWith(FECHAMENTO)) return texto;
   const conteudo = texto.slice(0, texto.length - FECHAMENTO.length).trim();
 
   const ultimoPonto = conteudo.lastIndexOf('. ');
   const ultimaVirgula = conteudo.lastIndexOf(', ');
   let novoConteudo;
   if (ultimoPonto > 0) {
-    novoConteudo = conteudo.slice(0, ultimoPonto + 1); // mantém o "."
+    novoConteudo = conteudo.slice(0, ultimoPonto + 1);
   } else if (ultimaVirgula > 0) {
     novoConteudo = conteudo.slice(0, ultimaVirgula);
   } else {
     const palavras = conteudo.split(/\s+/);
-    if (palavras.length <= 3) return texto; // já está mínimo, não corta mais
+    if (palavras.length <= 3) return texto;
     palavras.pop();
     novoConteudo = palavras.join(' ');
   }
 
   novoConteudo = novoConteudo.replace(/[,:;—-]+$/, '').trim();
   if (!/[.!?]$/.test(novoConteudo)) novoConteudo += '.';
-  if (!novoConteudo || novoConteudo === '.') return texto; // nada sobrou, não corta mais
+  if (!novoConteudo || novoConteudo === '.') return texto;
   return `${novoConteudo} ${FECHAMENTO}`;
 }
 
-function sintetizar(texto, arquivoWav) {
+// SAPI e Piper só diferem no script .ps1 e nos parâmetros finais —
+// 1 função só (achado do simplify: eram 2 quase idênticas + um
+// despachante).
+function sintetizar(texto, arquivoWav, voz, ritmo) {
   const arquivoTxt = path.join(TMP, 'texto-atual.txt');
   fs.writeFileSync(arquivoTxt, texto, 'utf8');
-  const script = path.join(DIR_NARRACAO, 'sintetizar-voz.ps1');
+  const parametros = voz.tipo === 'sapi'
+    ? `-Rate ${ritmo} -Voz "${voz.vozSapi}"`
+    : `-Modelo "${voz.modelo}" -LengthScale ${ritmo}`;
+  const script = path.join(DIR_NARRACAO, voz.tipo === 'sapi' ? 'sintetizar-voz.ps1' : 'sintetizar-piper.ps1');
   execSync(
-    `powershell -NoProfile -ExecutionPolicy Bypass -File "${script}" -TextoArquivo "${arquivoTxt}" -SaidaWav "${arquivoWav}" -Rate ${RATE} -Voz "${VOZ}"`,
+    `powershell -NoProfile -ExecutionPolicy Bypass -File "${script}" -TextoArquivo "${arquivoTxt}" -SaidaWav "${arquivoWav}" ${parametros}`,
     { stdio: 'ignore' }
   );
 }
 
-// Sintetiza, e se a voz não couber na duração disponível (com a
-// folga do fim), corta palavras e tenta de novo; por fim, se ainda
-// não couber, acelera o ÁUDIO (atempo) até ACELERACAO_MAXIMA.
-function sintetizarComAjuste(textoOriginal, limiteSegundos, decisoes) {
+// Sintetiza e, se a voz não couber na duração disponível, corta o
+// texto e tenta de novo. NUNCA acelera o áudio (proibido na Rodada
+// 6) — se mesmo cortado ao máximo não couber, avisa e segue com o
+// que saiu (a mixagem corta no fim pelo -shortest, o que é menos
+// ruim que esticar o áudio, mas o ideal é o roteiro caber sozinho).
+function sintetizarComAjuste(textoOriginal, limiteSegundos, voz, ritmo, decisoes) {
   let texto = textoOriginal;
-  let arquivoWav = path.join(TMP, 'voz.wav');
+  const arquivoWav = path.join(TMP, 'voz.wav');
   let duracao;
   let tentativas = 0;
   const MAX_TENTATIVAS_CORTE = 8;
 
   while (true) {
-    sintetizar(texto, arquivoWav);
+    sintetizar(texto, arquivoWav, voz, ritmo);
     duracao = duracaoSegundos(arquivoWav);
     if (duracao <= limiteSegundos || tentativas >= MAX_TENTATIVAS_CORTE) break;
     const novoTexto = cortarConteudo(texto);
-    if (novoTexto === texto) break; // não dá pra cortar mais
+    if (novoTexto === texto) break;
     texto = novoTexto;
     tentativas += 1;
   }
@@ -187,31 +251,29 @@ function sintetizarComAjuste(textoOriginal, limiteSegundos, decisoes) {
   if (tentativas > 0) {
     decisoes.push(`texto cortado ${tentativas}x pra caber na duração (texto final: "${texto}")`);
   }
-
   if (duracao > limiteSegundos) {
-    // último recurso: acelerar o ÁUDIO (não o vídeo) até 1,1x
-    const fator = Math.min(ACELERACAO_MAXIMA, duracao / limiteSegundos);
-    const acelerado = path.join(TMP, 'voz-acelerada.wav');
-    execSync(`"${FFMPEG}" -y -i "${arquivoWav}" -filter:a "atempo=${fator.toFixed(3)}" "${acelerado}"`, { stdio: 'ignore' });
-    arquivoWav = acelerado;
-    duracao = duracaoSegundos(arquivoWav);
-    decisoes.push(`áudio acelerado ${fator.toFixed(3)}x (ainda não cabia só cortando palavras)`);
-    if (duracao > limiteSegundos) {
-      decisoes.push(`AVISO: mesmo cortado+acelerado a 1,1x, a voz (${duracao.toFixed(2)}s) ainda passa do limite (${limiteSegundos.toFixed(2)}s) — registrar pro Fabrício revisar o roteiro`);
-    }
+    decisoes.push(`AVISO: mesmo cortado ao máximo, a voz (${duracao.toFixed(2)}s) passa do limite (${limiteSegundos.toFixed(2)}s) — não acelerei (proibido); revisar o roteiro.md pra este vídeo`);
   }
 
-  return { arquivoWav, duracao };
+  return { arquivoWav, duracao, texto };
 }
 
-function mixar(video, voz, saida) {
+function mixar(video, voz, duracaoVoz, saida) {
+  const inicioFade = Math.max(0, duracaoVoz - FADE_OUT).toFixed(3);
+  const filtroVoz =
+    `highpass=f=80,` +
+    `acompressor=threshold=-18dB:ratio=3:attack=20:release=250,` +
+    `afade=t=out:st=${inicioFade}:d=${FADE_OUT},` +
+    `adelay=${Math.round(OFFSET_VOZ * 1000)}:all=1,` +
+    `apad,` +
+    `loudnorm=I=-16:TP=-1.5:LRA=11`;
   execSync(
-    `"${FFMPEG}" -y -i "${video}" -i "${voz}" -filter_complex "[1:a]adelay=${Math.round(OFFSET_VOZ * 1000)}:all=1,apad,loudnorm=I=-16:TP=-1.5:LRA=11[a]" -map 0:v -map "[a]" -c:v copy -c:a aac -ar 48000 -ac 2 -b:a 128k -shortest "${saida}"`,
+    `"${FFMPEG}" -y -i "${video}" -i "${voz}" -filter_complex "[1:a]${filtroVoz}[a]" -map 0:v -map "[a]" -c:v copy -c:a aac -ar 48000 -ac 2 -b:a 128k -shortest "${saida}"`,
     { stdio: 'ignore' }
   );
 }
 
-function processarVideo(item, roteiros, relatorio) {
+function processarVideo(item, roteiros, nomeVoz, voz, ritmo, relatorio) {
   const { nome, pasta } = item;
   const texto = roteiros[nome];
   if (!texto) {
@@ -232,10 +294,6 @@ function processarVideo(item, roteiros, relatorio) {
   }
 
   fs.mkdirSync(dirMudo, { recursive: true });
-  // Arquiva o mudo original UMA VEZ (corridas seguintes deste script
-  // não sobrescrevem o arquivo já salvo — ele é a fonte de verdade
-  // da duração do vídeo, mesmo que o script seja rodado de novo
-  // sobre um arquivo que já tem narração).
   if (!fs.existsSync(arquivoMudo)) {
     fs.copyFileSync(arquivoAtual, arquivoMudo);
   }
@@ -244,31 +302,37 @@ function processarVideo(item, roteiros, relatorio) {
   const limite = duracaoVideo - OFFSET_VOZ - FOLGA_FIM;
 
   const decisoes = [];
-  const { arquivoWav, duracao: duracaoVoz } = sintetizarComAjuste(texto, limite, decisoes);
+  const { arquivoWav, duracao: duracaoVoz, texto: textoFinal } = sintetizarComAjuste(texto, limite, voz, ritmo, decisoes);
 
-  // Mixa num arquivo temporário e só então troca pro lugar final
-  // (rename, não copy — mesmo disco E:, é só trocar a entrada no
-  // diretório, não reler/regravar os bytes todos) — se o ffmpeg
-  // falhar no meio da mixagem, arquivoAtual nunca fica corrompido.
+  const silenciosInternos = detectarSilencioInterno(arquivoWav, duracaoVoz);
+  if (silenciosInternos.length > 0) {
+    decisoes.push(`AVISO: ${silenciosInternos.length} silêncio(s) ≥0,6s no meio da fala: ${silenciosInternos.map((s) => `${s.inicio}-${s.fim}s`).join(', ')}`);
+  }
+
   const saidaTmp = path.join(TMP, `${nome}-narrado.mp4`);
-  mixar(arquivoMudo, arquivoWav, saidaTmp);
+  mixar(arquivoMudo, arquivoWav, duracaoVoz, saidaTmp);
   fs.renameSync(saidaTmp, arquivoAtual);
 
   const streams = contarAudioEVideo(arquivoAtual);
   const duracaoFinal = duracaoSegundos(arquivoAtual);
   const volume = volumeDetect(arquivoAtual);
+  const palavras = contarPalavras(textoFinal.slice(0, textoFinal.length - FECHAMENTO.length)) + contarPalavras(FECHAMENTO);
+  const wps = duracaoVoz > 0 ? palavras / duracaoVoz : 0;
 
   const okStreams = streams.audio === 1 && streams.video === 1;
-  const okSilencio = volume.mean !== null && volume.mean > -50; // não é silêncio total
-  const okClipping = volume.max !== null && volume.max <= 0.5; // margem pequena de tolerância de medição
-  const okDuracaoVoz = duracaoVoz < duracaoFinal;
+  const okSilencio = volume.mean !== null && volume.mean > -50;
+  const okClipping = volume.max !== null && volume.max <= 0.5;
+  const okDuracaoVoz = duracaoVoz < duracaoFinal - 0.5;
+  const okRitmo = wps >= 2.8 && wps <= 3.1;
+  const okSemCortesInternos = silenciosInternos.length === 0;
 
   const linha =
-    `${nome} — vídeo ${duracaoVideo.toFixed(2)}s, voz ${duracaoVoz.toFixed(2)}s, ` +
-    `final ${duracaoFinal.toFixed(2)}s | fluxos: ${streams.audio}a/${streams.video}v | ` +
+    `${nome} — voz=${nomeVoz} ritmo=${ritmo} | vídeo ${duracaoVideo.toFixed(2)}s, voz ${duracaoVoz.toFixed(2)}s, final ${duracaoFinal.toFixed(2)}s | ` +
+    `palavras=${palavras} wps=${wps.toFixed(2)} | fluxos: ${streams.audio}a/${streams.video}v | ` +
     `volume mean=${volume.mean}dB max=${volume.max}dB | ` +
-    `${okStreams ? 'OK' : 'FALHA'} fluxos, ${okSilencio ? 'OK' : 'FALHA'} silêncio, ` +
-    `${okClipping ? 'OK' : 'FALHA'} clipping, ${okDuracaoVoz ? 'OK' : 'FALHA'} duração` +
+    `${okStreams ? 'OK' : 'FALHA'} fluxos, ${okSilencio ? 'OK' : 'FALHA'} silêncio-total, ` +
+    `${okClipping ? 'OK' : 'FALHA'} clipping, ${okDuracaoVoz ? 'OK' : 'FALHA'} duração(+0.5s), ` +
+    `${okRitmo ? 'OK' : 'FALHA'} ritmo(2.8-3.1), ${okSemCortesInternos ? 'OK' : 'FALHA'} sem-corte-interno` +
     (decisoes.length ? ` | decisões: ${decisoes.join('; ')}` : '');
 
   console.log(`✅ ${linha}`);
@@ -276,10 +340,17 @@ function processarVideo(item, roteiros, relatorio) {
 }
 
 function main() {
-  const { nomeFiltro } = lerArgs();
+  const { nomeFiltro, voz: nomeVoz, ritmoArg } = lerArgs();
   fs.mkdirSync(TMP, { recursive: true });
   process.env.TEMP = TMP;
   process.env.TMP = TMP;
+
+  const voz = VOZES[nomeVoz];
+  if (!voz) {
+    console.error(`Voz desconhecida: "${nomeVoz}". Opções: ${Object.keys(VOZES).join(', ')}`);
+    process.exit(1);
+  }
+  const ritmo = ritmoArg != null ? parseFloat(ritmoArg) : voz.ritmoPadrao;
 
   const roteiros = lerRoteiros();
   const lista = nomeFiltro ? VIDEOS.filter((v) => v.nome === nomeFiltro) : VIDEOS;
@@ -288,10 +359,12 @@ function main() {
     process.exit(1);
   }
 
-  const relatorio = [];
+  console.log(`Voz: ${nomeVoz} (${voz.tipo}), ritmo: ${ritmo}\n`);
+
+  const relatorio = [`Voz: ${nomeVoz} (${voz.tipo}), ritmo: ${ritmo}`];
   for (const item of lista) {
     try {
-      processarVideo(item, roteiros, relatorio);
+      processarVideo(item, roteiros, nomeVoz, voz, ritmo, relatorio);
     } catch (erro) {
       console.error(`❌ ${item.nome}: FALHOU — ${erro.message}`);
       relatorio.push(`${item.nome}: FALHOU — ${erro.message}`);

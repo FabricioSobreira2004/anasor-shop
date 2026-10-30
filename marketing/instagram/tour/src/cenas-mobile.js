@@ -4,10 +4,12 @@
 // pro chamador codificar em .mp4. Nenhuma peça vendida é comprada de
 // verdade, nenhum pagamento é gerado — ver capturar.js.
 const {
-  manterFoto, rolarPagina, instalarIndicadorToque,
+  manterFoto, rolarEmArrastos, arrastarCarrossel, instalarIndicadorToque,
   tocarComIndicador, capturarVideo, esperarCampoPreenchido, criarFabricaCena,
 } = require('./captura-ferramentas');
-const { FPS, ID_PRODUTO_PRINCIPAL, ID_PRODUTO_VENDIDO, CPF_TESTE, CEP_TESTE } = require('./dispositivos');
+const { FPS, VELOCIDADE_MAX_PX_S, ID_PRODUTO_PRINCIPAL, ID_PRODUTO_VENDIDO, CPF_TESTE, CEP_TESTE } = require('./dispositivos');
+
+const VMAX = VELOCIDADE_MAX_PX_S.mobile;
 
 async function capturarMobile(page, dirBase, baseUrl, manifest) {
   await instalarIndicadorToque(page);
@@ -20,18 +22,37 @@ async function capturarMobile(page, dirBase, baseUrl, manifest) {
     await manterFoto(page, dir, c, 45);
   });
 
-  // 2) Rolagem pelos carrosséis (Queridinhos, subcategorias)
+  // 2) Rolagem pelos carrosséis (Queridinhos, subcategorias) — pedido
+  // explícito da Rodada 6 (item B): arrastos curtos com pausa, nunca
+  // 1 rolagem contínua. Distância FIXA (não % da altura da página) —
+  // achado capturando de verdade: a Home tem quase 13.000px de altura
+  // no mobile (hero + várias vitrines empilhadas), então uma % da
+  // altura total virava uma rolagem de milhares de px, bem mais que o
+  // "mostrar mais um pouco" que a cena pede. 400px (o teto padrão do
+  // motor, `distanciaMaximaPx` em captura-ferramentas.js — pedir mais
+  // que isso aqui só seria truncado do mesmo jeito) já passa da hero
+  // pra dentro da 1ª vitrine, o bastante pra esta cena curta.
   await cena('home-scroll-carrosseis', async (dir, c) => {
-    const alturaPagina = await page.evaluate(() => document.body.scrollHeight);
-    // ~45%: o bastante pra passar por "Queridinhos do Ateliê" e entrar
-    // nas subcategorias na maioria dos layouts, sem depender de achar
-    // um seletor exato de seção (o conteúdo da Home é dado, muda com o
-    // catálogo) — ver nota em roteiro-mobile.js sobre por que a
-    // legenda desta cena fala em termos gerais.
-    await rolarPagina(page, dir, c, { de: 0, para: Math.round(alturaPagina * 0.22), quadros: 60 });
-    await manterFoto(page, dir, c, 15);
-    await rolarPagina(page, dir, c, { de: Math.round(alturaPagina * 0.22), para: Math.round(alturaPagina * 0.42), quadros: 60 });
-    await manterFoto(page, dir, c, 15);
+    await rolarEmArrastos(page, dir, c, { de: 0, para: 400, velocidadeMaxPxS: VMAX, dispositivo: 'mobile', cena: 'home-scroll-1' });
+
+    // Carrossel horizontal (".carrossel-viewport", ex.: "Queridinhos
+    // do Ateliê") — pedido explícito: arrasto de 0,7-1,0s com o
+    // indicador de toque acompanhando o dedo. `arrastarCarrossel` acha
+    // sozinha qual ".carrossel-viewport" está visível (a página tem
+    // vários) e devolve `null` se nenhum estiver — degrada bem, não
+    // derruba a captura por um seletor que pode não existir se o
+    // catálogo mudar o layout.
+    const achou = await arrastarCarrossel(page, '.carrossel-viewport', dir, c, { distanciaPx: 260, velocidadeMaxPxS: VMAX, dispositivo: 'mobile', cena: 'home-carrossel' });
+    if (!achou) await manterFoto(page, dir, c, Math.round(0.8 * FPS));
+
+    // Parte do scrollY REAL da página (não de um número calculado
+    // antes) — o arrasto anterior pode ter sido limitado pelo teto de
+    // distância do motor (ver nota em captura-ferramentas.js), então
+    // confiar num valor pré-calculado criaria um SALTO (a página
+    // pularia do ponto real pro ponto "esperado").
+    const atual = await page.evaluate(() => window.scrollY);
+    await rolarEmArrastos(page, dir, c, { de: atual, para: atual + 400, velocidadeMaxPxS: VMAX, dispositivo: 'mobile', cena: 'home-scroll-2' });
+    await manterFoto(page, dir, c, Math.round(0.8 * FPS));
   });
 
   // 3) Card com selo — ACHADO NA 2ª RODADA DE CRÍTICA VISUAL: a 1ª
@@ -58,7 +79,7 @@ async function capturarMobile(page, dirBase, baseUrl, manifest) {
       const rect = card.getBoundingClientRect();
       return window.scrollY + rect.top - window.innerHeight * 0.3;
     });
-    await rolarPagina(page, dir, c, { de: 0, para: Math.max(0, Math.round(y)), quadros: 30 });
+    await rolarEmArrastos(page, dir, c, { de: 0, para: Math.max(0, Math.round(y)), velocidadeMaxPxS: VMAX, dispositivo: 'mobile', cena: 'card-selo' });
     await manterFoto(page, dir, c, 30);
   });
 
@@ -71,7 +92,7 @@ async function capturarMobile(page, dirBase, baseUrl, manifest) {
     for (const thumb of miniaturas.slice(1, 3)) {
       const box = await thumb.boundingBox();
       if (!box) continue;
-      await tocarComIndicador(page, dir, c, { x: box.x + box.width / 2, y: box.y + box.height / 2 });
+      await tocarComIndicador(page, dir, c, { x: box.x + box.width / 2, y: box.y + box.height / 2, pausaDepois: false });
       await manterFoto(page, dir, c, 18);
     }
   });
@@ -97,7 +118,7 @@ async function capturarMobile(page, dirBase, baseUrl, manifest) {
       return window.scrollY + rect.top - 80;
     });
     const atual = await page.evaluate(() => window.scrollY);
-    await rolarPagina(page, dir, c, { de: atual, para: Math.round(y), quadros: 35 });
+    await rolarEmArrastos(page, dir, c, { de: atual, para: Math.round(y), velocidadeMaxPxS: VMAX, dispositivo: 'mobile', cena: 'produto-medidas' });
     await manterFoto(page, dir, c, 20);
   });
 
@@ -110,7 +131,7 @@ async function capturarMobile(page, dirBase, baseUrl, manifest) {
       return window.scrollY + rect.top - 100;
     });
     const atual = await page.evaluate(() => window.scrollY);
-    await rolarPagina(page, dir, c, { de: atual, para: Math.round(y), quadros: 40 });
+    await rolarEmArrastos(page, dir, c, { de: atual, para: Math.round(y), velocidadeMaxPxS: VMAX, dispositivo: 'mobile', cena: 'produto-upsell' });
     await manterFoto(page, dir, c, 20);
   });
 
@@ -121,7 +142,7 @@ async function capturarMobile(page, dirBase, baseUrl, manifest) {
     const botao = await page.$('.btn-comprar');
     if (!botao) { await manterFoto(page, dir, c, 1); return; } // mesma defesa de "vendida-produto"/"produto-video" — achado do code-review (faltava aqui)
     const box = await botao.boundingBox();
-    await tocarComIndicador(page, dir, c, { x: box.x + box.width / 2, y: box.y + box.height / 2 });
+    await tocarComIndicador(page, dir, c, { x: box.x + box.width / 2, y: box.y + box.height / 2, pausaDepois: false });
     await page.waitForSelector('.mini-carrinho', { state: 'visible', timeout: 4000 }).catch(() => {});
     await manterFoto(page, dir, c, 50);
   });
@@ -151,7 +172,13 @@ async function capturarMobile(page, dirBase, baseUrl, manifest) {
   await cena('vendida-secao', async (dir, c) => {
     await page.goto(`${baseUrl}/ceramica.html`, { waitUntil: 'networkidle' });
     const alturaPagina = await page.evaluate(() => document.body.scrollHeight);
-    await rolarPagina(page, dir, c, { de: 0, para: Math.max(0, alturaPagina - page.viewportSize().height), quadros: 45 });
+    // Não rola até o fim da página — o teto de distância do motor
+    // (400px por padrão, ver `distanciaMaximaPx` em
+    // captura-ferramentas.js) já evita que esta cena sozinha estoure
+    // o tempo do vídeo; passar o percurso máximo como alvo só garante
+    // que o teto é o que de fato decide, mesmo se a listagem crescer.
+    const maximo = Math.max(0, alturaPagina - page.viewportSize().height);
+    await rolarEmArrastos(page, dir, c, { de: 0, para: maximo, velocidadeMaxPxS: VMAX, dispositivo: 'mobile', cena: 'vendida-secao' });
     await manterFoto(page, dir, c, 15);
   });
 
@@ -169,7 +196,10 @@ async function capturarMobile(page, dirBase, baseUrl, manifest) {
   // "tela toda branca" relatada.
   await cena('links', async (dir, c) => {
     await page.goto(`${baseUrl}/links.html`, { waitUntil: 'networkidle' });
-    await manterFoto(page, dir, c, 45);
+    // 35 (não 45) — ajuste fino pra caber no teto de 45s do vídeo
+    // inteiro (Rodada 6, item B2) depois de medir o total real com
+    // as cenas de rolagem novas.
+    await manterFoto(page, dir, c, 35);
   });
 }
 

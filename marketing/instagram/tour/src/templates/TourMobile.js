@@ -19,9 +19,11 @@ const {
 // resultado não foi um erro claro: o fetch do quadro TRAVOU (timeout
 // de 28s do Remotion), derrubando o render inteiro. <Sequence> zera o
 // frame local no início de cada cena — exatamente o que faltava.
+const QUADROS_WIPE = 16;
+
 function CenaMobile({ cena, i, clipes, cores, retratoUri }) {
   const frame = useCurrentFrame();
-  const progressoWipe = i === 0 ? 1 : interpolate(frame, [0, 16], [0, 1], {
+  const progressoWipe = i === 0 ? 1 : interpolate(frame, [0, QUADROS_WIPE], [0, 1], {
     extrapolateLeft: 'clamp', extrapolateRight: 'clamp',
   });
 
@@ -62,11 +64,31 @@ function TourMobile({ cenas, cores, logoUri, retratoUri, clipes }) {
     'div',
     { style: { position: 'absolute', inset: 0, backgroundColor: cores.fundo } },
     React.createElement(FundoBege, { cores }),
-    cenas.map((cena, i) => React.createElement(
-      Sequence,
-      { key: i, from: cena.inicio, durationInFrames: cena.duracao, name: cena.nome, layout: 'none' },
-      React.createElement(CenaMobile, { cena, i, clipes, cores, retratoUri })
-    )),
+    // durationInFrames + QUADROS_WIPE (exceto a última cena) — achado
+    // visual (Rodada 6, QA de 10 quadros): como cada cena mora num
+    // <Sequence> PRÓPRIO, sem sobreposição, a cena anterior já tinha
+    // terminado (Sequence fechado) no exato instante em que a
+    // PRÓXIMA cena começa seu wipe circular (progresso≈0, quase
+    // invisível) — resultado: ~2 quadros praticamente em branco (só
+    // fundo bege) em TODA transição entre cenas, achado só olhando o
+    // vídeo renderizado quadro a quadro, não pela varredura de
+    // luminância (o bege não é branco o bastante pra disparar o
+    // limiar). Esticar o Sequence além da duração "oficial" da cena
+    // mantém a cena ANTERIOR visível por baixo enquanto a próxima
+    // cena ainda está quase transparente — câmera e vídeo apenas
+    // seguram no último quadro durante essa folga (clamp já existente
+    // em DispositivoFlutuante; OffthreadVideo segura no último quadro
+    // do clipe, mesmo comportamento já usado em outras cenas mais
+    // curtas que a duração pedida).
+    cenas.map((cena, i) => {
+      const ultima = i === cenas.length - 1;
+      const duracaoSequence = ultima ? cena.duracao : cena.duracao + QUADROS_WIPE;
+      return React.createElement(
+        Sequence,
+        { key: i, from: cena.inicio, durationInFrames: duracaoSequence, name: cena.nome, layout: 'none' },
+        React.createElement(CenaMobile, { cena, i, clipes, cores, retratoUri })
+      );
+    }),
     React.createElement(SeloTour, { cores, texto: 'Tour do Site' }),
     React.createElement(MarcaDagua, { src: logoUri }),
     React.createElement(VinhetaGrao)

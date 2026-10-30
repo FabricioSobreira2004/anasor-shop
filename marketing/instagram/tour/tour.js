@@ -151,9 +151,20 @@ async function renderizar({ id, nome, props, bundleLocation }) {
   fs.mkdirSync(SAIDA, { recursive: true });
   fs.mkdirSync(SAIDA_CONFERENCIA, { recursive: true });
   const saidaBruta = path.join(SAIDA, `_bruto-${nome}.mp4`);
+  // concurrency MENOR que o padrão (8, 1 por núcleo) — achado nesta
+  // rodada: o render morria sem mensagem de erro clara, sempre no
+  // meio da renderização de verdade (não no carregamento), com o
+  // cache do compositor perto de 2-3GB numa máquina com só ~8,8GB
+  // livres. "TourDesktop" (Versão B) decodifica 2 vídeos por quadro
+  // (desktop + celular lado a lado) — dobra a memória por thread
+  // comparado a "TourMobile" (1 vídeo só), por isso precisa do nível
+  // mais conservador (1, sequencial); concurrency:3 já bastou pra
+  // "TourMobile" sem morrer, bem mais rápido que rodar tudo em série.
+  const concurrency = id === 'TourDesktop' ? 1 : 3;
   await renderMedia({
     composition, serveUrl: bundleLocation, codec: 'h264', outputLocation: saidaBruta,
     inputProps: props, pixelFormat: 'yuv420p', crf: 18, x264Preset: 'slow', logLevel: 'verbose',
+    concurrency,
   });
 
   const saidaFinal = path.join(SAIDA, `${nome}.mp4`);

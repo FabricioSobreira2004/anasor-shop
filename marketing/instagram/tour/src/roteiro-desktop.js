@@ -33,11 +33,21 @@ function montarRoteiroDesktop() {
     de: { escala: 1.0, x: 0, y: 0 }, para: { escala: 1.04, x: 0, y: -0.6 },
   });
 
-  push('listagem', 270, {
+  // 180 (não 270/300): a cena ganhou uma rolagem suave de verdade na
+  // captura (Rodada 6, item B) — medido o clipe real (com o motor já
+  // determinístico, ver DECISOES.md), dá 185 quadros (busca + rolagem
+  // + hold). IMPORTANTE: esta duração precisa ser < ao clipe real,
+  // nunca igual ou maior — `copiarClipesParaPublic` "estica" clipes
+  // mais CURTOS que a cena repetindo o próprio clipe (`-stream_loop`),
+  // o que é imperceptível pra uma cena ESTÁTICA (o uso original,
+  // documentado acima), mas criaria um SALTO visível aqui (a rolagem
+  // voltaria pro topo/busca vazia no meio da cena). 180 = 185 reais
+  // − 5 quadros de margem, nunca estica.
+  push('listagem', 180, {
     tipo: 'desktop-solo', desktop: 'desktop-listagem',
     de: { escala: 1.0, x: 0, y: 0 }, para: { escala: 1.05, x: 0, y: -0.6 },
     destaques: [
-      { texto: 'O preço de cada peça é recalculado no servidor — nunca só no que chega do navegador.', atraso: 20, duracao: 220 },
+      { texto: 'O preço de cada peça é recalculado no servidor — nunca só no que chega do navegador.', atraso: 20, duracao: 155 },
     ],
   });
 
