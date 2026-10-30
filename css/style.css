@@ -2838,15 +2838,9 @@ nav {
   display: flex;
   flex-direction: column;
   align-items: center;
-  /* CORREÇÃO (cards desalinhados): height:100% faz o card preencher
-     toda a altura da CÉLULA do grid — que, por padrão (align-items:
-     stretch, o valor padrão de .selecao-especial__grid, nunca
-     sobrescrito), já é igual para as duas colunas: a mais alta das
-     duas "estica" a célula da outra. Sem isto, cada card só ocupava a
-     própria altura de CONTEÚDO, então uma frase mais curta num card
-     deixava ele mais baixo que o outro — os dois pareciam
-     "flutuar" em alturas diferentes mesmo lado a lado. */
-  height: 100%;
+  /* a altura igual entre os cards vem do bloco "CARDS DAS SEÇÕES
+     ESCURAS", mais abaixo (o antigo height:100% não esticava no
+     carrossel flex do celular) */
 }
 
 /* .carrossel-card__foto-wrap: NOVO (pedido item 2, setas) — ancora
@@ -3117,7 +3111,7 @@ nav {
    pra não afetar esse mesmo botão em outros lugares do site (barra-
    compra flutuante, produto.html etc.), que não são flex column. */
 .selecao-especial__pergaminho .btn-comprar-agora {
-  margin-top: auto;
+  margin-top: 0;
 }
 
 /* touch-action:manipulation nos botões/links destes 2 carrosséis de
@@ -3429,6 +3423,56 @@ nav {
 .edicao-surpresa__preco {
   justify-content: center;
   margin-bottom: 1.1rem;
+}
+
+/* ============================================================
+   CARDS DAS SEÇÕES ESCURAS (Edição Surpresa + Seleção Especial)
+   ============================================================
+   Medido: nome em 2 linhas (Cachorrinho) x 1 linha (Gatinho) e fotos
+   de proporções diferentes deixavam cada botão numa altura. A regra
+   vale para qualquer peça que entrar aqui: cards da mesma altura,
+   foto e título com espaço reservado, e preço + botão colados na
+   base, sempre à mesma distância um do outro. */
+.edicao-surpresa__grid,
+.selecao-especial__grid {
+  align-items: stretch;
+}
+
+.edicao-surpresa__card,
+.selecao-especial__card {
+  align-self: stretch;
+}
+
+/* caixa de altura fixa: foto em pé ou deitada ocupa o mesmo espaço */
+.edicao-surpresa .carrossel-card__foto-wrap,
+.selecao-especial .carrossel-card__foto-wrap {
+  height: 230px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 2 linhas sempre reservadas; nome maior que isso vira reticências */
+.edicao-surpresa__titulo-peca,
+.selecao-especial__titulo-peca {
+  width: 100%;
+  line-height: 1.3;
+  min-height: 2.6em;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+}
+
+/* o preço absorve a sobra (margin-top:auto) e leva o botão junto */
+.edicao-surpresa__preco,
+.selecao-especial__preco {
+  margin-top: auto;
+}
+
+.edicao-surpresa__card .btn-comprar-agora {
+  margin-top: 0;
 }
 
 /* .preco/.preco__atual (renderBlocoPreco, main.js) usam --cor-destaque
