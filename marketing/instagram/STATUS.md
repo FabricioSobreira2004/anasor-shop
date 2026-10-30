@@ -407,3 +407,5 @@ paralelo (fork), B na sessão principal.
   main sem force. Produção confirmada 200.
 
 **Rodada 6 completa — A, B e o fechamento final concluídos.**
+
+Notebook do pai: ajustes 1 a 5 feitos em 2026-10-30; o PC de casa precisa de git pull antes de qualquer alteração.
