@@ -31,6 +31,12 @@
                                     o fundo claro o contraste dele é ~3:1 (ok pra
                                     destaque grande/curto, não pra leitura longa). */
   --cor-card: #FFFFFF;           /* branco levemente quebrado, fundo dos cards */
+  /* Acentos com contraste AA medido (>= 4,5:1). O --cor-ouro dá só
+     4,06:1 no marrom e 2,3:1 no pergaminho, então cada fundo ganha o
+     seu tom da mesma família, em vez de uma cor nova. */
+  --cor-ouro-claro: #D4A574;       /* no marrom #3E2E22: 5,83:1 */
+  --cor-terracota-clara: #E39B78;  /* no marrom #3E2E22: 5,70:1 */
+  --cor-ouro-escuro: #7A4E16;      /* no pergaminho #EAD9AE: 5,13:1 */
 
   --fonte-titulo: 'Fraunces', serif;   /* fonte com curvas orgânicas, para títulos */
   --fonte-texto: 'Jost', sans-serif;   /* fonte limpa, para textos corridos */
@@ -2800,6 +2806,7 @@ nav {
 
 .selecao-especial__titulo {
   color: var(--cor-texto);
+  text-wrap: balance;
   /* era var(--cor-fundo) (creme, pra ler sobre o marrom escuro) — veja
      o comentário completo da recoloração em ".selecao-especial" acima;
      h1-h4 já são --cor-texto por padrão (style.css, lá no topo), mas
@@ -3048,7 +3055,8 @@ nav {
   font-family: var(--fonte-titulo);
   font-style: italic;
   font-weight: 600;
-  color: var(--cor-ouro);
+  /* ouro escuro: o --cor-ouro dava 2,3:1 neste papel (reprovava AA) */
+  color: var(--cor-ouro-escuro);
   /* --cor-ouro sobre o creme #EAD9AE de fundo: ~3,1:1 — abaixo do
      mínimo AA pra texto normal (4,5:1), mas esta linha é CURTA e
      GRANDE (1.2rem, perto do piso de "texto grande" da WCAG, 18,66px
@@ -3082,6 +3090,19 @@ nav {
   color: var(--cor-texto);
   font-size: 0.92rem;
   line-height: 1.4;
+}
+
+/* Realces da Seleção Especial (fundo claro): terracota no título da
+   seção (4,6:1 no bege) e terracota escuro no pergaminho, onde o
+   terracota comum cai pra 4,2:1. Com a tagline em ouro escuro, a seção
+   fica em 2 cores de destaque. */
+.selecao-especial .realce {
+  font-weight: 600;
+  color: var(--cor-destaque);
+}
+
+.selecao-especial__pergaminho .realce {
+  color: var(--cor-destaque-escuro);
 }
 
 .selecao-especial__beneficios svg {
@@ -3316,14 +3337,16 @@ nav {
 
 .edicao-surpresa__titulo {
   color: var(--cor-fundo);
+  text-wrap: balance; /* evita a palavra órfã ("fim") sozinha na 2ª linha */
   font-size: 1.75rem;
   max-width: 560px;
   margin: 0.5rem auto 0.75rem;
 }
 
 .edicao-surpresa__subtitulo {
-  color: var(--cor-fundo);
-  opacity: 0.85;
+  /* transparência na cor, não em opacity: os realces dentro do
+     parágrafo precisam da cor cheia pra manter o contraste */
+  color: rgba(251, 246, 239, 0.85);
   max-width: 480px;
   /* 3rem -> 1.75rem (achado da auditoria, item 5) */
   margin: 0 auto 1.75rem;
@@ -3406,7 +3429,7 @@ nav {
   padding: 0.35rem 0.9rem;
   border-radius: 999px;
   border: 1px solid rgba(212, 165, 116, 0.5);
-  background-color: rgba(212, 165, 116, 0.14);
+  background-color: rgba(212, 165, 116, 0.08); /* tom leve: com 0.14 o texto caía pra 4,47:1 */
   color: var(--cor-ouro);
   font-size: 0.78rem;
   font-weight: 600;
@@ -3485,7 +3508,24 @@ nav {
    escuro. */
 .edicao-surpresa .preco,
 .edicao-surpresa .preco__atual {
-  color: var(--cor-ouro);
+  color: var(--cor-ouro-claro);
+}
+
+/* Destaques da seção: só 2 cores (ouro claro + terracota clara), ambas
+   AA no marrom. Ouro marca o "segredo" e a exclusividade; terracota, o
+   objeto. Etiqueta e selo saem do --cor-ouro, que reprovava aqui. */
+.edicao-surpresa .produto-destaque__etiqueta,
+.edicao-surpresa__selo,
+.edicao-surpresa .realce--ouro {
+  color: var(--cor-ouro-claro);
+}
+
+.edicao-surpresa .realce {
+  font-weight: 600;
+}
+
+.edicao-surpresa .realce:not(.realce--ouro) {
+  color: var(--cor-terracota-clara);
 }
 .edicao-surpresa .preco__antigo {
   color: rgba(251, 246, 239, 0.55);

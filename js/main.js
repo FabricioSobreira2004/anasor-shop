@@ -3058,12 +3058,12 @@ const COPY_SELECAO_ESPECIAL = {
     beneficios: [
       {
         icone: '<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>',
-        texto: 'Quando esta vender, não haverá outra igual.',
+        texto: 'Quando esta vender, <span class="realce">não haverá outra igual</span>.',
       },
       {
         icone:
           '<path d="M18 11V6a2 2 0 0 0-4 0"/><path d="M14 10V4a2 2 0 0 0-4 0v2"/><path d="M10 10.5V6a2 2 0 0 0-4 0v8"/><path d="m7 15-1.8-1.8a2 2 0 0 0-2.8 2.8L6 20c1.5 1.5 3 2 5 2h2a8 8 0 0 0 8-8V7a2 2 0 0 0-4 0v5"/>',
-        texto: 'Pintada à mão — o tom de azul nunca se repete.',
+        texto: '<span class="realce">Pintada à mão</span> — o tom de azul nunca se repete.',
       },
     ],
   },
@@ -3078,7 +3078,7 @@ const COPY_SELECAO_ESPECIAL = {
       },
       {
         icone: '<path d="M20 6 9 17l-5-5"/>',
-        texto: 'Traço fino em renda, pintado à mão, peça a peça.',
+        texto: 'Traço fino em renda, <span class="realce">pintado à mão</span>, peça a peça.',
       },
     ],
   },
@@ -3641,7 +3641,7 @@ function montarSelecaoEspecial(secao) {
 
   secao.innerHTML = `
     <p class="produto-destaque__etiqueta selecao-especial__etiqueta">&#10022; Seleção Especial</p>
-    <h2 class="selecao-especial__titulo">Peças que também merecem um lugar em casa</h2>
+    <h2 class="selecao-especial__titulo">Peças que também <span class="realce">merecem um lugar</span> em casa</h2>
     <div class="selecao-especial__grid">${cardsHTML}</div>
   `;
 
@@ -3765,8 +3765,8 @@ function montarEdicaoSurpresa(secao) {
 
   secao.innerHTML = `
     <p class="produto-destaque__etiqueta">&#10022; Edição Surpresa</p>
-    <h2 class="edicao-surpresa__titulo">A graça só aparece pra quem chega até o fim</h2>
-    <p class="edicao-surpresa__subtitulo">Um bichinho de cerâmica dorme no fundo de cada caneca — e só se revela quando a bebida baixa. No catálogo inteiro, só existem estes 2 modelos.</p>
+    <h2 class="edicao-surpresa__titulo">A graça <span class="realce realce--ouro">só aparece</span> pra quem chega até o fim</h2>
+    <p class="edicao-surpresa__subtitulo">Um <span class="realce">bichinho de cerâmica</span> dorme no fundo de cada caneca — e só se revela quando a bebida baixa. No catálogo inteiro, <span class="realce realce--ouro">só existem estes 2 modelos</span>.</p>
     <div class="edicao-surpresa__grid">${cardsHTML}</div>
   `;
 
