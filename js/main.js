@@ -489,12 +489,8 @@ function renderSeloEscassez() {
 //  GALERIA DE FOTOS (reutilizável) — trocar a foto grande
 // ============================================================
 // MOVIDA de js/produto.js (era "ativarGaleria()", sem parâmetros) e
-// GENERALIZADA: agora recebe o CONTAINER e a lista de IMAGENS, em vez
-// de assumir um contexto fixo. Hoje só produto.html usa (miniaturas
-// clicáveis) — a "Peça em Destaque" da Home TINHA setas aqui antes,
-// mas virou o giro 360° (ativarGiro360(), logo abaixo), um jeito de
-// navegar totalmente diferente (arrastar, não clicar), que por isso
-// ganhou função PRÓPRIA em vez de mais um "if" aqui dentro.
+// GENERALIZADA: recebe o CONTAINER e a lista de IMAGENS. Usada pela
+// página da peça e pela "Escolha do Ateliê" da Home.
 function ativarGaleriaDeFotos(container, imagens) {
   const principalWrap = container.querySelector('.galeria__principal-wrap');
   const principal = container.querySelector('.galeria__principal');
@@ -519,14 +515,19 @@ function ativarGaleriaDeFotos(container, imagens) {
   // divergirem depois de uma mudança futura).
   function irParaIndice(indice) {
     indiceAtual = ((indice % imagens.length) + imagens.length) % imagens.length;
-    // fórmula "+ length antes do %" — mesmo motivo já documentado em
-    // trocarFrame()/irParaFrame() (ativarGiro360, logo abaixo): em JS,
-    // -1 % N dá -1, não N-1; somar length primeiro corrige os dois sentidos.
+    // "+ length antes do %": em JS, -1 % N dá -1, não N-1; somar
+    // length primeiro faz o loop funcionar nos dois sentidos.
     principal.src = imagens[indiceAtual];
 
     const thumbAtiva = miniaturas.querySelector('.is-ativa');
     if (thumbAtiva) thumbAtiva.classList.remove('is-ativa');
     miniaturas.children[indiceAtual]?.classList.add('is-ativa');
+    // fileira que desliza (celular): traz a miniatura ativa para o
+    // centro mexendo só no scroll dela, nunca no da página
+    const thumb = miniaturas.children[indiceAtual];
+    if (thumb && miniaturas.scrollWidth > miniaturas.clientWidth) {
+      miniaturas.scrollTo({ left: thumb.offsetLeft - (miniaturas.clientWidth - thumb.offsetWidth) / 2, behavior: 'smooth' });
+    }
 
     const dotAtivo = dotsEl?.querySelector('.is-ativo');
     if (dotAtivo) dotAtivo.classList.remove('is-ativo');
@@ -599,166 +600,6 @@ function ativarGaleriaDeFotos(container, imagens) {
       { passive: true }
     );
   }
-}
-
-// ============================================================
-//  GIRO 360° (arrastar/deslizar pra girar) — só na "Peça em
-//  Destaque" da Home
-// ============================================================
-// Ideia: as mesmas fotos de "outros ângulos" que já existiam
-// (imagensExtras, em produtos.js) viram, aqui, os QUADROS de uma
-// rotação — arrastar/deslizar HORIZONTALMENTE sobre a foto troca de
-// quadro, como se estivesse girando a peça na mão.
-//
-// COMO O ARRASTE VIRA UM ÍNDICE DE QUADRO (a parte pedida pra
-// comentar):
-//   1. Cada evento de movimento (mousemove/touchmove) só sabe a
-//      posição X ATUAL do ponteiro/dedo — não "quantos quadros
-//      passar". Por isso guardamos xReferencia (a posição X do
-//      último evento) e, a cada novo evento, calculamos delta = x
-//      atual - xReferencia: o quanto o ponteiro andou DESDE A ÚLTIMA
-//      VEZ (não desde o início do arraste).
-//   2. Esse delta (que pode ser 1px, 3px, -5px...) é somado num
-//      acumulador ("acumulado"). PIXELS_POR_FRAME_GIRO360 define
-//      quantos pixels arrastados valem 1 quadro — enquanto o
-//      acumulado não chega lá, nada muda de tela (arraste "devagar"
-//      não gira nada ainda, só vai "enchendo" o acumulador).
-//   3. Quando o acumulado ULTRAPASSA o limiar (pra qualquer lado), um
-//      "while" (não um "if") avança/volta um quadro E DESCONTA o
-//      limiar do acumulado, repetindo enquanto ainda sobrar — assim
-//      um arraste rápido, que ande 80px num único evento, gira vários
-//      quadros de uma vez em vez de "travar" em só 1.
-//
-// LOOP: trocarFrame() sempre soma "+ imagens.length" antes do "%" —
-// em JavaScript, -1 % N dá -1 (não N-1 como se poderia esperar), e
-// sem esse ajuste o loop pra TRÁS (arrastar pra esquerda no 1º
-// quadro) quebraria. Pra FRENTE o "%" sozinho já basta, mas a mesma
-// fórmula funciona nos dois sentidos, então é só uma conta só.
-const CHAVE_DICA_GIRO360 = 'anasor-dica-giro360-visto';
-const PIXELS_POR_FRAME_GIRO360 = 18; // menor = giro mais "sensível" (mais rápido pro mesmo arraste)
-
-function ativarGiro360(container, imagens) {
-  const frame = container.querySelector('.giro360__frame');
-  if (!frame || imagens.length < 2) return; // 1 foto só: nada a girar
-
-  const dica = container.querySelector('.giro360__dica');
-  let arrastando = false;
-  let indiceAtual = 0;
-  let xReferencia = 0;
-  let acumulado = 0; // "sobra" de arraste que ainda não completou 1 quadro inteiro
-
-  function trocarFrame(passo) {
-    indiceAtual = (indiceAtual + passo + imagens.length) % imagens.length;
-    frame.src = imagens[indiceAtual];
-  }
-
-  // Pula DIRETO pra um índice (usado pelas miniaturas clicáveis do
-  // "mini-álbum" — ver montarProdutoDestaque). Precisa MEXER no mesmo
-  // "indiceAtual" que o arraste usa (não só trocar frame.src por fora)
-  // — senão, depois de clicar numa miniatura, o próximo arraste
-  // continuaria contando a partir do índice antigo e "pularia" vários
-  // quadros de uma vez, de um jeito confuso. Por isso esta função vive
-  // AQUI DENTRO (tem acesso ao "indiceAtual" fechado no escopo), em
-  // vez de reaproveitar ativarGaleriaDeFotos() (que existe pra outro
-  // caso: uma galeria PURAMENTE por clique, sem estado de arraste pra
-  // manter sincronizado).
-  function irParaFrame(indice) {
-    indiceAtual = ((indice % imagens.length) + imagens.length) % imagens.length;
-    frame.src = imagens[indiceAtual];
-  }
-
-  // MINIATURAS: cada botão .produto-destaque__miniatura leva
-  // data-indice-imagem (o índice dela dentro do array "imagens" — ver
-  // o HTML montado em montarProdutoDestaque). Delegado no container
-  // (1 listener só) em vez de 1 por miniatura — mesmo padrão usado
-  // no resto do site (menu mobile, mini-carrinho...).
-  container.addEventListener('click', (evento) => {
-    const miniatura = evento.target.closest('.produto-destaque__miniatura');
-    if (!miniatura) return;
-    irParaFrame(Number(miniatura.dataset.indiceImagem));
-    esconderDica(); // clicar já conta como "a pessoa entendeu que a foto muda" — some com a dica de arrastar
-  });
-
-  // some na 1ª interação (mousedown/touchstart já contam — não é
-  // preciso esperar o arraste de fato começar a mover). localStorage
-  // guarda a preferência entre visitas, com try/catch de segurança
-  // (pode falhar em navegação privada/cookies bloqueados — nesse
-  // caso a dica só reaparece a cada carregamento, sem quebrar nada).
-  function esconderDica() {
-    if (!dica || dica.classList.contains('is-oculta')) return;
-    dica.classList.add('is-oculta');
-    try {
-      localStorage.setItem(CHAVE_DICA_GIRO360, '1');
-    } catch (e) {
-      /* sem localStorage: a dica não "lembra" entre visitas — aceitável */
-    }
-  }
-
-  function iniciarArraste(x) {
-    arrastando = true;
-    xReferencia = x;
-    acumulado = 0;
-    frame.classList.add('is-arrastando'); // CSS troca cursor:grab por grabbing
-    esconderDica();
-  }
-
-  function moverArraste(x) {
-    if (!arrastando) return;
-    const delta = x - xReferencia;
-    xReferencia = x;
-    acumulado += delta;
-
-    while (acumulado >= PIXELS_POR_FRAME_GIRO360) {
-      trocarFrame(1); // arrastar pra DIREITA = avança nas fotos
-      acumulado -= PIXELS_POR_FRAME_GIRO360;
-    }
-    while (acumulado <= -PIXELS_POR_FRAME_GIRO360) {
-      trocarFrame(-1); // arrastar pra ESQUERDA = volta
-      acumulado += PIXELS_POR_FRAME_GIRO360;
-    }
-  }
-
-  function finalizarArraste() {
-    arrastando = false;
-    frame.classList.remove('is-arrastando');
-  }
-
-  // --- MOUSE (desktop) ---
-  frame.addEventListener('mousedown', (e) => {
-    e.preventDefault(); // sem isto o navegador tenta um "arrastar imagem" nativo (drag-and-drop), que atrapalharia o giro
-    iniciarArraste(e.clientX);
-  });
-  // mousemove/mouseup ficam no WINDOW, não só na <img>: se o arraste
-  // for rápido o bastante pro cursor "escapar" da foto no meio do
-  // gesto, o giro continua (e o mouseup em qualquer lugar da página
-  // ainda encerra o arraste) — sem isso, soltar fora da imagem
-  // deixaria "arrastando" travado em true.
-  window.addEventListener('mousemove', (e) => moverArraste(e.clientX));
-  window.addEventListener('mouseup', finalizarArraste);
-
-  // --- TOQUE (mobile) ---
-  // touchstart: { passive:true } (não precisamos bloquear nada ainda,
-  // só registrar o início). touchmove: { passive:false }, porque
-  // aqui SIM chamamos preventDefault() — reforço pro touch-action:none
-  // do CSS (.giro360__frame), que já avisa o navegador "eu cuido do
-  // toque aqui": juntos, garantem que arrastar sobre a foto gire o
-  // objeto em vez de rolar a página.
-  frame.addEventListener(
-    'touchstart',
-    (e) => iniciarArraste(e.touches[0].clientX),
-    { passive: true }
-  );
-  frame.addEventListener(
-    'touchmove',
-    (e) => {
-      if (!arrastando) return;
-      e.preventDefault();
-      moverArraste(e.touches[0].clientX);
-    },
-    { passive: false }
-  );
-  frame.addEventListener('touchend', finalizarArraste);
-  frame.addEventListener('touchcancel', finalizarArraste);
 }
 
 // Recebe UM objeto de produto e devolve o HTML de um card (como texto).
@@ -3090,173 +2931,98 @@ if (secaoSelecaoEspecial) {
 }
 
 function montarProdutoDestaque(secao) {
-  // "produtos" (produtos.js) é um array já pronto, sem async — ao
-  // contrário da vitrine principal, esta seção não precisa do
-  // "carregarProdutos()" (que só existe pra SIMULAR uma latência de
-  // rede pro skeleton aparecer). Uma peça de destaque fixa não ganha
-  // nada esperando: mostra assim que a página abre.
   // produtosVisiveis(): o destaque nunca pode ser uma peça oculta
   const produto = produtosVisiveis().find((p) => p.id === ID_PRODUTO_DESTAQUE);
-  // ID trocado errado ou peça removida do catálogo: a seção continua
-  // "hidden" (valor que já veio do HTML) — some sem quebrar a página.
-  // Vendida também: um destaque com "Comprar" de peça que não existe
-  // mais confundiria; ela segue visível nas vitrines, desbotada.
-  if (!produto || estaVendida(produto)) return;
+  // id trocado errado ou peça removida: a seção segue "hidden"
+  if (!produto) return;
   if (reservarPecasHome('destaque', [produto]).length === 0) return;
 
-  // Lista de fotos = principal + extras, MESMA ideia de montarDetalhe
-  // (produto.js): a principal entra como 1º item da galeria.
+  const vendida = estaVendida(produto);
   const imagens = [produto.imagem, ...(produto.imagensExtras || [])];
+  const variasFotos = imagens.length > 1;
 
-  // GALERIA: GIRO 360° (arrastar/deslizar), NÃO a galeria de
-  // miniaturas/setas da página de produto — ver ativarGiro360() logo
-  // abaixo pra lógica do arraste. É EXCLUSIVA desta seção de
-  // propósito ("vitrine de honra" pede algo mais interativo/vistoso
-  // que a ficha técnica da página de peça); produto.html continua
-  // usando ativarGaleriaDeFotos() (miniaturas), sem nenhuma mudança.
-  // "draggable=false" na <img>: sem isso o navegador tenta iniciar um
-  // arraste NATIVO de imagem (o "fantasma" que se pode soltar numa
-  // aba/pasta) assim que o mousedown vira um movimento — atrapalharia
-  // o giro. A dica ("Arraste para girar") só entra se houver mais de
-  // 1 foto — com 1 só, não há o que girar.
-  //
-  // .foto-emoldurada: MESMA moldura de sempre — o CSS (style.css)
-  // troca as cores dela pra funcionar sobre o fundo escuro só dentro
-  // de .produto-destaque (ver comentário lá).
-  //
-  // PREÇO + SELO: renderBlocoPreco() e renderSeloEscassez() são as
-  // MESMAS funções que a página de produto usa — o "de/por" e o selo
-  // "Peça única" saem idênticos aqui, sem reescrever nada. O CSS
-  // troca só as CORES deles (não o formato) pro fundo escuro.
-  //
-  // BOTÕES: .btn-comprar / .btn-comprar-agora são as MESMAS classes
-  // dos cards — o listener delegado (mais acima, "document.addEventListener('click', ...)")
-  // já os reconhece sozinho, bastando a SEÇÃO (data-id/nome/preco,
-  // logo abaixo) ser o ancestral [data-id] mais próximo. Zero JS novo
-  // pra "Adicionar ao Carrinho"/"Comprar Agora" funcionarem aqui.
-  // MINIATURA do "mini-álbum" (pedido item 1): SEMPRE imagens[1] — a
-  // 1ª foto de imagensExtras, ou seja, a 2ª foto do produto no total
-  // (imagens[0] é a principal). NÃO fixei o caminho de arquivo de
-  // propósito (não é "a foto do vaso com as margaridas" escrito à
-  // mão): assim, se ID_PRODUTO_DESTAQUE mudar pra outra peça no
-  // futuro (comentário logo acima explica esse mecanismo), a
-  // miniatura continua funcionando sozinha, mostrando a 2ª foto QUE
-  // ELA TIVER — nenhum código extra pra trocar. Só entra se existir
-  // mais de 1 foto (mesma condição que já protege a dica de arraste).
-  const temMiniatura = imagens.length > 1;
+  // Mesma marcação (.galeria__*) da página da peça, para reaproveitar
+  // ativarGaleriaDeFotos(): setas, dots, miniaturas e swipe já saem
+  // sincronizados por um único irParaIndice().
+  const setasHTML = variasFotos
+    ? `
+      <button type="button" class="galeria__seta galeria__seta--anterior" aria-label="Foto anterior">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
+      </button>
+      <button type="button" class="galeria__seta galeria__seta--proxima" aria-label="Próxima foto">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+      </button>`
+    : '';
+  const dotsHTML = variasFotos
+    ? `<div class="galeria__dots" role="tablist" aria-label="Selecionar foto">${imagens
+        .map((_, i) => `<button type="button" class="galeria__dot ${i === 0 ? 'is-ativo' : ''}" aria-label="Ver foto ${i + 1} de ${imagens.length}"></button>`)
+        .join('')}</div>`
+    : '';
+  const miniaturasHTML = variasFotos
+    ? `<div class="galeria__miniaturas">${imagens
+        .map((src, i) => `<button type="button" class="galeria__thumb ${i === 0 ? 'is-ativa' : ''}" aria-label="Ver foto ${i + 1} de ${imagens.length}"><img src="${src}" alt="" loading="lazy"></button>`)
+        .join('')}</div>`
+    : '';
+
+  // Vendida continua em destaque como portfólio: sem botões de compra
+  // (nada de "Comprar" de peça que não existe mais), com a encomenda.
+  // O "Ver mais" vale nos dois casos: a página da peça tem os detalhes.
+  const verMaisHTML = `<a class="btn-ver-mais" href="produto.html?id=${produto.id}">Ver mais sobre esta peça</a>`;
+  const acoesHTML = vendida
+    ? `<a class="btn-comprar btn-encomendar" href="${linkEncomendaWhatsApp(produto, { indisponivel: true })}"
+          target="_blank" rel="noopener noreferrer">Encomendar peça parecida&nbsp;🤎</a>
+       ${verMaisHTML}`
+    : `<button class="btn-comprar" type="button">${estaNoCarrinho(produto.id) ? TEXTO_NO_CARRINHO : 'Adicionar ao Carrinho'}</button>
+       <button class="btn-comprar-agora" type="button">Comprar Agora</button>
+       ${verMaisHTML}`;
+  const badgesHTML = vendida
+    ? '<p class="produto-destaque__status-vendida">Esta peça já encontrou um lar. Encomende uma parecida, do seu jeitinho.</p>'
+    : `<div class="produto-destaque__badges">
+         ${renderSeloEscassez()}
+         <span class="produto-destaque__chip">Feito à Mão</span>
+       </div>`;
 
   secao.innerHTML = `
     <div class="produto-destaque__grid">
-      <div class="produto-destaque__galeria">
-        <!-- MINI-ÁLBUM (pedido item 1): a foto principal (giro 360°,
-             arrastável) ao lado de UMA miniatura clicável da 2ª foto
-             do produto — "2 fotos lado a lado" E "miniatura que troca
-             a principal" ao mesmo tempo, as duas opções que o pedido
-             sugeriu, sem precisar escolher só uma. A miniatura É um
-             <button> (foco de teclado, leitor de tela anuncia como
-             botão) que chama irParaFrame() dentro de ativarGiro360()
-             — REAPROVEITA o mesmo estado (indiceAtual) do arraste, em
-             vez de ativarGaleriaDeFotos() (a galeria de miniaturas de
-             produto.html): aquela função tem seu PRÓPRIO jeito de
-             saber "qual foto está em exibição" (não conversa com o
-             índice do giro 360°) — usar as duas juntas aqui deixaria
-             arrastar e clicar dessincronizados entre si. Ver o
-             comentário completo em ativarGiro360(), logo acima neste
-             arquivo. -->
-        <div class="produto-destaque__fotos">
-          <!-- .produto-destaque__foto-principal-wrap: ancora a dica
-               "Arraste para girar" (position:absolute) SÓ na foto
-               grande — não dava pra deixar a dica direto dentro de
-               .produto-destaque__fotos (o pai comum dela e da
-               miniatura): centralizada (top/left:50%) contra a LINHA
-               inteira (foto + miniatura lado a lado), a dica ficaria
-               puxada pro meio das DUAS fotos juntas, em vez de em
-               cima da foto que de fato se arrasta. -->
-          <div class="produto-destaque__foto-principal-wrap">
-            <img class="giro360__frame foto-emoldurada produto-destaque__foto-principal" src="${produto.imagem}" alt="${produto.nome}" loading="lazy" draggable="false">
-            ${
-              imagens.length > 1
-                ? `
-            <div class="giro360__dica" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <path d="M16.466 7.5C15.643 4.237 13.952 2 12 2 9.239 2 7 6.477 7 12s2.239 10 5 10c.342 0 .677-.069 1-.2"/>
-                <path d="m15.194 13.707 3.814 1.86-1.86 3.814"/>
-                <path d="M19 15.57c-1.804.885-4.274 1.43-7 1.43-5.523 0-10-2.239-10-5s4.477-5 10-5c4.838 0 8.873 1.718 9.8 4"/>
-              </svg>
-              <span>Arraste para girar</span>
-            </div>`
-                : ''
-            }
-          </div>
-          ${
-            temMiniatura
-              ? `
-          <button type="button" class="produto-destaque__miniatura" data-indice-imagem="1" aria-label="Ver outro ângulo de ${produto.nome}">
-            <img src="${imagens[1]}" alt="" loading="lazy">
-          </button>`
-              : ''
-          }
+      <div class="galeria produto-destaque__galeria">
+        <div class="galeria__principal-wrap">
+          <img class="galeria__principal foto-emoldurada" src="${produto.imagem}" alt="${produto.nome}" loading="lazy">
+          ${setasHTML}
         </div>
+        ${dotsHTML}
+        ${miniaturasHTML}
       </div>
       <div class="produto-destaque__info">
         <p class="produto-destaque__etiqueta">&#10022; Escolha do Ateliê</p>
         <h2 class="produto-destaque__titulo">${produto.nome}</h2>
         <p class="produto-destaque__descricao">${produto.descricao}</p>
         ${renderBlocoPreco(produto, { classeExtra: 'produto-destaque__preco' })}
-        <!-- BADGES: selo-escassez ("Peça única", já existia) + um
-             chip NOVO "Feito à Mão" ao lado (pedido: "considere
-             destacar também... se fizer sentido sem poluir"). Optei
-             por um CHIP pequeno, não um 2º bloco igual ao de cima —
-             dois avisos do mesmo tamanho um embaixo do outro
-             pesariam mais do que ajudariam nesta seção (que já tem
-             etiqueta + título + descrição + preço); lado a lado, o
-             chip reforça sem competir. -->
-        <div class="produto-destaque__badges">
-          ${renderSeloEscassez()}
-          <span class="produto-destaque__chip">Feito à Mão</span>
-        </div>
-        <div class="produto-destaque__acoes">
-          <button class="btn-comprar" type="button">Adicionar ao Carrinho</button>
-          <button class="btn-comprar-agora" type="button">Comprar Agora</button>
-        </div>
+        ${badgesHTML}
+        <div class="produto-destaque__acoes">${acoesHTML}</div>
       </div>
     </div>
   `;
 
-  // dados que o carrinho lê do ancestral [data-id] mais próximo dos
-  // botões — aqui é a PRÓPRIA seção (mesmo esquema de produto.js:
-  // .produto-detalhe / .produto-card / .barra-compra, todos com o
-  // quarteto id/nome/preco/imagem no elemento que os envolve).
-  // "imagem" foi ADICIONADA aqui: sem ela, "Comprar Agora"/"Adicionar
-  // ao Carrinho" nesta seção salvavam o item no localStorage sem foto
-  // — o mini-carrinho só reencontrava a foto se conseguisse religar o
-  // id no catálogo depois (ver o comentário completo em
-  // adicionarAoCarrinho e renderMiniCarrinho, js/main.js).
+  // O listener do carrinho lê id/nome/preço/imagem do ancestral
+  // [data-id] mais próximo dos botões: aqui, a própria seção.
   secao.dataset.id = produto.id;
   secao.dataset.nome = produto.nome;
   secao.dataset.preco = produto.preco;
   secao.dataset.imagem = produto.imagem;
   secao.hidden = false;
 
-  ativarGiro360(secao, imagens);
-
-  // a seção inteira já nasceu com a classe .reveal (index.html) — só
-  // precisa ser registrada no observador AGORA que tem conteúdo de
-  // verdade dentro (sem isto, .reveal:not(.reveal--visto) só seria
-  // escaneada pela chamada genérica lá embaixo, e funcionaria igual,
-  // mas chamar aqui deixa explícito que ESTA função é responsável
-  // por revelar o que acabou de montar — mesmo padrão de
-  // montarRelacionados em produto.js).
+  ativarGaleriaDeFotos(secao.querySelector('.galeria'), imagens);
   escanearReveal();
 }
+
 
 // ============================================================
 //  SELEÇÃO ESPECIAL (Home) — 2 peças, formato PRÓPRIO
 // ============================================================
 // Pedido explícito: "mais destaque que o carrossel Queridinhos do
 // Ateliê, mas um formato PRÓPRIO — não uma cópia do hero do Vaso".
-// Por isso NÃO chama ativarGiro360() (sem arrastar/girar aqui — fica
-// exclusivo da "Escolha do Ateliê") e usa moldura/etiqueta
+// Por isso usa um carrossel por card (não a galeria da "Escolha do
+// Ateliê") e moldura/etiqueta
 // REAPROVEITADAS (.foto-emoldurada e a classe de brilho dourado da
 // etiqueta — ver os seletores estendidos em style.css) só a peça
 // central — o bloco de texto sobre "papel de pergaminho" — é

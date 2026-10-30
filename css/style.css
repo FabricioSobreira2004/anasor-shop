@@ -2352,110 +2352,6 @@ nav {
   margin: 0 auto;
 }
 
-/* --- coluna esquerda: galeria (giro 360° + mini-álbum) ---
-   .produto-destaque__galeria virou só um wrapper de LAYOUT (sem CSS
-   próprio) desde que a miniatura entrou: quem ancora a dica "Arraste
-   para girar" (position:relative) agora é
-   .produto-destaque__foto-principal-wrap, mais abaixo — não esta div
-   inteira, que passou a conter foto+miniatura lado a lado (ver
-   comentário no HTML sobre por quê). */
-
-/* Linha "2 fotos lado a lado" (pedido item 1) — a foto principal
-   (giro 360°, arrastável) cresce pra ocupar o espaço disponível
-   (flex:1 no wrap dela, logo abaixo) e a miniatura fica com um
-   tamanho FIXO ao lado, como uma "foto extra" do álbum, não uma 2ª
-   foto do mesmo tamanho competindo pela atenção — a principal
-   continua sendo a protagonista visual. */
-.produto-destaque__fotos {
-  display: flex;
-  align-items: flex-end;
-  /* flex-end (não center): alinha a base da miniatura com a base da
-     foto principal — como as duas têm proporções diferentes (a
-     miniatura é mais quadrada), alinhar pela base fica mais "arrumado"
-     que centralizar, que deixaria um desnível estranho nas bordas
-     inferiores das duas fotos */
-  gap: 1rem;
-}
-
-.produto-destaque__foto-principal-wrap {
-  position: relative;
-  /* ancora a dica "Arraste para girar" (ver comentário no HTML) */
-  flex: 1;
-  min-width: 0;
-  /* min-width:0 é o "clássico" de flex-item que tem uma <img> dentro
-     — sem isso, a largura mínima intrínseca da imagem pode empurrar a
-     miniatura pra fora da linha em telas mais estreitas antes mesmo
-     do breakpoint mobile entrar em ação */
-}
-
-.produto-destaque__foto-principal {
-  width: 100%;
-  /* já era 100% (herdado de .giro360__frame) — declarado de novo
-     aqui só deixa explícito que a foto ocupa o wrap INTEIRO agora
-     que ele não é mais a única coisa na linha */
-}
-
-/* MINIATURA clicável — a "2ª foto" do mini-álbum. Fica FORA de
-   .foto-emoldurada (aquela moldura é pesada — 14px de padding + 6px
-   de borda — pensada pra uma foto grande de destaque; numa miniatura
-   pequena ela engoliria a imagem). Em vez disso, um tratamento mais
-   leve na MESMA linguagem visual (moldura em --cor-ouro, a cor de
-   acento já usada na etiqueta/preço/selo desta seção escura). */
-.produto-destaque__miniatura {
-  flex-shrink: 0;
-  width: 92px;
-  aspect-ratio: 3 / 4;
-  /* retrato — mesma proporção "de peça de cerâmica alta" da foto
-     principal (object-fit:contain nela já lida com qualquer proporção
-     real, mas a MOLDURA da miniatura fica mais elegante já nascendo
-     no formato mais comum das fotos do catálogo) */
-  padding: 0;
-  border: none;
-  border-radius: 10px;
-  overflow: hidden;
-  cursor: pointer;
-  background: none;
-
-  /* moldura + sombra em camadas — dourado translúcido (liga com o
-     tema da seção) + sombra em preto puro (mesmo motivo do
-     .foto-emoldurada escuro logo abaixo: sombra na MESMA família de
-     marrom do fundo não criaria profundidade nenhuma) */
-  box-shadow:
-    0 0 0 2px rgba(184, 135, 62, 0.45),
-    0 8px 18px rgba(0, 0, 0, 0.35);
-  transition: transform 0.25s ease, box-shadow 0.25s ease;
-}
-
-.produto-destaque__miniatura img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  /* cover (não contain, como na principal): a miniatura é só um
-     "gatilho"/prévia — pode recortar a peça sem problema, ela nunca é
-     a versão "definitiva" que a pessoa está avaliando pra comprar */
-}
-
-.produto-destaque__miniatura:hover,
-.produto-destaque__miniatura:focus-visible {
-  transform: translateY(-4px);
-  box-shadow:
-    0 0 0 2px var(--cor-ouro),
-    0 12px 24px rgba(0, 0, 0, 0.4);
-  /* no hover/foco o anel dourado fica OPACO (não mais translúcido) —
-     reforço claro de "isto é clicável", sem precisar de texto extra */
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .produto-destaque__miniatura {
-    transition: none;
-  }
-  .produto-destaque__miniatura:hover,
-  .produto-destaque__miniatura:focus-visible {
-    transform: none;
-  }
-}
-
 /* moldura ajustada pro fundo escuro: o passe-partout claro
    (--cor-card + --cor-fundo-alt) da versão padrão de .foto-emoldurada
    SUMIRIA de contraste aqui — troca pra um marrom um pouco mais claro
@@ -2482,87 +2378,214 @@ nav {
 }
 
 /* ============================================================
-   GIRO 360° — arrastar/deslizar a foto pra "girar" a peça (só na
-   "Peça em Destaque" da Home). A LÓGICA do arraste/loop está toda em
-   ativarGiro360() (js/main.js) — aqui é só a aparência.
-   ============================================================ */
-.giro360__frame {
-  display: block;
-  width: 100%;
-  max-height: 480px;
-  object-fit: contain;
-  /* contain, não cover: peça de cerâmica não pode ser cortada — mesma
-     escolha da galeria em produto.html (que não é carregada aqui, daí
-     este tamanho/encaixe precisar ser redeclarado). */
-
-  cursor: grab;
-  /* touch-action:none = "eu mesmo trato o toque aqui dentro": sem
-     isto, arrastar o dedo sobre a foto no celular rolaria a PÁGINA
-     (o gesto padrão do navegador pra um <img>) em vez de girar a
-     peça — mesmo com o preventDefault() no JS, esta linha é quem
-     evita o "puxão" inicial da rolagem antes do JS conseguir reagir. */
-  touch-action: none;
-  /* impede selecionar a imagem/texto ao redor durante um arraste
-     rápido (comportamento padrão do navegador ao "arrastar" sobre
-     qualquer conteúdo, não só imagens) */
-  user-select: none;
-  -webkit-user-select: none;
+   GALERIA DE FOTOS — componente compartilhado
+   ============================================================
+   Setas + dots + miniaturas, ligados por ativarGaleriaDeFotos()
+   (main.js). Mora aqui (e não em produto.css) porque serve a página
+   da peça E a "Escolha do Ateliê" da Home; cada página traz só o
+   tamanho da foto e o próprio layout. */
+.galeria__principal-wrap {
+  position: relative; /* ancora as setas na foto, não na galeria toda */
+  /* o deslize horizontal é do carrossel; sem isto o navegador às vezes
+     assume o gesto (touchcancel) e o swipe se perde. Rolar a página
+     na vertical continua normal. */
+  touch-action: pan-y pinch-zoom;
 }
 
-/* enquanto o mouse/dedo está pressionado (ver a classe is-arrastando,
-   ligada/desligada por ativarGiro360()): cursor de "segurando", pra
-   reforçar visualmente que a peça está sendo girada agora mesmo. */
-.giro360__frame.is-arrastando {
-  cursor: grabbing;
+.galeria__seta {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+  width: 42px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 50%;
+  background-color: rgba(251, 246, 239, 0.85);
+  color: var(--cor-texto);
+  box-shadow: 0 4px 12px rgba(62, 46, 34, 0.18);
+  cursor: pointer;
+  touch-action: manipulation; /* sem o zoom de toque duplo */
+  transition: background-color 0.2s ease, transform 0.2s ease;
 }
 
-/* DICA "Arraste para girar" — sobreposta ao centro da foto, some na
-   1ª interação (ver esconderDica() em main.js). pointer-events:none
-   pra nunca "roubar" o mousedown/touchstart que começa o arraste —
-   o clique atravessa a dica e chega direto na foto por baixo dela. */
-.giro360__dica {
+.galeria__seta:hover {
+  background-color: var(--cor-fundo);
+  transform: translateY(-50%) scale(1.08);
+}
+
+.galeria__seta svg {
+  width: 20px;
+  height: 20px;
+}
+
+.galeria__seta--anterior {
+  left: 0.75rem;
+}
+
+.galeria__seta--proxima {
+  right: 0.75rem;
+}
+
+/* área de toque 44x44, bolinha visual de 9px no ::after */
+.galeria__dots {
+  display: flex;
+  justify-content: center;
+  gap: 0.4rem;
+}
+
+.galeria__dot {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.galeria__dot::after {
+  content: "";
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  z-index: 2;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background-color: var(--cor-fundo-alt);
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.galeria__dot:hover::after {
+  background-color: var(--cor-secundaria);
+}
+
+.galeria__dot.is-ativo::after {
+  background-color: var(--cor-destaque);
+  transform: translate(-50%, -50%) scale(1.3);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .galeria__seta,
+  .galeria__dot::after {
+    transition: none;
+  }
+}
+
+.galeria__miniaturas {
+  display: flex;
+  flex-wrap: wrap; /* peças com até 11 fotos quebram linha, não espremem */
+  gap: 0.6rem;
+}
+
+.galeria__thumb {
+  width: 68px;
+  height: 68px;
+  padding: 0;
+  border: 2px solid transparent; /* já reservada: a ativa não "pula" 2px */
+  border-radius: 10px;
+  overflow: hidden;
+  background: none;
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+}
+
+.galeria__thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* miniatura é só amostra; a foto grande usa contain */
+  display: block;
+}
+
+.galeria__thumb:hover {
+  border-color: var(--cor-secundaria);
+}
+
+.galeria__thumb.is-ativa {
+  border-color: var(--cor-destaque);
+}
+
+/* ---- A galeria dentro da "Escolha do Ateliê" ----
+   As fotos são verticais (9:16). Com largura fixa, a moldura sobrava
+   larga e escura dos lados; aqui a ALTURA é fixa e a largura segue a
+   foto, então a moldura abraça a peça. */
+.produto-destaque__galeria {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.4rem;
-  padding: 1rem 1.4rem;
-  border-radius: 14px;
-  background-color: rgba(0, 0, 0, 0.55);
-  color: var(--cor-fundo);
-  font-size: 0.85rem;
-  white-space: nowrap;
-  pointer-events: none;
-  transition: opacity 0.4s ease;
+  gap: 0.75rem;
+  min-width: 0;
 }
-.giro360__dica svg {
-  width: 28px;
+
+.produto-destaque__galeria .galeria__principal {
+  display: block;
+  height: min(520px, 70vh);
+  width: auto;
+  max-width: 100%;
+  object-fit: contain;
+}
+
+/* setas discretas: menores e mais translúcidas, sem roubar a peça */
+.produto-destaque__galeria .galeria__seta {
+  width: 36px;
+  height: 36px;
+  background-color: rgba(251, 246, 239, 0.7);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+}
+
+.produto-destaque__galeria .galeria__seta--anterior {
+  left: -18px;
+}
+
+.produto-destaque__galeria .galeria__seta--proxima {
+  right: -18px;
+}
+
+/* no marrom, a bolinha inativa clara some menos com transparência */
+.produto-destaque__galeria .galeria__dot::after {
+  background-color: rgba(251, 246, 239, 0.35);
+}
+
+.produto-destaque__galeria .galeria__dot.is-ativo::after {
+  background-color: var(--cor-ouro-claro);
+}
+
+/* até 12 fotos: com o alvo de 44px os dots passavam da tela no
+   celular. 24px é o mínimo de toque da WCAG 2.2; miniaturas e setas
+   seguem como alvos maiores. */
+.produto-destaque__galeria .galeria__dots {
+  flex-wrap: wrap;
+  gap: 2px;
+  max-width: 100%;
+  margin: -0.25rem 0 0;
+}
+
+.produto-destaque__galeria .galeria__dot {
+  width: 24px;
   height: 28px;
-  /* o "balanço" (vai-e-vem) sugere o gesto de girar/arrastar pros
-     dois lados — mesma ideia do chevron que desliza na dica do
-     carrossel mobile (.carrossel-hint), só que girando em vez de
-     deslizando, pra combinar com o ícone "rotate-3d". */
-  animation: giro360-dica-balanco 1.8s ease-in-out infinite;
-}
-.giro360__dica.is-oculta {
-  opacity: 0;
 }
 
-@keyframes giro360-dica-balanco {
-  0%, 100% { transform: rotate(-14deg); }
-  50%      { transform: rotate(14deg); }
+.produto-destaque__galeria .galeria__miniaturas {
+  justify-content: center;
+  max-width: 420px;
 }
 
-/* respeita "reduzir movimento": ícone parado (a dica ainda aparece e
-   some no primeiro toque, só sem a animação) */
-@media (prefers-reduced-motion: reduce) {
-  .giro360__dica svg {
-    animation: none;
-  }
+.produto-destaque__galeria .galeria__thumb {
+  width: 52px;
+  height: 52px;
+  opacity: 0.7;
+  transition: border-color 0.2s ease, opacity 0.2s ease;
+}
+
+.produto-destaque__galeria .galeria__thumb:hover,
+.produto-destaque__galeria .galeria__thumb.is-ativa {
+  opacity: 1;
+  border-color: var(--cor-ouro-claro);
 }
 
 /* --- coluna direita: texto ---
@@ -2687,6 +2710,50 @@ nav {
      desce em vez de espremer/estourar a coluna */
 }
 
+/* "Ver mais sobre esta peça": gummy secundário. Contorno em ouro claro
+   (5,8:1 no marrom) e o mesmo degrau 3D dos botões de compra, mas sem
+   preenchimento, para não disputar com "Comprar Agora". */
+.btn-ver-mais {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.7rem 1.5rem;
+  border: 2px solid var(--cor-ouro-claro);
+  border-radius: 30px;
+  background-color: transparent;
+  color: var(--cor-ouro-claro);
+  font-family: var(--fonte-texto);
+  font-size: 0.9rem;
+  font-weight: 500;
+  text-decoration: none;
+  box-shadow: 0 5px 0 rgba(212, 165, 116, 0.35);
+  touch-action: manipulation;
+  transition: transform 0.1s ease-out, box-shadow 0.1s ease-out, background-color 0.2s ease;
+}
+
+.btn-ver-mais:hover {
+  background-color: rgba(212, 165, 116, 0.1);
+  transform: translateY(-2px);
+  box-shadow: 0 7px 0 rgba(212, 165, 116, 0.35);
+}
+
+.btn-ver-mais:active {
+  transform: translateY(5px);
+  box-shadow: 0 0 0 rgba(212, 165, 116, 0.35);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn-ver-mais {
+    transition: none;
+  }
+}
+
+.produto-destaque__status-vendida {
+  margin: -0.4rem 0 1.4rem;
+  color: rgba(251, 246, 239, 0.85);
+  font-style: italic;
+}
+
 .produto-destaque__acoes .btn-comprar,
 .produto-destaque__acoes .btn-comprar-agora {
   /* zera o margin-top:auto/0.6rem que os dois trazem de style.css —
@@ -2714,31 +2781,34 @@ nav {
     grid-template-columns: 1fr;
     gap: 2rem;
   }
-  .giro360__frame {
-    max-height: 320px;
+  /* no celular a foto fica mais baixa (sobra tela para o texto) e as
+     setas entram na borda da moldura, sem vazar da tela */
+  .produto-destaque__galeria .galeria__principal {
+    height: min(420px, 58vh);
   }
-
-  /* MINI-ÁLBUM NO MOBILE (pedido: "garanta que empilhe de forma
-     elegante, não esprema as duas fotos lado a lado"). Entre as 2
-     opções que o pedido ofereceu (carrossel de scroll horizontal OU
-     empilhar verticalmente), escolhi EMPILHAR: só são 2 fotos — um
-     carrossel (setas, dots, scroll-snap) é aparato demais pra
-     navegar entre duas imagens, e empilhado com a miniatura
-     centralizada abaixo da foto principal já fica limpo e óbvio de
-     usar (não precisa arrastar/deslizar pra descobrir que ela existe,
-     como aconteceria escondida fora da viewport num carrossel). */
-  .produto-destaque__fotos {
-    flex-direction: column;
-    align-items: center;
+  .produto-destaque__galeria .galeria__seta--anterior {
+    left: 4px;
   }
-  .produto-destaque__foto-principal-wrap {
-    width: 100%;
+  .produto-destaque__galeria .galeria__seta--proxima {
+    right: 4px;
   }
-  .produto-destaque__miniatura {
-    /* 92px -> 120px: empilhada embaixo (não mais competindo por
-       largura com a foto principal ao lado), sobra espaço pra ela
-       ficar um pouco mais generosa e continuar fácil de tocar */
-    width: 120px;
+  /* 12 miniaturas em 3 linhas pesavam: no celular viram 1 fileira
+     que desliza (e acompanha a foto ativa, ver irParaIndice) */
+  .produto-destaque__galeria .galeria__miniaturas {
+    position: relative; /* referência do offsetLeft das miniaturas */
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    max-width: 100%;
+    overflow-x: auto;
+    scrollbar-width: none;
+    overscroll-behavior-x: contain;
+    padding: 2px;
+  }
+  .produto-destaque__galeria .galeria__miniaturas::-webkit-scrollbar {
+    display: none;
+  }
+  .produto-destaque__galeria .galeria__thumb {
+    flex-shrink: 0;
   }
 
   .produto-destaque__titulo {
@@ -2868,9 +2938,7 @@ nav {
 
 /* COMPARTILHADA por <img> e <video> (achado da auditoria, item 7: o
    carrossel de "Edição Surpresa" agora também usa esta classe, não só
-   "Seleção Especial" — ver carrosselCardHTML, main.js). SEM
-   giro360__frame de propósito (pedido: "SEM o efeito arraste para
-   girar — esse fica exclusivo daquela seção") — moldura escura
+   "Seleção Especial" — ver carrosselCardHTML, main.js). Moldura escura
    reaproveitada em ".produto-destaque .foto-emoldurada" (mais acima)
    pras seções de fundo escuro; a de Seleção Especial usa a moldura
    PADRÃO agora (fundo bege, ver comentário lá). .foto-emoldurada
