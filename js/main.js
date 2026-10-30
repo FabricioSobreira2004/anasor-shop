@@ -401,18 +401,26 @@ function linkEncomendaWhatsApp(produto, { indisponivel = false } = {}) {
 // ------------------------------------------------------------------
 // Um selo só por peça, para a foto não virar mural de etiquetas. A
 // ordem abaixo é a prioridade: "vendido" ganha de tudo porque muda o
-// que o cliente pode fazer com a peça.
+// que o cliente pode fazer com a peça; os selos de fato (técnica,
+// vídeo) ficam por último, só aparecem quando não há outro motivo.
 const SELOS_PECA = {
   vendido: 'Vendido',
   'mais-vendido': 'Mais Vendido',
   assinada: 'Peça Assinada',
+  'edicao-limitada': 'Edição Limitada',
   queridinho: 'Queridinha do Ateliê',
   novidade: 'Novidade',
+  kit: 'Kit completo',
+  'pintada-a-mao': 'Pintada à Mão',
+  'modelada-a-mao': 'Modelada à Mão',
+  'com-video': 'Veja em vídeo',
 };
 
 function seloDaPeca(produto) {
   const selos = new Set([].concat(produto.selo || []));
+  // vendido e vídeo saem dos próprios dados: nunca ficam desatualizados
   if (estaVendida(produto)) selos.add('vendido');
+  if (produto.videoUrl) selos.add('com-video');
   return Object.keys(SELOS_PECA).find((chave) => selos.has(chave)) || null;
 }
 

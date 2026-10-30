@@ -101,14 +101,21 @@
 //                    bloco "Encomende uma peça parecida". Peça SEM este
 //                    campo é tratada como disponível (o padrão) — por
 //                    isso nenhum dos produtos abaixo precisa declará-lo.
-//   selo          -> OPCIONAL. Texto ou lista com um ou mais de:
-//                    "mais-vendido" | "queridinho" | "novidade" |
-//                    "assinada". O card mostra UM selo só, pela
-//                    prioridade: vendido > mais-vendido > assinada >
-//                    queridinho > novidade (ver SELOS em main.js).
-//                    Só use o que for verdade: "mais-vendido" exige
-//                    vendas reais confirmadas; "assinada" só quando a
-//                    peça tem a assinatura da artesã.
+//   selo          -> OPCIONAL. Texto ou lista. O card mostra UM selo
+//                    só, pela prioridade abaixo (SELOS_PECA, main.js).
+//                    Cada um exige um FATO; sem o fato, sem selo:
+//                      (vendido)         automático: disponivel: false
+//                      "mais-vendido"    vendas reais confirmadas (hoje: nenhuma)
+//                      "assinada"        a peça tem a assinatura da artesã
+//                      "edicao-limitada" só as 2 canecas Surpresa (19 e 20)
+//                      "queridinho"      escolha da Anasor
+//                      "novidade"        peça recém-chegada ao catálogo
+//                      "kit"             conjunto de peças vendidas juntas
+//                      "pintada-a-mao"   a descrição diz pintada/pintado à mão
+//                      "modelada-a-mao"  a descrição diz modelada/modelado à mão
+//                      (com-video)       automático: a peça tem videoUrl
+//                    Liste todos os fatos verdadeiros da peça: se um
+//                    deixar de valer (ex.: "novidade"), o próximo aparece.
 //   oculto        -> OPCIONAL, boolean. "oculto: true" tira a peça de
 //                    TODAS as listagens (carrosséis e grades da Home,
 //                    ceramica.html e suas contagens/subcategorias,
@@ -140,7 +147,7 @@ const produtos = [
     preco: 134.9,
     categoria: "ceramica",
     subcategoria: "Pratos Artísticos",
-    selo: "queridinho",
+    selo: ["queridinho", "pintada-a-mao"],
     imagem: "img/produtos/prato-melodia-da-primavera.jpg",
     imagensExtras: [
       "img/produtos/angulos-extras/prato-melodia-da-primavera-2.jpg",
@@ -164,7 +171,7 @@ const produtos = [
     preco: 134.9,
     categoria: "ceramica",
     subcategoria: "Pratos Artísticos",
-    selo: "assinada",
+    selo: ["assinada", "pintada-a-mao", "modelada-a-mao"],
     imagem: "img/produtos/prato-buque-de-calla-rubra.jpg",
     imagensExtras: [
       "img/produtos/angulos-extras/prato-buque-de-calla-rubra-2.jpg",
@@ -212,6 +219,7 @@ const produtos = [
     preco: 134.9,
     categoria: "ceramica",
     subcategoria: "Pratos Artísticos",
+    selo: "pintada-a-mao",
     imagem: "img/produtos/prato-girassois-ao-sol.jpg",
     imagensExtras: [
       "img/produtos/angulos-extras/prato-girassois-ao-sol-2.jpg",
@@ -258,6 +266,7 @@ const produtos = [
     preco: 179.9,
     categoria: "ceramica",
     subcategoria: "Vasos Escultóricos",
+    selo: "modelada-a-mao",
     imagem: "img/produtos/vaso-escultorico-silhueta-e-poesia.jpg",
     imagensExtras: [
       "img/produtos/angulos-extras/vaso-escultorico-silhueta-e-poesia-2.jpg",
@@ -315,7 +324,7 @@ const produtos = [
     preco: 159.9,
     categoria: "ceramica",
     subcategoria: "Vasos Escultóricos",
-    selo: "queridinho",
+    selo: ["queridinho", "modelada-a-mao"],
     imagem: "img/produtos/vaso-escultorico-manto-de-folhas.jpg",
     imagensExtras: [
       "img/produtos/angulos-extras/vaso-escultorico-manto-de-folhas-2.jpg",
@@ -352,6 +361,7 @@ const produtos = [
     preco: 134.9,
     categoria: "ceramica",
     subcategoria: "Pratos Artísticos",
+    selo: "pintada-a-mao",
     imagem: "img/produtos/prato-flor-de-pessegueiro.jpg",
     imagensExtras: [
       "img/produtos/angulos-extras/prato-flor-de-pessegueiro-2.jpg",
@@ -376,6 +386,7 @@ const produtos = [
     preco: 134.9,
     categoria: "ceramica",
     subcategoria: "Pratos Artísticos",
+    selo: "pintada-a-mao",
     imagem: "img/produtos/prato-ave-da-alvorada.jpg",
     imagensExtras: [
       "img/produtos/angulos-extras/prato-ave-da-alvorada-2.jpg",
@@ -398,7 +409,7 @@ const produtos = [
     preco: 134.9,
     categoria: "ceramica",
     subcategoria: "Pratos Artísticos",
-    selo: "assinada",
+    selo: ["assinada", "pintada-a-mao"],
     imagem: "img/produtos/prato-ninho-encantado.jpg",
     imagensExtras: [
       "img/produtos/angulos-extras/prato-ninho-encantado-2.jpg",
@@ -419,7 +430,7 @@ const produtos = [
     preco: 159.9,
     categoria: "ceramica",
     subcategoria: "Pratos Artísticos",
-    selo: "queridinho",
+    selo: ["queridinho", "pintada-a-mao"],
     imagem: "img/produtos/prato-serenata-a-dois.jpg",
     imagensExtras: [
       "img/produtos/angulos-extras/prato-serenata-a-dois-2.jpg",
@@ -451,7 +462,7 @@ const produtos = [
     // blocos de ceramica.html descobrem subcategorias sozinhos, a
     // partir dos valores que aparecem aqui.
     subcategoria: "Travessas Decorativas",
-    selo: "queridinho",
+    selo: ["queridinho", "pintada-a-mao", "modelada-a-mao"],
     // FOTO PRINCIPAL TROCADA (2ª correção): o recorte manual do turno
     // anterior passou do ponto e cortava a travessa nas laterais,
     // mostrando só uma fatia estreita dela. Em vez de recortar de novo
@@ -480,6 +491,7 @@ const produtos = [
     preco: 199.9,
     categoria: "ceramica",
     subcategoria: "Travessas Decorativas",
+    selo: "pintada-a-mao",
     // FOTO PRINCIPAL TROCADA: a peça estava colada nas bordas do
     // quadro (praticamente sem margem), fazendo qualquer corte de
     // card (object-fit:cover) arriscar cortar a própria travessa.
@@ -508,7 +520,7 @@ const produtos = [
     preco: 159.9,
     categoria: "ceramica",
     subcategoria: "Pratos Artísticos",
-    selo: "queridinho",
+    selo: ["queridinho", "pintada-a-mao"],
     // FOTO PRINCIPAL RECORTADA (revisão geral do catálogo): mesmo caso
     // da travessa Asas do Paraíso — peça desalinhada à esquerda,
     // recortei o excesso de parede vazia à direita pra recentralizar.
@@ -532,6 +544,7 @@ const produtos = [
     preco: 134.9,
     categoria: "ceramica",
     subcategoria: "Pratos Artísticos",
+    selo: "pintada-a-mao",
     // FOTO PRINCIPAL TROCADA (revisão geral do catálogo): a antiga
     // (agora extra nº2) estava em resolução bem mais baixa que o
     // padrão do site (570×495 contra os 900×1600 de praticamente todo
@@ -587,6 +600,7 @@ const produtos = [
     // menu, filtros e título da página de listagem — sem precisar
     // tocar em mais nenhum arquivo.
     subcategoria: "Conjuntos Artesanais",
+    selo: "kit",
     imagem: "img/produtos/kit-jogo-de-cha-bule-leiteira-xicaras-petala.jpg",
     imagensExtras: [
       "img/produtos/angulos-extras/kit-jogo-de-cha-bule-leiteira-xicaras-petala-2.jpg",
@@ -621,6 +635,7 @@ const produtos = [
     preco: 109.9,
     categoria: "ceramica",
     subcategoria: "Canecas Artísticas",
+    selo: ["edicao-limitada", "pintada-a-mao", "modelada-a-mao"],
     // Foto principal TROCADA (ver Passo 4 do pedido — padrão "vista
     // frontal centralizada"): entre as 5 fotos reunidas neste produto,
     // esta é a que mostra a caneca inteira, de frente e centralizada
@@ -653,6 +668,7 @@ const produtos = [
     preco: 109.9,
     categoria: "ceramica",
     subcategoria: "Canecas Artísticas",
+    selo: "edicao-limitada",
     imagem: "img/produtos/caneca-surpresa-gatinho.jpg",
     imagensExtras: [
       "img/produtos/angulos-extras/caneca-surpresa-gatinho-2.jpg",
@@ -678,7 +694,7 @@ const produtos = [
     preco: 169.9,
     categoria: "ceramica",
     subcategoria: "Jarras",
-    selo: "queridinho",
+    selo: ["queridinho", "pintada-a-mao"],
     imagem: "img/produtos/vaso-jarra-floral-pintada-a-mao.jpg",
     imagensExtras: [
       "img/produtos/angulos-extras/vaso-jarra-floral-pintada-a-mao-2.jpg",
@@ -695,6 +711,7 @@ const produtos = [
     preco: 229.9,
     categoria: "ceramica",
     subcategoria: "Conjuntos Artesanais",
+    selo: "kit",
     // FOTO PRINCIPAL REENQUADRADA: a antiga (agora extra nº2) tinha a
     // câmera olhando de cima pra dentro dos copos, jarra desalinhada à
     // esquerda. Esta (conteúdo trocado, nome do arquivo igual) mostra o
@@ -716,6 +733,7 @@ const produtos = [
     preco: 254.9,
     categoria: "ceramica",
     subcategoria: "Conjuntos Artesanais",
+    selo: "kit",
     imagem: "img/produtos/kit-4-canequinhas-marmorizadas.jpg",
     imagensExtras: [
       "img/produtos/angulos-extras/kit-4-canequinhas-marmorizadas-2.jpg",
@@ -739,6 +757,7 @@ const produtos = [
     preco: 234.9,
     categoria: "ceramica",
     subcategoria: "Objetos Decorativos",
+    selo: "pintada-a-mao",
     imagem: "img/produtos/boleira-com-tampa-morangos-e-flores.jpg",
     imagensExtras: [
       "img/produtos/angulos-extras/boleira-com-tampa-morangos-e-flores-2.jpg",
@@ -777,6 +796,7 @@ const produtos = [
     preco: 124.9,
     categoria: "ceramica",
     subcategoria: "Canecas Artísticas",
+    selo: "pintada-a-mao",
     // FOTO PRINCIPAL TROCADA + RECORTADA: a antiga (agora extra nº2)
     // tinha muito espaço vazio acima da peça. Esta (conteúdo trocado,
     // nome do arquivo igual) já vinha mais nivelada, e ainda cortei o
@@ -800,6 +820,7 @@ const produtos = [
     preco: 154.9,
     categoria: "ceramica",
     subcategoria: "Canecas Artísticas",
+    selo: "modelada-a-mao",
     // FOTO PRINCIPAL TROCADA + RECORTADA: as 3 fotos deste produto são
     // todas de cima (olhando pra dentro da caneca) — não havia uma
     // "vista frontal" de verdade disponível, nem no vídeo (que na
@@ -859,6 +880,7 @@ const produtos = [
     preco: 109.9,
     categoria: "ceramica",
     subcategoria: "Canecas Artísticas",
+    selo: ["pintada-a-mao", "modelada-a-mao"],
     // FOTO PRINCIPAL RECORTADA DE NOVO, a partir do ORIGINAL intacto
     // (não da versão já recortada do turno anterior — recortar um
     // recorte, em cascata, foi o que causou o problema: cada corte
@@ -909,6 +931,7 @@ const produtos = [
     preco: 124.9,
     categoria: "ceramica",
     subcategoria: "Canecas Artísticas",
+    selo: "modelada-a-mao",
     // FOTO PRINCIPAL TROCADA DE NOVO (pedido explícito): agora é a
     // 2ª foto de imagensExtras (a que ERA a extra nº3) — câmera
     // nivelada com a peça, corpo inteiro visível, o "padrão de foto
@@ -930,6 +953,7 @@ const produtos = [
     preco: 219.9,
     categoria: "ceramica",
     subcategoria: "Conjuntos Artesanais",
+    selo: "kit",
     imagem: "img/produtos/kit-3-xicaras-de-cafe-com-pires-chocolate.jpg",
     imagensExtras: [
       "img/produtos/angulos-extras/kit-3-xicaras-de-cafe-com-pires-chocolate-2.jpg",
@@ -969,6 +993,7 @@ const produtos = [
     preco: 194.9,
     categoria: "ceramica",
     subcategoria: "Conjuntos Artesanais",
+    selo: "kit",
     imagem: "img/produtos/kit-3-potinhos-maca.jpg",
     imagensExtras: [
       "img/produtos/angulos-extras/kit-3-potinhos-maca-2.jpg",
@@ -990,6 +1015,7 @@ const produtos = [
     preco: 149.9,
     categoria: "ceramica",
     subcategoria: "Conjuntos Artesanais",
+    selo: ["kit", "pintada-a-mao"],
     // FOTO PRINCIPAL RECORTADA: mesma foto de antes, mas cortando o
     // excesso de parede vazia no topo do quadro — as duas tigelas
     // passam a preencher a maior parte do enquadramento, mais perto do
@@ -1009,7 +1035,7 @@ const produtos = [
     preco: 334.9,
     categoria: "ceramica",
     subcategoria: "Conjuntos Artesanais",
-    selo: "queridinho",
+    selo: ["queridinho", "kit", "pintada-a-mao"],
     // FOTO PRINCIPAL TROCADA: a antiga (agora extra nº2) só mostrava 3
     // das 4 casinhas claramente. Esta (conteúdo trocado, nome do
     // arquivo igual) mostra as 4 peças do kit lado a lado, o que
@@ -1084,7 +1110,7 @@ const produtos = [
     preco: 134.9,
     categoria: "ceramica",
     subcategoria: "Conjuntos Artesanais",
-    selo: "novidade",
+    selo: ["novidade", "kit"],
     imagem: "img/produtos/kit-2-copos-ondas-azuis.jpg",
     imagensExtras: [
       "img/produtos/angulos-extras/kit-2-copos-ondas-azuis-2.jpg",
@@ -1104,7 +1130,7 @@ const produtos = [
     preco: 154.9,
     categoria: "ceramica",
     subcategoria: "Pratos Artísticos",
-    selo: "novidade",
+    selo: ["novidade", "pintada-a-mao"],
     imagem: "img/produtos/prato-passaros-e-flores-alaranjadas.jpg",
     imagensExtras: [
       "img/produtos/angulos-extras/prato-passaros-e-flores-alaranjadas-2.jpg",
