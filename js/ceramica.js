@@ -148,20 +148,77 @@ function aplicarFiltrosListagem() {
   if (produtosDaSub.length === 0) return; // ainda carregando
 
   const visiveis = filtrarProdutos(produtosDaSub, criterios);
-  // À venda na grade principal; vendidas numa seção própria no fim,
-  // como portfólio (a busca e os filtros valem para as duas)
+  // À venda no carrossel principal; vendidas num carrossel próprio no
+  // fim, como portfólio (a busca e os filtros valem para os dois)
   const aVenda = visiveis.filter((p) => !estaVendida(p));
   const vendidas = visiveis.filter(estaVendida);
+  // o alternador só aparece onde há peça suficiente para cansar o swipe
+  const comAlternador = aVenda.length >= MINIMO_ALTERNADOR;
+  const modo = comAlternador ? modoVitrine : 'carrossel';
+
   conteudoEl.innerHTML =
     visiveis.length === 0
       ? mensagemVazia()
-      : (aVenda.length ? `<div class="produtos-grid">${aVenda.map(criarCardProduto).join('')}</div>` : '')
-        + renderSecaoVendidas(vendidas);
+      : `<p class="sub-contagem" aria-live="polite">${aVenda.length} ${aVenda.length === 1 ? 'peça disponível' : 'peças disponíveis'}</p>`
+        + (comAlternador ? alternadorHTML(modo) : '')
+        + (aVenda.length ? vitrineHTML(aVenda, modo, 'Peças à venda') : '')
+        + renderSecaoVendidas(vendidas, vitrineHTML(vendidas, 'carrossel', 'Peças já vendidas'));
 
-  // criarCardProduto() já traz a classe .reveal nos cards; registra
-  // eles no observador (main.js) pra animarem ao rolar
+  // HTML novo = trilho novo, que nasce no início: filtrar/ordenar
+  // sempre volta para o 1º slide. Setas, dots e snap são os da Home.
+  sincronizarDotsCarrossel();
   escanearReveal();
 }
+
+// Mesmo carrossel da Home ("Queridinhos"): data-manual tira a grade do
+// aplicarEExibir() do main.js, que só sabe montar grades por categoria.
+// Com uma página só (1 a 4 peças no desktop, 1 a 2 no celular) a classe
+// --poucas centraliza os cards na largura normal, sem esticar.
+function vitrineHTML(lista, modo, rotulo) {
+  if (modo === 'grade') {
+    return `<div class="sub-vitrine sub-vitrine--grade" role="region" aria-label="${rotulo}">
+      <div class="produtos-grid">${lista.map(criarCardProduto).join('')}</div></div>`;
+  }
+  const porSlide = cardsPorSlideCarrossel();
+  const poucas = lista.length <= porSlide;
+  return `<div class="sub-vitrine${poucas ? ' sub-vitrine--poucas' : ''}" role="region" aria-label="${rotulo}" style="--cards: ${Math.min(lista.length, porSlide)}">
+    <div class="produtos-grid" data-grade-produtos="subcategoria" data-manual>${montarSlidesCarrossel(lista, porSlide)}</div></div>`;
+}
+
+// Subcategoria grande (ex.: Canecas) ganha "Carrossel | Grade"
+const MINIMO_ALTERNADOR = 8;
+const CHAVE_MODO_VITRINE = 'anasor-modo-vitrine';
+let modoVitrine = 'carrossel';
+try {
+  if (localStorage.getItem(CHAVE_MODO_VITRINE) === 'grade') modoVitrine = 'grade';
+} catch (e) {
+  /* sem localStorage: começa sempre no carrossel, o padrão */
+}
+
+function alternadorHTML(modo) {
+  const botao = (valor, rotulo) =>
+    `<button type="button" class="sub-alternador__opcao" data-modo="${valor}" aria-pressed="${modo === valor}">${rotulo}</button>`;
+  return `<div class="sub-alternador" role="group" aria-label="Ver peças em">${botao('carrossel', 'Carrossel')}${botao('grade', 'Grade')}</div>`;
+}
+
+// delegado: o alternador é recriado a cada filtro
+conteudoEl.addEventListener('click', (evento) => {
+  const opcao = evento.target.closest('.sub-alternador__opcao');
+  if (!opcao || opcao.dataset.modo === modoVitrine) return;
+  modoVitrine = opcao.dataset.modo;
+  try {
+    localStorage.setItem(CHAVE_MODO_VITRINE, modoVitrine);
+  } catch (e) {
+    /* a escolha vale só nesta visita */
+  }
+  aplicarFiltrosListagem();
+  conteudoEl.querySelector(`.sub-alternador__opcao[data-modo="${modoVitrine}"]`)?.focus();
+});
+
+// cruzar 768/769px muda quantos cards cabem por slide (2 x 4): remonta
+window.matchMedia('(min-width: 769px)').addEventListener('change', () => {
+  if (subPedida) aplicarFiltrosListagem();
+});
 
 // ============================================================
 //  LIGACAO DOS FILTROS

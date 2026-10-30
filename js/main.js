@@ -706,13 +706,14 @@ const TEXTO_NO_CARRINHO = 'No carrinho ✓';
 
 // Vitrine de portfólio das peças vendidas (fim de ceramica.html e das
 // subcategorias): mostra o que o ateliê já fez e puxa encomenda.
-function renderSecaoVendidas(vendidas) {
+// gradeHTML: as subcategorias passam um carrossel; a visão geral usa a grade
+function renderSecaoVendidas(vendidas, gradeHTML) {
   if (vendidas.length === 0) return '';
   return `
     <section class="ja-tem-lar" aria-labelledby="ja-tem-lar-titulo">
       <h2 id="ja-tem-lar-titulo">Já encontraram um lar 🤎</h2>
       <p class="ja-tem-lar__texto">Cada peça é única. Gostou de alguma? Encomende a sua, do seu jeitinho.</p>
-      <div class="produtos-grid">${vendidas.map(criarCardProduto).join('')}</div>
+      ${gradeHTML || `<div class="produtos-grid">${vendidas.map(criarCardProduto).join('')}</div>`}
     </section>`;
 }
 

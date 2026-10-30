@@ -6615,6 +6615,81 @@ footer {
   justify-content: center;
 }
 
+/* ============================================
+   SUBCATEGORIA EM CARROSSEL (ceramica.html?sub=...)
+   O trilho é o mesmo da Home; aqui só o que muda: a largura do card
+   vira uma conta fixa (a mesma coluna de 4 por página no desktop e 2
+   no celular), então com poucas peças ele não estica pela linha.
+   ============================================ */
+.sub-vitrine {
+  --largura-card: calc((100% - 3 * 2rem) / 4);
+}
+
+.sub-vitrine--poucas .produtos-grid[data-grade-produtos] > .carrossel-slide {
+  grid-template-columns: repeat(var(--cards), var(--largura-card));
+  justify-content: center;
+}
+
+.sub-vitrine--grade .produtos-grid {
+  grid-template-columns: repeat(4, var(--largura-card));
+  justify-content: center;
+}
+
+/* a regra de .ja-tem-lar centraliza a grade; num trilho que rola isso
+   esconderia o começo, então o carrossel volta a alinhar no início */
+.ja-tem-lar .sub-vitrine .produtos-grid[data-grade-produtos] {
+  justify-content: flex-start;
+}
+
+.sub-contagem {
+  text-align: center;
+  margin: -1.5rem 0 1.25rem;
+  color: var(--cor-texto);
+  font-size: 0.95rem;
+}
+
+/* alternador discreto "Carrossel | Grade": pílula dupla, a opção ativa
+   preenchida em terracota (branco sobre terracota: 5,8:1) */
+.sub-alternador {
+  display: flex;
+  width: max-content;
+  margin: 0 auto 1.25rem;
+  padding: 3px;
+  border-radius: 999px;
+  background-color: var(--cor-fundo-alt);
+}
+
+.sub-alternador__opcao {
+  min-height: 36px;
+  padding: 0.35rem 1rem;
+  border: none;
+  border-radius: 999px;
+  background: none;
+  color: var(--cor-texto);
+  font-family: var(--fonte-texto);
+  font-size: 0.85rem;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.sub-alternador__opcao[aria-pressed="true"] {
+  background-color: var(--cor-destaque);
+  color: #FFF;
+}
+
+@media (max-width: 768px) {
+  .sub-vitrine {
+    --largura-card: calc((100% - 1rem) / 2);
+  }
+  .sub-vitrine--grade .produtos-grid {
+    grid-template-columns: repeat(2, var(--largura-card));
+    gap: 1rem;
+  }
+  .sub-contagem {
+    margin-top: -1rem;
+  }
+}
+
 .ja-tem-lar__texto {
   text-align: center;
   max-width: 34rem;
