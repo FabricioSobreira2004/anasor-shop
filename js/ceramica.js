@@ -125,13 +125,12 @@ function dadosVisaoGeral() {
   const comFaixa = criterios.faixaPreco !== 'todas';
   // busca fica de fora: a do header não filtra esta página
   const filtro = { ...criterios, busca: '', ordem: 'relevancia' };
+  // filtra o catálogo uma vez só, não uma por subcategoria
+  const aVendaNaFaixa = filtrarProdutos(produtosVisiveis().filter((p) => !estaVendida(p)), filtro);
   const cards = dadosCardsSubcategoriaCeramica()
     .map((card) => {
-      const precos = filtrarProdutos(
-        produtosVisiveis().filter((p) => p.subcategoria === card.sub && !estaVendida(p)),
-        filtro
-      ).map((p) => p.preco);
-      return comFaixa ? { ...card, precos, rotuloQtd: rotuloPecasDisponiveis(precos.length) } : { ...card, precos };
+      const precos = aVendaNaFaixa.filter((p) => p.subcategoria === card.sub).map((p) => p.preco);
+      return { ...card, precos, ...(comFaixa && { rotuloQtd: rotuloPecasDisponiveis(precos.length) }) };
     })
     .filter((card) => !comFaixa || card.precos.length > 0);
 
