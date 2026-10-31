@@ -98,7 +98,8 @@ function desenharVisaoGeral() {
         criarCard: subcategoriaCardHTML,
         classeGrade: 'colecoes-grid',
       })
-    : mensagemVazia();
+    // texto próprio: mensagemVazia() citaria a busca do header, que aqui não filtra
+    : '<p class="vitrine-vazia">Nenhuma peça à venda nessa faixa de preço.</p>';
 
   // No fim da visão geral, as vendidas de todas as subcategorias
   // (portfólio: não passam pelo filtro de preço, como antes)
@@ -134,9 +135,12 @@ function dadosVisaoGeral() {
     })
     .filter((card) => !comFaixa || card.precos.length > 0);
 
-  // subcategoria sem peça à venda: Math.min/max de [] dá ±Infinity e ela vai pro fim
-  if (criterios.ordem === 'preco-asc') cards.sort((a, b) => Math.min(...a.precos) - Math.min(...b.precos));
-  else if (criterios.ordem === 'preco-desc') cards.sort((a, b) => Math.max(...b.precos) - Math.max(...a.precos));
+  // subcategoria sem peça à venda vai pro fim; entre duas assim, empate
+  // (subtrair Infinity de Infinity daria NaN e uma ordem instável)
+  const porPreco = (valor) => (a, b) =>
+    (!a.precos.length || !b.precos.length) ? !a.precos.length - !b.precos.length : valor(a) - valor(b);
+  if (criterios.ordem === 'preco-asc') cards.sort(porPreco((c) => Math.min(...c.precos)));
+  else if (criterios.ordem === 'preco-desc') cards.sort(porPreco((c) => -Math.max(...c.precos)));
   else if (criterios.ordem === 'nome-az') cards.sort((a, b) => a.sub.localeCompare(b.sub, 'pt'));
   return cards;
 }
