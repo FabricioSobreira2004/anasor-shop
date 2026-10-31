@@ -344,13 +344,13 @@ Link na bio 🤎
 
 ---
 
-### 28. 🏺 Travessa Decorativa Asas do Paraíso — R$ 199,90
+### 28. 🏺 Travessa Decorativa Asas do Paraíso — R$ 299,90
 
 Duas hastes de estrelícia, a ave-do-paraíso, em laranja e roxo vibrantes, sobem entre folhas longas verde-oliva e cobrem quase toda a travessa oval. 🌺
 
 Modelada e pintada à mão no ateliê, pede lugar de destaque na mesa posta.
 
-R$ 199,90 com frete grátis. Link na bio 🤎
+R$ 299,90 com frete grátis. Link na bio 🤎
 
 #travessa #mesaposta #avedoparaiso #pintadoamao #ceramicaartesanal #pecaunica #feitoamao
 

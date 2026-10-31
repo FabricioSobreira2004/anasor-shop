@@ -452,7 +452,9 @@ const produtos = [
     // base de apoio nas fotos originais. SEM promoção de propósito:
     // é peça de entrada de uma subcategoria nova, sem uma "linha"
     // ainda formada pra ter um "de/por" com sentido.
-    preco: 199.9,
+    // +R$ 100 em 31/10/2026 (autorizado pela artesã): sem "de/por",
+    // porque um "de" só pode ser um preço que a peça realmente teve.
+    preco: 299.9,
     categoria: "ceramica",
     // "Travessas Decorativas": subcategoria NOVA (as duas travessas
     // desta leva, ids 13 e 14) — formato oval/retangular alongado,
@@ -487,8 +489,9 @@ const produtos = [
       "Travessa retangular em cerâmica, <span class='realce'>modelada e pintada à mão</span> no ateliê, pensada como uma manhã de neblina passeando por um jardim cheio de flores. Botões e pétalas em <span class='realce'>aquarela azul-porcelana</span>, com toques dourados entre as folhas, cobrem toda a superfície da peça, num efeito suave e contínuo. O formato alongado e as bordas levemente curvas tornam a travessa <span class='realce--ouro'>generosa</span> para servir à mesa ou simplesmente compor um aparador. Combina com decoração clássica e contemporânea, por ser praticamente monocromática.",
     // Mesma subcategoria nova "Travessas Decorativas" (ver id 13) e
     // mesma classe de tamanho (retangular alongada, também bem
-    // maior que os pratos redondos) — por isso o mesmo preço.
-    preco: 199.9,
+    // maior que os pratos redondos) — por isso o mesmo preço
+    // (as duas com +R$ 100 em 31/10/2026, autorizado pela artesã).
+    preco: 299.9,
     categoria: "ceramica",
     subcategoria: "Travessas Decorativas",
     selo: "pintada-a-mao",
@@ -515,9 +518,9 @@ const produtos = [
     // perceptivelmente MAIOR nas fotos (mais próximo de um charger
     // que de um prato padrão) — preço fica acima da linha
     // promocional pelo tamanho, não por ser peça "de duas figuras"
-    // como a Serenata a Dois (id 12); mesmo valor final, motivo
-    // diferente.
-    preco: 159.9,
+    // como a Serenata a Dois (id 12). +R$ 100 em 31/10/2026
+    // (autorizado pela artesã); sem "de/por" pelo mesmo motivo.
+    preco: 259.9,
     categoria: "ceramica",
     subcategoria: "Pratos Artísticos",
     selo: ["queridinho", "pintada-a-mao"],
