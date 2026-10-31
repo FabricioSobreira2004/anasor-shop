@@ -472,3 +472,15 @@ Site (`extra-tour-do-site\`, já pronto) — decisão em DECISOES.md.
 
 **Rodada 7 completa.** Ver relatório final (fora deste arquivo) pras
 pendências reais do Fabrício.
+
+---
+
+## Notebook do pai — 2026-10-31
+
+Notebook do pai: preços +100 (3 peças), botão Ver mais 3D, carrossel na página de subcategorias, feitos em 2026-10-31; o PC de casa precisa de git pull antes de qualquer alteração.
+
+- Preços: Travessa Asas do Paraíso (13) e Travessa Bruma Azul (14) R$ 199,90 → R$ 299,90; Prato Brisa de Palmeira (15) R$ 159,90 → R$ 259,90. Nenhuma tinha "de/por".
+- Botão `.btn-ver-mais` (variação escura e `--claro`) na Escolha do Ateliê, Edição Surpresa e Seleção Especial.
+- ceramica.html (sem ?sub) em carrossel; "Faixa de preço" e "Ordenar por", que apareciam ali sem efeito, agora funcionam (ver DECISOES.md).
+- ?v=47. Deploy conferido: 200 em /, /ceramica.html, ?sub=jarras, produto 33, /links, /api/health.
+- Pendente (decisão do Fabrício): achados da code-review no código de narração que veio do PC de casa (legendar.js/narrar.js) — ver relatório da sessão.
