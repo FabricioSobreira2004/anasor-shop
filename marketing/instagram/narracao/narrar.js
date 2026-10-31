@@ -51,8 +51,19 @@ const SITE_MAE_REELS = 'E:/projetos/site-mae/reels';
 const SITE_MAE_TOUR = 'E:/projetos/site-mae/tour';
 const MUDO_REELS = path.join(SITE_MAE_REELS, '_mudo');
 const MUDO_TOUR = path.join(SITE_MAE_TOUR, '_mudo');
+const ANTERIORES_REELS = path.join(SITE_MAE_REELS, '_anteriores');
+const ANTERIORES_TOUR = path.join(SITE_MAE_TOUR, '_anteriores');
+const DADOS_LEGENDA = 'E:/projetos/site-mae/_narracao-dados';
 const TMP = 'E:/projetos/_tmp/narracao';
 const PIPER_MODELOS = 'E:/projetos/_tmp/piper-modelos';
+
+// Data de hoje (AAAA-MM-DD), usada só pro nome da subpasta de
+// arquivamento — regra fixa do usuário (Rodada 7): NUNCA sobrescrever
+// o .mp4 atual sem arquivar a versão anterior primeiro.
+function dataHoje() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
 
 // Rate=4 do SAPI mede, na MAIORIA dos roteiros reais (não numa frase
 // de calibração isolada), perto de 2,8-3,1 palavras/segundo — Rate=5
@@ -63,14 +74,25 @@ const PIPER_MODELOS = 'E:/projetos/_tmp/piper-modelos';
 // (~0,8-1,2) pra chegar nesse ritmo; ofereço como opção via --voz,
 // mas o padrão de produção continua o SAPI por not dar pra confirmar
 // por ouvido que o Piper nesse ritmo forçado não tem artefato.
+// wpsReferencia: palavras/s medida na AMOSTRA de referência de cada
+// voz+ritmo (narracao-amostras/, texto de 85 palavras) — usada só pra
+// checar se uma síntese de produção saiu dentro do esperado PRA
+// AQUELA voz (cada voz/ritmo tem seu próprio ritmo natural; o antigo
+// limiar fixo 2.8-3.1 era calibrado só pra Maria Rate=4/5 e reportaria
+// "FALHA" em qualquer voz Piper por não ser a mesma métrica).
 const VOZES = {
-  maria: { tipo: 'sapi', vozSapi: 'Microsoft Maria Desktop', ritmoPadrao: 4 },
-  faber: { tipo: 'piper', modelo: path.join(PIPER_MODELOS, 'pt_BR-faber-medium.onnx'), ritmoPadrao: 0.4 },
-  cadu: { tipo: 'piper', modelo: path.join(PIPER_MODELOS, 'pt_BR-cadu-medium.onnx'), ritmoPadrao: 0.4 },
-  jeff: { tipo: 'piper', modelo: path.join(PIPER_MODELOS, 'pt_BR-jeff-medium.onnx'), ritmoPadrao: 0.4 },
-  edresson: { tipo: 'piper', modelo: path.join(PIPER_MODELOS, 'pt_BR-edresson-low.onnx'), ritmoPadrao: 0.35 },
+  maria: { tipo: 'sapi', vozSapi: 'Microsoft Maria Desktop', ritmoPadrao: 4, wpsReferencia: 2.95 },
+  faber: { tipo: 'piper', modelo: path.join(PIPER_MODELOS, 'pt_BR-faber-medium.onnx'), ritmoPadrao: 0.4, wpsReferencia: 85 / 15.151020 },
+  cadu: { tipo: 'piper', modelo: path.join(PIPER_MODELOS, 'pt_BR-cadu-medium.onnx'), ritmoPadrao: 0.4, wpsReferencia: null },
+  // jeff/ritmo 0.7 — ESCOLHA DO FABRÍCIO (Rodada 7): ouviu as amostras
+  // em narracao-amostras/ e escolheu esta (voz masculina, ritmo mais
+  // pausado) como PADRÃO pra todos os vídeos. wpsReferencia medida na
+  // própria amostra voz-piper-jeff-ritmo-0.7.wav (85 palavras / 23,59s
+  // = 3,60 wps) — ver DECISOES.md.
+  jeff: { tipo: 'piper', modelo: path.join(PIPER_MODELOS, 'pt_BR-jeff-medium.onnx'), ritmoPadrao: 0.7, wpsReferencia: 85 / 23.591474 },
+  edresson: { tipo: 'piper', modelo: path.join(PIPER_MODELOS, 'pt_BR-edresson-low.onnx'), ritmoPadrao: 0.35, wpsReferencia: null },
 };
-const VOZ_PADRAO = 'maria';
+const VOZ_PADRAO = 'jeff';
 
 const OFFSET_VOZ = 0.3; // segundos
 const FOLGA_FIM = 0.5; // segundos
@@ -298,6 +320,18 @@ function processarVideo(item, roteiros, nomeVoz, voz, ritmo, relatorio) {
     fs.copyFileSync(arquivoAtual, arquivoMudo);
   }
 
+  // Regra fixa (Rodada 7): nunca sobrescrever o .mp4 atual sem
+  // arquivar a versão anterior (ela pode já ter narração Maria da
+  // Rodada 6) numa subpasta com a data de hoje — 1x por dia, pra não
+  // acumular cópia idêntica se o script rodar de novo no mesmo dia.
+  const dirAnteriores = pasta === 'reels' ? ANTERIORES_REELS : ANTERIORES_TOUR;
+  const subpastaHoje = path.join(dirAnteriores, dataHoje());
+  fs.mkdirSync(subpastaHoje, { recursive: true });
+  const arquivoArquivado = path.join(subpastaHoje, `${nome}.mp4`);
+  if (!fs.existsSync(arquivoArquivado)) {
+    fs.copyFileSync(arquivoAtual, arquivoArquivado);
+  }
+
   const duracaoVideo = duracaoSegundos(arquivoMudo);
   const limite = duracaoVideo - OFFSET_VOZ - FOLGA_FIM;
 
@@ -323,7 +357,13 @@ function processarVideo(item, roteiros, nomeVoz, voz, ritmo, relatorio) {
   const okSilencio = volume.mean !== null && volume.mean > -50;
   const okClipping = volume.max !== null && volume.max <= 0.5;
   const okDuracaoVoz = duracaoVoz < duracaoFinal - 0.5;
-  const okRitmo = wps >= 2.8 && wps <= 3.1;
+  // Faixa do ritmo: ±15% em volta da wpsReferencia MEDIDA na amostra
+  // desta voz+ritmo (narracao-amostras/) — cada voz tem seu ritmo
+  // natural próprio, não faz sentido comparar todas com o mesmo
+  // limiar fixo (ver comentário em VOZES, acima).
+  const temReferencia = typeof voz.wpsReferencia === 'number';
+  const faixaRitmo = temReferencia ? [voz.wpsReferencia * 0.85, voz.wpsReferencia * 1.15] : null;
+  const okRitmo = !temReferencia || (wps >= faixaRitmo[0] && wps <= faixaRitmo[1]);
   const okSemCortesInternos = silenciosInternos.length === 0;
 
   const linha =
@@ -332,11 +372,24 @@ function processarVideo(item, roteiros, nomeVoz, voz, ritmo, relatorio) {
     `volume mean=${volume.mean}dB max=${volume.max}dB | ` +
     `${okStreams ? 'OK' : 'FALHA'} fluxos, ${okSilencio ? 'OK' : 'FALHA'} silêncio-total, ` +
     `${okClipping ? 'OK' : 'FALHA'} clipping, ${okDuracaoVoz ? 'OK' : 'FALHA'} duração(+0.5s), ` +
-    `${okRitmo ? 'OK' : 'FALHA'} ritmo(2.8-3.1), ${okSemCortesInternos ? 'OK' : 'FALHA'} sem-corte-interno` +
+    `${okRitmo ? 'OK' : 'FALHA'} ritmo(${temReferencia ? `${faixaRitmo[0].toFixed(2)}-${faixaRitmo[1].toFixed(2)}` : 'sem referência'}), ${okSemCortesInternos ? 'OK' : 'FALHA'} sem-corte-interno` +
     (decisoes.length ? ` | decisões: ${decisoes.join('; ')}` : '');
 
   console.log(`✅ ${linha}`);
   relatorio.push(linha);
+
+  // Sidecar JSON pro script de legenda (legendar.js) — guarda o texto
+  // FINAL (já cortado se precisou) e os tempos reais da voz, pra
+  // gerar o .srt sincronizado sem precisar re-sintetizar nem adivinhar.
+  fs.mkdirSync(DADOS_LEGENDA, { recursive: true });
+  fs.writeFileSync(
+    path.join(DADOS_LEGENDA, `${nome}.json`),
+    JSON.stringify({
+      nome, pasta, voz: nomeVoz, ritmo,
+      textoFinal, offsetVoz: OFFSET_VOZ, duracaoVoz, duracaoFinal, duracaoVideo,
+    }, null, 2),
+    'utf8'
+  );
 }
 
 function main() {

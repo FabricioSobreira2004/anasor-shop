@@ -409,3 +409,66 @@ paralelo (fork), B na sessão principal.
 **Rodada 6 completa — A, B e o fechamento final concluídos.**
 
 Notebook do pai: ajustes 1 a 5 feitos em 2026-10-30; o PC de casa precisa de git pull antes de qualquer alteração.
+
+---
+
+# Rodada 7 — narração Piper jeff + legenda em todos (modo totalmente autônomo)
+
+Pedido em 2026-10-31, Fabrício fora de casa até a noite, quer postar a
+partir de amanhã (2026-11-01). Decisões em `DECISOES.md`.
+
+## 1) Voz (Piper jeff, ritmo 0,7) — ✅ CONCLUÍDO
+
+`narrar.js`: `VOZ_PADRAO='jeff'`, ritmo padrão 0,7 (escolha do
+Fabrício depois de ouvir `narracao-amostras\`). Achado e corrigido:
+o Piper tem um preditor de duração ESTOCÁSTICO — `--noise-w-scale 0`
+em `sintetizar-piper.ps1` tornou a síntese determinística (mesmo
+texto sempre sai com a mesma duração). Checagem de "ritmo" trocada
+pra uma faixa ±15% em volta da wps MEDIDA na amostra de cada voz
+(antes era um limiar fixo calibrado só pra Maria/SAPI).
+
+## 2) Narração nos 18 vídeos — ✅ CONCLUÍDO
+
+`node narrar.js` rodado nos 18 (12 Reels de peça, 4 de conteúdo, 2
+Tours) — todos passaram em fluxos/silêncio-total/clipping/duração.
+Antes de sobrescrever, o `.mp4` anterior (narração Maria da Rodada 6)
+foi arquivado em `<pasta>\_anteriores\2026-10-31\<nome>.mp4` (regra
+nova: nunca sobrescrever sem arquivar). Sidecar JSON por vídeo em
+`E:\projetos\site-mae\_narracao-dados\` (texto final falado + tempos
+reais) alimenta a legenda. Pendência de qualidade não resolvida:
+TODOS os 18 têm 1 a 10 pausas ≥0,6s no meio da fala (pausa natural do
+Piper/jeff em vírgulas de frases longas, não um corte/artefato) — ver
+DECISOES.md, decisão de não reescrever os 18 roteiros agora.
+
+## 3) Legenda queimada (novo, nunca feito antes) — ✅ CONCLUÍDO
+
+Novo script `narracao/legendar.js`: tempo por palavra estimado por
+proporção de caracteres (tentei o filtro `whisper` do ffmpeg pra ASR
+de verdade — funciona tecnicamente, mas a transcrição da voz
+sintética saiu errada demais pra confiar, não usei). Blocos de 3-6
+palavras, `.srt` entregue + `.ass` próprio (com `PlayResX`/`PlayResY`
+corretos — achado crítico: `force_style` sobre `.srt` puro saía com
+texto gigante/fora de posição, documentado em DECISOES.md) pra
+queimar com contorno grosso (AA garantido em qualquer fundo). Posição
+por categoria: tour mobile (reaproveita `CAPTION_TOP` já validado do
+próprio projeto), tour desktop (ajustada depois de 1 teste visual —
+a moldura real termina mais embaixo do que os números do código
+sugeriam) e Reels (dentro da faixa "nada importante" já estabelecida
+nas rodadas anteriores). Checagem automática de sobreposição
+(amplitude de luminância na caixa da legenda) rodou nos 18 — 1
+falso-positivo investigado e aceito (transição de cena, não
+sobreposição real), documentado.
+
+## 4) Qualidade e kit — ✅ CONCLUÍDO
+
+ffprobe (resolução/duração/áudio) e varredura de quadro preto
+(`blackdetect`) limpos nos 18. Prints início/meio/fim em
+`E:\projetos\site-mae\_prints\videos-finais\`. `montar-kit-postagem.js`
+rodado de novo — 11/17 dias prontos (sem mudança; os 6 pendentes
+continuam exigindo filmagem/depoimento real). `LEIA-ME.md` e
+`AMANHA-POSTAR.md` (novo) atualizados: como "Dia 1" do calendário
+pede filmagem ainda pendente, o post sugerido pra amanhã é o Tour do
+Site (`extra-tour-do-site\`, já pronto) — decisão em DECISOES.md.
+
+**Rodada 7 completa.** Ver relatório final (fora deste arquivo) pras
+pendências reais do Fabrício.

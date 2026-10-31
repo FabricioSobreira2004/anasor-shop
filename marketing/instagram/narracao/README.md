@@ -4,28 +4,28 @@ Narração em todos os Reels (12 de peça + 4 de conteúdo) e nos 2
 vídeos do Tour do Site (`tour-instagram`, `tour-portfolio`). O loop
 do README (`tour-loop.mp4`) fica mudo, de propósito.
 
-## Voz e ritmo (Rodada 6)
+## Voz e ritmo (Rodada 7)
 
-Padrão de produção: **Microsoft Maria Desktop** (pt-BR, feminina,
-`System.Speech`/SAPI do Windows, já instalada), **Rate=4** — mede
-perto de 2,8-3,1 palavras por segundo na maioria dos roteiros reais
-(o ritmo é ajustado NA VOZ, nunca esticando o áudio depois: ver
-`DECISOES.md`).
+Padrão de produção: **Piper "jeff"** (pt_BR, masculina, neural,
+offline, licença MIT), **length_scale 0,7** ("mais pausado") —
+escolha do Fabrício depois de ouvir as amostras em
+`E:\projetos\site-mae\narracao-amostras\`. Troca a voz feminina SAPI
+Maria usada até a Rodada 6.
 
-Também dá pra usar uma voz **neural (Piper, offline)** — 4 modelos
-pt_BR baixados (faber/cadu/jeff/edresson, todos masculinos: não
-existe voz feminina pt_BR no catálogo do Piper hoje), licença MIT.
-Amostras de todas em `E:\projetos\site-mae\narracao-amostras\` —
-ouça e decida se prefere trocar a voz padrão.
+A síntese é DETERMINÍSTICA (`--noise-w-scale 0` em
+`sintetizar-piper.ps1`, achado da Rodada 7: o Piper tem um preditor
+de duração estocástico — sem fixar esse parâmetro, a mesma frase sai
+com duração diferente a cada execução).
 
-Trocar voz/ritmo por linha de comando, sem editar código:
+Outras vozes Piper disponíveis (cadu/faber/edresson, também
+masculinas — não existe voz feminina pt_BR no catálogo do Piper
+hoje) ou a SAPI Maria de antes:
 
 ```
-node narrar.js                            # padrão: maria, rate 4
-node narrar.js --voz maria --ritmo 5      # SAPI, rate 5 (mais rápido)
-node narrar.js --voz faber --ritmo 0.4    # Piper faber, length_scale 0.4
+node narrar.js                            # padrão agora: jeff, ritmo 0.7
+node narrar.js --voz maria --ritmo 4      # volta pra SAPI Maria
+node narrar.js --voz faber --ritmo 0.4    # Piper faber
 node narrar.js --voz cadu --ritmo 0.4     # Piper cadu
-node narrar.js --voz jeff --ritmo 0.4     # Piper jeff
 node narrar.js --voz edresson --ritmo 0.35 # Piper edresson (qualidade "low")
 ```
 
@@ -51,7 +51,10 @@ python -m piper.download_voices --download-dir E:\projetos\_tmp\piper-modelos pt
 
 3. O script:
    - Arquiva o vídeo mudo original em `E:\projetos\site-mae\reels\_mudo\`
-     ou `...\tour\_mudo\` (só na primeira vez).
+     ou `...\tour\_mudo\` (só na primeira vez) e, antes de sobrescrever
+     o `.mp4` atual, arquiva a versão anterior (já narrada) em
+     `<pasta>\_anteriores\<data-de-hoje>\<nome>.mp4` (1x por dia —
+     regra fixa desde a Rodada 7: nunca sobrescrever sem arquivar).
    - Sintetiza o texto INTEIRO numa passada só (SAPI ou Piper).
    - Se a voz não couber na duração do vídeo (com folga de 0,5s no
      fim), CORTA o texto automaticamente — por frase/cláusula
@@ -82,6 +85,27 @@ dá pra confirmar por ouvido. Se ao ouvir perceber que soa estranho,
 2 saídas: reescrever o trecho em `roteiros.md` juntando a cláusula
 com "e"/"que" em vez de vírgula, ou aceitar — pausa em vírgula é
 normal em fala humana.
+
+## Legenda queimada (Rodada 7, novo)
+
+Depois de rodar `narrar.js`, rode `node legendar.js` (ou
+`--nome <vídeo>` pra 1 só) — lê o sidecar que `narrar.js` grava em
+`E:\projetos\site-mae\_narracao-dados\<nome>.json` (texto final
+falado + duração real da voz) e:
+
+- gera um `.srt` ao lado do `.mp4` (`site-mae\reels\` ou `...\tour\`),
+  com blocos de 3-6 palavras — tempo estimado por proporção de
+  caracteres (sem STT: a transcrição por ASR do Piper saiu errada
+  demais pra confiar, ver `DECISOES.md`);
+- queima a legenda no vídeo via um `.ass` próprio (não o `.srt` direto
+  — `force_style` sobre `.srt` puro sai com tamanho/posição errados,
+  achado da Rodada 7), com contorno escuro grosso (contraste garantido
+  em qualquer fundo) numa posição fixa por categoria de vídeo (tour
+  mobile, tour desktop, Reels) que nunca cobre celular/produto/
+  botão/logo/@ — validado por amostragem de quadro (amplitude de
+  luminância na caixa da legenda);
+- arquiva a versão SEM legenda (mas já narrada) em
+  `_anteriores\<data>\<nome>-sem-legenda.mp4` antes de sobrescrever.
 
 ## Pra silenciar ou trocar por música
 
