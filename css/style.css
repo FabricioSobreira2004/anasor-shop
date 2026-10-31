@@ -2710,41 +2710,82 @@ nav {
      desce em vez de espremer/estourar a coluna */
 }
 
-/* "Ver mais sobre esta peça": gummy secundário. Contorno em ouro claro
-   (5,8:1 no marrom) e o mesmo degrau 3D dos botões de compra, mas sem
-   preenchimento, para não disputar com "Comprar Agora". */
+/* "Ver mais sobre esta peça": gummy SECUNDÁRIO, reutilizado na Escolha
+   do Ateliê, Edição Surpresa e Seleção Especial. Mesmo degrau 3D dos
+   botões de compra, mas face só tingida (não cheia) e contorno em
+   ouro: lê como botão de verdade sem disputar o olho com "Comprar
+   Agora". Cores via variáveis pra a variação clara trocar só a paleta. */
 .btn-ver-mais {
+  --vm-texto: var(--cor-ouro-claro);   /* 5,8:1 no marrom */
+  --vm-borda: var(--cor-ouro-claro);
+  --vm-face: rgba(212, 165, 116, 0.12);
+  --vm-face-hover: rgba(212, 165, 116, 0.2);
+  --vm-labio: #8C6235;                 /* ouro ~35% mais escuro: a "base" */
+  --vm-brilho: rgba(255, 255, 255, 0.16);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0.7rem 1.5rem;
-  border: 2px solid var(--cor-ouro-claro);
+  gap: 0.5rem;
+  min-height: 44px; /* área de toque mínima, mesmo com fonte menor */
+  padding: 0.6rem 1.35rem;
+  border: 2px solid var(--vm-borda);
   border-radius: 30px;
-  background-color: transparent;
-  color: var(--cor-ouro-claro);
+  background-color: var(--vm-face);
+  color: var(--vm-texto);
   font-family: var(--fonte-texto);
   font-size: 0.9rem;
   font-weight: 500;
+  line-height: 1.2;
+  white-space: nowrap; /* "Ver mais sobre esta peça" quebrado em 2 linhas parecia defeito */
   text-decoration: none;
-  box-shadow: 0 5px 0 rgba(212, 165, 116, 0.35);
+  /* lábio sólido embaixo + fio de luz por dentro do topo = volume */
+  box-shadow: inset 0 1px 0 var(--vm-brilho), 0 4px 0 var(--vm-labio);
   touch-action: manipulation;
   transition: transform 0.1s ease-out, box-shadow 0.1s ease-out, background-color 0.2s ease;
 }
 
-.btn-ver-mais:hover {
-  background-color: rgba(212, 165, 116, 0.1);
-  transform: translateY(-2px);
-  box-shadow: 0 7px 0 rgba(212, 165, 116, 0.35);
+.btn-ver-mais__icone {
+  width: 1.05em;
+  height: 1.05em;
+  flex-shrink: 0;
+  opacity: 0.85;
 }
 
+.btn-ver-mais:hover {
+  background-color: var(--vm-face-hover);
+  transform: translateY(-1px);
+  box-shadow: inset 0 1px 0 var(--vm-brilho), 0 5px 0 var(--vm-labio);
+}
+
+/* afunda 3px e o lábio quase some: o mesmo "clique" dos de compra */
 .btn-ver-mais:active {
-  transform: translateY(5px);
-  box-shadow: 0 0 0 rgba(212, 165, 116, 0.35);
+  transform: translateY(3px);
+  box-shadow: inset 0 1px 0 var(--vm-brilho), 0 1px 0 var(--vm-labio);
+}
+
+.btn-ver-mais:focus-visible {
+  outline: 2px solid var(--vm-texto);
+  outline-offset: 4px;
+}
+
+/* Fundo claro (pergaminho/bege): o ouro claro some ali, então vira
+   terracota escuro (≥ 6:1 no #EAD9AE) com face quase branca. */
+.btn-ver-mais--claro {
+  --vm-texto: var(--cor-destaque-escuro);
+  --vm-borda: var(--cor-destaque);
+  --vm-face: rgba(255, 255, 255, 0.5);
+  --vm-face-hover: rgba(255, 255, 255, 0.75);
+  --vm-labio: rgba(127, 61, 34, 0.45);
+  --vm-brilho: rgba(255, 255, 255, 0.7);
 }
 
 @media (prefers-reduced-motion: reduce) {
   .btn-ver-mais {
     transition: none;
+  }
+  .btn-ver-mais:hover,
+  .btn-ver-mais:active {
+    transform: none;
   }
 }
 
@@ -3543,10 +3584,17 @@ nav {
   margin-top: auto;
 }
 
-/* o preço já empurra o par para a base: o botão só encosta nele */
+/* o preço já empurra o trio (preço, "Ver mais", "Comprar Agora") para
+   a base; entre os botões só um respiro fixo, o mesmo em todo card */
+.edicao-surpresa__card .btn-ver-mais,
+.selecao-especial__pergaminho .btn-ver-mais {
+  align-self: center;
+  font-size: 0.85rem;
+}
+
 .edicao-surpresa__card .btn-comprar-agora,
 .selecao-especial__pergaminho .btn-comprar-agora {
-  margin-top: 0;
+  margin-top: 0.9rem;
 }
 
 /* .preco/.preco__atual (renderBlocoPreco, main.js) usam --cor-destaque

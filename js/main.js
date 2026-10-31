@@ -2968,6 +2968,17 @@ if (secaoSelecaoEspecial) {
   montarSelecaoEspecial(secaoSelecaoEspecial);
 }
 
+// "Ver mais sobre esta peça": um marcado só pras 3 vitrines da Home, pra
+// o botão nunca divergir de uma seção pra outra. "claro" troca a paleta
+// pra fundo bege/pergaminho (ver .btn-ver-mais--claro). Ícone de olho
+// porque o botão leva a VER a peça, não a comprar.
+function btnVerMaisHTML(produto, { claro = false } = {}) {
+  return `<a class="btn-ver-mais${claro ? ' btn-ver-mais--claro' : ''}" href="produto.html?id=${produto.id}">
+    <svg class="btn-ver-mais__icone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>
+    Ver mais sobre esta peça
+  </a>`;
+}
+
 function montarProdutoDestaque(secao) {
   // produtosVisiveis(): o destaque nunca pode ser uma peça oculta
   const produto = produtosVisiveis().find((p) => p.id === ID_PRODUTO_DESTAQUE);
@@ -2981,7 +2992,7 @@ function montarProdutoDestaque(secao) {
   // Vendida continua em destaque como portfólio: sem botões de compra
   // (nada de "Comprar" de peça que não existe mais), com a encomenda.
   // O "Ver mais" vale nos dois casos: a página da peça tem os detalhes.
-  const verMaisHTML = `<a class="btn-ver-mais" href="produto.html?id=${produto.id}">Ver mais sobre esta peça</a>`;
+  const verMaisHTML = btnVerMaisHTML(produto);
   const acoesHTML = (vendida
     ? `<a class="btn-comprar btn-encomendar" href="${linkEncomendaWhatsApp(produto, { indisponivel: true })}"
           target="_blank" rel="noopener noreferrer">Encomendar peça parecida&nbsp;🤎</a>`
@@ -3406,6 +3417,7 @@ function montarSelecaoEspecial(secao) {
                 .join('')}
             </ul>
             ${renderBlocoPreco(produto, { classeExtra: 'selecao-especial__preco', comSelo: true })}
+            ${btnVerMaisHTML(produto, { claro: true })}
             <button class="btn-comprar-agora" type="button">Comprar Agora</button>
           </div>
         </article>`;
@@ -3531,6 +3543,7 @@ function montarEdicaoSurpresa(secao) {
           <p class="edicao-surpresa__selo">Edição Limitada &mdash; só 2 no mundo</p>
           <h3 class="edicao-surpresa__titulo-peca">${produto.nome}</h3>
           ${renderBlocoPreco(produto, { classeExtra: 'edicao-surpresa__preco' })}
+          ${btnVerMaisHTML(produto)}
           <button class="btn-comprar-agora" type="button">Comprar Agora</button>
         </article>`;
     })
