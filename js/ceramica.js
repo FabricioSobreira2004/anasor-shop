@@ -69,7 +69,10 @@ function nomeDaSub(slug) {
 function renderVisaoGeral() {
   tituloEl.textContent = 'Cerâmica';
   document.title = 'Cerâmica | Anasor Sobreira';
-  filtrosEl.hidden = true; // nao ha lista de produtos pra filtrar aqui
+  // O "hidden" daqui nunca valeu (.filtros tem display próprio): os
+  // filtros sempre apareceram nesta página sem fazer nada. Agora eles
+  // filtram e ordenam as subcategorias (ver dadosVisaoGeral).
+  filtrosEl.hidden = false;
 
   // breadcrump: "Home > Cerâmica" (Cerâmica e a pagina atual aqui,
   // entao vai sem href). Mesma funcao que produto.html usa.
@@ -78,12 +81,74 @@ function renderVisaoGeral() {
     { rotulo: 'Cerâmica' },
   ]);
 
-  // dadosCardsSubcategoriaCeramica() + fotosSubcategoriaHTML() moram em
-  // js/main.js, compartilhadas com montarColecoesHome() (a grade
-  // "Explore Nossas Coleções" da Home) — mesma fonte de dados, nenhuma
-  // lista/contagem duplicada entre as duas páginas.
+  // o navegador restaura o <select> ao voltar pra página: lê antes de desenhar
+  sincronizarCriterios();
+  desenharVisaoGeral();
+}
+
+// Separado de renderVisaoGeral pra os filtros remontarem só o conteúdo.
+function desenharVisaoGeral() {
+  const cards = dadosVisaoGeral();
+  // Mesmo carrossel das listagens (vitrineHTML, abaixo) com o card de
+  // subcategoria no lugar do de produto; "colecoes-grid" traz a
+  // espiadinha do próximo card no celular, igual à esteira da Home.
+  // HTML novo = trilho novo: filtrar/ordenar volta ao 1º slide.
+  const vitrine = cards.length
+    ? vitrineHTML(cards, 'carrossel', 'Subcategorias de cerâmica', {
+        criarCard: subcategoriaCardHTML,
+        classeGrade: 'colecoes-grid',
+      })
+    : mensagemVazia();
+
+  // No fim da visão geral, as vendidas de todas as subcategorias
+  // (portfólio: não passam pelo filtro de preço, como antes)
+  const vendidas = produtosVisiveis().filter((p) => p.categoria === 'ceramica' && estaVendida(p));
+  conteudoEl.innerHTML = vitrine + renderSecaoVendidas(vendidas);
+
+  sincronizarDotsCarrossel();
+  // os cards acima nasceram com a classe .reveal -> registra eles
+  // no IntersectionObserver do main.js pra animarem ao entrar na tela
+  escanearReveal();
+
+  // liga o revezamento de fotos de cada card — iniciarRotacaoFotos()
+  // agora mora em js/main.js (compartilhada com a grade da Home,
+  // montarColecoesHome()); já carregou antes deste arquivo.
+  iniciarRotacaoFotos();
+}
+
+// Os cards da visão geral com a faixa de preço e a ordem aplicadas.
+// A faixa conta só as peças À VENDA dentro dela (o rótulo promete
+// "disponíveis") e esconde a subcategoria que ficar sem nenhuma; a
+// ordem por preço usa a peça mais barata (ou mais cara) de cada uma.
+// Com "Todas" + "Padrão" sai exatamente a lista de sempre.
+function dadosVisaoGeral() {
+  const comFaixa = criterios.faixaPreco !== 'todas';
+  // busca fica de fora: a do header não filtra esta página
+  const filtro = { ...criterios, busca: '', ordem: 'relevancia' };
   const cards = dadosCardsSubcategoriaCeramica()
-    .map(({ sub, fotos, rotuloQtd, href }) => `
+    .map((card) => {
+      const precos = filtrarProdutos(
+        produtosVisiveis().filter((p) => p.subcategoria === card.sub && !estaVendida(p)),
+        filtro
+      ).map((p) => p.preco);
+      return comFaixa ? { ...card, precos, rotuloQtd: rotuloPecasDisponiveis(precos.length) } : { ...card, precos };
+    })
+    .filter((card) => !comFaixa || card.precos.length > 0);
+
+  // subcategoria sem peça à venda: Math.min/max de [] dá ±Infinity e ela vai pro fim
+  if (criterios.ordem === 'preco-asc') cards.sort((a, b) => Math.min(...a.precos) - Math.min(...b.precos));
+  else if (criterios.ordem === 'preco-desc') cards.sort((a, b) => Math.max(...b.precos) - Math.max(...a.precos));
+  else if (criterios.ordem === 'nome-az') cards.sort((a, b) => a.sub.localeCompare(b.sub, 'pt'));
+  return cards;
+}
+
+// Card de uma subcategoria (foto circular giratória + nome + contagem).
+// dadosCardsSubcategoriaCeramica() + fotosSubcategoriaHTML() moram em
+// js/main.js, compartilhadas com montarColecoesHome() (a esteira
+// "Explore Nossas Coleções" da Home) — mesma fonte de dados, nenhuma
+// lista/contagem duplicada entre as duas páginas.
+function subcategoriaCardHTML({ sub, fotos, rotuloQtd, href }) {
+  return `
         <a href="${href}" class="subcategoria-card reveal">
           <div class="subcategoria-card__foto">${fotosSubcategoriaHTML(fotos, sub)}</div>
           <div class="subcategoria-card__info">
@@ -97,27 +162,7 @@ function renderVisaoGeral() {
             <h2>${sub}</h2>
             <p>${rotuloQtd}</p>
           </div>
-        </a>`)
-    .join('');
-
-  // .categoria-cards e so o LAYOUT flex (centraliza + quebra linha);
-  // o visual do card e o .subcategoria-card (cantos normais de 16px,
-  // agora com a FOTO CIRCULAR centralizada no topo — ver CSS — e o
-  // nome/contagem abaixo; continua sem usar --raio-organico pelo
-  // mesmo motivo de sempre: nomes mais longos, tipo "Pratos
-  // Artísticos", ficariam apertados naquela forma estreita/assimétrica).
-  // No fim da visão geral, as vendidas de todas as subcategorias
-  const vendidas = produtosVisiveis().filter((p) => p.categoria === 'ceramica' && estaVendida(p));
-  conteudoEl.innerHTML = `<div class="categoria-cards">${cards}</div>${renderSecaoVendidas(vendidas)}`;
-
-  // os cards acima nasceram com a classe .reveal -> registra eles
-  // no IntersectionObserver do main.js pra animarem ao entrar na tela
-  escanearReveal();
-
-  // liga o revezamento de fotos de cada card — iniciarRotacaoFotos()
-  // agora mora em js/main.js (compartilhada com a grade da Home,
-  // montarColecoesHome()); já carregou antes deste arquivo.
-  iniciarRotacaoFotos();
+        </a>`;
 }
 
 // ============================================================
@@ -188,15 +233,17 @@ function aplicarFiltrosListagem() {
 // aplicarEExibir() do main.js, que só sabe montar grades por categoria.
 // Com uma página só (1 a 4 peças no desktop, 1 a 2 no celular) a classe
 // --poucas centraliza os cards na largura normal, sem esticar.
-function vitrineHTML(lista, modo, rotulo) {
+// criarCard/classeGrade deixam a visão geral usar o MESMO trilho com
+// cards de subcategoria, em vez de um 2º carrossel só dela.
+function vitrineHTML(lista, modo, rotulo, { criarCard = criarCardProduto, classeGrade = '' } = {}) {
   if (modo === 'grade') {
     return `<div class="sub-vitrine sub-vitrine--grade" role="region" aria-label="${rotulo}">
-      <div class="produtos-grid">${lista.map(criarCardProduto).join('')}</div></div>`;
+      <div class="produtos-grid">${lista.map(criarCard).join('')}</div></div>`;
   }
   const porSlide = cardsPorSlideCarrossel();
   const poucas = lista.length <= porSlide;
   return `<div class="sub-vitrine${poucas ? ' sub-vitrine--poucas' : ''}" role="region" aria-label="${rotulo}" style="--cards: ${Math.min(lista.length, porSlide)}">
-    <div class="produtos-grid" data-grade-produtos="subcategoria" data-manual>${montarSlidesCarrossel(lista, porSlide)}</div></div>`;
+    <div class="produtos-grid ${classeGrade}" data-grade-produtos="subcategoria" data-manual>${montarSlidesCarrossel(lista, porSlide, criarCard)}</div></div>`;
 }
 
 // Subcategoria grande (ex.: Canecas) ganha "Carrossel | Grade"
@@ -232,7 +279,8 @@ conteudoEl.addEventListener('click', (evento) => {
 // cruzar 768/769px muda quantos cards cabem por slide (2 x 4): remonta
 // (mesma MediaQueryList do carrossel da Home, main.js)
 mqCarrosselDesktop.addEventListener('change', () => {
-  if (subPedida) aplicarFiltrosListagem();
+  if (nomeSub) aplicarFiltrosListagem();
+  else desenharVisaoGeral();
 });
 
 // ============================================================
@@ -258,9 +306,12 @@ function sincronizarCriterios() {
   let espera = null;
   el.addEventListener(ehBusca ? 'input' : 'change', () => {
     sincronizarCriterios();
-    // so mexe na tela quando estamos no modo LISTAGEM; na visao
-    // geral os filtros estao escondidos e isto nao faz nada.
-    if (!subPedida) return;
+    // na visão geral, só preço e ordem mexem nos cards (a busca do
+    // header segue com o comportamento dela)
+    if (!nomeSub) {
+      if (!ehBusca) desenharVisaoGeral();
+      return;
+    }
     // na busca, remonta o carrossel quando a digitação pausa, não a
     // cada tecla (cada remontagem recria trilho, setas e dots)
     clearTimeout(espera);
