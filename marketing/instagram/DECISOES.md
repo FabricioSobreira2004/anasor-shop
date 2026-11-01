@@ -261,3 +261,10 @@ pendentes, só os 12 Reels trocaram de bytes). `AMANHA-POSTAR.md`
 (2026-11-01)" — corrigido pra "Hoje", já que hoje É o dia; conteúdo
 (Tour do Site, `extra-tour-do-site\tour-instagram.mp4`) continua certo,
 já tinha sido copiado com a versão corrigida.
+
+2026-11-01 — Os 4 Reels de CONTEÚDO (sem o bug da cor, vídeo intocado)
+ainda estavam com a narração/legenda da Rodada 8 (pausa entre frases
+0,15, não 0,05) — rodei `narrar.js`/`legendar.js` neles também (sem
+re-renderizar o vídeo, só reaplicando narração+legenda), pra fechar o
+escopo "narração estável" nos 18 vídeos, não só nos 14 que tinham o
+outro bug. Kit resincronizado de novo depois — mesma contagem (11/17).
