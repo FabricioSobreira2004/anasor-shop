@@ -231,6 +231,33 @@ function TituloCinetico({ texto, entradaFrame, tamanho = 76, cor = '#FFF' }) {
   );
 }
 
+// Faixa de gradiente atrás da legenda (Rodada 9, achado do Fabrício:
+// "a legenda nova cobre a base do produto" — a foto/vídeo do produto
+// é full-bleed, cobre o quadro inteiro, sem margem reservada pra
+// texto). Escurece só os `altura` px de baixo, suave (sem corte duro),
+// pra legenda.js (narração, ffmpeg) ter contraste garantido sem
+// esconder o produto inteiro — mais simples e seguro que recortar a
+// foto por produto (cada foto tem o produto num lugar diferente).
+//
+// altura 420 (não 260) — 2º achado testando a 1ª versão: a caixa da
+// legenda nova (CATEGORIAS.reels em legendar.js: caixaTop 1540,
+// caixaAltura 260, ou seja y:1540-1800) começa 120px ACIMA de onde a
+// faixa de 260px cobria (ela só ia de y:1660 a 1920) — a legenda
+// ficava sem fundo nos primeiros ~120px dela. 420px (y:1500-1920,
+// a mesma "faixa de baixo" já usada como zona segura no resto do
+// projeto) cobre a caixa inteira com folga, e o gradiente chega a
+// 50% de opacidade logo nos primeiros 12% da faixa (perto do topo da
+// caixa de legenda), não só no fim.
+function FaixaLegendaFundo({ altura = 420 }) {
+  return React.createElement('div', {
+    style: {
+      position: 'absolute', left: 0, right: 0, bottom: 0, height: altura,
+      background: 'linear-gradient(to bottom, rgba(20,12,8,0) 0%, rgba(20,12,8,0.55) 12%, rgba(20,12,8,0.85) 100%)',
+      zIndex: 4, pointerEvents: 'none',
+    },
+  });
+}
+
 // ---------------------------------------------------------------
 // Legenda palavra por palavra — até 6 palavras por tela (pedido
 // explícito), cada uma "pop" ao entrar e as anteriores desta leva
@@ -557,6 +584,7 @@ module.exports = {
   FaixaConfianca,
   TituloCinetico,
   LegendaPalavras,
+  FaixaLegendaFundo,
   FotoKenBurns,
   FotoParallax,
   BrilhoEsmalte,

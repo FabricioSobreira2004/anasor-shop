@@ -32,6 +32,11 @@ const SAIDA = path.resolve(RAIZ, '..', 'site-mae', 'reels');
 const SAIDA_CONFERENCIA = path.join(SAIDA, '_conferencia');
 
 // ---- CLI ----
+function dataHoje() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
 function lerArgs() {
   const args = {};
   const argv = process.argv.slice(2);
@@ -225,6 +230,14 @@ async function montarContextoProduto(produtos, produtoId, v) {
 }
 
 async function main() {
+  // Redireciona TEMP/TMP pro drive E: — mesmo achado/mesmo fix de
+  // tour.js (Rodada 9): disco C: com pouco espaço livre, Chrome do
+  // Remotion recusa carregar vídeo durante o render.
+  const TEMP_E = 'E:/projetos/_tmp/remotion-reels';
+  fs.mkdirSync(TEMP_E, { recursive: true });
+  process.env.TEMP = TEMP_E;
+  process.env.TMP = TEMP_E;
+
   const args = lerArgs();
   fs.rmSync(PUBLIC_DIR, { recursive: true, force: true });
   fs.mkdirSync(PUBLIC_DIR, { recursive: true });
@@ -311,6 +324,19 @@ async function main() {
     throw new Error('Uso: npm run reel -- --nome <roteiro>  OU  --id <id> --template <apresentacao|detalhes>  OU  --ids <id,id,id>');
   }
 
+  // LegendaPalavras (queimada aqui, no Remotion) e a legenda NOVA
+  // sincronizada com a narração (queimada depois por
+  // narracao/legendar.js) são 2 sistemas diferentes — os dois juntos
+  // davam "legenda dupla" (achado do Fabrício, Rodada 9: textos
+  // diferentes, fora de sincronia). Por padrão a legenda embutida não
+  // renderiza mais (`--com-legenda-embutida` liga de volta, pra
+  // quando fizer sentido publicar sem narração). As `legendas:` em
+  // roteiros.js/roteiroPadrao continuam como referência de texto —
+  // ainda úteis pra escrever o roteiro de narração de cada cena.
+  if (!args['com-legenda-embutida']) {
+    props.cenas = props.cenas.map((c) => (c.legendas ? { ...c, legendas: [] } : c));
+  }
+
   console.log(`\nRenderizando "${nome}" (template: ${template}, ${(props.duracaoTotal / FPS).toFixed(1)}s, ${props.duracaoTotal} frames)...`);
 
   const bundleLocation = await bundle({
@@ -338,6 +364,17 @@ async function main() {
   // Instagram, sem esperar baixar o arquivo inteiro). Reencoda (não
   // -c:v copy) porque "-profile:v high" exige recodificar.
   const saidaFinal = path.join(SAIDA, `${nome}.mp4`);
+  // Regra fixa: nunca sobrescrever um .mp4 final sem arquivar a
+  // versão anterior antes — reel.js RE-RENDERIZA da fonte (Remotion),
+  // igual tour.js (mesmo achado/mesmo fix, Rodada 9).
+  if (fs.existsSync(saidaFinal)) {
+    const dirAnteriores = path.join(SAIDA, '_anteriores', dataHoje());
+    fs.mkdirSync(dirAnteriores, { recursive: true });
+    const d = new Date();
+    const pad = (n) => String(n).padStart(2, '0');
+    const hora = `${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`;
+    fs.copyFileSync(saidaFinal, path.join(dirAnteriores, `${nome}-remotion-${hora}.mp4`));
+  }
   execFileSync(FFMPEG, [
     '-y', '-i', saidaBruta,
     '-an',

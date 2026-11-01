@@ -7,7 +7,7 @@ const React = require('react');
 const { AbsoluteFill, interpolate, useCurrentFrame } = require('remotion');
 const {
   MarcaDagua, TituloCinetico, FotoParallax, BrilhoEsmalte, VinhetaGrao,
-  MascaraCircular, FaixaConfianca, FechoRico,
+  MascaraCircular, FaixaConfianca, FechoRico, FaixaLegendaFundo,
 } = require('../componentes');
 
 function Colecao({ cores, logoUri, retratoUri, cenas }) {
@@ -39,7 +39,11 @@ function Colecao({ cores, logoUri, retratoUri, cenas }) {
             // importante nos 420px de baixo".
             key: 'nome',
             style: { position: 'absolute', left: 60, right: 60, bottom: 430 },
-          }, React.createElement(TituloCinetico, { texto: cena.nome, entradaFrame: cena.inicio + 8, tamanho: 58 }))
+          }, React.createElement(TituloCinetico, { texto: cena.nome, entradaFrame: cena.inicio + 8, tamanho: 58 })),
+          // Faixa de gradiente na base (Rodada 9) — mesmo motivo de
+          // Apresentacao.js: reserva contraste pra legenda da narração,
+          // queimada depois.
+          React.createElement(FaixaLegendaFundo, { key: 'faixa-legenda' })
         );
       } else if (cena.tipo === 'cta') {
         // FechoRico (Rodada 5, item 2) — ver mesmo comentário em

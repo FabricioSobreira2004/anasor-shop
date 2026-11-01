@@ -141,11 +141,22 @@ Fonte: 4 passos "Como funciona uma encomenda" (sem prazo nem preço fixo, igual 
 ## Tour do site (2)
 
 ### tour-instagram (45,00 s)
-Fonte: recursos reais do site, sem citar preço de peça nenhuma
+Fonte: recursos reais do site, sem citar preço de peça nenhuma.
+Rodada 9 (achado do Fabrício): o roteiro antigo (84 palavras) só
+preenchia ~26s dos 45s do vídeo, deixando quase 19s de silêncio no
+fim — o vídeo é um tour por VÁRIAS telas (home, produto, carrinho,
+checkout, vendidas, links) e o roteiro antigo só narrava 2-3 delas.
+Reescrito pra acompanhar, em ordem, as mesmas cenas do roteiro visual
+(roteiro-mobile.js) — ~126 palavras, ~39s na voz padrão, cabe nos 45s
+com folga sem cortar.
 
-> Vem dar uma volta pelo site da Anasor Cerâmica, onde cada peça é única, feita à mão, com fotos, vídeo e medidas reais, pra você conhecer antes de decidir. Escolha a sua, adicione ao carrinho, e feche a compra com segurança pelo Mercado Pago, enquanto o endereço se completa sozinho a partir do CEP e o frete segue grátis pra todo o Brasil. Até as peças já vendidas continuam no site, compondo o portfólio do ateliê. Link na bio, no arroba anasor ponto cerâmica.
+> Vem conhecer o site do ateliê Anasor Cerâmica. Na home você passeia pelas coleções de cerâmica e crochê. Toda peça é única e feita à mão. Quando uma vende não tem reposição igual. Na página de cada peça tem fotos vídeo e as medidas reais. Dá pra decidir com calma antes de comprar. Escolheu a sua? Ela vai pro carrinho bem ali do lado sempre visível. No checkout o endereço se completa sozinho a partir do CEP. A compra é segura pelo Mercado Pago e o frete é grátis pra todo o Brasil. Até as peças já vendidas continuam no site compondo o portfólio do ateliê. Dá pra encomendar uma parecida. Link na bio, no arroba anasor ponto cerâmica.
 
 ### tour-portfolio (47,00 s)
-Fonte: mesmos recursos do site, com um pouco mais de detalhe (versão mais longa, pensada pra portfólio)
+Fonte: mesmos recursos do site, com um pouco mais de detalhe (versão mais longa, pensada pra portfólio).
+Rodada 9 (achado do Fabrício): texto antigo (110 palavras, 10
+vírgulas) preenchia só 34,7s dos 47s, deixando 12s de silêncio no
+fim. Reescrito com bem menos vírgulas (frases curtas) — mesma
+informação, ~114 palavras, cabe melhor nos 47s.
 
-> Este é um tour completo pelo site da Anasor Cerâmica, pensado tanto pra quem compra pelo celular quanto pra quem navega no computador. Cada peça é única, com fotos, vídeo e medidas reais, sempre numa unidade só, porque nunca existe uma segunda peça igual. A navegação segue do carrinho lateral até o checkout, onde o endereço se completa automaticamente a partir do CEP e o pagamento é processado com segurança pelo Mercado Pago, com frete grátis pra todo o Brasil. E quando uma peça vende, ela não sai do site: passa a compor o portfólio do ateliê, mostrando o trabalho já realizado. Link na bio, no arroba anasor ponto cerâmica.
+> Este é um tour completo pelo site da Anasor Cerâmica. Pensado tanto pra quem compra pelo celular quanto pra quem navega no computador. Cada peça é única e sempre numa unidade só. Nunca existe uma segunda peça igual. Na página de cada peça tem fotos, vídeo e medidas reais. A navegação segue do carrinho lateral até o checkout. Lá o endereço se completa automaticamente a partir do CEP. O pagamento é processado com segurança pelo Mercado Pago. O frete é grátis pra todo o Brasil. Quando uma peça vende ela não sai do site. Passa a compor o portfólio do ateliê, mostrando o trabalho já realizado. Link na bio, no arroba anasor ponto cerâmica.

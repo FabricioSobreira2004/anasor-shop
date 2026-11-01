@@ -498,3 +498,47 @@ Os 4 bugs da code-review em `narrar.js`/`legendar.js` (apontados no fim da Rodad
 Rodei o checker corrigido nos 18 vídeos de produção: todos passaram na área livre de verdade, áudio+vídeo presentes, ~-16 LUFS, sem quadro preto, cartão final sem corte. `kit-postagem/` resincronizado (`montar-kit-postagem.js`) depois que um vídeo (`r1-caneca-surpresa-gatinho`) trocou de bytes no reencode — 11/17 dias prontos, igual antes. `AMANHA-POSTAR.md`/`LEIA-ME.md` já estavam corretos, sem mudança. Detalhe completo de cada achado em `DECISOES.md`, "Rodada 8".
 - ?v=47. Deploy conferido: 200 em /, /ceramica.html, ?sub=jarras, produto 33, /links, /api/health.
 - Pendente (decisão do Fabrício): achados da code-review no código de narração que veio do PC de casa (legendar.js/narrar.js) — ver relatório da sessão.
+
+---
+
+## Rodada 9 — legenda única + narração estável (2026-11-01) — ✅ CONCLUÍDO
+
+Retomada depois de 2 quedas por rate-limit de sessão (a sessão anterior
+já tinha regerado os 18 vídeos com legenda única sincronizada +
+narração mais estável, mas com um BUG: a faixa de contraste atrás da
+legenda dos Reels de peça (`FaixaLegendaFundo`, componente novo desta
+rodada) ficou com cor de TESTE vermelha em vez do degradê de marca).
+
+- Cor corrigida em `componentes.js` (Reels) pro degradê de marca
+  (marrom escuro). Varredura em todo o código de vídeo não achou mais
+  nenhuma cor de teste.
+- Os 12 Reels de PEÇA foram re-renderizados do zero (Remotion →
+  narração → legenda) pra sair com a cor certa — os 4 Reels de
+  CONTEÚDO não precisaram (nunca tiveram esse componente). Os 2 Tours
+  também não precisaram (sem o bug, já corretos de antes da sessão
+  cair). Comandos de render dos 6 Reels sem roteiro nomeado
+  reconstruídos com certeza (cruzando nome do produto no sidecar de
+  narração + duração exata do vídeo) — ver DECISOES.md pra cada
+  comando, documentado pra nunca mais precisar reconstruir.
+- Fechamento: varredura automática de cor (ffmpeg signalstats) nos 18
+  vídeos finais — ✅ nenhum traço de vermelho (saturação máxima <10 de
+  255 na faixa da legenda). Amostragem visual de 4 vídeos (templates
+  diferentes) + 1 do tour — ✅ degradê correto, legenda única, sem
+  sobreposição. `node --check` nos 11 scripts tocados: ✅ OK. Backend
+  offline: ✅ 6/6. Cache do webpack dentro do projeto (1,8GB,
+  gitignorado) limpo. Kit de postagem resincronizado — 11/17 dias
+  prontos (sem mudança nos pendentes). `AMANHA-POSTAR.md` (site-mae)
+  corrigido de "Amanhã" pra "Hoje" (a data já chegou).
+- git: só `marketing/instagram/**` tocado. Commit feito, push pra
+  `main` sem force.
+
+**O que postar HOJE (2026-11-01)**: `extra-tour-do-site\
+tour-instagram.mp4` (Tour do Site, 45s, narrado + legendado,
+1080×1920) — ver `AMANHA-POSTAR.md`/`LEIA-ME.md` no kit
+(`E:\projetos\site-mae\kit-postagem\`) pro passo a passo. "Dia 1" de
+verdade (Reels da Anasor se apresentando) continua pendente de
+filmagem real.
+
+Pendências reais do Fabrício (sem mudança — continuam exigindo
+filmagem/depoimento real, nada inventado): 6 dos 17 dias do kit (ver
+`LEIA-ME.md`/`PENDENTE.md` de cada pasta).

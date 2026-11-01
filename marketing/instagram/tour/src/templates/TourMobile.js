@@ -40,7 +40,10 @@ function CenaMobile({ cena, i, clipes, cores, retratoUri }) {
       DispositivoFlutuante,
       {
         inicioFrame: 0, duracaoFrames: cena.duracao, de: cena.de, para: cena.para,
-        inclinacaoBase: i % 2 === 0 ? 7 : -7,
+        // Reduzido de ±7° pra ±2° (Rodada 9, achado do Fabrício: o
+        // aparelho parecia "inclinado" — mantém um leve ar 3D sem
+        // prejudicar a leitura da tela, que é o objetivo do tour.
+        inclinacaoBase: i % 2 === 0 ? 2 : -2,
         ancoragem: { top: LAYOUT_CELULAR.TOPO, largura: LAYOUT_CELULAR.LARGURA },
       },
       React.createElement(MolduraCelular, { src: clipes[cena.clipe].arquivo, largura: LAYOUT_CELULAR.LARGURA, altura: LAYOUT_CELULAR.ALTURA })

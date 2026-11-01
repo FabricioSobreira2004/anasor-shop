@@ -25,14 +25,17 @@ const ZONA_SEGURA_TOPO = 250; // nada importante aqui (pedido explícito)
 const ZONA_SEGURA_BASE = 1920 - 420; // = 1500 — nada importante abaixo disso
 const GAP_MINIMO_CELULAR_LEGENDA = 20;
 
-// Estimativa CONSERVADORA da altura da legenda: não simulamos quebra
-// de linha de verdade (exigiria medir texto num browser) — assumimos
-// o pior caso plausível pra uma legenda de até 6 palavras em 62px
-// (pedido original): até 3 linhas. Cada linha ~ fontSize*1.2 (texto) +
-// 16 (padding vertical do "pill") + 12 (gap entre linhas do flex-wrap).
-function alturaMaximaLegendaEstimada(tamanhoFonte = 62) {
+// Estimativa CONSERVADORA da altura da legenda — ATUALIZADA na Rodada
+// 9: a legenda cinética embutida (LegendaCinetica, até 6 palavras em
+// 62px/3 linhas) foi DESATIVADA no render (ver tour.js,
+// semLegendaEmbutida) — quem queima legenda agora é
+// narracao/legendar.js, com no máximo 2 linhas e fonte 42
+// (CATEGORIAS.tourMobile.fonte, mesmo número aqui pra não desalinhar).
+// Cada linha ~ fontSize*1.2 (texto) + 16 (padding vertical do "pill")
+// + 12 (gap entre linhas).
+function alturaMaximaLegendaEstimada(tamanhoFonte = 42) {
   const alturaLinha = tamanhoFonte * 1.2 + 16;
-  const LINHAS_MAX = 3;
+  const LINHAS_MAX = 2;
   const GAP_ENTRE_LINHAS = 12;
   return alturaLinha * LINHAS_MAX + GAP_ENTRE_LINHAS * (LINHAS_MAX - 1);
 }
@@ -76,7 +79,7 @@ function main() {
     const celular = retanguloCelularPiorCaso(cena);
     const legendas = cena.legendas || [];
     const legendaTopo = LAYOUT_CELULAR.CAPTION_TOP;
-    const maiorFonte = legendas.reduce((max, l) => Math.max(max, l.tamanho || 62), 62);
+    const maiorFonte = legendas.reduce((max, l) => Math.max(max, l.tamanho || 42), 42);
     const legendaFundo = legendaTopo + alturaMaximaLegendaEstimada(maiorFonte);
 
     const semSobreposicao = celular.fundo + GAP_MINIMO_CELULAR_LEGENDA <= legendaTopo;

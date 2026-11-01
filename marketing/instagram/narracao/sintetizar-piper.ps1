@@ -13,6 +13,20 @@
 # mesmo texto), o que também torna a estimativa de tempo da legenda
 # (legendar.js) confiável. Timbre/entonação (noise-scale) não foi
 # tocado — só a aleatoriedade de DURAÇÃO.
+#
+# --sentence-silence 0.05 (Rodada 9, achado do Fabrício: "pausas de
+# 0,5 a 0,75s no meio de frases dão sensação de travando"): testei
+# isolar a causa — gerei o MESMO texto sem nenhuma vírgula E com
+# --sentence-silence 0 (zerado) e AINDA saíram pausas de 0,48-0,67s
+# espalhadas (silencedetect, d=0,4) em pontos que não são nem vírgula
+# nem fim de frase. Ou seja: a pausa NÃO vem deste parâmetro nem de
+# pontuação — é o PRÓPRIO MODELO (comportamento prosódico do VITS
+# esticado em length_scale 0,7, "mais pausado" por natureza, a mesma
+# característica da amostra aprovada pelo Fabrício). Não dá pra
+# eliminar sem mudar o ritmo (fora de escopo — "voz jeff, ritmo 0.7
+# mantida", pedido explícito). Baixei 0.15→0.05 (ainda uma pausa
+# mínima ENTRE frases, sem silêncio morto) — é a única redução
+# disponível sem tocar no ritmo; ver DECISOES.md.
 param(
   [Parameter(Mandatory = $true)][string]$TextoArquivo,
   [Parameter(Mandatory = $true)][string]$SaidaWav,
@@ -26,7 +40,7 @@ if (-not (Test-Path -LiteralPath $Modelo)) {
   exit 1
 }
 
-Get-Content -LiteralPath $TextoArquivo -Raw -Encoding UTF8 | python -m piper -m $Modelo -f $SaidaWav --length-scale $LengthScale --noise-w-scale $NoiseWScale --sentence-silence 0.15
+Get-Content -LiteralPath $TextoArquivo -Raw -Encoding UTF8 | python -m piper -m $Modelo -f $SaidaWav --length-scale $LengthScale --noise-w-scale $NoiseWScale --sentence-silence 0.05
 if ($LASTEXITCODE -ne 0) {
   Write-Error "Piper falhou (código $LASTEXITCODE)"
   exit $LASTEXITCODE

@@ -30,6 +30,35 @@ const DIR_CAPTURAS = path.join(__dirname, '.tmp', 'capturas');
 const SAIDA = path.resolve(RAIZ, '..', 'site-mae', 'tour');
 const SAIDA_CONFERENCIA = path.join(SAIDA, '_conferencia');
 
+// Legenda cinética do Remotion (Rodada 4/5, roteiro-mobile.js/
+// roteiro-desktop.js) e a legenda NOVA, sincronizada com a narração
+// e queimada depois por `narracao/legendar.js`, são DOIS sistemas
+// diferentes — rodar os dois juntos dá "legenda dupla" (achado do
+// Fabrício, Rodada 9: textos diferentes, fora de sincronia, um por
+// cima do outro). Por padrão agora a legenda cinética NÃO renderiza
+// (`--com-legenda-embutida` liga de volta, só se algum dia fizer
+// sentido publicar sem narração). As `legendas:` continuam no
+// roteiro — descrevem o que cada cena mostra e isso ainda é útil
+// como referência pra escrever o roteiro de narração.
+// `legendas` (Versão A/mobile) e `destaques` (Versão B/desktop,
+// DestaqueTecnico) são os 2 nomes do mesmo problema — texto
+// descritivo embutido no Remotion, hoje conflitando com a legenda da
+// narração.
+function semLegendaEmbutida(cenas, args) {
+  if (args['com-legenda-embutida']) return cenas;
+  return cenas.map((c) => {
+    const limpa = { ...c };
+    if (limpa.legendas) limpa.legendas = [];
+    if (limpa.destaques) limpa.destaques = [];
+    return limpa;
+  });
+}
+
+function dataHoje() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
 function lerVariaveisCss() {
   const css = fs.readFileSync(path.join(RAIZ, 'css', 'style.css'), 'utf8');
   const pegar = (nome) => {
@@ -168,6 +197,19 @@ async function renderizar({ id, nome, props, bundleLocation }) {
   });
 
   const saidaFinal = path.join(SAIDA, `${nome}.mp4`);
+  // Regra fixa (sempre, desde a Rodada 7): nunca sobrescrever um .mp4
+  // final sem arquivar a versão anterior antes. tour.js RE-RENDERIZA
+  // da fonte (Remotion) — isso ainda não tinha o arquivamento que
+  // narrar.js/legendar.js já tinham (achado da Rodada 9: um
+  // `node tour.js` direto sobrescrevia sem arquivar).
+  if (fs.existsSync(saidaFinal)) {
+    const dirAnteriores = path.join(SAIDA, '_anteriores', dataHoje());
+    fs.mkdirSync(dirAnteriores, { recursive: true });
+    const d = new Date();
+    const pad = (n) => String(n).padStart(2, '0');
+    const hora = `${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`;
+    fs.copyFileSync(saidaFinal, path.join(dirAnteriores, `${nome}-remotion-${hora}.mp4`));
+  }
   execFileSync(FFMPEG, [
     '-y', '-i', saidaBruta, '-an',
     '-c:v', 'libx264', '-profile:v', 'high', '-pix_fmt', 'yuv420p', '-color_range', 'tv',
@@ -200,6 +242,18 @@ async function renderizar({ id, nome, props, bundleLocation }) {
 }
 
 async function main() {
+  // Redireciona TEMP/TMP pro drive E: (mesmo padrão de narrar.js) —
+  // achado da Rodada 9: o disco C: estava com só 2,6GB livres (não
+  // 0 bytes como na Rodada 5, mas baixo o bastante pra o Chrome do
+  // Remotion recusar carregar um clipe de vídeo durante o render,
+  // "Chrome rejecting the request because the disk space is low").
+  // tour.js nunca tinha esse redirecionamento (narrar.js/legendar.js
+  // já tinham, por isso nunca deram esse erro).
+  const TEMP_E = 'E:/projetos/_tmp/remotion-tour';
+  fs.mkdirSync(TEMP_E, { recursive: true });
+  process.env.TEMP = TEMP_E;
+  process.env.TMP = TEMP_E;
+
   const args = lerArgs();
   const versao = args.versao || 'ambas';
   if (!['a', 'b', 'ambas'].includes(versao)) throw new Error('Uso: node tour.js --versao a|b|ambas');
@@ -244,13 +298,13 @@ async function main() {
 
   if (versao === 'a' || versao === 'ambas') {
     const { cenas, duracaoTotal } = montarRoteiroMobile(clipesMobile);
-    propsPorVersao.a = { cenas, duracaoTotal, fps: FPS, cores, logoUri, retratoUri, clipes: clipesMobile };
+    propsPorVersao.a = { cenas: semLegendaEmbutida(cenas, args), duracaoTotal, fps: FPS, cores, logoUri, retratoUri, clipes: clipesMobile };
   }
 
   if (roteiroB) {
     const { cenas, duracaoTotal, faixaTecnologias } = roteiroB;
     const clipesDesktop = copiarClipesParaPublic(lerManifesto('desktop'), 'desktop', minimosMobile);
-    propsPorVersao.b = { cenas, duracaoTotal, fps: FPS, cores, logoUri, retratoUri, clipesDesktop, clipesMobile, faixaTecnologias };
+    propsPorVersao.b = { cenas: semLegendaEmbutida(cenas, args), duracaoTotal, fps: FPS, cores, logoUri, retratoUri, clipesDesktop, clipesMobile, faixaTecnologias };
   }
 
   // 1 bundle só, reaproveitado por quantas composições forem pedidas

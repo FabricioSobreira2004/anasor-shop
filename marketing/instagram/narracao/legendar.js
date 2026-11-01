@@ -100,15 +100,18 @@ function caminhoMaster(dirPasta, nome) {
 // Categoria de vídeo -> geometria do canvas + zona segura pra legenda
 // (ver DECISOES.md pela origem de cada número):
 //   - tourMobile: 1080x1920, abaixo do celular (LAYOUT_CELULAR.CAPTION_TOP
-//     = 1140 em componentes.js do tour) e acima da faixa de 250px
-//     reservada pra UI do Instagram.
+//     = 1265 em componentes.js do tour, Rodada 9 — celular maior) e
+//     acima da faixa de 420px reservada pra UI do Instagram (y:1500).
 //   - tourDesktop: 1920x1080, abaixo da moldura de navegador
 //     (MolduraDesktop: top 54 + altura 738 = base em 792).
 //   - reels: 1080x1920, dentro da faixa "nada importante" já usada
 //     pros selos/CTA nos templates (250px topo / 420px base), perto
 //     do fim dessa faixa mas com folga antes da UI do Instagram.
 const CATEGORIAS = {
-  tourMobile: { largura: 1080, altura: 1920, caixaTop: 1160, caixaAltura: 420, fonte: 42 },
+  // caixaTop/caixaAltura ATUALIZADOS (Rodada 9): LAYOUT_CELULAR.CAPTION_TOP
+  // mudou de 1140 pra 1265 (celular maior) — caixaAltura 220 termina em
+  // 1485, 15px de folga antes da zona proibida (y:1500).
+  tourMobile: { largura: 1080, altura: 1920, caixaTop: 1265, caixaAltura: 220, fonte: 42 },
   // caixaTop ACHADO testando (Rodada 7): a moldura do navegador
   // desktop termina mais embaixo do que os números do componentes.js
   // sugeriam (~860px reais, não 792) — a 1ª tentativa (caixaTop:840)

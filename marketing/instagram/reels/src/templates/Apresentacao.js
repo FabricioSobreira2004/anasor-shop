@@ -9,7 +9,7 @@ const React = require('react');
 const { AbsoluteFill, Img, interpolate, useCurrentFrame } = require('remotion');
 const {
   MarcaDagua, SeloAnimado, FaixaConfianca, TituloCinetico,
-  LegendaPalavras, FotoKenBurns, FotoParallax, BrilhoEsmalte, VinhetaGrao,
+  LegendaPalavras, FaixaLegendaFundo, FotoKenBurns, FotoParallax, BrilhoEsmalte, VinhetaGrao,
   VideoInserto, MascaraCircular, BotaoGummyFinal, FechoRico, resolverSrc,
 } = require('../componentes');
 
@@ -132,6 +132,15 @@ function Apresentacao({ produto, cores, logoUri, retratoUri, selo, cenas, fps })
           ),
           React.createElement(FaixaConfianca, { key: 'fc', cores, entradaFrame: cena.inicio + 58, sobreClaro: true })
         );
+      }
+
+      // Faixa de gradiente na base (Rodada 9) — SEMPRE presente em
+      // cenas com foto/vídeo full-bleed (não no CTA, que já tem fundo
+      // sólido controlado): reserva contraste pra legenda nova,
+      // queimada depois por narracao/legendar.js, sem precisar saber
+      // nada sobre ela aqui (o template não lê narração/legenda).
+      if (cena.tipo !== 'cta') {
+        conteudo.push(React.createElement(FaixaLegendaFundo, { key: 'faixa-legenda' }));
       }
 
       // Uma cena pode ter mais de uma "leva" de legenda (ex.: o gancho

@@ -39,14 +39,26 @@ const EASE_CAMERA = Easing.bezier(0.16, 1, 0.3, 1);
 // 250 — margem de segurança insuficiente) até toda cena passar com
 // folga. Esse script é a fonte de verdade — rode ele de novo depois
 // de mexer em qualquer número aqui.
+// Geometria AUMENTADA (Rodada 9, achado do Fabrício: "celular pequeno,
+// inclinado, metade de baixo da tela vazia"). Era 400×760 a partir de
+// y:300 — deixava quase 900px vazios abaixo do aparelho. Novos
+// números CALCULADOS pela fórmula de validar-geometria.js (não
+// chutados): zoom máx reduzido pra 1,015 (quase sem zoom-in) e
+// translate máx pra 1% — com ALTURA 960, o pior caso do celular vai
+// até y≈1245; CAPTION_TOP 1270 deixa 20px de gap + ~145px pra legenda
+// de até 2 linhas em 42px (ver alturaMaximaLegendaEstimada, também
+// atualizada pro tamanho real da legenda nova) — fundo da legenda em
+// ~1415, ainda dentro da zona segura (<1500). Rode
+// `src/validar-geometria.js` de novo depois de mexer aqui — é a fonte
+// de verdade, não a conta de cabeça.
 const LAYOUT_CELULAR = {
-  TOPO: 300,
-  LARGURA: 400,
-  ALTURA: 760,
-  CAMERA_ESCALA_MIN: 0.96,
-  CAMERA_ESCALA_MAX: 1.08,
-  CAMERA_TRANSLATE_MAX_PCT: 1.6,
-  CAPTION_TOP: 1140, // abaixo do fundo máximo do celular (1082,6) + folga de ~57px
+  TOPO: 268,
+  LARGURA: 500,
+  ALTURA: 960,
+  CAMERA_ESCALA_MIN: 0.98,
+  CAMERA_ESCALA_MAX: 1.015,
+  CAMERA_TRANSLATE_MAX_PCT: 1.0,
+  CAPTION_TOP: 1270,
 };
 function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
 

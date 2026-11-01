@@ -178,3 +178,86 @@ Pedido do Fabrício em modo autônomo, PC de casa, sincronizar com o notebook do
 - `teste-legendar.js` tinha uma linha morta (`fs.readFileSync(video).toString('base64').length && ...`, sempre truthy, sem efeito) e repetia a chamada `certutil -hashfile` 4x → helper `hashArquivo()`.
 - `teste-legendar.js`/`teste-narrar.js` reimplementavam o MESMO runner de teste (`teste()`/contador/resumo) lado a lado → extraído pra `narracao/teste-util.js` (`criarRunner()`), importado pelos dois.
 - Rodei `legendar.js` nos 18 vídeos de produção DE NOVO depois de todas essas mudanças (confirma que a extração de funções/constantes não alterou nenhum resultado) e os 2 testes de novo (8/8 OK).
+
+---
+
+## Rodada 9 — legenda única + narração estável (modo totalmente autônomo)
+
+Pedido em 2026-10-31/11-01, sessão anterior caiu 2x em rate-limit de
+sessão no meio do trabalho (a 1ª vez no meio da verificação do
+tour-portfolio, concluída antes de cair; a 2ª no meio da limpeza do
+cache do webpack). Esta sessão retomou de onde parou, sem perguntar,
+seguindo a prioridade pedida: 1) kit do dia de hoje, 2) tour-instagram/
+tour-portfolio, 3) o resto.
+
+2026-11-01 — ACHADO CRÍTICO (prioridade 0 do pedido): `FaixaLegendaFundo`
+(componentes.js dos Reels, nova nesta rodada — faixa de gradiente atrás
+da legenda, pra dar contraste à legenda nova sobre fotos full-bleed)
+tinha ficado com a cor de TESTE vermelha (`rgba(255,0,0,...)`) em vez do
+degradê de marca (marrom escuro `rgba(20,12,8,...)`). Os 12 Reels de
+PEÇA (não os 4 de conteúdo, que não usam esse componente) já tinham sido
+regerados a noite com essa cor errada, antes da sessão cair. Corrigido o
+código primeiro, varredura em todo o código de vídeo (grep por
+`255,0,0`/`#f00`/`outline`/`debug`) não achou mais nenhuma cor de teste,
+e os 12 Reels foram TODOS re-renderizados (ver abaixo) — nenhum vídeo
+final ficou com a cor errada (confirmado por varredura automática de
+saturação/matiz na faixa da legenda dos 18 vídeos + amostragem visual de
+quadros, ver "Fechamento" abaixo).
+
+2026-11-01 — Pra re-renderizar os 12 Reels de peça, faltava o comando
+exato de 6 deles (`caneca-surpresa-cachorrinho`, `kit-canequinhas-
+arlequim`, `kit-copos-ondas-do-mar`, `anjo-guardiao-porta-incenso`,
+`prato-ave-da-alvorada`, `colecao-pecas-de-alma`) — não são roteiros
+nomeados em `roteiros.js`, foram gerados direto por `--id`/`--ids` numa
+sessão anterior sem log do comando usado. Reconstruí com certeza, sem
+chutar: cruzei o NOME do produto citado no sidecar de narração
+(`_narracao-dados/<nome>.json`, campo `textoFinal`) com `js/produtos.js`
+pra achar o id, e inferi apresentacao vs. detalhes pela DURAÇÃO exata do
+vídeo (`roteiroPadrao()` produz 4 durações possíveis e só 4: 350/375
+frames sem vídeo, 380/405 com vídeo, conforme template) — bateu
+exatamente com a duração já medida (`duracaoVideo` do sidecar) nos 5
+casos, sem ambiguidade, e a contagem final bateu com os totais já
+documentados na Rodada 2 (7 apresentação + 3 detalhes + 2 coleção).
+Comandos confirmados (documentando pra nunca mais precisar reconstruir):
+`--id 10 --template apresentacao --saida prato-ave-da-alvorada`,
+`--id 19 --template apresentacao --saida caneca-surpresa-cachorrinho`,
+`--id 23 --template detalhes --saida kit-canequinhas-arlequim`,
+`--id 40 --template detalhes --saida kit-copos-ondas-do-mar`,
+`--id 43 --template apresentacao --saida anjo-guardiao-porta-incenso`,
+`--ids 32,37,45 --saida colecao-pecas-de-alma` (ordem dos ids = ordem
+citada na narração: Kit 3 Xícaras de Café Terra Escura, Saboneteira
+Pássaro Azul-Noite, Vaso Escultórico Elo Noturno).
+
+2026-11-01 — Pipeline completo rodado pros 12 Reels de peça (os 4 de
+conteúdo NÃO precisaram — `Conteudo.js` nunca usou `FaixaLegendaFundo`
+nem tinha legenda embutida pra duplicar, ficaram intocados desde a
+Rodada 8): apaguei `_mudo/<nome>.mp4` e `_sem_legenda/<nome>.mp4` de
+cada um (caches internos, seguros de apagar — se não apagasse,
+`narrar.js` reusaria o master ANTIGO com a cor errada em vez de capturar
+o novo render limpo), `reel.js` (Remotion, com a cor corrigida + geometria/
+arquivamento da Rodada 9), `narrar.js` (mesma voz/ritmo/texto de antes —
+síntese determinística, reproduziu a narração idêntica) e `legendar.js`
+(legenda nova sincronizada). Os 2 Tours NÃO precisaram de re-render (sem
+o bug da cor; já tinham sido regerados corretamente antes da sessão
+cair) — só reverificados.
+
+2026-11-01 — Fechamento: varredura automática de cor (ffmpeg
+`signalstats`, crop nos 420px de baixo onde fica a legenda/faixa, pico de
+saturação por vídeo) nos 18 vídeos finais — todos com SATAVG máximo
+abaixo de 10 (de 255), ou seja praticamente sem cor nenhuma ali, nada
+perto da saturação de um vermelho puro (que passaria de 200+); amostragem
+visual de quadros (4 vídeos, templates diferentes: apresentação, detalhes,
+coleção por nome, coleção por id, + 1 do tour) confirmou visualmente:
+degradê marrom neutro, legenda única e legível, sem sobreposição. `node
+--check` nos 11 scripts tocados: OK. Teste offline do backend (não tocado
+nesta rodada, conferido por segurança): 6/6 OK. Cache do webpack dentro
+do projeto (`reels/.tmp/`, `tour/.tmp/` — redirecionado do TEMP do
+Windows pro próprio projeto numa sessão anterior, 1,8GB) limpo (já
+gitignorado por `.gitignore` local de cada pacote, nunca foi risco de
+commit, só espaço em disco). Kit de postagem resincronizado
+(`montar-kit-postagem.js`) — 11/17 dias prontos (sem mudança nos
+pendentes, só os 12 Reels trocaram de bytes). `AMANHA-POSTAR.md`
+(site-mae, fora do git) datado de 31/10 ainda dizia "Amanhã
+(2026-11-01)" — corrigido pra "Hoje", já que hoje É o dia; conteúdo
+(Tour do Site, `extra-tour-do-site\tour-instagram.mp4`) continua certo,
+já tinha sido copiado com a versão corrigida.
