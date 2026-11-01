@@ -72,19 +72,27 @@ python -m piper.download_voices --download-dir E:\projetos\_tmp\piper-modelos pt
      (o mudo original continua intacto em `_mudo\`).
 4. Confira `E:\projetos\_tmp\narracao-relatorio.txt` — 1 linha por
    vídeo com: palavras/segundo medido, as 6 checagens (fluxos,
-   sem silêncio total, sem estouro, duração, ritmo 2,8-3,1, sem
-   corte interno) e qualquer decisão/aviso automático.
+   sem silêncio total, sem estouro, duração, ritmo, sem corte
+   interno) e qualquer decisão/aviso automático. A faixa de ritmo é
+   calculada por voz (±15% da `wpsReferencia` medida na amostra
+   dela em `narracao-amostras\`); uma voz sem amostra própria
+   (cadu/edresson) compara contra a referência da voz PADRÃO
+   (jeff/0,7) — a checagem nunca é pulada (Rodada 8, achado da
+   code-review — ver `DECISOES.md`, teste em `teste-narrar.js`).
 
 ## Sobre o aviso "sem-corte-interno"
 
-A maioria dos vídeos mostra 1 pausa de ~0,6-0,68s bem no meio da
-fala, sempre numa vírgula/cláusula — é muito provável que seja a
-pausa NATURAL que o SAPI insere nesse Rate (consistente em quase
-todo vídeo, no mesmo tamanho), não um defeito de verdade, mas não
-dá pra confirmar por ouvido. Se ao ouvir perceber que soa estranho,
-2 saídas: reescrever o trecho em `roteiros.md` juntando a cláusula
-com "e"/"que" em vez de vírgula, ou aceitar — pausa em vírgula é
-normal em fala humana.
+Os roteiros de produção (frases únicas e compactas, pra caber nos
+poucos segundos de cada vídeo) têm várias vírgulas encadeadas — o
+Piper, no ritmo 0,7, insere uma pausa prosódica mais longa (~0,6-1s)
+bem numa vírgula de frase longa; a amostra de referência (2
+parágrafos soltos) não tem esse padrão porque tem frases mais
+simples. NÃO é corte/artefato (a fala não quebra nem repete palavra)
+— é uma pausa de respiração um pouco mais longa que o ideal. Se ao
+ouvir perceber que soa estranho, 2 saídas: reescrever o trecho em
+`roteiros.md` juntando a cláusula com "e"/"que" em vez de vírgula,
+ou aceitar — pausa em vírgula é normal em fala humana (detalhe
+completo em `DECISOES.md`, Rodada 7).
 
 ## Legenda queimada (Rodada 7, novo)
 
@@ -103,9 +111,26 @@ falado + duração real da voz) e:
   em qualquer fundo) numa posição fixa por categoria de vídeo (tour
   mobile, tour desktop, Reels) que nunca cobre celular/produto/
   botão/logo/@ — validado por amostragem de quadro (amplitude de
-  luminância na caixa da legenda);
-- arquiva a versão SEM legenda (mas já narrada) em
-  `_anteriores\<data>\<nome>-sem-legenda.mp4` antes de sobrescrever.
+  luminância na caixa da legenda). Desde a Rodada 8, essa checagem
+  BLOQUEIA: se a caixa da legenda cair sobre algo importante, o script
+  lança erro e NÃO escreve o vídeo final (exceto 1 falso-positivo já
+  verificado à mão, numa lista documentada no topo do arquivo).
+- mantém um MASTER permanente sem legenda em `<pasta>\_sem_legenda\
+  <nome>.mp4` (seedado uma única vez a partir do vídeo recém-saído do
+  `narrar.js`) — toda queima lê SÓ dali, nunca do `.mp4` final, que é
+  só o destino. Rodar `legendar.js` várias vezes no mesmo vídeo sempre
+  dá o mesmo resultado (idempotente — Rodada 8, antes rodar 2x queimava
+  legenda em cima de legenda, ver `DECISOES.md`). Antes de sobrescrever
+  o `.mp4` final, arquiva a versão anterior em `_anteriores\<data>\
+  <nome>-<hora>.mp4`.
+
+## Testes (Rodada 8)
+
+```
+node teste-narrar.js     # checagem de ritmo (cálculo puro, sem sintetizar voz)
+node teste-legendar.js   # idempotência, formato de tempo, bloqueio de área livre
+                          # (usa ffmpeg de verdade numa sandbox em E:\projetos\_tmp\, nunca toca em site-mae\)
+```
 
 ## Pra silenciar ou trocar por música
 

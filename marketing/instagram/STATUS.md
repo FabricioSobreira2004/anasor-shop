@@ -482,5 +482,19 @@ Notebook do pai: preços +100 (3 peças), botão Ver mais 3D, carrossel na pági
 - Preços: Travessa Asas do Paraíso (13) e Travessa Bruma Azul (14) R$ 199,90 → R$ 299,90; Prato Brisa de Palmeira (15) R$ 159,90 → R$ 259,90. Nenhuma tinha "de/por".
 - Botão `.btn-ver-mais` (variação escura e `--claro`) na Escolha do Ateliê, Edição Surpresa e Seleção Especial.
 - ceramica.html (sem ?sub) em carrossel; "Faixa de preço" e "Ordenar por", que apareciam ali sem efeito, agora funcionam (ver DECISOES.md).
+
+---
+
+## Rodada 8 — sincronização do PC de casa + correções de narração/legenda (2026-10-31) — ✅ CONCLUÍDO
+
+PC de casa sincronizado e vídeos revisados em 2026-10-31. `git pull --rebase` trouxe os 5 commits do notebook do pai (fast-forward, sem conflito) — preços já corretos em `js/produtos.js` e `legendas.md`. Único texto desatualizado era `site-mae/instagram-posts/post-08.md` (não regenerado desde 27/10), corrigido rodando `gerar-posts.js` de novo; o gerador já lê o preço ao vivo de `produtos.js` (nada a mudar no código). Nenhum vídeo/roteiro cita as 3 peças com preço novo.
+
+Os 4 bugs da code-review em `narrar.js`/`legendar.js` (apontados no fim da Rodada 7) foram corrigidos e testados:
+- `legendar.js` idempotente (master permanente sem legenda em `_sem_legenda/`, nunca mais lê do arquivo já legendado) — `teste-legendar.js`.
+- Formatador único de tempo sem overflow de milissegundos/centissegundos — `teste-legendar.js`.
+- Checagem de área livre agora BLOQUEIA a gravação (exceto 1 falso-positivo já verificado visualmente, numa lista documentada) — `teste-legendar.js`.
+- Checagem de ritmo rígida mesmo pra vozes sem referência própria (cai pra referência da voz padrão jeff/0.7, nunca pula) — `teste-narrar.js`.
+
+Rodei o checker corrigido nos 18 vídeos de produção: todos passaram na área livre de verdade, áudio+vídeo presentes, ~-16 LUFS, sem quadro preto, cartão final sem corte. `kit-postagem/` resincronizado (`montar-kit-postagem.js`) depois que um vídeo (`r1-caneca-surpresa-gatinho`) trocou de bytes no reencode — 11/17 dias prontos, igual antes. `AMANHA-POSTAR.md`/`LEIA-ME.md` já estavam corretos, sem mudança. Detalhe completo de cada achado em `DECISOES.md`, "Rodada 8".
 - ?v=47. Deploy conferido: 200 em /, /ceramica.html, ?sub=jarras, produto 33, /links, /api/health.
 - Pendente (decisão do Fabrício): achados da code-review no código de narração que veio do PC de casa (legendar.js/narrar.js) — ver relatório da sessão.

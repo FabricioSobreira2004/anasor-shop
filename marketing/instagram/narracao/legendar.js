@@ -22,8 +22,25 @@
 //      alta = tem elemento gráfico ali) antes de aceitar a posição.
 //
 // Nunca sobrescreve o .mp4 atual sem arquivar antes (mesma regra do
-// narrar.js) — a versão SEM legenda (mas já narrada) vai pra
-// `_anteriores/<data>/<nome>-sem-legenda.mp4`.
+// narrar.js) — a versão legendada anterior (se houver) vai pra
+// `_anteriores/<data>/<nome>-<hora>.mp4`.
+//
+// IDEMPOTÊNCIA (achado da code-review, Etapa 3a — rodar duas vezes
+// estava queimando legenda em cima de legenda): antes, a queima lia
+// e escrevia o MESMO arquivo (`arquivoAtual`) — na 2ª execução,
+// `arquivoAtual` já vinha com legenda da 1ª, e a queima rodava de
+// novo por cima. Agora existe um MASTER permanente, sem legenda, em
+// `<pasta>/_sem_legenda/<nome>.mp4`: na 1ª vez que um vídeo passa por
+// aqui, o master é criado a partir do `arquivoAtual` de então (que
+// nesse momento é assumido limpo — acabou de sair do narrar.js).
+// A partir daí, a queima SEMPRE lê do master (nunca de `arquivoAtual`,
+// que passa a ser só o destino final) — rodar de novo produz a mesma
+// legenda em cima do mesmo vídeo limpo, nunca uma segunda camada.
+// Esse master fica OBSOLETO se o vídeo for renarrado (voz/ritmo
+// diferente) — é por isso que `narrar.js` apaga
+// `_sem_legenda/<nome>.mp4` sempre que regera a narração de um vídeo
+// (achado de uma code-review posterior, ver DECISOES.md): sem isso,
+// uma narração nova seria legendada com o áudio/texto da ANTERIOR.
 //
 //   node legendar.js                                  → todos os 18
 //   node legendar.js --nome tour-instagram             → só 1 (teste)
@@ -32,14 +49,52 @@ const path = require('path');
 const { execSync } = require('child_process');
 const { FFMPEG, FFPROBE } = require('../reels/src/ffmpeg-path.js');
 
-const DADOS_LEGENDA = 'E:/projetos/site-mae/_narracao-dados';
-const SITE_MAE_REELS = 'E:/projetos/site-mae/reels';
-const SITE_MAE_TOUR = 'E:/projetos/site-mae/tour';
-const TMP = 'E:/projetos/_tmp/narracao';
+// Caminhos sobrepostos por variável de ambiente — usado só por
+// teste-legendar.js, pra rodar o pipeline de verdade (ffmpeg incluso)
+// numa pasta sandbox em vez de mexer na mídia real de site-mae.
+const DIR_NARRACAO = __dirname;
+const DADOS_LEGENDA = process.env.LEGENDAR_DADOS || 'E:/projetos/site-mae/_narracao-dados';
+const SITE_MAE_REELS = process.env.LEGENDAR_REELS || 'E:/projetos/site-mae/reels';
+const SITE_MAE_TOUR = process.env.LEGENDAR_TOUR || 'E:/projetos/site-mae/tour';
+const TMP = process.env.LEGENDAR_TMP || 'E:/projetos/_tmp/narracao';
+
+// Formatador comum (achado do simplify: tempoSrt/tempoAss/
+// dataHoraArquivo definiam a mesma função 3x) — 2 dígitos por padrão,
+// usado pra hora/minuto/segundo em todo o arquivo.
+const pad = (n, l = 2) => String(n).padStart(l, '0');
 
 function dataHoje() {
   const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
+// Limiar de amplitude (YMAX-YMIN) acima do qual a caixa da legenda é
+// considerada "ocupada" por um elemento gráfico — único lugar que
+// define o número (achado do simplify: estava duplicado na comparação
+// e na mensagem de erro).
+const LIMIAR_AMPLITUDE_LEGENDA = 140;
+
+// Aprovações manuais de falso-positivo na checagem de área livre —
+// DADOS, não código (achado da code-review: um array de nomes
+// hardcoded no .js cresceria 1 linha por vídeo flaky, sem histórico
+// nem forma de expirar). Cada entrada trava a AMPLITUDE aprovada na
+// hora da inspeção visual, não só o nome — se uma amostragem futura
+// sair muito mais alta que a aprovada (TOLERANCIA abaixo), a aprovação
+// velha não cobre silenciosamente um problema novo.
+const TOLERANCIA_APROVACAO = 1.3;
+function lerAprovacoesAreaLivre() {
+  const arquivo = path.join(DIR_NARRACAO, 'aprovacoes-area-livre.json');
+  if (!fs.existsSync(arquivo)) return {};
+  return JSON.parse(fs.readFileSync(arquivo, 'utf8'));
+}
+
+// Caminho do master permanente sem legenda — função única (achado da
+// code-review: o literal '_sem_legenda' estava hardcoded tanto aqui
+// quanto em narrar.js, que precisa apagar esse arquivo quando renarra
+// um vídeo; narrar.js importa esta função em vez de remontar o
+// caminho por conta própria).
+function caminhoMaster(dirPasta, nome) {
+  return path.join(dirPasta, '_sem_legenda', `${nome}.mp4`);
 }
 
 // Categoria de vídeo -> geometria do canvas + zona segura pra legenda
@@ -70,13 +125,28 @@ function categoriaDoVideo(nome, pasta) {
   return 'reels';
 }
 
+// Formatador único de tempo (achado da code-review, Etapa 3b): o jeito
+// antigo arredondava SEPARADAMENTE os segundos (Math.floor) e os ms
+// (Math.round da fração) — em frações bem perto de 1 (ex.: 3.9996s),
+// os segundos truncavam pra 3 e os ms arredondavam pra 1000, saindo
+// "00:00:03,1000" (4 dígitos, SRT inválido). Agora arredonda o valor
+// INTEIRO pra uma única unidade pequena (ms ou centissegundo) ANTES de
+// decompor em h/m/s/frac — a decomposição por módulo garante que a
+// fração nunca "vaza" pra fora de 0-999 (ou 0-99).
+function decompor(segundos, unidadesPorSegundo) {
+  let total = Math.round(segundos * unidadesPorSegundo);
+  const frac = total % unidadesPorSegundo;
+  total = Math.floor(total / unidadesPorSegundo);
+  const s = total % 60;
+  total = Math.floor(total / 60);
+  const m = total % 60;
+  const h = Math.floor(total / 60);
+  return { h, m, s, frac };
+}
+
 function tempoSrt(segundos) {
-  const h = Math.floor(segundos / 3600);
-  const m = Math.floor((segundos % 3600) / 60);
-  const s = Math.floor(segundos % 60);
-  const ms = Math.round((segundos - Math.floor(segundos)) * 1000);
-  const pad = (n, l = 2) => String(n).padStart(l, '0');
-  return `${pad(h)}:${pad(m)}:${pad(s)},${pad(ms, 3)}`;
+  const { h, m, s, frac } = decompor(segundos, 1000);
+  return `${pad(h)}:${pad(m)}:${pad(s)},${pad(frac, 3)}`;
 }
 
 // Separa o texto final em palavras e estima o tempo de cada uma por
@@ -129,12 +199,8 @@ function escreverSrt(blocos, arquivo) {
 // fonte batem exatamente com os pixels do quadro, sem adivinhação do
 // libass. Confirmado visualmente (ver DECISOES.md) antes de aceitar.
 function tempoAss(segundos) {
-  const h = Math.floor(segundos / 3600);
-  const m = Math.floor((segundos % 3600) / 60);
-  const s = Math.floor(segundos % 60);
-  const cs = Math.round((segundos - Math.floor(segundos)) * 100);
-  const pad = (n, l = 2) => String(n).padStart(l, '0');
-  return `${h}:${pad(m)}:${pad(s)}.${pad(cs)}`;
+  const { h, m, s, frac } = decompor(segundos, 100);
+  return `${h}:${pad(m)}:${pad(s)}.${pad(frac)}`;
 }
 
 // Cor ASS = &HAABBGGRR& (alfa,azul,verde,vermelho; alfa 00=opaco,
@@ -174,7 +240,12 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
 // maior que a de referência, tem elemento gráfico (celular/produto/
 // selo/CTA) por baixo, e a posição falha.
 function checarAreaLivre(videoSemLegenda, categoria, geom) {
-  const amostras = [0.2, 0.5, 0.8].map((f) => f * duracaoVideoCache);
+  // Duração calculada aqui dentro (achado do simplify: antes vinha de
+  // um `duracaoVideoCache` global, setado pelo chamador um pouco
+  // antes — acoplamento por estado de módulo sem necessidade, já que
+  // a função já recebe o vídeo como parâmetro).
+  const duracaoVideo = duracaoSegundos(videoSemLegenda);
+  const amostras = [0.2, 0.5, 0.8].map((f) => f * duracaoVideo);
   const resultados = [];
   for (const t of amostras) {
     const statsLegenda = extrairDesvioPadrao(videoSemLegenda, t, 0, geom.caixaTop, geom.largura, geom.caixaAltura);
@@ -198,8 +269,6 @@ function extrairDesvioPadrao(video, t, x, y, w, h) {
   return maxs[maxs.length - 1] - mins[mins.length - 1];
 }
 
-let duracaoVideoCache = 0;
-
 function duracaoSegundos(arquivo) {
   const out = execSync(`"${FFPROBE}" -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "${arquivo}"`).toString().trim();
   return parseFloat(out);
@@ -217,6 +286,11 @@ function queimarLegenda(video, arquivoAss, saida) {
   );
 }
 
+function dataHoraArquivo() {
+  const d = new Date();
+  return `${dataHoje()}_${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`;
+}
+
 function processarVideo(nome, relatorio) {
   const arquivoJson = path.join(DADOS_LEGENDA, `${nome}.json`);
   if (!fs.existsSync(arquivoJson)) {
@@ -230,6 +304,19 @@ function processarVideo(nome, relatorio) {
   const arquivoSrt = path.join(dirPasta, `${nome}.srt`);
   const arquivoAss = path.join(TMP, `${nome}.ass`);
 
+  // Master permanente, sem legenda — ver comentário no topo do
+  // arquivo (Etapa 3a). Seedado uma única vez; depois disso, toda
+  // queima lê SÓ deste arquivo, nunca de `arquivoAtual`.
+  const arquivoMaster = caminhoMaster(dirPasta, nome);
+  fs.mkdirSync(path.dirname(arquivoMaster), { recursive: true });
+  if (!fs.existsSync(arquivoMaster)) {
+    if (!fs.existsSync(arquivoAtual)) {
+      relatorio.push(`${nome}: PULADO — vídeo não encontrado em ${arquivoAtual}`);
+      return;
+    }
+    fs.copyFileSync(arquivoAtual, arquivoMaster);
+  }
+
   const categoria = categoriaDoVideo(nome, pasta);
   const geom = CATEGORIAS[categoria];
 
@@ -237,32 +324,56 @@ function processarVideo(nome, relatorio) {
   escreverSrt(blocos, arquivoSrt); // entregável pro Fabrício reusar
   escreverAss(blocos, arquivoAss, geom); // usado só pra queimar (controle total de posição/tamanho)
 
-  duracaoVideoCache = duracaoSegundos(arquivoAtual);
-
-  // Checagem de área livre ANTES de queimar (no vídeo ainda sem
-  // legenda) — compara a caixa da legenda com a faixa de referência
-  // conhecida como vazia (topo).
-  const checagem = checarAreaLivre(arquivoAtual, categoria, geom);
+  // Checagem de área livre ANTES de queimar, sempre contra o MASTER
+  // limpo (garantidamente sem legenda, mesmo que `arquivoAtual` já
+  // tenha uma de uma rodada anterior) — compara a caixa da legenda
+  // com a faixa de referência conhecida como vazia (topo).
+  const checagem = checarAreaLivre(arquivoMaster, categoria, geom);
   const amplitudes = checagem.map((c) => c.statsLegenda).filter((v) => v !== null);
   const amplitudeMedia = amplitudes.length ? amplitudes.reduce((a, b) => a + b, 0) / amplitudes.length : null;
-  // Limiar: fundo liso/gradiente tem amplitude baixa (~30-90 em 0-255);
+  // Fundo liso/gradiente tem amplitude baixa (~30-90 em 0-255);
   // qualquer elemento gráfico nítido (texto, borda de celular, ícone)
-  // empurra a amplitude bem mais alto. 140 dá folga generosa.
-  const areaLivre = amplitudeMedia !== null && amplitudeMedia < 140;
+  // empurra a amplitude bem mais alto — LIMIAR_AMPLITUDE_LEGENDA (140)
+  // dá folga generosa.
+  const areaLivre = amplitudeMedia !== null && amplitudeMedia < LIMIAR_AMPLITUDE_LEGENDA;
+  const aprovacao = lerAprovacoesAreaLivre()[nome];
+  const dentroDaAprovacao = !areaLivre && aprovacao && amplitudeMedia !== null
+    && amplitudeMedia <= aprovacao.amplitudeAprovada * TOLERANCIA_APROVACAO;
 
-  // Arquiva a versão narrada SEM legenda antes de sobrescrever.
-  const dirAnteriores = path.join(dirPasta, '_anteriores', dataHoje());
-  fs.mkdirSync(dirAnteriores, { recursive: true });
-  const arquivoArquivado = path.join(dirAnteriores, `${nome}-sem-legenda.mp4`);
-  if (!fs.existsSync(arquivoArquivado)) {
-    fs.copyFileSync(arquivoAtual, arquivoArquivado);
+  // Etapa 3c (code-review): a checagem de área livre BLOQUEIA a
+  // gravação — se a caixa da legenda cair sobre algo importante, o
+  // vídeo final NÃO é gerado (nem arquivado, nem sobrescrito), erro
+  // claro, e quem chamou ajusta a posição/geometria antes de tentar
+  // de novo. Exceção só pra falso-positivo JÁ aprovado em
+  // `aprovacoes-area-livre.json` E dentro da tolerância da amplitude
+  // aprovada (uma amplitude muito maior que a aprovada é tratada como
+  // problema NOVO, não coberta pela aprovação velha).
+  if (!areaLivre && !dentroDaAprovacao) {
+    throw new Error(
+      `legenda intersecta elemento importante da cena (amplitude ${amplitudeMedia === null ? 'n/d' : amplitudeMedia.toFixed(1)} ≥ limiar ${LIMIAR_AMPLITUDE_LEGENDA}, caixa y=${geom.caixaTop}-${geom.caixaTop + geom.caixaAltura}) — ajuste CATEGORIAS.${categoria} em legendar.js antes de regenerar`
+    );
+  }
+
+  // Arquiva a versão final ATUAL (o que tiver lá — já legendada numa
+  // rodada anterior, ou ainda limpa na 1ª vez) antes de sobrescrever.
+  // Nome com data+hora: evita que duas execuções no mesmo dia pisem
+  // no arquivo uma da outra (a regra é nunca sobrescrever sem
+  // arquivar, não arquivar só a 1ª vez do dia).
+  if (fs.existsSync(arquivoAtual)) {
+    const dirAnteriores = path.join(dirPasta, '_anteriores', dataHoje());
+    fs.mkdirSync(dirAnteriores, { recursive: true });
+    fs.copyFileSync(arquivoAtual, path.join(dirAnteriores, `${nome}-${dataHoraArquivo()}.mp4`));
   }
 
   const saidaTmp = path.join(TMP, `${nome}-legendado.mp4`);
-  queimarLegenda(arquivoAtual, arquivoAss, saidaTmp);
+  queimarLegenda(arquivoMaster, arquivoAss, saidaTmp);
   fs.renameSync(saidaTmp, arquivoAtual);
 
-  const linha = `${nome} [${categoria}] — ${blocos.length} blocos de legenda, caixa y=${geom.caixaTop}-${geom.caixaTop + geom.caixaAltura} | amplitude da caixa=${amplitudeMedia ? amplitudeMedia.toFixed(1) : 'n/d'} | ${areaLivre ? 'OK área-livre' : 'FALHA área-livre (revisar manualmente)'}`;
+  const notaFalsoPositivo = dentroDaAprovacao ? ` (falso-positivo aprovado: ${aprovacao.motivo} — seguiu mesmo assim)` : '';
+  // amplitudeMedia !== null (não "amplitudeMedia ?") — 0 é uma
+  // amplitude válida (quadro perfeitamente liso) e é falsy em JS; o
+  // operador ternário antigo mostrava "n/d" pra esse caso real.
+  const linha = `${nome} [${categoria}] — ${blocos.length} blocos de legenda, caixa y=${geom.caixaTop}-${geom.caixaTop + geom.caixaAltura} | amplitude da caixa=${amplitudeMedia !== null ? amplitudeMedia.toFixed(1) : 'n/d'} | ${areaLivre ? 'OK área-livre' : 'FALHA área-livre'}${notaFalsoPositivo}`;
   console.log(`${areaLivre ? '✅' : '⚠️ '} ${linha}`);
   relatorio.push(linha);
 }
@@ -288,4 +399,11 @@ function main() {
   console.log('\nRelatório salvo em E:/projetos/_tmp/legenda-relatorio.txt');
 }
 
-main();
+// Só roda sozinho quando chamado direto (`node legendar.js`) — quando
+// importado (teste-legendar.js), só expõe as funções, sem processar
+// os 18 vídeos de produção.
+if (require.main === module) {
+  main();
+}
+
+module.exports = { decompor, tempoSrt, tempoAss, construirBlocos, processarVideo, categoriaDoVideo, CATEGORIAS, caminhoMaster };

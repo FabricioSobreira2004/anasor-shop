@@ -13,10 +13,8 @@
 //     (vozes neurais pt_BR, masculinas — ver narracao-amostras/):
 //     node narrar.js --voz maria --ritmo 5
 //     node narrar.js --voz faber --ritmo 0.4
-//     Padrão sem --voz/--ritmo: maria, Rate=4 (~2,8-3,1 palavras/s
-//     medido com o TEXTO REAL dos roteiros — Rate=5 media bem nessa
-//     faixa numa frase de calibração isolada, mas passava de 3,1-3,8
-//     nos roteiros de verdade; ver DECISOES.md pela escolha completa).
+//     Padrão sem --voz/--ritmo (Rodada 7, ESCOLHA DO FABRÍCIO depois
+//     de ouvir as amostras): jeff, ritmo 0.7 — ver VOZES abaixo.
 //   - Checa por código se a voz tem algum silêncio ≥0,6s NO MEIO da
 //     fala (silencedetect) antes de mixar — registra aviso, não
 //     bloqueia (editar o roteiro.md é o jeito de corrigir).
@@ -45,6 +43,7 @@ const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
 const { FFMPEG, FFPROBE } = require('../reels/src/ffmpeg-path.js');
+const { caminhoMaster } = require('./legendar.js');
 
 const DIR_NARRACAO = __dirname;
 const SITE_MAE_REELS = 'E:/projetos/site-mae/reels';
@@ -65,15 +64,6 @@ function dataHoje() {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
-// Rate=4 do SAPI mede, na MAIORIA dos roteiros reais (não numa frase
-// de calibração isolada), perto de 2,8-3,1 palavras/segundo — Rate=5
-// soa mais rápido na calibração isolada mas sistematicamente passa
-// de 3,1-3,8 wps nos roteiros de verdade (ver DECISOES.md). Os 4 modelos
-// Piper pt_BR (todos masculinos — não existe voz feminina pt_BR no
-// catálogo hoje) precisam de length_scale bem abaixo do recomendado
-// (~0,8-1,2) pra chegar nesse ritmo; ofereço como opção via --voz,
-// mas o padrão de produção continua o SAPI por not dar pra confirmar
-// por ouvido que o Piper nesse ritmo forçado não tem artefato.
 // wpsReferencia: palavras/s medida na AMOSTRA de referência de cada
 // voz+ritmo (narracao-amostras/, texto de 85 palavras) — usada só pra
 // checar se uma síntese de produção saiu dentro do esperado PRA
@@ -295,6 +285,19 @@ function mixar(video, voz, duracaoVoz, saida) {
   );
 }
 
+// Função isolada (testável sem precisar sintetizar voz de verdade —
+// ver teste-narrar.js) — Etapa 3d da code-review: antes, uma voz sem
+// wpsReferencia própria (cadu/edresson) pulava a checagem (okRitmo
+// sempre true). Agora SEMPRE compara: usa a referência da própria voz
+// quando existe, senão cai pra referência da voz PADRÃO (jeff/0.7,
+// que sempre tem wpsReferencia medida) — rígida pra qualquer voz.
+function calcularFaixaRitmo(voz, wps) {
+  const usouReferenciaPropria = typeof voz.wpsReferencia === 'number';
+  const referenciaUsada = usouReferenciaPropria ? voz.wpsReferencia : VOZES[VOZ_PADRAO].wpsReferencia;
+  const faixa = [referenciaUsada * 0.85, referenciaUsada * 1.15];
+  return { faixa, okRitmo: wps >= faixa[0] && wps <= faixa[1], usouReferenciaPropria };
+}
+
 function processarVideo(item, roteiros, nomeVoz, voz, ritmo, relatorio) {
   const { nome, pasta } = item;
   const texto = roteiros[nome];
@@ -347,6 +350,26 @@ function processarVideo(item, roteiros, nomeVoz, voz, ritmo, relatorio) {
   mixar(arquivoMudo, arquivoWav, duracaoVoz, saidaTmp);
   fs.renameSync(saidaTmp, arquivoAtual);
 
+  // ACHADO da code-review (Rodada 8): legendar.js guarda um MASTER
+  // permanente sem legenda em `_sem_legenda/<nome>.mp4`, criado uma
+  // única vez e nunca mais tocado — pensado pra legendar.js não poder
+  // se auto-contaminar rodando 2x. Mas isso deixava essa narração NOVA
+  // (voz/ritmo diferente, ex. `--voz faber`) sem efeito nenhum: o
+  // legendar.js continuaria lendo o master VELHO e sobrescreveria este
+  // vídeo recém-narrado com a legenda da narração ANTERIOR. Quem muda
+  // a narração (aqui) tem que invalidar esse cache — o master não é um
+  // entregável do Fabrício (isso é `_mudo/`, preservado à parte), é só
+  // um cache interno do legendar.js, seguro de apagar: ele se
+  // regenera sozinho, a partir deste vídeo, na próxima vez que
+  // legendar.js rodar. `caminhoMaster` vem de legendar.js (achado do
+  // simplify: o caminho `_sem_legenda/<nome>.mp4` estava hardcoded nos
+  // dois arquivos, sem contrato entre eles).
+  const masterLegenda = caminhoMaster(dirPasta, nome);
+  if (fs.existsSync(masterLegenda)) {
+    fs.rmSync(masterLegenda);
+    decisoes.push('narração mudou: cache de legenda (_sem_legenda/) invalidado — rode legendar.js de novo pra re-queimar a legenda nesta narração nova');
+  }
+
   const streams = contarAudioEVideo(arquivoAtual);
   const duracaoFinal = duracaoSegundos(arquivoAtual);
   const volume = volumeDetect(arquivoAtual);
@@ -357,13 +380,9 @@ function processarVideo(item, roteiros, nomeVoz, voz, ritmo, relatorio) {
   const okSilencio = volume.mean !== null && volume.mean > -50;
   const okClipping = volume.max !== null && volume.max <= 0.5;
   const okDuracaoVoz = duracaoVoz < duracaoFinal - 0.5;
-  // Faixa do ritmo: ±15% em volta da wpsReferencia MEDIDA na amostra
-  // desta voz+ritmo (narracao-amostras/) — cada voz tem seu ritmo
-  // natural próprio, não faz sentido comparar todas com o mesmo
-  // limiar fixo (ver comentário em VOZES, acima).
-  const temReferencia = typeof voz.wpsReferencia === 'number';
-  const faixaRitmo = temReferencia ? [voz.wpsReferencia * 0.85, voz.wpsReferencia * 1.15] : null;
-  const okRitmo = !temReferencia || (wps >= faixaRitmo[0] && wps <= faixaRitmo[1]);
+  // Ver calcularFaixaRitmo() acima — faixa de ±15% em volta da
+  // referência da própria voz, ou da voz padrão quando não existe.
+  const { faixa: faixaRitmo, okRitmo, usouReferenciaPropria } = calcularFaixaRitmo(voz, wps);
   const okSemCortesInternos = silenciosInternos.length === 0;
 
   const linha =
@@ -372,7 +391,7 @@ function processarVideo(item, roteiros, nomeVoz, voz, ritmo, relatorio) {
     `volume mean=${volume.mean}dB max=${volume.max}dB | ` +
     `${okStreams ? 'OK' : 'FALHA'} fluxos, ${okSilencio ? 'OK' : 'FALHA'} silêncio-total, ` +
     `${okClipping ? 'OK' : 'FALHA'} clipping, ${okDuracaoVoz ? 'OK' : 'FALHA'} duração(+0.5s), ` +
-    `${okRitmo ? 'OK' : 'FALHA'} ritmo(${temReferencia ? `${faixaRitmo[0].toFixed(2)}-${faixaRitmo[1].toFixed(2)}` : 'sem referência'}), ${okSemCortesInternos ? 'OK' : 'FALHA'} sem-corte-interno` +
+    `${okRitmo ? 'OK' : 'FALHA'} ritmo(${faixaRitmo[0].toFixed(2)}-${faixaRitmo[1].toFixed(2)}${usouReferenciaPropria ? '' : ', referência da voz padrão'}), ${okSemCortesInternos ? 'OK' : 'FALHA'} sem-corte-interno` +
     (decisoes.length ? ` | decisões: ${decisoes.join('; ')}` : '');
 
   console.log(`✅ ${linha}`);
@@ -429,4 +448,11 @@ function main() {
   console.log(`\nRelatório salvo em ${arquivoRelatorio}`);
 }
 
-main();
+// Só roda sozinho quando chamado direto (`node narrar.js`) — quando
+// importado (teste-narrar.js), só expõe calcularFaixaRitmo, sem
+// sintetizar voz nem tocar em vídeo nenhum.
+if (require.main === module) {
+  main();
+}
+
+module.exports = { calcularFaixaRitmo, VOZES, VOZ_PADRAO };
