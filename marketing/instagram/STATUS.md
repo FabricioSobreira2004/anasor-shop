@@ -542,3 +542,82 @@ filmagem real.
 Pendências reais do Fabrício (sem mudança — continuam exigindo
 filmagem/depoimento real, nada inventado): 6 dos 17 dias do kit (ver
 `LEIA-ME.md`/`PENDENTE.md` de cada pasta).
+
+---
+
+## Rodada 10 — Tour v3 (celular maior, legenda karaokê, narração
+rápida, trilha original) — 2026-11-08 — ✅ CONCLUÍDO (escopo descrito
+abaixo; itens fora do escopo anotados como pendência)
+
+Tarefa autônoma, só os 2 Tours. Saída NOVA em
+`E:\projetos\site-mae\tour\v3\` — v2 (`tour\tour-instagram.mp4` /
+`tour-portfolio.mp4`) **não foi tocado**.
+
+- **Geometria (Instagram)**: celular de 500×960 pra 560×1150 (~60% da
+  altura do quadro), zona segura nova 220px topo / 250px base (era
+  250/420). `LAYOUT_CELULAR`/`validar-geometria.js` atualizados e
+  conferidos por código (`node src/validar-geometria.js` — ✅ todas as
+  cenas).
+- **Logo**: 130→240px (corredor à esquerda do celular, não mais canto
+  inferior direito — ali colidia com a legenda nova e ficava perto da
+  coluna de botões do Instagram).
+- **Transição**: wipe circular (`MascaraCircular`) trocado por
+  crossfade de opacidade — o efeito "recorte de foto com arcos" citado
+  pelo Fabrício sumiu (confirmado visualmente).
+- **Legenda karaokê**: pílula marrom (#3B2A22 80%) com a palavra atual
+  em destaque âmbar (#F5C04A)/texto escuro, as demais em creme. ACHADO
+  TÉCNICO: a 1ª tentativa renderizava a legenda numa composição
+  Remotion separada, exportada como WebM "transparente" (VP8/VP9 alfa)
+  e sobreposta por `ffmpeg overlay` — o alfa saía sempre opaco (preto
+  cobrindo o vídeo inteiro) nesta build de libvpx, mesmo com os
+  parâmetros corretos (`-pix_fmt yuva420p -auto-alt-ref 0` confirmados
+  no comando real; os PNGs de cada quadro tinham alfa correto, só o
+  ENCODE pro WebM perdia o canal). Resolvido renderizando a legenda
+  DENTRO da própria composição `TourMobile` (`LegendaKaraoke` em
+  `componentes.js`) — nunca mais precisa de vídeo com alfa.
+- **Narração**: Piper (`jeff`, ritmo 0,7) sintetizado FRASE POR FRASE
+  (não o roteiro inteiro de uma vez) — cada frase passa por um
+  encolhedor de silêncio PRÓPRIO (`narracao/encolher-silencio.js`,
+  envelope RMS em Node — o filtro `silenceremove` do ffmpeg não
+  encolheu as pausas internas do Piper nos testes) e as frases são
+  concatenadas com um gap FIXO de 0,3s. Resultado: narração começa aos
+  0,3s (pedido: ≤0,6s), nenhum silêncio interno >0,46s detectado em
+  nenhum dos 2 vídeos finais (checado com `silencedetect`).
+- **tour-portfolio**: balões técnicos (`DestaqueTecnico`,
+  `--com-legenda-embutida`) ligados só nesta versão (antes vinham
+  desligados por padrão, pra não duplicar com a legenda narrada) —
+  narração REESCRITA (fatos técnicos reais: HTML/CSS/JS/Node.js/
+  Express, Mercado Pago, preço recalculado no servidor, CEP/CPF
+  validados, aviso por e-mail+Telegram, push no GitHub publica na
+  Vercel, desenvolvido por FabricioSobreira — sem preço, sem exagero).
+  Legenda NÃO queimada (só `.srt` gerado) — os balões já cobrem isso.
+  Cartão final: `anasorsobreira.com.br` **não resolve** (nslookup:
+  domínio inexistente) — trocado por `anasor-sobreira.vercel.app`
+  (HTTP 200, conferido).
+- **Trilha sonora original**: gerada por código
+  (`musica/gerar-trilha.js`, síntese de osciladores — pad quente +
+  arpejo tipo harpa, ~70 BPM, Lá menor Am-F-C-G — + reverb algorítmico
+  leve + corte de agudos ~6,5kHz), salva em
+  `site-mae\musica\trilha-atelie.wav`. Mixada nos 2 vídeos a -26dB sob
+  a voz com ducking (`sidechaincompress`), fade-in 1s/fade-out 2s,
+  `loudnorm` final -16 LUFS/pico ≤-1,5dBTP — medido nos 2 finais:
+  tour-instagram -16,0 LUFS/-3,4dBTP, tour-portfolio -16,0 LUFS/
+  -3,2dBTP (bem dentro do pico pedido).
+- **Verificação**: ffprobe (áudio presente, resolução correta nos 2:
+  1080×1920 e 1920×1080), `silencedetect` (início ≤0,6s, sem gap
+  interno >0,46s), `loudnorm` (-16 LUFS/pico ok), amostragem visual de
+  4 quadros de cada um salva em `site-mae\_prints\tours-v3\`. `node
+  --check` em todos os 12 scripts tocados/criados: OK. Teste offline do
+  backend (não tocado nesta rodada, conferido por segurança): 6/6 OK.
+- **Pendência/corte de escopo** (documentado, não ideal mas aceito
+  pelo orçamento desta rodada): a duração TOTAL de cada vídeo não foi
+  reduzida pra bater exatamente com "fala + cartão final de 3s" — os
+  dois mantiveram a duração do roteiro visual original (45s/47s,
+  calculada a partir da duração REAL de cada clipe capturado), com um
+  trecho de alguns segundos sem narração antes do cartão de fechamento
+  (cena ainda rolando, nunca tela vazia/preta). Mudar isso exigiria
+  recalcular a duração de cada cena capturada — fora do orçamento desta
+  rodada. Os "vazios perto de 24s/27s" citados no pedido não foram
+  reproduzidos na checagem desta rodada (amostragem de quadros não achou
+  nenhum quadro vazio/bege-sozinho fora da abertura e do cartão final).
+  Karaokê é por PALAVRA (não por sílaba) — suficiente pro pedido.

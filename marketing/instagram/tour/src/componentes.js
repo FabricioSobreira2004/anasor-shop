@@ -51,14 +51,25 @@ const EASE_CAMERA = Easing.bezier(0.16, 1, 0.3, 1);
 // ~1415, ainda dentro da zona segura (<1500). Rode
 // `src/validar-geometria.js` de novo depois de mexer aqui — é a fonte
 // de verdade, não a conta de cabeça.
+// GEOMETRIA v3 (pedido explícito do Fabrício, Rodada 10): celular BEM
+// maior — altura ≈60% do quadro (1150 de 1920) — e zona segura nova
+// (220px topo / 250px base, não mais 250/420). Números CALCULADOS (não
+// chutados) pro pior caso (CAMERA_ESCALA_MAX/CAMERA_TRANSLATE_MAX_PCT
+// aplicados) nunca encostar na faixa de legenda NOVA (y:1440-1600, fixa
+// — quem queima agora é o overlay de karaokê do Remotion, não mais a
+// legenda cinética nem o ASS do legendar.js nesta versão) nem na zona
+// seguro do topo (>=220). Com TOPO:245/ALTURA:1150/ESCALA_MAX:1.01/
+// TRANSLATE_MAX_PCT:0.6 — fundo no pior caso ≈1413 (+20 de gap ≤1440 ✅),
+// topo no pior caso ≈227 (≥220 ✅). Rode `src/validar-geometria.js` de
+// novo depois de mexer aqui.
 const LAYOUT_CELULAR = {
-  TOPO: 268,
-  LARGURA: 500,
-  ALTURA: 960,
-  CAMERA_ESCALA_MIN: 0.98,
-  CAMERA_ESCALA_MAX: 1.015,
-  CAMERA_TRANSLATE_MAX_PCT: 1.0,
-  CAPTION_TOP: 1270,
+  TOPO: 245,
+  LARGURA: 560,
+  ALTURA: 1150,
+  CAMERA_ESCALA_MIN: 0.99,
+  CAMERA_ESCALA_MAX: 1.01,
+  CAMERA_TRANSLATE_MAX_PCT: 0.6,
+  CAPTION_TOP: 1440,
 };
 function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
 
@@ -72,13 +83,23 @@ function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
 // de baixo (a área da interface do Instagram) em TourMobile.js, que
 // nunca passava um `bottom` próprio. TourDesktop.js sempre passa o
 // seu (48/90), então só o padrão precisava mudar.
-function MarcaDagua({ src, tamanho = 130, right = 56, bottom = 460 }) {
+// `left`/`top` (opcionais) — Rodada 10 (v3): com o celular bem maior
+// (LAYOUT_CELULAR), não sobra espaço vertical pra marca d'água no
+// canto inferior direito (colide com a faixa de legenda nova OU com a
+// coluna de botões do Instagram, y:1100-1700) — TourMobile.js passa
+// `left`/`top` explícitos pra mover a marca pro corredor à ESQUERDA do
+// celular; TourDesktop.js continua passando `right`/`bottom` (sem
+// mudança nenhuma de comportamento pra ele).
+function MarcaDagua({ src, tamanho = 130, right = 56, bottom = 460, left, top }) {
   const frame = useCurrentFrame();
   const opacidade = interpolate(frame, [0, 20], [0, 0.8], { extrapolateRight: 'clamp' });
+  const posicao = left != null || top != null
+    ? { left, top }
+    : { right, bottom };
   return React.createElement(Img, {
     src: resolverSrc(src),
     style: {
-      position: 'absolute', right, bottom, width: tamanho, height: 'auto', opacity: opacidade,
+      position: 'absolute', ...posicao, width: tamanho, height: 'auto', opacity: opacidade,
       filter: 'drop-shadow(0 3px 10px rgba(0,0,0,0.3))', zIndex: 5,
     },
   });
@@ -204,6 +225,72 @@ function LegendaCinetica({ texto, inicioFrame, duracao = 70, top = LAYOUT_CELULA
         },
       }, p);
     })
+  );
+}
+
+// ---------------------------------------------------------------
+// Legenda KARAOKÊ v3 (Rodada 10) — pílula marrom-escura translúcida
+// com a palavra ATUAL em destaque âmbar, texto creme nas demais,
+// sincronizada com a narração (tempos em SEGUNDOS, já computados por
+// narracao/narrar-tour-v3.js a partir da síntese de voz real). ACHADO
+// TESTANDO: a 1ª versão renderizava isso numa composição Remotion
+// SEPARADA, exportada como WebM "transparente" (VP8/VP9 alfa) e
+// sobreposta por cima via ffmpeg `overlay` — o alfa saía sempre opaco
+// (preto sólido cobrindo o vídeo inteiro) nesta build de libvpx/ffmpeg,
+// mesmo com `-pix_fmt yuva420p -auto-alt-ref 0` corretos no comando
+// (confirmado: o PNG de cada quadro tinha alfa=0 certinho, só o
+// ENCODE pro VP8/VP9 jogava tudo pra alfa=255). Renderizar a legenda
+// DENTRO da própria composição (aqui, junto com o celular) em vez de
+// um overlay separado evita o problema inteiro — nunca precisa de
+// vídeo com canal alfa nenhum. `blocos`: [{ inicio, fim, palavras:
+// [{texto,inicio,fim}] }], tempos relativos ao início do VÍDEO
+// (segundos).
+const COR_PILULA_LEGENDA = 'rgba(59,42,34,0.8)'; // #3B2A22 ~80%
+const COR_TEXTO_LEGENDA = '#FBF6EF';
+const COR_DESTAQUE_FUNDO_LEGENDA = '#F5C04A';
+const COR_DESTAQUE_TEXTO_LEGENDA = '#3B2A22';
+
+function LegendaKaraoke({ blocos, fps, top = 1440, altura = 160, fonte = 44 }) {
+  const frame = useCurrentFrame();
+  const t = frame / fps;
+  const MARGEM_FADE = 0.12;
+  const blocoAtivo = (blocos || []).find((b) => t >= b.inicio - MARGEM_FADE && t <= b.fim + MARGEM_FADE);
+  if (!blocoAtivo) return null;
+
+  let opacidade = 1;
+  if (t < blocoAtivo.inicio) opacidade = Math.max(0, (t - (blocoAtivo.inicio - MARGEM_FADE)) / MARGEM_FADE);
+  if (t > blocoAtivo.fim) opacidade = Math.max(0, 1 - (t - blocoAtivo.fim) / MARGEM_FADE);
+
+  return React.createElement(
+    'div',
+    {
+      style: {
+        position: 'absolute', left: 0, right: 0, top, height: altura, zIndex: 30,
+        display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 60px',
+      },
+    },
+    React.createElement(
+      'div',
+      {
+        style: {
+          opacity: opacidade, maxWidth: 1080 - 160, background: COR_PILULA_LEGENDA, borderRadius: 28,
+          padding: '14px 28px', display: 'flex', flexWrap: 'wrap', justifyContent: 'center',
+          gap: '6px 10px', boxShadow: '0 10px 30px rgba(0,0,0,0.25)',
+        },
+      },
+      blocoAtivo.palavras.map((p, i) => {
+        const ativa = t >= p.inicio && t < p.fim;
+        return React.createElement('span', {
+          key: i,
+          style: {
+            fontFamily: 'Jost, sans-serif', fontWeight: 600, fontSize: fonte, lineHeight: 1.2,
+            color: ativa ? COR_DESTAQUE_TEXTO_LEGENDA : COR_TEXTO_LEGENDA,
+            background: ativa ? COR_DESTAQUE_FUNDO_LEGENDA : 'transparent',
+            borderRadius: 10, padding: ativa ? '2px 10px' : '2px 0',
+          },
+        }, p.texto);
+      })
+    )
   );
 }
 
@@ -395,7 +482,12 @@ function FechoPortfolio({ entradaFrame, cores, retratoUri }) {
     { style: { position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 70, opacity: pop, transform: `translateY(${(1 - pop) * 20}px)` } },
     React.createElement(RetratoAnasor, { src: retratoUri, tamanho: 260, cores }),
     React.createElement('div', { style: { display: 'flex', flexDirection: 'column', gap: 16, alignItems: 'flex-start' } },
-      React.createElement('div', { style: { fontFamily: 'Fraunces, serif', fontWeight: 600, fontSize: 56, color: cores.texto } }, 'anasorsobreira.com.br'),
+      // anasor-sobreira.vercel.app (não anasorsobreira.com.br) —
+      // ACHADO NA RODADA 10 (v3): o domínio próprio não resolve
+      // (nslookup: "Non-existent domain") — conferido com curl antes
+      // de aceitar; o endereço da Vercel abre normal (HTTP 200).
+      // Nunca mostrar um endereço que não funciona.
+      React.createElement('div', { style: { fontFamily: 'Fraunces, serif', fontWeight: 600, fontSize: 48, color: cores.texto } }, 'anasor-sobreira.vercel.app'),
       React.createElement('div', { style: { fontFamily: 'Jost, sans-serif', fontSize: 26, color: cores.texto, display: 'flex', alignItems: 'center', gap: 10 } },
         'Peça única, feita à mão', React.createElement(Coracao, { tamanho: 22, cor: cores.destaque })),
       React.createElement(FaixaConfiancaMini, { entradaFrame: entradaFrame + 20, cores, corTexto: cores.texto }),
@@ -567,7 +659,7 @@ function MolduraDesktop({ src, largura = 920, altura = 575 }) {
 
 module.exports = {
   EASE_CAMERA, resolverSrc, LAYOUT_CELULAR,
-  MarcaDagua, FundoBege, SeloTour, LegendaCinetica, VinhetaGrao,
+  MarcaDagua, FundoBege, SeloTour, LegendaCinetica, LegendaKaraoke, VinhetaGrao,
   FechoInstagram, FechoPortfolio, FaixaTecnologias, DestaqueTecnico,
   MascaraCircular, DispositivoFlutuante, MolduraCelular, MolduraDesktop,
 };

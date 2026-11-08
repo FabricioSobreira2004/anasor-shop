@@ -153,10 +153,16 @@ com folga sem cortar.
 > Vem conhecer o site do ateliê Anasor Cerâmica. Na home você passeia pelas coleções de cerâmica e crochê. Toda peça é única e feita à mão. Quando uma vende não tem reposição igual. Na página de cada peça tem fotos vídeo e as medidas reais. Dá pra decidir com calma antes de comprar. Escolheu a sua? Ela vai pro carrinho bem ali do lado sempre visível. No checkout o endereço se completa sozinho a partir do CEP. A compra é segura pelo Mercado Pago e o frete é grátis pra todo o Brasil. Até as peças já vendidas continuam no site compondo o portfólio do ateliê. Dá pra encomendar uma parecida. Link na bio, no arroba anasor ponto cerâmica.
 
 ### tour-portfolio (47,00 s)
-Fonte: mesmos recursos do site, com um pouco mais de detalhe (versão mais longa, pensada pra portfólio).
-Rodada 9 (achado do Fabrício): texto antigo (110 palavras, 10
-vírgulas) preenchia só 34,7s dos 47s, deixando 12s de silêncio no
-fim. Reescrito com bem menos vírgulas (frases curtas) — mesma
-informação, ~114 palavras, cabe melhor nos 47s.
+Fonte (Rodada 10/v3 — REESCRITO): o pedido mudou — não é mais o pitch
+de cliente (preço/compra), é um tour TÉCNICO de portfólio,
+acompanhando os balões técnicos que agora aparecem na tela
+(roteiro-desktop.js, `--com-legenda-embutida` ligado só nesta versão)
+e a faixa de tecnologias do rodapé (HTML/CSS/JS/Node.js/Express/
+Mercado Pago/Vercel, sempre visível). Só fatos reais do projeto: feito
+do zero, Mercado Pago, preço recalculado no servidor, CEP/CPF
+validados, aviso por e-mail e Telegram, push no GitHub publica na
+Vercel, desenvolvido por FabricioSobreira. Sem preço, sem exagero, sem
+promessa falsa (pedido explícito). ~85 palavras, ~45-50s na voz padrão
+(jeff/0,7) com o encolhedor de silêncio de narrar-tour-v3.js.
 
-> Este é um tour completo pelo site da Anasor Cerâmica. Pensado tanto pra quem compra pelo celular quanto pra quem navega no computador. Cada peça é única e sempre numa unidade só. Nunca existe uma segunda peça igual. Na página de cada peça tem fotos, vídeo e medidas reais. A navegação segue do carrinho lateral até o checkout. Lá o endereço se completa automaticamente a partir do CEP. O pagamento é processado com segurança pelo Mercado Pago. O frete é grátis pra todo o Brasil. Quando uma peça vende ela não sai do site. Passa a compor o portfólio do ateliê, mostrando o trabalho já realizado. Link na bio, no arroba anasor ponto cerâmica.
+> Este é um tour pelo site da Anasor Cerâmica, pensado tanto pra quem compra pelo computador quanto pelo celular. É uma loja online construída do zero, com HTML, CSS, JavaScript, Node.js e Express. O pagamento é processado pelo Mercado Pago, e o preço de cada peça é sempre recalculado no servidor, nunca só no que chega do navegador. No checkout, o CEP e o CPF são validados antes de seguir pro pagamento. Quando um pedido é pago, a Anasor é avisada na hora, por e-mail e por Telegram. Cada push no GitHub já publica a nova versão no ar, direto na Vercel. Este site foi desenvolvido por FabricioSobreira.

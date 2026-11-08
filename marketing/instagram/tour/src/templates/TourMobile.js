@@ -4,8 +4,8 @@
 const React = require('react');
 const { Sequence, useCurrentFrame, interpolate } = require('remotion');
 const {
-  FundoBege, MarcaDagua, SeloTour, LegendaCinetica, VinhetaGrao,
-  FechoInstagram, MascaraCircular, DispositivoFlutuante, MolduraCelular, LAYOUT_CELULAR,
+  FundoBege, MarcaDagua, SeloTour, LegendaCinetica, LegendaKaraoke, VinhetaGrao,
+  FechoInstagram, DispositivoFlutuante, MolduraCelular, LAYOUT_CELULAR,
 } = require('../componentes');
 
 // Cada cena mora dentro de um <Sequence> — ACHADO SÓ RODANDO (não
@@ -23,7 +23,15 @@ const QUADROS_WIPE = 16;
 
 function CenaMobile({ cena, i, clipes, cores, retratoUri }) {
   const frame = useCurrentFrame();
-  const progressoWipe = i === 0 ? 1 : interpolate(frame, [0, QUADROS_WIPE], [0, 1], {
+  // Crossfade (opacidade), não mais wipe circular — ACHADO DO
+  // FABRÍCIO (Rodada 10): o wipe em íris (MascaraCircular) lia como
+  // "a tela vira um recorte de foto com arcos", chamativo demais pra
+  // um tour que deveria fluir. A cena de baixo (anterior) já fica
+  // visível por baixo durante toda a troca (Sequence estendido em
+  // QUADROS_WIPE, ver comentário no fundo do arquivo) — só a cena de
+  // CIMA (nova) precisa entrar com opacidade 0→1 pra virar um
+  // crossfade suave, sem precisar desenhar nenhuma máscara.
+  const opacidadeEntrada = i === 0 ? 1 : interpolate(frame, [0, QUADROS_WIPE], [0, 1], {
     extrapolateLeft: 'clamp', extrapolateRight: 'clamp',
   });
 
@@ -55,14 +63,14 @@ function CenaMobile({ cena, i, clipes, cores, retratoUri }) {
   return React.createElement(
     'div',
     { style: { position: 'absolute', inset: 0, zIndex: i + 1 } },
-    i === 0 ? conteudo : React.createElement(MascaraCircular, { progresso: progressoWipe }, conteudo),
+    i === 0 ? conteudo : React.createElement('div', { style: { position: 'absolute', inset: 0, opacity: opacidadeEntrada } }, conteudo),
     (cena.legendas || []).map((leg, li) => React.createElement(LegendaCinetica, {
       key: li, texto: leg.texto, inicioFrame: leg.atraso, duracao: leg.duracao,
     }))
   );
 }
 
-function TourMobile({ cenas, cores, logoUri, retratoUri, clipes }) {
+function TourMobile({ cenas, cores, logoUri, retratoUri, clipes, legendaBlocos, fps = 30 }) {
   return React.createElement(
     'div',
     { style: { position: 'absolute', inset: 0, backgroundColor: cores.fundo } },
@@ -93,7 +101,20 @@ function TourMobile({ cenas, cores, logoUri, retratoUri, clipes }) {
       );
     }),
     React.createElement(SeloTour, { cores, texto: 'Tour do Site' }),
-    React.createElement(MarcaDagua, { src: logoUri }),
+    // left/top (não right/bottom) + tamanho ~1,85x — Rodada 10 (v3):
+    // ver comentário de LAYOUT_CELULAR acima. Corredor livre à
+    // esquerda do celular (LAYOUT_CELULAR.LARGURA:560 centrado em
+    // 1080 → 260px de cada lado) — logo de 240px cabe com 10px de
+    // margem de cada lado do corredor, vertical centralizada na altura
+    // do celular (TOPO 245 + ALTURA/2 575 = centro 820; 820-120=700).
+    // Longe da coluna de botões do Instagram (direita, y:1100-1700),
+    // do celular e da faixa de legenda (y:1440-1600).
+    React.createElement(MarcaDagua, { src: logoUri, tamanho: 240, left: 10, top: 700 }),
+    // Legenda karaokê v3 — RENDERIZADA AQUI, dentro da própria
+    // composição (não como overlay de vídeo separado — ver
+    // componentes.js/LegendaKaraoke pro motivo). zIndex 30 (acima de
+    // tudo, abaixo só da VinhetaGrao/grão, que é puramente estética).
+    legendaBlocos ? React.createElement(LegendaKaraoke, { blocos: legendaBlocos, fps, top: LAYOUT_CELULAR.CAPTION_TOP, altura: 160, fonte: 44 }) : null,
     React.createElement(VinhetaGrao)
   );
 }

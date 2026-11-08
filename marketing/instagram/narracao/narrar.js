@@ -47,12 +47,16 @@ const { caminhoMaster } = require('./legendar.js');
 
 const DIR_NARRACAO = __dirname;
 const SITE_MAE_REELS = 'E:/projetos/site-mae/reels';
-const SITE_MAE_TOUR = 'E:/projetos/site-mae/tour';
+// NARRAR_TOUR_DIR/NARRAR_DADOS_DIR (opcionais) — Rodada 10 (v3): mesmo
+// padrão de LEGENDAR_* (legendar.js) — redireciona o pipeline do TOUR
+// pra tour\v3\ sem tocar nos arquivos v2 (reels nunca é afetado, usa
+// sempre SITE_MAE_REELS). Sem as env vars, comportamento idêntico.
+const SITE_MAE_TOUR = process.env.NARRAR_TOUR_DIR || 'E:/projetos/site-mae/tour';
 const MUDO_REELS = path.join(SITE_MAE_REELS, '_mudo');
 const MUDO_TOUR = path.join(SITE_MAE_TOUR, '_mudo');
 const ANTERIORES_REELS = path.join(SITE_MAE_REELS, '_anteriores');
 const ANTERIORES_TOUR = path.join(SITE_MAE_TOUR, '_anteriores');
-const DADOS_LEGENDA = 'E:/projetos/site-mae/_narracao-dados';
+const DADOS_LEGENDA = process.env.NARRAR_DADOS_DIR || 'E:/projetos/site-mae/_narracao-dados';
 const TMP = 'E:/projetos/_tmp/narracao';
 const PIPER_MODELOS = 'E:/projetos/_tmp/piper-modelos';
 
@@ -455,4 +459,13 @@ if (require.main === module) {
   main();
 }
 
-module.exports = { calcularFaixaRitmo, VOZES, VOZ_PADRAO };
+// Exports ADICIONAIS (Rodada 10/v3, achado: narrar-tour-v3.js precisa
+// sintetizar por FRASE, não o roteiro inteiro de uma vez, pra controlar
+// a pausa entre frases por código — ver DECISOES.md) — só EXPÕE funções
+// já existentes (nenhuma mudou de comportamento), pra não duplicar a
+// chamada do PowerShell/Piper numa 2ª cópia que pudesse desalinhar.
+module.exports = {
+  calcularFaixaRitmo, VOZES, VOZ_PADRAO,
+  sintetizar, lerRoteiros, duracaoSegundos, mixar, FFMPEG, FFPROBE,
+  OFFSET_VOZ, FOLGA_FIM, FADE_OUT, TMP,
+};

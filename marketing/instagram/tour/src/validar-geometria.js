@@ -21,8 +21,11 @@ const { LAYOUT_CELULAR } = require('./componentes');
 const { montarRoteiroMobile } = require('./roteiro-mobile');
 
 const ALTURA_CANVAS = 1920;
-const ZONA_SEGURA_TOPO = 250; // nada importante aqui (pedido explícito)
-const ZONA_SEGURA_BASE = 1920 - 420; // = 1500 — nada importante abaixo disso
+// Zona segura NOVA (Rodada 10/v3, pedido explícito): 220px no topo e
+// 250px na base — não mais 250/420 (eram os números da versão
+// anterior, com o celular menor).
+const ZONA_SEGURA_TOPO = 220;
+const ZONA_SEGURA_BASE = 1920 - 250; // = 1670 — nada importante abaixo disso
 const GAP_MINIMO_CELULAR_LEGENDA = 20;
 
 // Estimativa CONSERVADORA da altura da legenda — ATUALIZADA na Rodada

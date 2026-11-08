@@ -268,3 +268,89 @@ ainda estavam com a narração/legenda da Rodada 8 (pausa entre frases
 re-renderizar o vídeo, só reaplicando narração+legenda), pra fechar o
 escopo "narração estável" nos 18 vídeos, não só nos 14 que tinham o
 outro bug. Kit resincronizado de novo depois — mesma contagem (11/17).
+
+2026-11-08 — Rodada 10 (Tour v3, tarefa autônoma, só os 2 Tours — ver
+STATUS.md pro resumo completo). Saída toda em
+`E:\projetos\site-mae\tour\v3\`, v2 nunca tocado.
+
+2026-11-08 — Legenda karaokê: a 1ª tentativa foi uma composição
+Remotion SEPARADA ("LegendaOverlay"), renderizada como WebM
+"transparente" (`renderMedia({ codec:'vp8', transparent:true,
+imageFormat:'png', pixelFormat:'yuva420p' })`) e sobreposta no vídeo
+narrado via `ffmpeg overlay`. Resultado: fundo sempre PRETO SÓLIDO
+cobrindo o vídeo inteiro, só a legenda aparecendo por cima — mesmo com
+o comando ffmpeg gerado pelo Remotion correto (`-pix_fmt yuva420p
+-auto-alt-ref 0`, confirmado lendo o log verbose). Isolei a causa
+testando cada etapa: `renderStill` (screenshot direto, sem passar por
+encode de vídeo) produzia um PNG com alfa=0 CORRETO no fundo
+(confirmado lendo os bytes crus do pixel, `-pix_fmt rgba -f rawvideo`)
+— então o Chromium/CDP (`Emulation.setDefaultBackgroundColorOverride`)
+funciona direito. O problema é especificamente na ETAPA DE ENCODE pro
+WebM (libvpx, tanto VP8 quanto VP9 testados, mesmo resultado): o
+arquivo final sempre saía com alfa=255 (opaco) em toda a área
+transparente, apesar do `ALPHA_MODE:1` nos metadados do stream (um
+metadado "mentiroso" — a cor de fato não carrega alfa nenhum). Não
+investiguei mais fundo (seria preciso recompilar o ffmpeg/libvpx desta
+máquina, fora do escopo) — a solução adotada foi ELIMINAR a
+necessidade de vídeo com alfa: a legenda agora é renderizada DENTRO da
+própria composição `TourMobile` (componente `LegendaKaraoke` em
+`tour/src/componentes.js`, recebe `legendaBlocos` como prop), já que
+Remotion/React compõe normalmente (sem precisar de alfa de vídeo
+nenhum) quando tudo está na MESMA árvore. Isso exigiu inverter a ordem
+do pipeline: antes (reels/tour-portfolio) é sempre vídeo→narração→
+legenda; pro tour-instagram agora é narração (só síntese, sem vídeo
+ainda, `narrar-tour-v3.js --voz-saida`) → render do vídeo JÁ com a
+legenda queimada (`tour.js --legenda-json`) → mixagem do áudio por
+cima (`mixar()`, reexportado de `narrar.js`). Removido o código da
+tentativa de overlay (`LegendaOverlay.js`, `legendar-overlay-v3.js`,
+a fonte Jost baixada manualmente do Google Fonts pra uso em libass)
+antes de qualquer commit — não ficou nenhum vestígio morto no repo.
+
+2026-11-08 — Narração rápida: medi o pipeline existente
+(`narrar.js`, síntese do roteiro INTEIRO de uma vez) e achei pausas de
+~0,5-0,7s ENTRE PALAVRAS dentro de uma mesma frase (não só entre
+frases) — característica do motor Piper na voz `jeff`/ritmo 0,7
+(ritmo mais lento = pausas proporcionalmente mais longas, não só a
+fala). Tentei `ffmpeg -af silenceremove=stop_periods=-1:...` (a forma
+"oficial" de encolher silêncio NO MEIO de um áudio, não só nas bordas)
+com várias combinações de threshold (em dB e em linear) — encolheu
+quase nada nos testes (3,08s → 2,81-2,93s, deveria ter ido pra ~2s se
+funcionasse). Troquei por um encolhedor PRÓPRIO em Node
+(`narracao/encolher-silencio.js`): lê o WAV, mede um envelope RMS por
+janela de 15ms, e corta fisicamente o MEIO de todo trecho silencioso
+mais longo que o alvo (0,3s) — testado isoladamente numa frase (3,08s
+→ 1,95s, gaps internos de 0,59s/0,51s → 0,30s/0,31s) antes de aplicar
+no pipeline de produção. `narrar-tour-v3.js` sintetiza cada FRASE
+separadamente (não o roteiro inteiro), apara borda + encolhe silêncio
+interno de cada uma, e concatena com um gap FIXO de 0,3s (ffmpeg
+`concat`, silêncio gerado via `anullsrc`, nunca o silêncio natural do
+motor) — resultado determinístico, sempre dentro de 0,25-0,35s entre
+frases e nunca >0,45s em nenhum ponto, confirmado por `silencedetect`
+nos 2 vídeos finais. `narrar.js` só ganhou exports NOVOS
+(`sintetizar`, `lerRoteiros`, `mixar`, etc.) — nenhuma linha de
+comportamento mudou pros outros 16 vídeos (reels, sempre via
+`narrar.js`/`legendar.js` sem mudança nenhuma).
+
+2026-11-08 — Fonte Jost pro libass: antes de abandonar a abordagem de
+overlay, baixei a Jost SemiBold (woff2 do Google Fonts não serve pro
+libass/fontconfig — convertido pegando o TTF de verdade trocando o
+User-Agent do curl pra um Safari antigo, que o Google Fonts ainda
+serve em TrueType puro). Removido junto com o resto do código da
+tentativa de overlay (não ficou usado em nada no resultado final).
+
+2026-11-08 — `anasorsobreira.com.br` não resolve (nslookup: "domínio
+inexistente") — conferido com `curl`/`nslookup` antes de aceitar o
+texto do cartão final do tour-portfolio. `anasor-sobreira.vercel.app`
+responde HTTP 200 — troquei o texto do fecho (`FechoPortfolio` em
+`componentes.js`) pra esse endereço (fonte reduzida de 56 pra 48px, o
+texto novo é mais longo). Registrado — nunca mostrar endereço que não
+funciona (pedido explícito).
+
+2026-11-08 — Corte de escopo (orçamento da rodada): a duração TOTAL de
+cada Tour não foi recalculada pra bater com "fala real + cartão final
+de 3s" — o roteiro VISUAL (duração de cada cena, vinda da captura real
+de tela) não foi tocado, só a narração ficou mais rápida (sobra ~8-13s
+de cena sem narração antes do cartão final, nunca tela vazia — só sem
+fala). Mudar isso exigiria recalcular a duração de CADA cena capturada
+(roteiro-mobile.js/roteiro-desktop.js), fora do orçamento desta
+rodada — registrado em STATUS.md como pendência, não escondido.

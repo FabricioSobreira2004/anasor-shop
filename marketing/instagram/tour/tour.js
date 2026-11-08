@@ -23,11 +23,16 @@ const { lerArgs } = require('./src/cli');
 const { FPS } = require('./src/dispositivos');
 const { montarRoteiroMobile } = require('./src/roteiro-mobile');
 const { montarRoteiroDesktop } = require('./src/roteiro-desktop');
+const { agruparBlocos } = require('./src/blocos-legenda');
 
 const RAIZ = path.resolve(__dirname, '..', '..', '..'); // anasor-shop
 const PUBLIC_DIR = path.join(__dirname, 'public');
 const DIR_CAPTURAS = path.join(__dirname, '.tmp', 'capturas');
-const SAIDA = path.resolve(RAIZ, '..', 'site-mae', 'tour');
+// TOUR_SAIDA_DIR (opcional) — Rodada 10 (v3): permite redirecionar a
+// saída pra uma subpasta nova (tour\v3\) SEM tocar no pipeline v2
+// (mesmo padrão de LEGENDAR_* em narracao/legendar.js). Sem a env var,
+// comportamento idêntico a sempre.
+const SAIDA = process.env.TOUR_SAIDA_DIR || path.resolve(RAIZ, '..', 'site-mae', 'tour');
 const SAIDA_CONFERENCIA = path.join(SAIDA, '_conferencia');
 
 // Legenda cinética do Remotion (Rodada 4/5, roteiro-mobile.js/
@@ -298,7 +303,18 @@ async function main() {
 
   if (versao === 'a' || versao === 'ambas') {
     const { cenas, duracaoTotal } = montarRoteiroMobile(clipesMobile);
-    propsPorVersao.a = { cenas: semLegendaEmbutida(cenas, args), duracaoTotal, fps: FPS, cores, logoUri, retratoUri, clipes: clipesMobile };
+    // --legenda-json <sidecar.json> (Rodada 10/v3, opcional) — queima a
+    // legenda karaokê DENTRO da composição (narracao/narrar-tour-v3.js
+    // já rodou antes e gravou os tempos de palavra; tour.js só agrupa
+    // em blocos de 3-6 palavras, mesma função usada pro .srt — ver
+    // DECISOES.md pro motivo de não ser mais um overlay de vídeo
+    // transparente).
+    let legendaBlocos = null;
+    if (args['legenda-json']) {
+      const dadosLegenda = JSON.parse(fs.readFileSync(args['legenda-json'], 'utf8'));
+      legendaBlocos = agruparBlocos(dadosLegenda.palavras);
+    }
+    propsPorVersao.a = { cenas: semLegendaEmbutida(cenas, args), duracaoTotal, fps: FPS, cores, logoUri, retratoUri, clipes: clipesMobile, legendaBlocos };
   }
 
   if (roteiroB) {
