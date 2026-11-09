@@ -21,7 +21,7 @@ const {
 // frame local no início de cada cena — exatamente o que faltava.
 const QUADROS_WIPE = 16;
 
-function CenaMobile({ cena, i, clipes, cores, retratoUri }) {
+function CenaMobile({ cena, i, ultima, clipes, cores, retratoUri }) {
   const frame = useCurrentFrame();
   // Crossfade (opacidade), não mais wipe circular — ACHADO DO
   // FABRÍCIO (Rodada 10): o wipe em íris (MascaraCircular) lia como
@@ -31,9 +31,27 @@ function CenaMobile({ cena, i, clipes, cores, retratoUri }) {
   // QUADROS_WIPE, ver comentário no fundo do arquivo) — só a cena de
   // CIMA (nova) precisa entrar com opacidade 0→1 pra virar um
   // crossfade suave, sem precisar desenhar nenhuma máscara.
+  //
+  // opacidadeSaida — ACHADO DO FABRÍCIO (Rodada 11/v4): o crossfade
+  // antigo só fazia a cena NOVA entrar (0→1) enquanto a ANTERIOR ficava
+  // 100% opaca o tempo todo por baixo — na transição pro fecho, isso
+  // deixava o retrato da Anasor (que também tem sua própria entrada em
+  // spring, mais lenta) "por cima" do celular ainda 100% visível por um
+  // instante (os 2 elementos somados, nunca a troca ficando só numa
+  // peça de cada vez). Agora a cena TAMBÉM se esmaece (1→0) durante a
+  // sua própria extensão (QUADROS_WIPE depois do fim nominal) — como
+  // essa extensão de uma cena corresponde EXATAMENTE aos primeiros
+  // QUADROS_WIPE quadros locais da PRÓXIMA cena (mesmo instante
+  // absoluto), as 2 rampas são complementares (saída 1→0 enquanto
+  // entrada 0→1) — um dissolve de verdade, nunca os 2 em cima um do
+  // outro ao mesmo tempo em opacidade alta.
   const opacidadeEntrada = i === 0 ? 1 : interpolate(frame, [0, QUADROS_WIPE], [0, 1], {
     extrapolateLeft: 'clamp', extrapolateRight: 'clamp',
   });
+  const opacidadeSaida = ultima ? 1 : interpolate(frame, [cena.duracao, cena.duracao + QUADROS_WIPE], [1, 0], {
+    extrapolateLeft: 'clamp', extrapolateRight: 'clamp',
+  });
+  const opacidade = opacidadeEntrada * opacidadeSaida;
 
   let conteudo;
   if (cena.tipo === 'fecho') {
@@ -63,7 +81,7 @@ function CenaMobile({ cena, i, clipes, cores, retratoUri }) {
   return React.createElement(
     'div',
     { style: { position: 'absolute', inset: 0, zIndex: i + 1 } },
-    i === 0 ? conteudo : React.createElement('div', { style: { position: 'absolute', inset: 0, opacity: opacidadeEntrada } }, conteudo),
+    (i === 0 && ultima) ? conteudo : React.createElement('div', { style: { position: 'absolute', inset: 0, opacity: opacidade } }, conteudo),
     (cena.legendas || []).map((leg, li) => React.createElement(LegendaCinetica, {
       key: li, texto: leg.texto, inicioFrame: leg.atraso, duracao: leg.duracao,
     }))
@@ -97,7 +115,7 @@ function TourMobile({ cenas, cores, logoUri, retratoUri, clipes, legendaBlocos, 
       return React.createElement(
         Sequence,
         { key: i, from: cena.inicio, durationInFrames: duracaoSequence, name: cena.nome, layout: 'none' },
-        React.createElement(CenaMobile, { cena, i, clipes, cores, retratoUri })
+        React.createElement(CenaMobile, { cena, i, ultima, clipes, cores, retratoUri })
       );
     }),
     React.createElement(SeloTour, { cores, texto: 'Tour do Site' }),

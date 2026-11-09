@@ -354,3 +354,70 @@ de cena sem narração antes do cartão final, nunca tela vazia — só sem
 fala). Mudar isso exigiria recalcular a duração de CADA cena capturada
 (roteiro-mobile.js/roteiro-desktop.js), fora do orçamento desta
 rodada — registrado em STATUS.md como pendência, não escondido.
+
+2026-11-09 — Rodada 11 (Tour v4 — ver STATUS.md pro resumo completo).
+A pendência registrada acima (2026-11-08) virou o PEDIDO principal
+desta rodada: a duração de cada cena agora vem da fala (não mais da
+captura), resolvendo exatamente o corte de escopo anotado.
+
+2026-11-09 — `roteiro-mobile.js`/`roteiro-desktop.js` ganharam um
+parâmetro OPCIONAL de override de duração (`overridesDuracao`/
+`overrides`) — sem ele, comportamento idêntico a sempre (a v3 nunca
+chama com esse parâmetro, continua lendo a duração do manifesto/dos
+números fixos). `montarRoteiroDesktop` também passou a aceitar
+`destaques` dinâmicos por cena (texto/atraso/duração calculados a
+partir da fala real, não mais hardcoded) — só pras cenas que JÁ
+tinham balão antes (listagem/checkout/fecho[0]); nenhum balão NOVO foi
+adicionado em cena nenhuma (visual aprovado, só tempo mudou).
+
+2026-11-09 — ACHADO (1ª tentativa de render): `bundle()` do Remotion
+copia o conteúdo de `publicDir` pro diretório temporário do bundle NA
+HORA da chamada — mesmo achado já registrado em tour.js (Rodada 4),
+esquecido ao escrever `tour/rodar-v4.js` do zero: a 1ª versão bundlava
+ANTES de copiar os clipes ajustados (freeze/corte) pra `public/`,
+dando 404 no render ("clipes/mobile/home-hero.mp4 could not be
+found"). Corrigido: clipes ajustados SEMPRE antes do `bundle()`.
+
+2026-11-09 — ACHADO (1º render completo, Instagram): legenda DUPLICADA
+na tela (2 pílulas sobrepostas, uma com o texto da narração nova,
+outra "fantasma" com fragmentos da legenda cinética antiga). Causa:
+`roteiro-mobile.js` sempre devolve `legendas` (array da legenda
+cinética antiga, `LegendaCinetica`, texto DIFERENTE da narração) — o
+pipeline v3 (`tour.js`) sempre removia isso antes de montar os props
+(`semLegendaEmbutida`); o driver novo (`rodar-v4.js`) esqueceu desse
+passo. Corrigido: `cenas.map(c => ({...c, legendas: []}))` antes de
+montar os props do Instagram — só a legenda karaokê nova
+(`legendaBlocos`) renderiza agora.
+
+2026-11-09 — ACHADO testando (confirmado por script, não por ouvido):
+o filtro `ffmpeg -af silenceremove` continua não encolhendo pausas
+internas de forma confiável nesta build de libvpx/ffmpeg (mesmo
+achado da Rodada 10) — por isso a narração v4 usa síntese de UMA
+PASSADA por frase (sem cortar miolo nenhum, só borda de 80ms) em vez
+de tentar de novo encolher silêncio interno por filtro. Pedido desta
+rodada já pedia isso explicitamente ("SEM cortar silêncio interno"),
+então o achado da Rodada 10 (que motivou o corte agressivo) foi
+revertido de propósito, não por engano.
+
+2026-11-09 — `pip install faster-whisper` funcionou de primeira
+(Python 3.14.7 já instalado na máquina) mas `model.transcribe(caminho)`
+falhava (`TypeError: open() got an unexpected keyword argument
+'metadata_errors'` — incompatibilidade de versão entre faster-whisper
+e o PyAV instalado). Contornado lendo o `.wav` manualmente (módulo
+`wave` do Python + numpy) e passando o array de amostras direto pro
+`transcribe()`, em vez do caminho do arquivo — bypassa o PyAV
+inteiro. Também precisa reamostrar pra 16kHz antes (o modelo espera
+isso; alimentar com 22050Hz direto saiu com transcrição toda errada,
+não só imprecisa — achado comparando as 2 tentativas).
+
+2026-11-09 — Cobertura de voz do Instagram ficou em 88,8% (meta:
+≥90%) — único item do pedido que não passou 100%. Tentei entender se
+dava pra fechar a lacuna sem violar outra regra do mesmo pedido: com
+13 frases curtas (1 por cena, pedido explícito) e pausa fixa de 0,3s
+entre elas (também pedido explícito), a sobra proporcional de silêncio
+é maior que no portfólio (8 frases mais longas, mesmas regras, 92,4%
+de cobertura — passa). Reduzir a pausa ou juntar frases de cenas
+diferentes contradiria pedidos explícitos do mesmo texto — decidi
+ACEITAR o resultado e registrar a reprovação parcial com transparência
+(nenhum gap sozinho passa de 1,3s, bem abaixo do limite de 3,5s) em
+vez de quebrar outra regra pra forçar o número.

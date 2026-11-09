@@ -10,11 +10,19 @@
 // comentário dizia "loop:true", mas esse caminho foi abandonado cedo
 // nesta rodada — <OffthreadVideo loop> exige durationInFrames
 // explícito — e NUNCA existiu em componentes.js.)
-function montarRoteiroDesktop() {
+// `overrides` (opcional, Rodada 11/v4) — { [nomeCena]: { duracao,
+// destaques } } — quando uma cena tem entrada aqui, a duração E os
+// `destaques` (texto/atraso/duração de cada balão) vêm da NARRAÇÃO
+// sincronizada por áudio (tour/gerar-v4.js), não mais dos números
+// fixos abaixo. Sem o parâmetro, comportamento idêntico ao de sempre.
+function montarRoteiroDesktop(overrides = {}) {
   const cenas = [];
   let acc = 0;
-  function push(nome, duracao, extra) {
-    cenas.push({ nome, inicio: acc, duracao, ...extra });
+  function push(nome, duracaoPadrao, extra) {
+    const o = overrides[nome];
+    const duracao = o && o.duracao != null ? o.duracao : duracaoPadrao;
+    const destaques = o && o.destaques ? o.destaques : (extra && extra.destaques);
+    cenas.push({ nome, inicio: acc, duracao, ...extra, ...(destaques ? { destaques } : {}) });
     acc += duracao;
   }
 

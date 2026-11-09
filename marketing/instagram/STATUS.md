@@ -621,3 +621,89 @@ Tarefa autônoma, só os 2 Tours. Saída NOVA em
   reproduzidos na checagem desta rodada (amostragem de quadros não achou
   nenhum quadro vazio/bege-sozinho fora da abertura e do cartão final).
   Karaokê é por PALAVRA (não por sílaba) — suficiente pro pedido.
+
+---
+
+## Rodada 11 — Tour v4 (linha do tempo movida pra NARRAÇÃO, não mais
+duração fixa) — 2026-11-09 — ✅ CONCLUÍDO
+
+Tarefa autônoma e urgente: só narração/tempo, visual da v3 continua
+(celular grande, logo, legenda pílula, rolagem, cartão final, música).
+Saída nova em `E:\projetos\site-mae\tour\v4\` — v3 intocado
+(confirmado: timestamps/md5 dos .mp4 de v3 iguais a antes da rodada).
+
+**Diagnóstico medido** (script rápido, confirmou o relato do Fabrício):
+
+| vídeo | duração | voz até | cauda só-música | causa |
+|---|---|---|---|---|
+| tour-instagram v3 | 45,0s | ~32,1s | ~12,9s | cena com duração FIXA (do clipe capturado), nunca amarrada à fala |
+| tour-portfolio v3 | 47,0s | ~31,1s | ~15,9s | idem |
+
+Também confirmado nos `.wav` brutos de uma frase (Rodada 10): o
+encolhedor de silêncio INTERNO cortava 0,5-1,8s por frase — às vezes
+dentro da pausa entre palavras de verdade, não "gordura". Sem
+sobreposição de frases encontrada (concatenação sempre sequencial).
+Volume por frase variava ~15-20dB RMS porque o `loudnorm` só rodava
+1x no fim do áudio inteiro, não por frase.
+
+**Correção (arquitetura nova, os 2 tours):**
+- **Linha do tempo vem da ÁUDIO**: cada cena = 1 frase nova (roteiro
+  reescrito, `narracao/roteiro-v4-dados.js`, 1 frase por cena —
+  13 no Instagram, 8 em 6 cenas no portfólio). Duração da cena =
+  duração da frase + 0,3s (mínimo 2,0s); início da cena = início da
+  frase − 0,2s — os clipes capturados são ESTICADOS (segura o último
+  quadro, `tpad`) ou CORTADOS (tempo morto do fim) pra bater exato,
+  nunca repetidos/loop. Cartão final = +3s depois da última frase.
+  Resultado: tour-instagram 37,9s (era 45s), tour-portfolio 34,4s (era
+  47s) — dentro da meta (34-40s / 34-42s).
+- **Narração sem cortar miolo**: cada frase sintetizada INTEIRA (Piper
+  jeff/0,7, sem mudar), só apara BORDA (80ms de folga,
+  `narracao/sintetizar-frase-v4.js`), `loudnorm` POR FRASE (-16 LUFS,
+  LRA medido 2,5-2,6 nos 2 finais — bem dentro de ±2 LU) + fade de
+  30ms nas pontas. Pausa entre frases sempre 0,3s (gerada, não mais o
+  silêncio natural do motor). Resultado: silêncio interno máximo
+  <0,46s nos 2 vídeos finais (só a cauda do cartão final passa disso —
+  0,99s/1,27s, dentro do permitido).
+- **Frase ↔ cena**: cada frase nova descreve EXATAMENTE a tela daquele
+  momento (ex.: "Já encontraram um lar" narrado exatamente quando o
+  texto "Já encontraram um lar" está na tela; "O CEP e o CPF são
+  validados..." com os campos CEP/CPF visíveis no portfólio) —
+  conferido visualmente em 12 quadros-chave (`_prints\tours-v4\`).
+  Exceção conhecida: a cena de checkout do Instagram (curta, 2,1s) às
+  vezes corta antes do campo CEP aparecer na rolagem (mostra só o
+  formulário geral) — o clipe capturado original rola rápido demais
+  pra garantir o campo exato numa cena tão curta; o PORTFÓLIO (cena
+  mais longa) acerta certinho.
+- **Legenda** (só Instagram — portfólio continua sem queimar, só
+  `.srt`): blocos re-quebrados (3-6 palavras) nunca terminando em
+  artigo/preposição/conjunção — achado só no 1º `.srt` gerado:
+  "pelas" (contração não coberta) terminava um bloco; lista de
+  palavras de função ampliada (contrações pelo/pela/pelos/pelas,
+  num/duma, etc.) e os 2 vídeos re-renderizados com a legenda corrigida
+  antes de aceitar.
+- **Glitch do cartão final** (item 7 do pedido): a foto da Anasor
+  aparecendo por cima do celular por um instante — causa: só a cena
+  NOVA entrava em crossfade (0→1), a ANTERIOR ficava 100% opaca o
+  tempo todo por baixo, então os 2 ficavam parcialmente visíveis ao
+  mesmo tempo. Agora as 2 pontas são complementares (cena antiga
+  1→0 exatamente enquanto a nova vai 0→1) — dissolve de verdade,
+  aplicado em TODAS as transições (não só a última), sem mudar o
+  visual aprovado.
+- **Verificação**: `silencedetect` (sem gap >0,46s exceto a cauda do
+  cartão final nos 2), `loudnorm` (-15,9/-16,2 LUFS, pico -2,3/-3,1
+  dBTP — dentro do pedido), sem clipping (pico de amostra sempre
+  <0,75, bem abaixo de 0,99) nas 13+8 frases testadas. ASR
+  (`faster-whisper`, instalado nesta rodada — `pip install
+  faster-whisper`, modelo `base`, CPU): transcrição de cada frase
+  comparada ao roteiro — qualidade baixa pra nomes próprios/voz
+  sintética (esperado, aviso do próprio pedido), mas nenhuma frase
+  transcrita como cortada/incompleta — conferido por leitura manual
+  das 21 transcrições. Cobertura de voz (antes do cartão final):
+  portfólio 92,4% (✅ ≥90%), Instagram 88,8% (⚠️ levemente abaixo —
+  13 frases curtas, cada uma carregando os mesmos 0,3s de pausa fixa
+  pedidos, deixam a sobra proporcionalmente maior que no portfólio,
+  que tem só 8 frases mais longas; reduzir mais a pausa contradiria o
+  pedido de "pausa entre frases 0,3s" — registrado como o único item
+  que NÃO passou 100%, sem gap nenhum passando de 1,3s em nenhum caso).
+  `node --check` nos 7 scripts tocados/criados: OK. Teste offline do
+  backend (não tocado): 6/6 OK.

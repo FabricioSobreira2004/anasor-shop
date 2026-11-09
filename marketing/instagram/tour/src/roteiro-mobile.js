@@ -2,11 +2,18 @@
 // a partir do manifesto de captura (duração REAL de cada clipe, não um
 // número chutado) e das 6 legendas pedidas + o convite da peça vendida.
 // Nenhuma legenda cita preço fixo nem Pix (pedido explícito).
-function montarRoteiroMobile(manifest) {
+//
+// `overridesDuracao` (opcional, Rodada 11/v4) — { [nomeCena]: quadros }
+// — quando uma cena tem entrada aqui, a duração dela vem da NARRAÇÃO
+// (fase/cena sincronizada por áudio, ver tour/gerar-v4.js), não mais
+// da duração bruta do clipe capturado. Sem o parâmetro (ou pra cenas
+// sem entrada), comportamento idêntico ao de sempre — nunca quebra
+// quem chama sem passar nada (tour.js, versão v3 em diante).
+function montarRoteiroMobile(manifest, overridesDuracao = {}) {
   const cenas = [];
   let acc = 0;
   function push(nome, clipe, extra) {
-    const quadros = manifest[clipe].quadros;
+    const quadros = overridesDuracao[nome] != null ? overridesDuracao[nome] : manifest[clipe].quadros;
     cenas.push({ nome, clipe, inicio: acc, duracao: quadros, ...extra });
     acc += quadros;
   }
@@ -82,8 +89,9 @@ function montarRoteiroMobile(manifest) {
   // entrada (retrato → tagline → botão → handle → faixa) sozinha já
   // usa uns 73 quadros — 150 deixa ~2,5s de "hold" depois de tudo
   // aparecido, sem cortar a faixa de confiança antes da hora.
-  cenas.push({ nome: 'fecho', tipo: 'fecho', inicio: acc, duracao: 150 });
-  acc += 150;
+  const duracaoFecho = overridesDuracao.fecho != null ? overridesDuracao.fecho : 150;
+  cenas.push({ nome: 'fecho', tipo: 'fecho', inicio: acc, duracao: duracaoFecho });
+  acc += duracaoFecho;
 
   return { cenas, duracaoTotal: acc };
 }
