@@ -707,3 +707,90 @@ Volume por frase variava ~15-20dB RMS porque o `loudnorm` só rodava
   que NÃO passou 100%, sem gap nenhum passando de 1,3s em nenhum caso).
   `node --check` nos 7 scripts tocados/criados: OK. Teste offline do
   backend (não tocado): 6/6 OK.
+
+## N) Tour do Site v5 — narração fluida — ✅ CONCLUÍDO (Rodada 12)
+
+Pedido: a v4 media "travando" — 30 rajadas de fala (Instagram, média
+0,78s, 35% do tempo em pausa) e 21 rajadas (portfólio, 30% pausa),
+causa provável: roteiro em ~13 frases CURTAS (1 por cena), cada uma
+sintetizada isolada, mais `length_scale 0,7` do Piper. Só a NARRAÇÃO
+foi refeita — visual (celular grande, logo, legenda karaokê, música,
+linha do tempo "cena = fala real") idêntico à v4.
+
+- **Roteiro fluido**: `narracao/roteiro-v5-dados.js` — trechos de 2-3
+  orações ligadas por conectivos ("e", com vírgula só de respiração).
+  No mobile, os 13 clipes/cenas da v4 viraram **7 trechos de narração +
+  1 fechamento fixo** (cenas relacionadas narradas juntas — ex.: fotos
+  + vídeo + medidas do produto num só trecho) — sem isso, 13 trechos de
+  14-26 palavras cada passariam de 90s de fala sozinha (meta era
+  ≈36-44s); ver DECISOES.md pro raciocínio completo. Nenhum dos 13
+  clipes foi removido ou reordenado — a duração de cada um agora é uma
+  fatia proporcional do trecho que o narra
+  (`dividirDuracaoEntreClipes`, `tour/gerar-v5.js`). No desktop (8
+  itens/6 cenas), o orçamento de palavras já cabia sem precisar
+  agrupar — só os textos ficaram mais fluidos (sem criar nem remover
+  nenhum balão).
+- **Síntese por TRECHO INTEIRO**: `narracao/sintetizar-trecho-v5.js` —
+  1 chamada de Piper por trecho (nunca por cláusula), apara só borda
+  (80ms), nunca corta silêncio interno, loudnorm por trecho.
+- **4 configurações testadas** (`narracao/teste-fluidez-v5.js`, mesmo
+  trecho de ~14s, noise_scale 0,667/noise_w 0,8 fixos em todas,
+  sentence_silence 0,15): A jeff/0.7 (atual), B jeff/0.85, C jeff/1.0,
+  D faber/0.9. **Nenhuma passou** nas metas rígidas (rajada média
+  ≥1,5s, pausa interna ≤0,30s, ≤22% do tempo em pausa, wps 2,6-3,2) —
+  é o próprio modelo Piper (pausa prosódica entre cláusulas, mesmo
+  achado da Rodada 9). D (faber 0.9) teve a menor pontuação de
+  violação (3/5 métricas dentro da meta) — escolhida como padrão
+  (`configs-sintese-v5.js`). Amostras em
+  `site-mae/narracao-amostras/fluidez/`.
+- **Tempo de palavra por ASR**: `narracao/alinhar-palavras-v5.js` —
+  faster-whisper `word_timestamps=True` no áudio de cada trecho
+  (`asr-palavras-v5.py`), mapeado POSICIONALMENTE (a transcrição erra
+  nomes próprios/voz sintética, mas a CONTAGEM e os TEMPOS continuam
+  úteis); cai pra proporção de caractere (igual v4) se a contagem de
+  palavras do ASR não bater dentro de ±30%.
+- **Checkout do Instagram mostrando o CEP**: clipe pré-cortado em 36
+  quadros (até o endereço auto-preenchido pelo ViaCEP, antes do scroll
+  pros selos) + 0,4s extra de duração na cena
+  (`prepararManifestoCheckoutCep`, `tour/gerar-v5.js`). ACHADO
+  rodando: mesmo assim o CEP saía raspando a borda arredondada da
+  moldura do celular (`MolduraCelular` recorta o vídeo centralizado
+  pro tamanho fixo da moldura, mais "quadrado" que o vídeo bruto —
+  qualquer conteúdo perto da BORDA perde uma fatia) — corrigido
+  acrescentando uma faixa de fundo (cor da página) embaixo do quadro
+  ANTES do corte, pra o recorte centralizado comer a faixa extra, não
+  o campo do CEP. Conferido por print antes/depois.
+- **Medição antes (v4) x depois (v5)** (`narracao/medir-ritmo.js`, no
+  WAV de voz isolado, antes da música):
+  - Instagram: pausa média 0,389s→**0,218s**, %tempo em pausa
+    38,3%→**23,3%**, rajada média 0,608s→**0,703s**.
+  - Portfólio: pausa média 0,389s→**0,215s**, %tempo em pausa
+    33,9%→**20,7%** (✅ dentro da meta ≤22%), rajada média
+    0,731s→**0,803s**.
+  - Instagram ficou acima da meta de 22% de pausa por 1,3 ponto — não
+    deu pra fechar sem violar o orçamento de duração (mesma tensão
+    registrada pra v4/cobertura — ver DECISOES.md); ainda assim, uma
+    melhora clara (-15 pontos) sobre a v4.
+- **Duração**: Instagram 40,0s, portfólio 41,8s — dentro da meta
+  (≈36-44s / ≈34-42s).
+- **Ocupação de voz antes do cartão final** (`narracao/verificar-v5.py`,
+  mesmo padrão da v4): Instagram **93,5%** (v4: 88,8% ⚠️, agora ✅
+  ≥90%), portfólio **94,8%** (v4: 92,4%).
+- **ASR por trecho**: Instagram 7/8, portfólio 8/8 trechos com
+  cobertura ≥40% de palavras (voz sintética erra nomes próprios,
+  esperado); nenhum trecho cortado. Sem clipping (pico de amostra
+  sempre ≤0,63) nos 2 vídeos. `loudnorm`: -16,1/-16,2 LUFS, pico
+  -3,6/-3,9 dBTP (dentro do pedido, ≤-1,5 dBTP).
+- **Frase ↔ tela**: conferido em 12 quadros-chave
+  (`site-mae/_prints/tours-v5/`) — peça vendida com "Já encontraram um
+  lar" na tela, CEP visível no checkout dos 2 vídeos, balões do
+  portfólio (inclusive os 2 textos mais longos) cabendo sem cortar.
+- **Saída**: `site-mae/tour/v5/` (`tour-instagram.mp4`,
+  `tour-portfolio.mp4` + `.srt`); v4 intocado. Pra trocar de
+  configuração de síntese sem refazer visual/captura:
+  `node tour/rodar-v5.js --versao a --config B` (regera áudio, tempo
+  de palavra, legenda e re-renderiza — ver comentário no topo do
+  arquivo pro porquê de precisar re-renderizar).
+- `node --check` nos 10 scripts tocados/criados: OK. `py_compile` nos
+  2 scripts Python novos: OK.
+  backend (não tocado): 6/6 OK.

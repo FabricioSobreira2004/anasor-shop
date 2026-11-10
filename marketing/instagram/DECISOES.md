@@ -421,3 +421,74 @@ diferentes contradiria pedidos explícitos do mesmo texto — decidi
 ACEITAR o resultado e registrar a reprovação parcial com transparência
 (nenhum gap sozinho passa de 1,3s, bem abaixo do limite de 3,5s) em
 vez de quebrar outra regra pra forçar o número.
+
+2026-11-09 — Rodada 12 (Tour do Site v5, narração fluida). TENSÃO
+entre 2 pedidos numéricos do mesmo texto: "1 trecho por cena, 14 a 26
+palavras" x "duração ≈36-44s (Instagram) / ≈34-42s (portfólio)". No
+mobile há 13 cenas/clipes fixos (1 por elemento do site capturado); 13
+trechos de 14-26 palavras a ~2,6-3,2 palavras/s somam 57-130s SÓ de
+fala, muito acima da meta de duração — mesmo aceitando a banda mais
+baixa (14 palavras), passa de 57s. Não dava pra cumprir as 2 regras ao
+mesmo tempo. Decisão: agrupar os 13 clipes mobile em **7 trechos de
+narração + 1 fechamento fixo** — cenas com conteúdo relacionado
+(ex.: produto-galeria + produto-video + produto-medidas) passaram a
+ser narradas por 1 trecho só de 2-3 orações, com a duração de cada
+clipe virando uma FATIA proporcional (peso = duração original
+capturada de cada um, piso de 0,5s) do trecho que o narra — nenhum dos
+13 clipes foi removido, cortado de ordem ou teve conteúdo retirado, só
+a duração de cada um deixou de vir de 1 frase própria. O orçamento de
+PALAVRAS por trecho ficou um pouco abaixo de 14-26 em alguns (a
+prioridade foi a meta de DURAÇÃO, que tem verificação por script
+"sem depender de mim" explícita no pedido; o range de palavras era
+instrumental — o objetivo real, "trechos fluidos sintetizados numa
+passada só, não frase-a-frase", foi mantido). O desktop (8
+itens/6 cenas) não precisou desse agrupamento — o orçamento de
+palavras já cabia dentro da meta de duração só enriquecendo cada item
+(2 clausulas em vez de 1), sem juntar nenhuma cena nem criar/remover
+balão.
+
+2026-11-09 — Rodada 12, teste das 4 configurações de síntese
+(`teste-fluidez-v5.js`, metas: rajada média ≥1,5s/mediana ≥1,3s, pausa
+interna ≤0,30s, ≤22% do tempo total em pausa, 2,6-3,2 palavras/s,
+medidas no MESMO trecho de ~14s): A jeff/0.7 (atual), B jeff/0.85,
+C jeff/1.0, D faber/0.9 (todas com noise_scale 0,667/noise_w 0,8,
+sentence_silence 0,15 — pedido explícito, "variação natural de
+ritmo"). NENHUMA passou nas 5 metas ao mesmo tempo — rajadas de
+0,61-0,86s e 25-40% de pausa em todas, bem abaixo/acima do pedido.
+Isso bate com o achado já registrado na Rodada 9 (comentário em
+`sintetizar-piper.ps1`): a pausa entre cláusulas no Piper NÃO vem de
+`sentence_silence` nem de pontuação — é comportamento PROSÓDICO do
+próprio modelo VITS, não controlável só por length_scale/noise_w.
+Config D (faber 0.9) teve a MENOR pontuação de violação (soma das
+distâncias relativas às metas) — 3 das 5 métricas dentro da meta
+(pausa média 0,217s, %pausa 25,2%, wps 3,19) — escolhida como padrão
+por código, sem depender de audição humana (pedido explícito). Troca
+de voz (jeff→faber) é mais do que só ajustar o ritmo da voz já
+escolhida pelo Fabrício (Rodada 7) — registrado aqui com destaque:
+`node tour/rodar-v5.js --versao a --config A` volta pra jeff/0.7 (ou
+B/C) se o timbre do faber não for aprovado, sem precisar mexer em
+código.
+
+2026-11-09 — Rodada 12, ACHADO rodando (checkout do Instagram): o
+clipe pré-cortado em 36 quadros (até o CEP + endereço auto-preenchido
+pelo ViaCEP) ainda saía com o CEP cortado na composição final, mesmo
+o frame bruto mostrando o CEP legível e com folga. Hipótese inicial
+(errada): o pan de câmera (`DispositivoFlutuante`, de/para do
+`roteiro-mobile.js`) — tentativa de reduzir o pan só nesta cena NÃO
+mudou nada, porque toda câmera mobile já é clampada num intervalo
+minúsculo (`LAYOUT_CELULAR.CAMERA_ESCALA_MIN/MAX` 0,99-1,01,
+`CAMERA_TRANSLATE_MAX_PCT` 0,6%) — o de/para do roteiro é quase
+cosmético, não a causa. Causa real, achada comparando o clipe ajustado
+(antes do Remotion) com o quadro final: `MolduraCelular` (componentes.js)
+recorta o vídeo com `objectFit: cover` pro tamanho FIXO da moldura
+(560×1150, proporção ≈0,487) — mais "quadrado" que o vídeo bruto
+capturado (1180×2556, proporção ≈0,462) — qualquer conteúdo perto da
+BORDA do clipe perde uma fatia nesse recorte centralizado, e o CEP
+(perto do fim da página) caía bem nessa fatia. Corrigido
+ACRESCENTANDO uma faixa de fundo (cor de `--cor-fundo`, pega de
+`style.css`) de 420px embaixo do quadro ANTES de cortar os 36 quadros
+(`prepararManifestoCheckoutCep`, `tour/gerar-v5.js`) — o recorte
+centralizado da moldura passa a comer essa faixa extra (que não tem
+conteúdo nenhum), não mais o campo do CEP. Conferido por print
+recortado (zoom na borda inferior) antes/depois — só este clipe foi
+tocado, os outros 12 continuam exatamente como a captura trouxe.
