@@ -793,4 +793,63 @@ linha do tempo "cena = fala real") idêntico à v4.
   arquivo pro porquê de precisar re-renderizar).
 - `node --check` nos 10 scripts tocados/criados: OK. `py_compile` nos
   2 scripts Python novos: OK.
-  backend (não tocado): 6/6 OK.
+
+## O) Tour do Site v6 — sem narração, sem legenda queimada — ✅ CONCLUÍDO (Rodada 13)
+
+Pedido: a voz Piper (mesmo a config D escolhida por medição na v5)
+soa robótica/arrastada mesmo depois dos ajustes — decisão do
+Fabrício: **narração e legenda ficam por fora, em app externo
+(CapCut/Clipchamp)**. Reaproveita o visual e as DURAÇÕES exatas da v5
+(celular grande, logo, rolagem, cartão final, cenas) sem sintetizar
+nenhuma voz — `tour/gerar-v6.js` reconstrói as mesmas durações de
+cena a partir do JSON já salvo pela v5 (`tour/v5/_dados/*.json`, que
+guarda a duração REAL de cada trecho medida naquela rodada), pura
+aritmética, sem chamar o Piper.
+
+- **Instagram**: precisou de 1 RE-RENDER do Remotion (a legenda
+  karaokê estava QUEIMADA no pixel da v5, não dá pra "apagar" depois)
+  — `legendaBlocos: null` nos props desliga a legenda (mesma prop que
+  já existia, `TourMobile.js` só renderiza `<LegendaKaraoke>` se ela
+  existir — nenhum código da legenda foi apagado, só não é chamado).
+  Validado por `renderStill` em 3 quadros (início/meio/fim) ANTES do
+  render completo (pedido explícito, evita gastar um render de 40s só
+  pra descobrir que algo ficou errado).
+- **Portfólio**: nunca teve legenda queimada — reaproveitado DIRETO o
+  `tour-portfolio-narrado.mp4` da v5 (vídeo + voz, sem música), só
+  tirando o áudio (`-an`) — **zero render Remotion** nesta rodada.
+- **Áudio**: só `musica/trilha-atelie.wav` em loop, fade-in 1s/
+  fade-out 2s, `loudnorm -24 LUFS`/pico -3dBTP (mais baixo que a v5 de
+  propósito — vai levar voz por cima depois, no app). Trilha isolada
+  salva em `musica-tour-instagram.wav`/`musica-tour-portfolio.wav`,
+  já no tamanho de cada vídeo.
+- **Verificação**: `ffprobe` (1080×1920/1920×1080, 40,0s/41,8s — igual
+  v5, com 1 faixa de áudio); `loudnorm` -24,4/-24,1 LUFS, pico
+  -14,8dBTP (bem abaixo do limite -3dBTP); sem clipping (volumedetect
+  max -14,8dB); `silencedetect` (noise=-40dB, d=1s): nenhum silêncio
+  >1s nos 2 vídeos (música contínua, como pedido). Faixa de legenda do
+  Instagram (y 1440-1600) conferida em TODOS os 1198 quadros
+  (`signalstats` YAVG por quadro, crop na faixa) — luminância sempre
+  entre 204 e 213 (só fundo bege, nunca uma pílula escura de legenda)
+  — confirma que a legenda está mesmo desligada em 100% do vídeo, não
+  só nos 3 quadros validados antes do render. 4 quadros de cada vídeo
+  salvos em `site-mae/_prints/tours-v6/` — celular, logo e cartão
+  final conferidos (portfólio com `anasor-sobreira.vercel.app`
+  visível).
+- **Guias de narração** (o entregável principal pro Fabrício regravar
+  por fora): `tour/v6/guia-narracao-instagram.md` e
+  `guia-narracao-portfolio.md` — tabela por cena (janela mm:ss.s,
+  tela, texto sugerido reaproveitado do roteiro da v5, palavras e
+  velocidade necessária vs. 2,8 palavras/s de referência — a maioria
+  das cenas do Instagram pede ~3,0-3,4 palavras/s, sinalizado como
+  "apertado" na tabela, não escondido), roteiro completo pronto pra
+  colar (`texto-para-colar-*.txt`), marcas de sincronia (telas-chave),
+  zona livre de legenda (Instagram: y 1440-1600) e 5 dicas de
+  exportação. `.srt` de referência do Instagram
+  (`tour-instagram-referencia.srt`) gerado a partir dos tempos de
+  palavra REAIS medidos na v5 (ASR), não estimados.
+- **Saída**: `site-mae/tour/v6/` — `tour-instagram-sem-voz.mp4`,
+  `tour-portfolio-sem-voz.mp4`, músicas isoladas, guias, roteiros e
+  `.srt` de referência; v5 (com narração) intocada, preservada como
+  está.
+- `node --check` nos 3 scripts tocados/criados (`gerar-v5.js` só
+  ganhou exports novos, nenhum comportamento mudou): OK.

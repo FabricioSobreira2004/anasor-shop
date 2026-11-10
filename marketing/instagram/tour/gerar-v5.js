@@ -416,10 +416,11 @@ function escreverSrt(palavras, arquivo) {
 }
 
 module.exports = {
-  FPS, LEAD, GAP, MIN_CENA, TRAIL_FECHO, SAIDA, DADOS, PRINTS, MUSICA, PUBLIC_DIR, RAIZ, TMP_V5,
+  FPS, LEAD, GAP, MIN_CENA, TRAIL_FECHO, PAD_CHECKOUT, SAIDA, DADOS, PRINTS, MUSICA, PUBLIC_DIR, RAIZ, TMP_V5,
   CONFIGS_V5, CONFIG_PADRAO_V5,
   lerVariaveisCss, gerarLogoTransparente, gerarRetratoDataUri, lerManifesto,
   ajustarClipe, construirTimelineMobileV5, construirTimelineDesktopV5, prepararManifestoCheckoutCep,
+  dividirDuracaoEntreClipes, NOME_PARA_CLIPE,
   montarVozCompleta, copiarClipesAjustados, arquivarSeExistir, renderizar,
   tempoSrt, escreverSrt, agruparBlocosSemPreposicaoFinal, dataHoje,
   montarRoteiroMobile, montarRoteiroDesktop,

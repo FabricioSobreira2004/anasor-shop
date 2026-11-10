@@ -492,3 +492,54 @@ centralizado da moldura passa a comer essa faixa extra (que não tem
 conteúdo nenhum), não mais o campo do CEP. Conferido por print
 recortado (zoom na borda inferior) antes/depois — só este clipe foi
 tocado, os outros 12 continuam exatamente como a captura trouxe.
+
+2026-11-10 — Rodada 13, DECISÃO DO FABRÍCIO: abandonar a narração
+sintética (Piper) no Tour do Site. Mesmo depois de toda a Rodada 12
+(trechos fluidos, síntese numa passada só, config escolhida por
+medição), a voz ainda soa robótica/arrastada ao ouvido dele — decisão
+de produto, não um bug pra caçar: narração e legenda passam a ser
+feitas por fora, num app de edição (CapCut/Clipchamp), com uma voz
+real ou um TTS melhor escolhido por ele. Não tentei "melhorar mais" a
+voz (pedido explícito: "Não tente melhorar a voz") — o pipeline
+`narracao/*-v5.*` continua existindo e funcional (não foi apagado,
+só parou de ser usado nos vídeos do Tour) caso sirva de referência ou
+seja reaproveitado noutro contexto depois.
+
+2026-11-10 — Rodada 13, v6 sem recalcular NADA de visual: em vez de
+reconstruir a linha do tempo do zero, `tour/gerar-v6.js` LÊ a duração
+real de cada trecho que a v5 já sintetizou e salvou em
+`tour/v5/_dados/*.json` e refaz a MESMA conta de
+`construirTimelineMobileV5`/`construirTimelineDesktopV5` (gerar-v5.js)
+só que sem chamar `sintetizarTrechoV5` — é só aritmética (soma
+GAP/PAD_CHECKOUT/TRAIL_FECHO, `dividirDuracaoEntreClipes`), então as
+durações de cena da v6 são IDÊNTICAS às da v5 (Instagram 40,0s,
+portfólio 41,8s) sem gastar 1 chamada de Piper. Export adicional em
+`gerar-v5.js` (`PAD_CHECKOUT`, `dividirDuracaoEntreClipes`,
+`NOME_PARA_CLIPE`) — só tornou públicas funções/constantes que já
+existiam no módulo (closures), nenhum comportamento da v5 mudou (o
+próprio `node tour/rodar-v5.js` continua idêntico, não foi tocado).
+
+2026-11-10 — Rodada 13, ACHADO: a legenda karaokê do Instagram está
+QUEIMADA no pixel do vídeo final da v5 (faz parte do frame renderizado
+pelo Remotion, não é uma faixa separada) — não existe jeito de
+"remover" isso de um vídeo já renderizado sem reprocessar a imagem.
+Único jeito de entregar o Instagram sem legenda era re-rodar o render
+Remotion (bundle + renderMedia) com a legenda desligada nos props —
+usei a MESMA prop que já existia (`legendaBlocos`): `TourMobile.js` só
+chama `<LegendaKaraoke>` quando essa prop não é nula/vazia, então
+passar `null` desliga sem tocar no componente nem no código da
+legenda (pedido explícito: "use prop/flag, não apague o código"). Já
+o portfólio NUNCA teve legenda queimada (o texto na tela são balões
+`DestaqueTecnico`, parte do design, não legenda) — não precisou de
+render nenhum, só reaproveitei `tour-portfolio-narrado.mp4` da v5
+(vídeo+voz, sem música) e tirei o áudio.
+
+2026-11-10 — Rodada 13, achado validando a faixa de legenda (y
+1440-1600) do Instagram v6: em vez de amostrar só alguns quadros
+"a cada 1s" (o que o pedido sugeria como suficiente), usei o filtro
+`signalstats` do ffmpeg pra medir o brilho médio (YAVG) da faixa em
+TODOS os ~1200 quadros do vídeo de uma vez (mais barato que extrair
+quadro por quadro e mais completo que amostrar) — ficou entre 204 e
+213 o vídeo inteiro (só o fundo bege da composição), confirmando que
+não sobrou nenhum resquício de legenda em nenhum instante, não só nos
+3 quadros validados antes do render.
