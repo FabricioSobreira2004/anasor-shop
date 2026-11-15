@@ -76,13 +76,23 @@ Salve este post para não esquecer. Mais dicas no link na bio 🤎
 
 ### 5. 🏺 Vaso Escultórico Silhueta e Poesia — R$ 179,90
 
-Uma silhueta feminina de braços cruzados, modelada à mão em massa cerâmica preta e queimada em alta temperatura. O tom escuro é da própria massa; o brilho vem do vidrado transparente e muda com a luz do ambiente. 🏺
+🏺 **Silhueta e Poesia** 🖤
+_Uma silhueta de braços cruzados, em cerâmica preta que muda com a luz._
 
-Funciona com um galho seco dentro ou sozinha, como escultura. Peça de autor, única.
+Modelada à mão em massa cerâmica preta, queimada em alta temperatura, sob um vidrado transparente que reflete a luz de um jeito diferente a cada ângulo. Funciona com um galho seco dentro ou sozinha, como escultura. 🖤
 
-R$ 179,90 com frete grátis. Link na bio 🤎
+✨ **Por que ele é especial**
+🖤 Modelado à mão, massa cerâmica preta queimada em alta temperatura
+💎 Peça de autor: única, não existe outra igual
+🖼️ Lindo numa mesa lateral, no hall ou na estante
 
-#vasoescultorico #ceramicaautoral #esculturaemceramica #decoracaodeinteriores #pecaunica #feitoamao
+🚚 **Frete grátis para todo o Brasil**
+💳 Pix, crédito ou débito
+🤎 R$ 179,90 · toque no **link da bio** e garanta a sua antes que alguém leve
+
+📩 Quer uma parecida, com a sua cara? Chama no direct que a gente faz por encomenda.
+
+#vasoescultorico #ceramicaautoral #esculturaemceramica #decoracaodeinteriores #pecaunica #feitoamao #ceramicapreta #artedecorativa #decoracaoautoral #presentecriativo
 
 ---
 
@@ -100,13 +110,23 @@ Detalhes, prazo e valor a gente combina pelo WhatsApp. Toque em "Encomende sua p
 
 ### 7. 🏺 Kit Jogo de Chá Pétala — R$ 399,90
 
-Bule, leiteira e três xícaras com pires em formato de pétala, todos modelados e esmaltados à mão no mesmo tom terroso, com flores rosadas aplicadas uma a uma. ☕
+☕ **Jogo de Chá Pétala** 🌸
+_Bule, leiteira e três xícaras que viram ritual de cafezinho._
 
-Nenhuma peça sai do forno igual à outra, e aqui elas se juntaram num conjunto verdadeiramente único. Para transformar o cafezinho num pequeno ritual.
+Modelados e esmaltados à mão no mesmo tom terroso, com flores rosadas aplicadas uma a uma — nenhuma peça sai do forno igual à outra. Juntas, formam um conjunto completo e verdadeiramente único. ☕
 
-R$ 399,90 com frete grátis para todo o Brasil. Link na bio 🤎
+✨ **Por que ele é especial**
+🤲 Modelado e esmaltado à mão, peça a peça
+💎 Kit completo: bule, leiteira e 3 xícaras com pires — 8 peças
+🖼️ Transforma o cafezinho num pequeno ritual
 
-#jogodecha #ceramicaartesanal #mesaposta #cafedatarde #pecaunica #feitoamao #presenteartesanal
+🚚 **Frete grátis para todo o Brasil**
+💳 Pix, crédito ou débito
+🤎 R$ 399,90 · toque no **link da bio** e garanta a sua antes que alguém leve
+
+📩 Quer um conjunto parecido, com a sua cara? Chama no direct que a gente faz por encomenda.
+
+#jogodecha #ceramicaartesanal #mesaposta #cafedatarde #pecaunica #feitoamao #presenteartesanal #kitceramica #conjuntoartesanal #ritualdocafe
 
 ---
 
@@ -124,13 +144,23 @@ Obrigada pelo carinho e por escolher uma peça feita à mão. A sua pode ser a p
 
 ### 9. 🏺 Prato Decorativo Pavão Real — R$ 174,90
 
-Um pavão azul de perfil, penacho erguido e o leque de plumas abrindo em "olhos" verdes e dourados, sobre um fundo cinza-pérola aquarelado. 🦚
+🦚 **Pavão Real** 🪶
+_Um pavão azul de perfil, leque de plumas abrindo em "olhos" verdes e dourados._
 
-Pintado à mão e assinado pela artesã, é a peça mais sofisticada do ateliê. Pede uma parede de destaque.
+Pintado à mão sobre um fundo cinza-pérola aquarelado, é a peça mais sofisticada do ateliê — assinada pela própria artesã. Pede uma parede de destaque, um cavalete de mesa ou uma estante bem composta. 🎨
 
-R$ 174,90 com frete grátis. Link na bio 🤎
+✨ **Por que ele é especial**
+🤲 Pintado à mão e assinado pela artesã
+💎 Peça única: não existe outra igual
+🖼️ Presente de peso pra uma data que merece
 
-#pavao #pratodecorativo #pintadoamao #ceramicaartesanal #decoracaodeparede #pecaunica #feitoamao
+🚚 **Frete grátis para todo o Brasil**
+💳 Pix, crédito ou débito
+🤎 R$ 174,90 · toque no **link da bio** e garanta a sua antes que alguém leve
+
+📩 Quer uma parecida, com a sua cara? Chama no direct que a gente faz por encomenda.
+
+#pavao #pratodecorativo #pintadoamao #ceramicaartesanal #decoracaodeparede #pecaunica #feitoamao #pecaassinada #artesanatobrasileiro #presentedeluxo
 
 ---
 
@@ -148,13 +178,23 @@ Cada flor, cada pássaro, cada pétala dos pratos é pintada à mão, uma de cad
 
 ### 11. 🏺 Caneca Artística Buquê de Rosas Esculpidas — R$ 154,90
 
-A alça desta caneca virou um buquê: rosas vermelhas esculpidas uma a uma brotam de uma folha verde que serve de apoio para os dedos. 🌹
+🌹 **Buquê de Rosas Esculpidas** ☕
+_A alça desta caneca virou um buquê de rosas vermelhas._
 
-O corpo em esmalte branco-esverdeado em degradê deixa o vermelho das rosas ainda mais vivo. Um detalhe tridimensional raro em cerâmica de uso diário.
+Rosas esculpidas uma a uma brotam de uma folha verde que serve de apoio pros dedos — um detalhe tridimensional raro em cerâmica de uso diário. O corpo em esmalte branco-esverdeado degradê deixa o vermelho ainda mais vivo. 🌿
 
-R$ 154,90 com frete grátis. Link na bio 🤎
+✨ **Por que ela é especial**
+🤲 Rosas esculpidas à mão, uma a uma
+💎 Peça única: não existe outra igual
+🖼️ Um objeto de admiração na hora do café
 
-#canecaartesanal #rosas #ceramicaesculpida #cafecomarte #presenteespecial #pecaunica #feitoamao
+🚚 **Frete grátis para todo o Brasil**
+💳 Pix, crédito ou débito
+🤎 R$ 154,90 · toque no **link da bio** e garanta a sua antes que alguém leve
+
+📩 Quer uma parecida, com a sua cara? Chama no direct que a gente faz por encomenda.
+
+#canecaartesanal #rosas #ceramicaesculpida #cafecomarte #presenteespecial #pecaunica #feitoamao #canecadecorada #presenteparaela #arteemceramica
 
 ---
 
@@ -172,13 +212,23 @@ Me chama no WhatsApp para a gente conversar sobre detalhes, prazo e valor. É s�
 
 ### 13. 🏺 Boleira Jardim de Morangos — R$ 234,90
 
-Uma boleira com tampa em cerâmica bege, coroada por um puxador em formato de flor e cercada por uma grinalda de morangos e florzinhas pintados à mão. 🍓
+🍓 **Jardim de Morangos** 🌸
+_Uma boleira cercada por uma grinalda de morangos e florzinhas pintados à mão._
 
-Protege o bolo e, mesmo fechada, enfeita a cozinha. Perfeita para quem ama receber visitas no café da tarde.
+Tem tampa em cerâmica bege, coroada por um puxador em formato de flor — protege o bolo da poeira e das moscas, mas é peça de presença própria mesmo fechada. Perfeita para o café da tarde. ☕
 
-R$ 234,90 com frete grátis para todo o Brasil. Link na bio 🤎
+✨ **Por que ela é especial**
+🤲 Morangos e florzinhas pintados à mão, um a um
+💎 Peça única: não existe outra igual
+🖼️ Linda na mesa ou só de enfeite na cozinha
 
-#boleira #cafedatarde #ceramicaartesanal #cozinhaafetiva #pintadoamao #pecaunica #feitoamao
+🚚 **Frete grátis para todo o Brasil**
+💳 Pix, crédito ou débito
+🤎 R$ 234,90 · toque no **link da bio** e garanta a sua antes que alguém leve
+
+📩 Quer uma parecida, com a sua cara? Chama no direct que a gente faz por encomenda.
+
+#boleira #cafedatarde #ceramicaartesanal #cozinhaafetiva #pintadoamao #pecaunica #feitoamao #decoracaodecozinha #presenteafetivo #mesaposta
 
 ---
 
@@ -334,13 +384,23 @@ Mandou foto? Eu reposto com carinho. Quer começar a sua coleção? Link na bio 
 
 ### 26. 🏺 Caneca Artística Surpresa Cachorrinho — R$ 109,90
 
-Uma caneca com segredo: no fundo, um cachorrinho em miniatura, modelado e pintado à mão, espera aparecer assim que a última gota é bebida 🐶
+🐶 **Surpresa Cachorrinho** ☕
+_Uma caneca com segredo escondido no fundo._
 
-Transforma o café da manhã num momento de sorriso. Presente certeiro para quem é apaixonado por cachorro.
+No fundo dela, um cachorrinho em miniatura, modelado e pintado à mão, espera aparecer assim que a última gota é bebida — a surpresa vai se revelando aos poucos, conforme você bebe ou inclina a caneca (dá pra ver o efeito no vídeo do post). 🎥
 
-R$ 109,90 com frete grátis. Link na bio 🤎
+✨ **Por que ela é especial**
+🤲 Modelada e pintada à mão, cachorrinho incluso
+💎 Edição limitada: peça pequena e rara de se repetir
+🖼️ Ideal pra presentear quem ama um toque de fantasia
 
-#canecaartesanal #canecacomsurpresa #cachorro #ceramicaartesanal #presenteespecial #pecaunica #feitoamao
+🚚 **Frete grátis para todo o Brasil**
+💳 Pix, crédito ou débito
+🤎 R$ 109,90 · toque no **link da bio** e garanta a sua antes que alguém leve
+
+📩 Quer uma parecida, com a sua cara? Chama no direct que a gente faz por encomenda.
+
+#canecaartesanal #canecacomsurpresa #cachorro #ceramicaartesanal #presenteespecial #pecaunica #feitoamao #edicaolimitada #canecadivertida #amantesdepet
 
 ---
 
@@ -358,13 +418,23 @@ Link na bio 🤎
 
 ### 28. 🏺 Travessa Decorativa Asas do Paraíso — R$ 299,90
 
-Duas hastes de estrelícia, a ave-do-paraíso, em laranja e roxo vibrantes, sobem entre folhas longas verde-oliva e cobrem quase toda a travessa oval. 🌺
+🌺 **Asas do Paraíso** 🦜
+_Duas hastes de estrelícia abrindo como um pássaro prestes a alçar voo._
 
-Modelada e pintada à mão no ateliê, pede lugar de destaque na mesa posta.
+Modelada e pintada à mão no ateliê, em laranja e roxo vibrantes sobre folhas longas verde-oliva, cobrindo quase toda a extensão oval da travessa. Uma peça grande e generosa, pra quem gosta de receber com presença. 🌿
 
-R$ 299,90 com frete grátis. Link na bio 🤎
+✨ **Por que ela é especial**
+🤲 Modelada e pintada à mão, do começo ao fim
+💎 Peça única: não existe outra igual
+🖼️ Pede lugar de destaque numa mesa posta
 
-#travessa #mesaposta #avedoparaiso #pintadoamao #ceramicaartesanal #pecaunica #feitoamao
+🚚 **Frete grátis para todo o Brasil**
+💳 Pix, crédito ou débito
+🤎 R$ 299,90 · toque no **link da bio** e garanta a sua antes que alguém leve
+
+📩 Quer uma parecida, com a sua cara? Chama no direct que a gente faz por encomenda.
+
+#travessa #mesaposta #avedoparaiso #pintadoamao #ceramicaartesanal #pecaunica #feitoamao #decoracaodemesa #pecagrande #presenteparareceber
 
 ---
 
@@ -394,13 +464,23 @@ R$ 134,90 com frete grátis. Link na bio 🤎
 
 ### 31. 🏺 Vaso Escultórico Manto de Folhas — R$ 159,90
 
-Duas grandes folhas curvadas que se envolvem e, juntas, viram o vaso 🍂
+🍂 **Manto de Folhas** 🤎
+_Duas grandes folhas curvadas que se envolvem e viram vaso._
 
-Modelado à mão, com acabamento em bronze escuro metálico que reluz de perto e recolhe a luz no escuro. Fica lindo com um arranjo ou sozinho, na mesa de entrada, num nicho ou na estante.
+Modelado à mão, com acabamento em bronze escuro metálico que reluz de perto e recolhe a luz no escuro. Orgânico e escultural, fica lindo com um arranjo dentro ou sozinho, como peça decorativa. 🌿
 
-R$ 159,90 com frete grátis para todo o Brasil. Link na bio 🤎
+✨ **Por que ele é especial**
+🤲 Modelado à mão, do começo ao fim
+💎 Peça única: não existe outra igual
+🖼️ Lindo na mesa de entrada, num nicho ou na estante
 
-#vasoescultorico #ceramicaautoral #decoracaodeinteriores #ceramicaartesanal #pecaunica #feitoamao
+🚚 **Frete grátis para todo o Brasil**
+💳 Pix, crédito ou débito
+🤎 R$ 159,90 · toque no **link da bio** e garanta a sua antes que alguém leve
+
+📩 Quer uma parecida, com a sua cara? Chama no direct que a gente faz por encomenda.
+
+#vasoescultorico #ceramicaautoral #decoracaodeinteriores #ceramicaartesanal #pecaunica #feitoamao #vasodecorativo #decoracaoautoral #acabamentometalico #presentecriativo
 
 ---
 
