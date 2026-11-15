@@ -647,3 +647,61 @@ em vez de sair "quebrada" (metade em negrito, acento caído de volta pro
 normal). O "h" itálico minúsculo tem 1 exceção conhecida no padrão
 Unicode (ponto de código reservado) — usa U+210E (ℎ, visualmente
 idêntico) em vez do bloco principal.
+
+## Rodada 15 — Capas dos destaques (v3), modo totalmente autônomo (2026-11-15)
+
+Pedido: refazer as 7 capas de destaque do Instagram pela FONTE (template +
+script, não arte editada à mão) — a v2 (ícone de linha fino, sem moldura)
+tinha sido reprovada: "sem borda, sem símbolo, simples demais". Sem
+nenhuma pergunta durante a execução — decisões abaixo.
+
+2026-11-15 — Paleta: o pedido citou terracota #B5754C e ouro #B8873E; a
+Rodada 14 (acima) já tinha decidido manter a cor REAL do site
+(`--cor-destaque` #9E4F2E) em vez do hex do pedido, por contraste WCAG —
+mesma decisão repetida aqui, pelo mesmo motivo, lendo `css/style.css` via
+`lerVariaveisCss()` em vez de hard-codar. O dourado usa o mesmo
+`#D9B06A` já usado nos medalhões 3D dos posts (não um nº novo).
+2026-11-15 — Local de saída: `marketing/instagram/destaques/`, DENTRO do
+repositório — diferente de `instagram-posts/` (que vai para `site-mae/`,
+fora do git). Pedido explícito desta rodada. Como as capas são 100%
+geradas pelo script (nenhuma edição manual), ficam de fora do `git`
+mesmo assim (`.gitignore`, mesmo padrão já usado para `posts/`) — só o
+script e o guia (`destaques.md`) são versionados.
+2026-11-15 — Raminho decorativo: a 1ª versão (curva livre à mão) lia
+como anzol/alfinete num zoom normal. Reescrita com trigonometria
+(`pontoNoAnel`/`RAIO_RAMINHO`) pra desenhar um ARCO de verdade sobre o
+raio do próprio anel (contorna o anel de fato) + 3 folhas (elipses
+tangentes) + 1 flor simples na ponta — sempre no mesmo ângulo nos 7,
+pra fileira parecer conjunto.
+2026-11-15 — Ícone de "Bastidores" (roda de oleiro): 3 tentativas
+reprovadas em sequência durante a própria rodada — elipse+arco fino leu
+como chapéu, elipse+bojo arredondado também leu como chapéu, círculo+
+bolinha (vista de cima) leu como olho/alvo. A versão final é um disco
+BEM achatado (visto quase de cima, elipse rasa) com o bolo de argila
+raso por dentro do próprio contorno (nunca subindo acima da silhueta) +
+2 riscos de giro simétricos — "disco achatado girando" não lia como mais
+nada nos testes.
+2026-11-15 — Ícone de "Comprar?": testado com sacola (lia como "loja",
+redundante com o ícone de Peças) e com um ícone de interrogação dentro
+de outro círculo (Lucide `circle-help` — lia como "2 molduras
+concêntricas" de longe, competindo com a própria moldura da capa). O "?"
+grande sozinho, em Fraunces, no mesmo peso visual dos outros ícones, foi
+o único inequívoco — opção que o próprio pedido já deixava em aberto.
+2026-11-15 — Legibilidade do texto a ~70px (tamanho real no perfil):
+fisicamente impossível ler uma palavra nesse tamanho sem tomar o espaço
+inteiro do ícone (medido no mock `_mockup-perfil-390.png` a cada
+rodada de ajuste). Decisão: o ÍCONE é o elemento que precisa ler nesse
+tamanho (por isso ocupa 54% do núcleo da moldura, não os ~43% da 1ª
+versão) — o texto fica como reforço de marca pros tamanhos maiores
+(story aberto, feed), não como rótulo funcional da miniatura.
+2026-11-15 — `impeccable`/`frontend-design`: consultadas as diretrizes
+das 2 skills (hierarquia/peso visual, "gastar a ousadia num lugar só")
+antes de desenhar, mas sem rodar o setup completo do `impeccable`
+(`impeccable context`/PRODUCT.md/DESIGN.md) — é pensado pra superfícies
+de app/site inteiras, não pra um gerador de 7 PNGs estáticos; custaria
+tempo sem agregar nada que a verificação visual direta (Read da própria
+imagem gerada) já não resolvesse.
+2026-11-15 — `chrome-browser` não foi usado: a tarefa é geração de
+imagem estática via Playwright (mesmo motor dos outros scripts desta
+pasta), não interação com uma página viva — a verificação visual foi
+feita lendo os PNGs gerados diretamente, sem abrir navegador.

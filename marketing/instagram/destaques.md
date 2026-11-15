@@ -2,19 +2,58 @@
 
 Cada destaque tem de 3 a 5 stories curtos. Os textos usam apenas informações reais da loja: `politicas.html` (compra, envio, trocas, cuidados e FAQ) e `js/produtos.js` (peças e preços). **Nada de prazo de encomenda inventado:** prazo e valor de encomenda são sempre combinados pelo WhatsApp.
 
-## Capas dos destaques
+## Capas dos destaques (v3 — gerar-capas-destaque.js)
 
-Círculo bege (#EFE3D0) com o emoji no centro, sem texto. O 🤎 da capa de Cuidados é a mesma assinatura do site e da bio.
+A v1 (emoji cru sobre círculo bege) e a v2 (ícone de linha fino, fundo
+alternado, sem moldura) foram reprovadas pelo Fabrício: "sem borda, sem
+símbolo, simples demais". A v3 (2026-11-15, modo autônomo) dá a cada
+destaque uma **moldura circular 3D** — a mesma linguagem do redesign v4
+dos posts (`gerar-posts.js`) — e um **ícone + 1 palavra** em vez de
+emoji. Gerar com `node gerar-capas-destaque.js` (dentro de
+`marketing/instagram/`); saída em `marketing/instagram/destaques/`
+(fora do git, ver `.gitignore` — reproduzível a qualquer momento a
+partir do script).
 
-| Destaque | Emoji da capa |
-|---|---|
-| Peças Únicas | 🏺 |
-| Bastidores | 🎬 |
-| Como Comprar | 🛍️ |
-| Encomendas | ✨ |
-| Cuidados com a Peça | 🤎 |
+**Cada capa, de fora para dentro:**
+1. Fundo creme (`--cor-fundo`) liso com o padrão "AS" bem suave
+   (`--marca-monograma-fraca`, 3,5% de opacidade) + textura de grão.
+2. Moldura circular 3D "cerâmica esmaltada": respiro creme → anel
+   terracota (`--cor-destaque`) → fio dourado (mesmo `#D9B06A` dos
+   medalhões dos posts) → bisel/brilho e sombra interna via `box-shadow`
+   (mesma técnica de `.rosto-anasor`/`.confianca__medalhao` em
+   `gerar-posts.js`) → sombra de contato no fundo.
+3. Um raminho dourado fino contornando uma parte do anel (sempre no
+   mesmo ângulo nos 7, pra fileira parecer um conjunto — não é a
+   `--marca-flor` do site, que já vem com cor/opacidade fixas no SVG;
+   é um desenho próprio, calculado por trigonometria sobre o raio do
+   anel, em `raminhoHtml()`).
+4. Ícone grande (ou a foto da Anasor, no caso de Ateliê) num "puck"
+   creme bem sutil (relevo gummy discreto, não uma 2ª moldura) + o nome
+   do destaque embaixo, em Fraunces.
 
-**Emojis nos stories:** no máximo um por story, e o último story de cada destaque termina com a assinatura 🤎.
+**Os 7 destaques:**
+
+| Destaque | Ícone | Texto na capa |
+|---|---|---|
+| Peças | Vaso de cerâmica (traço próprio) | Peças |
+| Como Comprar | "?" grande em Fraunces (testado contra sacola e ícone de interrogação em círculo — os dois liam pior reduzidos) | Comprar? |
+| Frete Grátis | Caminhão (Lucide `truck`, mesmo ícone do selo de frete dos posts) | Frete grátis |
+| Encomendas | Pincel com ponta sólida + gota de tinta (traço próprio) | Encomende |
+| Ateliê | Rosto da Anasor (`img/institucional/quem-somos.jpg`, mesmo recorte circular dos posts) | Ateliê |
+| Bastidores | Disco de argila visto de cima + bolo central + riscos de giro (traço próprio — 3 tentativas anteriores com elipse em perspectiva liam como chapéu) | Bastidores |
+| Cuidados | Gota sobre mãos em concha (traço próprio) | Cuidados |
+
+**Legibilidade real (~60-80px no perfil):** nenhuma palavra lê nesse
+tamanho — é físico, não dá pra caber texto legível num círculo tão
+pequeno sem lotar o ícone. A decisão foi priorizar a SILHUETA do ícone
+(ocupa 54% do núcleo da moldura) e deixar o texto como reforço visível
+só em tamanhos maiores (story aberto, feed, etc.). Conferido no mock
+`_mockup-perfil-390.png` (largura real de celular) a cada rodada de
+ajuste de ícone.
+
+**Antes de mudar o design de novo:** o script apaga e regenera toda a
+pasta `destaques/` a cada execução — nenhuma capa é editada à mão, então
+não existe o risco de perder trabalho ao rodar de novo.
 
 ---
 

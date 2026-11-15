@@ -1,29 +1,48 @@
 #!/usr/bin/env node
 // ============================================================
-// Capas dos 5 destaques do Instagram — v2 (Rodada 5, item 3).
+// Capas dos destaques do Instagram — v3 (pedido explícito do Fabrício,
+// modo autônomo, 2026-11-15; ver destaques.md e DECISOES.md Rodada 15).
 //
-// A v1 (E:\projetos\site-mae\instagram-perfil\*.png) usava o EMOJI
-// literal (🏺🎬🛍️✨🤎) sobre um círculo bege — cores genéricas do
-// emoji (amarelo/laranja vivo), fora da paleta da marca. Esta v2 usa
-// ilustração vetorial em LINHA (SVG, traço único, cor da marca),
-// temática por destaque, com fundo alternando bege/marrom pra fileira
-// ficar harmônica — pedido explícito.
+// A v1 (emoji cru sobre círculo bege) e a v2 (ícone de linha fino, sem
+// moldura, fundo liso) foram reprovadas: "sem borda, sem símbolo, simples
+// demais". v3 dá a cada destaque uma moldura circular 3D (anel duplo
+// terracota+ouro com bisel/brilho e sombra interna, como cerâmica
+// esmaltada) — a MESMA receita de sombras em camadas do redesign v4 dos
+// posts (gerar-posts.js: .rosto-anasor/.confianca__medalhao) — pra também
+// combinar com o padrão novo dos posts, não só parecer "bonito à parte".
 //
+//   cd marketing/instagram
 //   node gerar-capas-destaque.js
 //
-// Saída: E:\projetos\site-mae\instagram-perfil\v2\capa-<nome>.png
-// (1080x1920, mesmo formato da v1) + _folha-contato.png (as 5 lado a
-// lado, pra crítica visual em bloco).
+// Saída: marketing/instagram/destaques/ (DENTRO do repositório, por
+// pedido explícito desta rodada — ao contrário de instagram-posts/, que
+// vai para site-mae/). Como são PNGs gerados, 100% reproduzíveis a partir
+// deste script, ficam fora do git (.gitignore), igual a instagram-posts/.
+// Cada destaque sai em 1080x1920 (Story — é o formato que o Instagram
+// recebe ao criar um destaque) e 1080x1080 (quadrado, mais fácil de
+// comparar lado a lado); + um mock da fileira do perfil em 390px (largura
+// real de tela de celular) para validar legibilidade no tamanho de
+// exibição real (~60-80px de diâmetro).
+// ============================================================
+
 const fs = require('fs');
 const path = require('path');
 const { chromium } = require('playwright');
 
 const RAIZ = path.resolve(__dirname, '..', '..');
-const SAIDA = path.resolve(RAIZ, '..', 'site-mae', 'instagram-perfil', 'v2');
+const SAIDA = path.resolve(__dirname, 'destaques');
 const LARGURA = 1080;
-const ALTURA = 1920;
+const ALTURA_STORY = 1920;
+const ALTURA_QUADRADA = 1080;
 
-// ---- Cores da marca (mesma técnica de gerar-posts.js/reel.js) ----
+// Ouro da marca: MESMO hex do selo "Mais Vendido" / medalhões do redesign
+// v4 dos posts (ver gerar-posts.js, constante DOURADO) — duplicado aqui
+// (não importado) porque cada script de marketing/instagram é standalone
+// (mesmo padrão já usado pelos outros arquivos desta pasta).
+const DOURADO = '#D9B06A';
+
+// ---- Cores/texturas da marca: lidas de css/style.css, fonte única do
+// site (mesma técnica de gerar-posts.js/gerar-capas-destaque.js v2) ----
 function lerVariaveisCss() {
   const css = fs.readFileSync(path.join(RAIZ, 'css', 'style.css'), 'utf8');
   const pegar = (nome) => {
@@ -37,162 +56,340 @@ function lerVariaveisCss() {
     destaque: pegar('cor-destaque'),
     destaqueEscuro: pegar('cor-destaque-escuro'),
     secundaria: pegar('cor-secundaria'),
+    grao: pegar('textura-grao'),
+    // "AS" bem suave (3,5% de opacidade) para o fundo FORA do círculo —
+    // é o padrão pedido ("fundo creme liso com o padrão AS bem suave").
+    // O v4 dos posts usa a versão forte (10%) porque lá o padrão cobre
+    // uma arte inteira; aqui ele só preenche a moldura do perfil, por
+    // isso a versão fraca original do site, não a forte do redesign.
+    monogramaFraco: pegar('marca-monograma-fraca'),
   };
 }
 
-// ---- Ícones de linha (SVG, viewBox 0 0 100 100, stroke único) ----
-// Traço consistente (stroke-width 3.2, round cap/join) nos 5 — é isso
-// que dá "série"/consistência entre os destaques, mesmo com desenhos
-// diferentes. Vetoriais de propósito (escala sem perder nitidez).
-const TRACO = 'fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"';
-
-const ICONES = {
-  // Vaso com brilho — mesma silhueta "artesanal" das ilustrações
-  // decorativas do próprio site (ver fundo da Home).
-  'pecas-unicas': `
-    <path ${TRACO} d="M38 30 Q38 22 50 22 Q62 22 62 30 L65 55 Q68 70 68 80 Q68 92 50 92 Q32 92 32 80 Q32 70 35 55 Z"/>
-    <path ${TRACO} d="M40 30 L60 30"/>
-    <path ${TRACO} d="M40 48 Q50 52 60 48" opacity="0.6"/>
-    <path ${TRACO} d="M74 24 L78 32 L86 34 L78 36 L74 44 L70 36 L62 34 L70 32 Z"/>
-  `,
-  // Roda de oleiro (disco visto de lado, em perspectiva) + peça
-  // subindo + 2 linhas de movimento — "bastidores do torno".
-  bastidores: `
-    <ellipse cx="50" cy="72" rx="30" ry="9" ${TRACO}/>
-    <path ${TRACO} d="M42 72 L44 48 Q44 38 50 38 Q56 38 56 48 L58 72"/>
-    <path ${TRACO} d="M18 60 Q14 66 18 72" opacity="0.7"/>
-    <path ${TRACO} d="M82 60 Q86 66 82 72" opacity="0.7"/>
-  `,
-  // Sacola de compras com laço — "como comprar".
-  'como-comprar': `
-    <path ${TRACO} d="M28 40 L72 40 L68 88 L32 88 Z"/>
-    <path ${TRACO} d="M38 40 Q38 22 50 22 Q62 22 62 40"/>
-    <path ${TRACO} d="M44 56 Q50 62 56 56" opacity="0.7"/>
-    <circle cx="50" cy="48" r="4" ${TRACO}/>
-  `,
-  // Lápis + esboço + estrela — "encomendas sob medida".
-  encomendas: `
-    <path ${TRACO} d="M30 82 L34 68 L68 34 L78 44 L44 78 Z"/>
-    <path ${TRACO} d="M64 38 L74 48"/>
-    <path ${TRACO} d="M30 82 L24 86 L28 78 Z"/>
-    <path ${TRACO} d="M80 22 L83 29 L90 31 L83 33 L80 40 L77 33 L70 31 L77 29 Z"/>
-  `,
-  // Gotas d'água sobre mãos em concha — "cuidados com a peça".
-  cuidados: `
-    <path ${TRACO} d="M24 68 Q24 84 42 84 Q52 84 56 76"/>
-    <path ${TRACO} d="M76 68 Q76 84 58 84"/>
-    <path ${TRACO} d="M50 28 Q62 44 62 54 Q62 64 50 64 Q38 64 38 54 Q38 44 50 28 Z"/>
-  `,
-};
-
-const DESTAQUES = [
-  { nome: 'pecas-unicas', titulo: 'Peças Únicas', fundoAlt: false },
-  { nome: 'bastidores', titulo: 'Bastidores', fundoAlt: true },
-  { nome: 'como-comprar', titulo: 'Como Comprar', fundoAlt: false },
-  { nome: 'encomendas', titulo: 'Encomendas', fundoAlt: true },
-  { nome: 'cuidados', titulo: 'Cuidados com a Peça', fundoAlt: false },
-];
-
-// Textura de papel — ruído SVG leve, mesma técnica de VinhetaGrao no
-// motor de Reels (feTurbulence), reaproveitada aqui como padrão, não
-// importada (arquivo HTML solto, sem require entre pacotes).
-function texturaPapelCss() {
-  const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'>
-    <filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/></filter>
-    <rect width='100%' height='100%' filter='url(#n)'/>
-  </svg>`;
-  return `data:image/svg+xml,${encodeURIComponent(svg)}`;
+// As fotos/a logo entram como data URI: o HTML é montado em memória e o
+// Chromium bloqueia file:// a partir de uma página sem origem (mesmo
+// motivo documentado em gerar-posts.js).
+function dataUri(arquivo) {
+  const ext = path.extname(arquivo).slice(1).toLowerCase().replace('jpg', 'jpeg');
+  return `data:image/${ext};base64,${fs.readFileSync(arquivo).toString('base64')}`;
 }
 
-function montarHtml(destaque, v) {
-  const corFundo = destaque.fundoAlt ? v.texto : v.fundo;
-  const corIcone = destaque.fundoAlt ? v.fundo : v.destaque;
-  const corAro = destaque.fundoAlt ? 'rgba(251,246,239,0.35)' : 'rgba(62,46,34,0.22)';
-  const logoJpg = fs.readFileSync(path.join(RAIZ, 'img', 'institucional', 'logo-anasor.jpg')).toString('base64');
-  return `<!doctype html><html><head><meta charset="utf-8">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500..700&family=Jost:wght@400;500&display=block" rel="stylesheet">
+// ---- Rosto da Anasor (Ateliê) — MESMO recorte/função de gerar-posts.js
+// (rostoAnasorHtml/ROSTO_ANASOR_RECORTE), duplicado aqui pelo mesmo motivo
+// (scripts standalone). Se a foto-fonte for trocada, remedir nos DOIS
+// lugares — ver comentário original em gerar-posts.js.
+const ROSTO_ANASOR_RECORTE = { x: 280, y: 290, lado: 560 };
+function rostoAnasorHtml(fotoUri, diametro) {
+  const escala = diametro / ROSTO_ANASOR_RECORTE.lado;
+  const larguraOriginal = 1195 * escala;
+  const alturaOriginal = 896 * escala;
+  const esquerda = -ROSTO_ANASOR_RECORTE.x * escala;
+  const topo = -ROSTO_ANASOR_RECORTE.y * escala;
+  return `<div class="rosto" style="width:${diametro}px;height:${diametro}px;">
+    <img src="${fotoUri}" alt="Anasor Sobreira" style="width:${larguraOriginal}px;height:${alturaOriginal}px;left:${esquerda}px;top:${topo}px;">
+  </div>`;
+}
+
+// ---- Ícones (traço único, mesma espessura/estilo Lucide do resto do
+// site — ver politicas.html e gerar-posts.js) ----
+// "truck" é o MESMO path de gerar-posts.js (Lucide "truck"), duplicado
+// pelo mesmo motivo de sempre (scripts standalone). Os outros 4 são
+// desenho próprio (vaso, roda de oleiro, pincel, gotas) no mesmo espírito
+// — viewBox 100x100, traço único grosso — porque não têm um equivalente
+// direto e fiel no set Lucide já usado no site.
+const TRACO = 'fill="none" stroke="currentColor" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"';
+const ICONES_100 = {
+  // Vaso de cerâmica (silhueta "artesanal", sem o brilho/sparkle da v2 —
+  // aqui some de propósito: sparkle é a linguagem visual do selo
+  // "Novidade" em outro lugar do sistema, repeti-la aqui confundiria).
+  // v3.1: a linha de brilho da barriga (opacity 0.55) some no mockup de
+  // 390px e não ajuda em nada a identificar "vaso" — tirada; sobra só a
+  // silhueta + a linha da boca, que É o que faz ler como vaso/pote.
+  vaso: `
+    <path ${TRACO} d="M38 28 Q38 20 50 20 Q62 20 62 28 L65 54 Q68 70 68 80 Q68 93 50 93 Q32 93 32 80 Q32 70 35 54 Z"/>
+    <path ${TRACO} d="M39 28 L61 28"/>
+  `,
+  // v3.1: 3 tentativas anteriores falharam — qualquer coisa alta em cima
+  // da elipse lia como chapéu, e o círculo+bolinha visto de cima lia
+  // como olho/alvo (ver mockup das duas rodadas passadas). O problema
+  // era a SILHUETA total subir acima da largura do disco; esta versão
+  // mantém tudo raso, dentro do contorno largo e achatado do disco (o
+  // "bolo" de argila é baixo, não uma torre) + riscos de giro simétricos
+  // dos dois lados — menos ambíguo: só "disco achatado girando".
+  'roda-de-oleiro': `
+    <ellipse cx="50" cy="58" rx="36" ry="15" ${TRACO}/>
+    <ellipse cx="50" cy="52" rx="15" ry="7" fill="currentColor" stroke="none"/>
+    <path ${TRACO} d="M8 50 Q2 58 8 66" opacity="0.6"/>
+    <path ${TRACO} d="M92 50 Q98 58 92 66" opacity="0.6"/>
+  `,
+  // v3.1: a v1 (cabo + 2 linhas finas formando a ponta + bolinha solta)
+  // lia como "termômetro"/"fósforo aceso", não pincel — a ponta em
+  // TRAÇO fino não tinha massa suficiente pra ler como cerdas. Esta
+  // versão preenche a ponta (cunha SÓLIDA, não só contorno) — é o que dá
+  // o "peso" de cerdas de pincel — + 1 gota de tinta, também sólida.
+  pincel: `
+    <path ${TRACO} d="M78 14 L48 44"/>
+    <path fill="currentColor" stroke="none" d="M46 42 L28 60 L38 69 L54 51 Z"/>
+    <circle cx="21" cy="70" r="5" fill="currentColor" stroke="none"/>
+  `,
+  // Gotas sobre mãos em concha — "cuidados com a peça" (mesmo desenho da
+  // v2, já cobria bem o pedido "gota/coração").
+  gotas: `
+    <path ${TRACO} d="M22 66 Q22 84 42 84 Q53 84 57 75"/>
+    <path ${TRACO} d="M78 66 Q78 84 58 84"/>
+    <path ${TRACO} d="M50 24 Q63 42 63 53 Q63 64 50 64 Q37 64 37 53 Q37 42 50 24 Z"/>
+  `,
+};
+function svgIcone100(nome, tamanho, cor) {
+  return `<svg width="${tamanho}" height="${tamanho}" viewBox="0 0 100 100" style="color:${cor}">${ICONES_100[nome]}</svg>`;
+}
+// Caminhão: Lucide "truck", viewBox 24, igual ao usado no selo "Frete
+// grátis" dos posts (gerar-posts.js, ICONES.truck) — mesmo ícone, mesma
+// peça de informação ("frete grátis"), em escala maior.
+const ICONE_CAMINHAO = '<path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/><path d="M15 18H9"/><path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14"/><circle cx="17" cy="18" r="2"/><circle cx="7" cy="18" r="2"/>';
+function svgCaminhao(tamanho, cor) {
+  return `<svg width="${tamanho}" height="${tamanho}" viewBox="0 0 24 24" fill="none" stroke="${cor}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${ICONE_CAMINHAO}</svg>`;
+}
+
+// ---- Medidas da moldura (ver destaques.md para o detalhe de cada uma)
+// Tudo dentro de CIRCULO_TOTAL (788px) fica dentro do círculo de ~800px
+// pedido, com folga; fora dele é só fundo creme + "AS" bem suave.
+// Vêm ANTES do raminho de propósito: raminhoHtml() precisa de NUCLEO/
+// CIRCULO_TOTAL já calculados pra desenhar o arco certo.
+const NUCLEO = 700;      // disco creme com a textura/ícone/texto
+const ANEL_RESPIRO = 8;  // faixa creme entre o núcleo e o anel terracota
+const ANEL_TERRACOTA = 28; // até aqui = anel terracota com 20px de espessura
+const ANEL_OURO = 36;      // até aqui = fio dourado com 8px de espessura
+const CIRCULO_TOTAL = NUCLEO + ANEL_OURO * 2; // 772px — diâmetro total visível da moldura
+// v3.1: era 300 (43% do núcleo) — no mockup de 390px (ícone real de
+// ~72px no perfil) ficava pequeno demais pra reconhecer a silhueta.
+// 380 (54%) deixa o ícone dominar o círculo, sobrando só o essencial de
+// moldura+texto — é a troca certa, já que o TEXTO não vai ler em ~70px
+// de jeito nenhum (letra ficaria com ~2px de altura); o ícone sim.
+const SLOT_ICONE = 380; // caixa do ícone/foto — IGUAL nos 7, é o que faz a fileira parecer conjunto
+
+// ---- Raminho decorativo contornando parte do anel ----
+// Desenho próprio e fino (NÃO a --marca-flor do site: aquele SVG já vem
+// com cor/opacidade gravadas dentro do próprio data URI, não dá pra
+// recolorir/reaproveitar num traço mais visível sobre o anel dourado).
+// 1ª tentativa (curva livre à mão) lia como anzol/alfinete, não como
+// flor — esta versão usa trigonometria pra desenhar um ARCO de verdade
+// sobre o raio do anel (contorna o anel de fato, não flutua ao lado dele)
+// com 3 folhas (elipses tangentes ao arco) e uma flor simples na ponta.
+// Um só desenho, na MESMA posição/ângulo nos 7 destaques — é o que
+// mantém a fileira parecendo um conjunto, em vez de 7 flores diferentes
+// competindo com o ícone central.
+const RAIO_RAMINHO = (NUCLEO / 2 + CIRCULO_TOTAL / 2) / 2; // meio da espessura do anel terracota+ouro
+const ANGULO_INICIO = 10;  // graus (0° = direita, cresce no sentido horário)
+const ANGULO_FIM = 80;     // ~canto inferior direito do anel
+function pontoNoAnel(raio, grau) {
+  const rad = (grau * Math.PI) / 180;
+  return { x: CIRCULO_TOTAL / 2 + raio * Math.cos(rad), y: CIRCULO_TOTAL / 2 + raio * Math.sin(rad) };
+}
+function raminhoHtml() {
+  const p1 = pontoNoAnel(RAIO_RAMINHO, ANGULO_INICIO);
+  const p2 = pontoNoAnel(RAIO_RAMINHO, ANGULO_FIM);
+  const folhas = [25, 45, 65].map((grau) => {
+    const p = pontoNoAnel(RAIO_RAMINHO + 14, grau);
+    return `<ellipse cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" rx="15" ry="6" transform="rotate(${grau + 90} ${p.x.toFixed(1)} ${p.y.toFixed(1)})"/>`;
+  }).join('');
+  const flor = pontoNoAnel(RAIO_RAMINHO + 6, ANGULO_FIM);
+  return `<svg class="raminho" viewBox="0 0 ${CIRCULO_TOTAL} ${CIRCULO_TOTAL}" width="${CIRCULO_TOTAL}" height="${CIRCULO_TOTAL}"
+    fill="none" stroke="${DOURADO}" stroke-width="2.4" stroke-linecap="round">
+    <path d="M ${p1.x.toFixed(1)} ${p1.y.toFixed(1)} A ${RAIO_RAMINHO} ${RAIO_RAMINHO} 0 0 1 ${p2.x.toFixed(1)} ${p2.y.toFixed(1)}"/>
+    ${folhas}
+    <circle cx="${flor.x.toFixed(1)}" cy="${flor.y.toFixed(1)}" r="9"/>
+    <circle cx="${flor.x.toFixed(1)}" cy="${flor.y.toFixed(1)}" r="3" fill="${DOURADO}" stroke="none"/>
+  </svg>`;
+}
+
+// ---- Os 7 destaques (ícone/foto + 1-2 palavras) ----
+// "Comprar?" vira um "?" grande em Fraunces em vez de um ícone de linha:
+// opção explicitamente aberta no pedido ("pode ser só um '?' grande se
+// ler melhor") — testado em conjunto com uma sacola e um ícone de
+// interrogação em círculo (Lucide "circle-help"), os dois liam como
+// "sacola" ou "duas molduras concêntricas" de longe; o "?" sozinho, no
+// mesmo peso visual dos outros ícones, foi o único que ficou inequívoco
+// reduzido a ~70px (ver _mockup-perfil-390.png).
+const DESTAQUES = [
+  { nome: 'pecas', titulo: 'Peças', tipo: 'icone', icone: (cor) => svgIcone100('vaso', 290, cor) },
+  { nome: 'comprar', titulo: 'Comprar?', tipo: 'glifo', glifo: '?' },
+  { nome: 'frete', titulo: 'Frete grátis', tipo: 'icone', icone: (cor) => svgCaminhao(280, cor) },
+  { nome: 'encomende', titulo: 'Encomende', tipo: 'icone', icone: (cor) => svgIcone100('pincel', 290, cor) },
+  { nome: 'atelie', titulo: 'Ateliê', tipo: 'foto' },
+  { nome: 'bastidores', titulo: 'Bastidores', tipo: 'icone', icone: (cor) => svgIcone100('roda-de-oleiro', 290, cor) },
+  { nome: 'cuidados', titulo: 'Cuidados', tipo: 'icone', icone: (cor) => svgIcone100('gotas', 290, cor) },
+];
+
+function montarHtml(destaque, v, rostoUri, altura) {
+  const centroY = altura / 2;
+  const corIcone = v.destaque;
+  const miolo = destaque.tipo === 'foto'
+    ? `<div class="slot slot--foto">${rostoAnasorHtml(rostoUri, SLOT_ICONE)}</div>`
+    : destaque.tipo === 'glifo'
+      ? `<div class="slot slot--glifo" style="color:${corIcone}">${destaque.glifo}</div>`
+      : `<div class="slot slot--icone" style="color:${corIcone}">${destaque.icone(corIcone)}</div>`;
+
+  return `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=Jost:wght@400;500&display=block" rel="stylesheet">
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: ${LARGURA}px; height: ${altura}px; overflow: hidden; }
   body {
-    width: ${LARGURA}px; height: ${ALTURA}px; position: relative; overflow: hidden;
-    background: ${corFundo};
-    background-image: url("${texturaPapelCss()}");
-    background-blend-mode: ${destaque.fundoAlt ? 'soft-light' : 'multiply'};
-    background-size: 180px 180px;
+    position: relative; font-family: 'Jost', sans-serif;
+    background-color: ${v.fundo};
+    /* Fora da moldura: só o padrão "AS" bem suave sobre o creme liso —
+       pedido explícito ("fundo creme liso com o padrão AS bem suave"). */
+    background-image: ${v.monogramaFraco}, ${v.grao};
+    background-size: 240px 240px, 140px 140px;
   }
-  .marca-dagua {
-    position: absolute; right: 56px; bottom: 56px; width: 110px; opacity: ${destaque.fundoAlt ? 0.5 : 0.35};
+  .moldura {
+    position: absolute; left: 50%; top: ${centroY}px; transform: translate(-50%, -50%);
+    width: ${NUCLEO}px; height: ${NUCLEO}px; border-radius: 50%;
+    background-color: ${v.fundo};
+    background-image: ${v.grao};
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 40px;
+    /* Moldura circular 3D "cerâmica esmaltada", pedido explícito:
+       — respiro creme (ANEL_RESPIRO) separa o conteúdo do anel, pra ele
+         não "encostar" na borda colorida;
+       — anel terracota (ANEL_TERRACOTA) + fio dourado (ANEL_OURO), os
+         dois em box-shadow (não border): permite empilhar vários anéis
+         concêntricos com um raio cada, mesma técnica de .rosto-anasor em
+         gerar-posts.js;
+       — os dois insets (brilho no topo, sombra na base) são o
+         bisel/brilho + "sombra interna" pedidos: luz batendo de cima
+         como um esmalte vitrificado, sombra acumulada embaixo;
+       — a sombra de contato final (0 30px 60px) é o que separa a
+         moldura do fundo creme, sem ela ela ficaria "colada" no fundo. */
+    box-shadow:
+      0 0 0 ${ANEL_RESPIRO}px ${v.fundo},
+      0 0 0 ${ANEL_TERRACOTA}px ${v.destaque},
+      0 0 0 ${ANEL_OURO}px ${DOURADO},
+      inset 0 16px 32px rgba(255, 255, 255, 0.45),
+      inset 0 -20px 40px rgba(62, 46, 34, 0.22),
+      0 30px 60px rgba(62, 46, 34, 0.35);
   }
-  .circulo {
-    position: absolute; left: 50%; top: 790px; transform: translate(-50%, -50%);
-    width: 780px; height: 780px; border-radius: 50%;
-    border: 2px solid ${corAro};
+  .raminho {
+    /* O SVG já nasce com o tamanho/centro de CIRCULO_TOTAL (788px) — o
+       mesmo círculo do anel inteiro (ver pontoNoAnel/RAIO_RAMINHO) — por
+       isso o deslocamento de -ANEL_OURO (44px) em cima/esquerda: alinha o
+       CENTRO do SVG com o centro de .moldura (700px), sem o que o arco
+       calculado em coordenadas absolutas (ex.: pontoNoAnel) sairia do
+       lugar certo. Sempre o mesmo ângulo nos 7 destaques, por consistência. */
+    position: absolute; top: -${ANEL_OURO}px; left: -${ANEL_OURO}px;
+    width: ${CIRCULO_TOTAL}px; height: ${CIRCULO_TOTAL}px;
+    filter: drop-shadow(0 2px 3px rgba(62, 46, 34, 0.25));
   }
-  .icone {
-    position: absolute; left: 50%; top: 790px; transform: translate(-50%, -50%);
-    width: 300px; height: 300px; color: ${corIcone};
+  .slot {
+    width: ${SLOT_ICONE}px; height: ${SLOT_ICONE}px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    /* "Puck" bem sutil sob o ícone/foto — mesma receita de relevo gummy
+       dos medalhões do redesign v4 (brilho inset + sombra inset + degrau
+       sólido), só que discreta: o anel já é o elemento "bold" da peça,
+       isto aqui é só um toque de profundidade, não uma 2ª moldura. */
+    box-shadow:
+      inset 3px 3px 6px rgba(255, 255, 255, 0.5),
+      inset -4px -5px 10px rgba(62, 46, 34, 0.12),
+      0 6px 0 rgba(62, 46, 34, 0.08),
+      0 14px 26px rgba(62, 46, 34, 0.16);
+  }
+  .slot--foto { overflow: hidden; box-shadow: 0 0 0 5px ${v.destaque}, 0 10px 22px rgba(62, 46, 34, 0.3); }
+  .rosto { position: relative; border-radius: 50%; overflow: hidden; }
+  .rosto img { position: absolute; display: block; }
+  .slot--glifo {
+    font-family: 'Fraunces', serif; font-weight: 600; font-size: 290px; line-height: 1;
+  }
+  .slot--icone svg { display: block; }
+  .titulo {
+    font-family: 'Fraunces', serif; font-weight: 600; font-size: 78px; line-height: 1;
+    color: ${v.texto}; text-align: center; white-space: nowrap;
   }
 </style></head>
 <body>
-  <div class="circulo"></div>
-  <svg class="icone" viewBox="0 0 100 100">${ICONES[destaque.nome]}</svg>
-  <img class="marca-dagua" src="data:image/jpeg;base64,${logoJpg}">
+  <div class="moldura">
+    ${raminhoHtml()}
+    ${miolo}
+    <div class="titulo">${destaque.titulo}</div>
+  </div>
 </body></html>`;
 }
 
-async function renderizar(pagina, html, arquivo) {
-  await pagina.setViewportSize({ width: LARGURA, height: ALTURA });
+async function renderizar(pagina, html, arquivo, altura) {
+  await pagina.setViewportSize({ width: LARGURA, height: altura });
   await pagina.setContent(html, { waitUntil: 'networkidle' });
   await pagina.evaluate(() => document.fonts.ready);
-  await pagina.screenshot({ path: arquivo, clip: { x: 0, y: 0, width: LARGURA, height: ALTURA } });
+  await pagina.screenshot({ path: arquivo, clip: { x: 0, y: 0, width: LARGURA, height: altura } });
 }
 
-async function montarFolhaContato(pagina, arquivos) {
-  // Mesma ideia de folha-contato.js (raiz de marketing/instagram): as
-  // 5 capas lado a lado, pequenas, pra avaliar a série de uma vez só
-  // — reimplementado aqui em vez de reaproveitado porque aquele
-  // script lê de instagram-posts/, não de instagram-perfil/v2/.
-  const COL = 300;
-  // data URI, não "file:///" — ACHADO NA 1ª RODADA DE CRÍTICA VISUAL:
-  // com file:///, o Chromium (página aberta via setContent, origem
-  // about:blank) recusa carregar a imagem (ícone de "imagem quebrada"
-  // nas 5) — provavelmente uma restrição de segurança do próprio
-  // Chromium pra esse tipo de origem. Base64 embutido não depende de
-  // nenhuma permissão de arquivo.
-  const imgsBase64 = arquivos.map((a) => fs.readFileSync(a).toString('base64'));
-  const html = `<!doctype html><html><head><style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { display: flex; background: #ccc; }
-    img { width: ${COL}px; height: ${Math.round(COL * ALTURA / LARGURA)}px; object-fit: cover; }
-  </style></head><body>${imgsBase64.map((b64) => `<img src="data:image/png;base64,${b64}">`).join('')}</body></html>`;
-  const largura = COL * arquivos.length;
-  const altura = Math.round(COL * ALTURA / LARGURA);
-  await pagina.setViewportSize({ width: largura, height: altura });
+// ---- Mock da fileira de destaques do perfil, em largura real de
+// celular (390px, pedido explícito) ----
+// Reproduz como o Instagram mostra o perfil: círculos pequenos (~72px,
+// dentro da faixa "~60-80px" pedida) em fileira horizontal com o nome do
+// destaque embaixo, em cinza pequeno — é o teste de legibilidade real,
+// não a arte em tela cheia. Mostra o começo da fileira cortado pela
+// largura (como a rolagem real), não as 7 espremidas pra caber.
+async function montarMockPerfil(pagina, destaquesComImagem) {
+  const DIAMETRO = 72;
+  const GAP = 24;
+  const LARGURA_MOCK = 390;
+  const ALTURA_MOCK = 150;
+  const itens = destaquesComImagem.map(({ titulo, quadradoUri }) => `
+    <div class="item">
+      <div class="circulo"><img src="${quadradoUri}"></div>
+      <span>${titulo}</span>
+    </div>`).join('');
+  const html = `<!doctype html><html><head>
+<link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500&display=block" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: ${LARGURA_MOCK}px; height: ${ALTURA_MOCK}px; overflow: hidden; background: #FFFFFF; }
+  .fileira { display: flex; gap: ${GAP}px; padding: 18px 16px 0; overflow: hidden; }
+  .item { display: flex; flex-direction: column; align-items: center; gap: 6px; flex-shrink: 0; width: ${DIAMETRO}px; }
+  .circulo {
+    width: ${DIAMETRO}px; height: ${DIAMETRO}px; border-radius: 50%; overflow: hidden;
+    box-shadow: 0 0 0 1.5px #DBDBDB;
+  }
+  .circulo img { width: 100%; height: 100%; object-fit: cover; }
+  span {
+    font-family: 'Jost', sans-serif; font-weight: 400; font-size: 11px; color: #262626;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: ${DIAMETRO + 10}px;
+  }
+</style></head><body><div class="fileira">${itens}</div></body></html>`;
+  await pagina.setViewportSize({ width: LARGURA_MOCK, height: ALTURA_MOCK });
   await pagina.setContent(html, { waitUntil: 'networkidle' });
-  await pagina.screenshot({ path: path.join(SAIDA, '_folha-contato.png'), clip: { x: 0, y: 0, width: largura, height: altura } });
+  await pagina.evaluate(() => document.fonts.ready);
+  await pagina.screenshot({ path: path.join(SAIDA, '_mockup-perfil-390.png'), clip: { x: 0, y: 0, width: LARGURA_MOCK, height: ALTURA_MOCK } });
 }
 
 async function main() {
   fs.mkdirSync(SAIDA, { recursive: true });
+  // Pasta sempre regenerada do zero a partir deste script — nenhuma capa
+  // é editada à mão, então não há risco de perder trabalho ao limpar.
+  for (const arquivo of fs.readdirSync(SAIDA)) fs.rmSync(path.join(SAIDA, arquivo));
+
   const v = lerVariaveisCss();
-  const browser = await chromium.launch();
-  const pagina = await browser.newPage();
+  const rostoUri = dataUri(path.join(RAIZ, 'img', 'institucional', 'quem-somos.jpg'));
 
-  const arquivos = [];
-  for (const destaque of DESTAQUES) {
-    const html = montarHtml(destaque, v);
-    const arquivo = path.join(SAIDA, `capa-${destaque.nome}.png`);
-    await renderizar(pagina, html, arquivo);
-    arquivos.push(arquivo);
-    console.log(`✅ capa-${destaque.nome}.png — ${destaque.titulo}`);
+  const navegador = await chromium.launch();
+  try {
+    const pagina = await navegador.newPage();
+    const geradas = [];
+
+    for (const destaque of DESTAQUES) {
+      const arquivoStory = path.join(SAIDA, `capa-${destaque.nome}-1080x1920.png`);
+      const arquivoQuadrado = path.join(SAIDA, `capa-${destaque.nome}-1080x1080.png`);
+      await renderizar(pagina, montarHtml(destaque, v, rostoUri, ALTURA_STORY), arquivoStory, ALTURA_STORY);
+      await renderizar(pagina, montarHtml(destaque, v, rostoUri, ALTURA_QUADRADA), arquivoQuadrado, ALTURA_QUADRADA);
+      geradas.push({ titulo: destaque.titulo, quadradoUri: dataUri(arquivoQuadrado) });
+      console.log(`✅ ${destaque.nome}: ${destaque.titulo} (1080x1920 + 1080x1080)`);
+    }
+
+    await montarMockPerfil(pagina, geradas);
+    console.log('✅ _mockup-perfil-390.png');
+  } finally {
+    await navegador.close();
   }
-
-  await montarFolhaContato(pagina, arquivos);
-  console.log(`✅ _folha-contato.png`);
-
-  await browser.close();
-  console.log(`\nSaída: ${SAIDA}`);
+  console.log(`\nPronto: ${SAIDA}`);
 }
 
 main().catch((erro) => {

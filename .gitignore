@@ -38,6 +38,13 @@ desktop.ini
 /marketing/instagram/posts/
 /marketing/instagram/folha-contato.png
 
+# Capas dos destaques (marketing/instagram/gerar-capas-destaque.js): mesmo
+# motivo acima — geradas, pesadas (PNGs 1080x1920/1080x1080), 100%
+# reproduzíveis rodando o script. Ficam DENTRO do repositório (pedido
+# explícito desta rodada, diferente de instagram-posts/), só não vão
+# para o git.
+/marketing/instagram/destaques/
+
 # Prints das verificações com Playwright: ficam no projeto (sem precisar de
 # permissão para ler fora dele), mas nunca vão para o git.
 /_prints/
