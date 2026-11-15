@@ -543,3 +543,107 @@ quadro por quadro e mais completo que amostrar) — ficou entre 204 e
 213 o vídeo inteiro (só o fundo bege da composição), confirmando que
 não sobrou nenhum resquício de legenda em nenhum instante, não só nos
 3 quadros validados antes do render.
+
+---
+
+## Rodada 14 — Redesign dos posts (v4), modo totalmente autônomo (2026-11-14)
+
+Pedido: o post-01 "ficou fraco", refazer e corrigir o GERADOR (não os
+PNGs à mão) pra todos os posts futuros já saírem no padrão novo. Sem
+nenhuma pergunta durante a execução — decisões abaixo.
+
+2026-11-14 — Paleta: o pedido citou terracota #B5754C; o `--cor-destaque`
+ATUAL do site é #9E4F2E (o comentário em `css/style.css` explica: a
+#B5754C antiga dava só ~3,7:1 de contraste com texto branco, reprovava
+WCAG AA). Mantive o script lendo a cor de verdade do CSS (`lerVariaveisCss`,
+já existia) em vez de hard-codar o hex do pedido — CLAUDE.md proíbe mudar
+a identidade visual sem pedido, e usar uma cor diferente da atual do site
+teria sido exatamente isso.
+2026-11-14 — Marca d'água "AS" de fundo: trocada de `--marca-monograma-fraca`
+(0,035 = 3,5%, a causa real de "quase não aparece") para `--marca-monograma`
+(0,1 = 10%) — variável que já existe em `css/style.css` (usada em "Quem
+Somos"/rodapé do site), não uma 3ª cópia nova do SVG. Já cai dentro da
+faixa pedida (8-12%).
+2026-11-14 — Emblema da logo sobre FOTO: antes só o layout 4 (fundo
+marrom) usava o "chip" (círculo creme atrás da logo) — motivo original era
+só esconder ruído de compressão JPEG sobre fundo escuro. Estendi o chip
+pra TODO slide onde a logo flutua sobre uma foto (capa dos 4 layouts,
+story, "vendida", as 3 variantes de foto-detalhe) — é exatamente a causa
+de "quase não aparece": o emblema claro sem nada atrás, direto sobre uma
+foto variada, lia mal em qualquer fundo que não fosse bem escuro ou bem
+claro.
+2026-11-14 — Flor/vaso (marcas d'água de traço fino): o SVG-base já nasce
+em 10% de opacidade (`--marca-flor`/`--marca-vaso`); os slides aplicavam
+MAIS uma redução (opacity 0,7-0,9 no wrapper) por cima, deixando o efetivo
+~7-9%. Tirei essa redução extra (wrapper em 1) — mesma marca, só sem
+dupla opacidade.
+2026-11-14 — Rosto da Anasor: não existe `img/quem-somos.jpeg` citado no
+pedido — o arquivo real é `img/institucional/quem-somos.jpg` (a mesma
+ilustração estilo desenho da seção "Quem Somos" do site). Usei esse.
+Recorte circular (`ROSTO_ANASOR_RECORTE`: quadrado 560px a partir de
+(280,290) da imagem-fonte 1195x896) medido à mão olhando a imagem — do
+topo do cabelo aos ombros, centrado no rosto; comentário no código avisa
+pra remedir se a imagem-fonte for trocada um dia.
+2026-11-14 — Hierarquia do nome (capa): sem criar um campo novo em
+`produtos.js` (fonte única continua intacta). `dividirNome()` usa um mapa
+pequeno "palavra-cabeça → quais palavras seguintes ainda são TIPO, não
+nome poético" (Prato/Vaso/Travessa/Caneca/Pote + adjetivos tipo
+Decorativo/Escultórico/Artística/Jarra), calibrado olhando TODOS os nomes
+reais do catálogo antes de escrever a regra. Qualquer nome fora do padrão
+(ex.: o corte cairia numa preposição, tipo "Terço de Mesa Grãos de
+Oração") cai automaticamente no fallback: título inteiro numa linha só,
+sem dividir — um corte estranho é pior que não dividir.
+2026-11-14 — Legendas de foto-detalhe (pedido 4: trocar "Detalhe" fixo por
+algo útil): em vez de inventar texto novo por peça (que quebraria "nunca
+inventar" e não generalizaria pro catálogo inteiro), `extrairDestaques()`
+lê os trechos que a PRÓPRIA descrição da peça já marca em
+`<span class='realce'>...</span>` (a mesma marcação usada em
+`produto.html`) — pro post-01 isso dá exatamente "Torneado e pintado à
+mão" e "Borda em terracota natural", sem escrever nada novo. Faltando
+destaques reais suficientes (peça com 3 fotos extras mas só 1-2 frases
+`realce`), cai numa legenda genérica verdadeira ("Visto de perto" etc.).
+2026-11-14 — Item 4 ("7 dias pra se arrepender da compra") saiu do slide
+"por que comprar": pedido explícito pra trocar por "peça única: ninguém
+vai ter uma igual". A política de arrependimento CONTINUA valendo e
+publicada em `politicas.html` — só não é mais um dos 4 argumentos de
+venda na arte do Instagram.
+2026-11-14 — Coração do slide de chamada final: estava BRANCO sobre fundo
+creme (quase some) — trocado pra terracota (`v.destaque`), como o próprio
+pedido sugeriu ("coração terracota ou 🤎"). Medido depois de gerar (script
+à parte, lendo os pixels do PNG via Playwright/canvas): o bloco "Peça
+única ♥" ficou com centro em x=538,5 dos 1080px do canvas (centro real:
+540) — 1,5px de diferença, dentro de qualquer tolerância visual.
+2026-11-14 — Selos/medalhões 3D: reaproveitada a MESMA receita de sombras
+em camadas de `css/checkout.css` (`.checkout-selo__icone-fundo` — brilho
+inset, sombra inset, degrau sólido, sombra de contato), não uma invenção
+nova — é literalmente o badge "de confiança" que o checkout do site já
+usa, só escalado pra caber numa arte de 1080px.
+2026-11-14 — Variedade dos slides de foto-detalhe: 3 variantes
+(polaroid / moldura dupla com miniaturas em coluna / cantos orgânicos com
+`--raio-organico` do site) alternadas automaticamente por índice
+(`i % 3`) — só a variante 3 (cantos orgânicos) usa recorte quadrado
+forçado (`object-fit: cover`, pra caber na curva orgânica); as outras 2
+mostram a foto inteira, sem cortar nada (tamanho natural, `max-width`/
+`max-height`), pra nunca arriscar cortar o detalhe que a legenda descreve.
+2026-11-14 — Título com hierarquia (tipo/nome) e divisão por `dividirNome`
+foi aplicado SÓ no layout 1 da capa (o que o post-01 usa e que foi
+verificado visualmente nesta rodada). Os layouts 2/3/4 ganharam as
+melhorias "compartilhadas" (chip da logo, selos/medalhões 3D, marca
+d'água mais forte) automaticamente — por herdarem o mesmo CSS/funções —
+mas continuam com o nome numa linha só; dividir o nome ali também fica
+pendente de uma rodada futura COM verificação visual desses 3 layouts.
+2026-11-14 — Margem de segurança: todo elemento de canto (selo, logo)
+tinha 56px de distância da borda; pedido falava em "~80px". Fui pra 72px
+(`MARGEM_SEGURA`) — é a mesma distância já usada como padding lateral do
+corpo de vários slides, então os elementos de canto ficam alinhados com o
+texto central em vez de mais pra dentro ou mais pra fora; 72 já está bem
+dentro dos 80px pedidos.
+2026-11-14 — Legenda em negrito/itálico Unicode (`formatar-legenda.js`):
+o bloco Unicode usado (Mathematical Alphanumeric Symbols) só cobre
+A-Z/a-z/0-9 — nenhuma letra acentuada. Testado com ç/ã/é/ê/ó: a conversão
+decide por PALAVRA inteira (não por letra solta) — se uma letra da
+palavra não tiver versão Unicode, a palavra inteira fica no texto normal,
+em vez de sair "quebrada" (metade em negrito, acento caído de volta pro
+normal). O "h" itálico minúsculo tem 1 exceção conhecida no padrão
+Unicode (ponto de código reservado) — usa U+210E (ℎ, visualmente
+idêntico) em vez do bloco principal.
