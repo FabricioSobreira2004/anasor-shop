@@ -641,12 +641,14 @@ function slideCapaStory(v, foto, nome, recorte, logoUri) {
 // relativo ao <body>, que é quem tem position:relative (cssComum) — a
 // foto só por acaso preenche esse canto neste layout.
 function slideCapaEditorial(v, foto, nome, recorte, produto, logoUri) {
+  const { tipo, poetico } = dividirNome(nome);
   return baseHtml(v, `
     ${seloHtml(v, produto)}
     <div class="editorial">
       <div class="editorial__foto"><img src="${foto}" alt="" style="object-position:${recorte}"></div>
       <div class="editorial__bloco">
-        <h1 id="titulo" data-max-linhas="3">${escaparHtml(nome)}</h1>
+        ${tipo ? `<p class="editorial__tipo">${escaparHtml(tipo)}</p>` : ''}
+        <h1 id="titulo" data-max-linhas="3">${escaparHtml(poetico)}</h1>
         ${faixaConfiancaHtml({ coluna: true })}
         ${marcaDaguaHtml(logoUri, 'marca-dagua--editorial')}
       </div>
@@ -670,6 +672,11 @@ function slideCapaEditorial(v, foto, nome, recorte, produto, logoUri) {
       background-size: 260px;
       border-left: 2px solid ${v.destaque};
     }
+    .editorial__tipo {
+      font-family: 'Jost', sans-serif; font-weight: 500; font-size: 24px;
+      letter-spacing: 0.05em; text-transform: uppercase; color: ${v.destaque};
+      margin-bottom: 8px;
+    }
     .editorial__bloco h1 {
       font-family: 'Fraunces', serif; font-style: italic; font-weight: 600;
       font-size: 54px; line-height: 1.12; letter-spacing: -0.005em;
@@ -687,6 +694,7 @@ function slideCapaEditorial(v, foto, nome, recorte, produto, logoUri) {
 // (.circulo-pedestal) é a referência ao pedestal pedida — um gradiente,
 // não um desenho 3D, que ficaria falso/genérico perto de fotos reais.
 function slideCapaCirculo(v, foto, nome, recorte, produto, logoUri) {
+  const { tipo, poetico } = dividirNome(nome);
   return baseHtml(v, `
     ${seloHtml(v, produto)}
     <div class="circulo-cena">
@@ -694,10 +702,11 @@ function slideCapaCirculo(v, foto, nome, recorte, produto, logoUri) {
       <div class="circulo-foto"><img src="${foto}" alt="" style="object-position:${recorte}"></div>
     </div>
     <div class="circulo-rodape">
-      <h1 id="titulo">${escaparHtml(nome)}</h1>
+      ${tipo ? `<p class="circulo-rodape__tipo">${escaparHtml(tipo)}</p>` : ''}
+      <h1 id="titulo">${escaparHtml(poetico)}</h1>
       ${faixaConfiancaHtml()}
     </div>
-    ${marcaDaguaHtml(logoUri, 'marca-dagua--circulo')}`, `
+    ${marcaDaguaHtml(logoUri, 'marca-dagua--circulo', true)}`, `
     body { background-color: ${v.fundoAlt}; }
     .circulo-cena { position: absolute; top: 150px; left: 50%; transform: translateX(-50%); width: 680px; height: 680px; }
     .circulo-pedestal {
@@ -711,12 +720,22 @@ function slideCapaCirculo(v, foto, nome, recorte, produto, logoUri) {
     }
     .circulo-foto img { width: 100%; height: 100%; object-fit: cover; }
     .circulo-rodape { position: absolute; left: 0; right: 0; bottom: 210px; text-align: center; padding: 0 72px; }
+    .circulo-rodape__tipo {
+      font-family: 'Jost', sans-serif; font-weight: 500; font-size: 24px;
+      letter-spacing: 0.05em; text-transform: uppercase; color: ${v.destaque};
+      margin-bottom: 6px;
+    }
     .circulo-rodape h1 {
       font-family: 'Fraunces', serif; font-weight: 600; font-size: 58px; line-height: 1.08;
       max-height: calc(58px * 1.08 * 2 + 4px);
       margin-bottom: 30px;
     }
-    .marca-dagua--circulo { width: 104px; }
+    /* v4: logo sobre --cor-fundo-alt também ganhou chip — o emblema (em
+       traço claro/dourado) lia fraco sobre o bege encorpado deste
+       layout, mesmo sem ser uma foto. Largura E altura juntas (não só a
+       largura) porque aqui a classe cai no WRAPPER do chip (comChip),
+       não na img — ver marcaDaguaHtml(). */
+    .marca-dagua--circulo { width: 130px; height: 130px; padding: 16px; }
     `);
 }
 
@@ -726,11 +745,13 @@ function slideCapaCirculo(v, foto, nome, recorte, produto, logoUri) {
 // medalhão circular pequeno, contido — pra não virar só uma citação sem
 // produto; o foco visual é a tipografia, não a foto.
 function slideCapaMarrom(v, foto, nome, recorte, produto, logoUri) {
+  const { tipo, poetico } = dividirNome(nome);
   return baseHtml(v, `
     ${seloHtml(v, produto)}
     <div class="marrom-cena">
       <div class="marrom-foto"><img src="${foto}" alt="" style="object-position:${recorte}"></div>
-      <h1 id="titulo">${escaparHtml(nome)}</h1>
+      ${tipo ? `<p class="marrom-cena__tipo">${escaparHtml(tipo)}</p>` : ''}
+      <h1 id="titulo">${escaparHtml(poetico)}</h1>
       ${faixaConfiancaHtml({ dourada: true })}
     </div>
     ${marcaDaguaHtml(logoUri, '', true)}`, `
@@ -748,6 +769,11 @@ function slideCapaMarrom(v, foto, nome, recorte, produto, logoUri) {
       box-shadow: 0 0 0 6px ${DOURADO}, 0 20px 50px rgba(0, 0, 0, 0.4);
     }
     .marrom-foto img { width: 100%; height: 100%; object-fit: cover; }
+    .marrom-cena__tipo {
+      font-family: 'Jost', sans-serif; font-weight: 500; font-size: 24px;
+      letter-spacing: 0.05em; text-transform: uppercase; color: ${DOURADO}; opacity: 0.8;
+      margin-bottom: 8px;
+    }
     .marrom-cena h1 {
       font-family: 'Fraunces', serif; font-weight: 600; font-style: italic;
       font-size: 66px; line-height: 1.12; color: ${DOURADO};
