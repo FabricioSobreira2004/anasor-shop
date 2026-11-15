@@ -29,6 +29,18 @@
 // carrosséis de CONTEÚDO novos (não-peça: como comprar, cuidados, o
 // que "peça única" significa, como encomendar uma parecida) — ver
 // README.md para o detalhe de cada layout/carrossel.
+//
+// v4 (rodada "redesign dos posts", pedido explícito do Fabrício em modo
+// autônomo, 2026-11-14): o post-01 saiu "fraco" — marca d'água quase
+// invisível, selo/faixa de confiança chapados, slide de foto extra só
+// com moldura branca e "Detalhe", chamada final descentralizada. v4
+// reforça a marca d'água (padrão "AS" e emblema da logo), troca selo e
+// faixa de confiança por medalhões 3D (mesma receita do checkout do
+// site), acrescenta o rosto real da Anasor (chamada + "por que
+// comprar"), dá hierarquia ao nome da capa e reformula os slides de foto
+// extra (3 molduras diferentes + legenda tirada da própria descrição da
+// peça + miniaturas) — ver README.md ("v4") e DECISOES.md (Rodada 14)
+// para o detalhe de cada decisão.
 // ============================================================
 
 const fs = require('fs');
@@ -112,9 +124,15 @@ function lerVariaveisCss() {
     if (!m) throw new Error(`Variável --${nome} não encontrada em style.css`);
     return m[1].trim();
   };
+  // v4 (pedido 1: "padrão AS em torno de 8-12%"): --marca-monograma-fraca
+  // (a que era usada) está gravada em 0.035 de opacidade — some no
+  // celular, era exatamente a queixa. --marca-monograma "forte" (a MESMA
+  // marca, só que gravada em 0.1 = 10%, já dentro do pedido) já existe
+  // no :root do site (usada em "Quem Somos"/rodapé) — trocar pra ela
+  // evita inventar uma 3ª cópia do SVG só pra esta rodada.
   return {
     grao: pegar('textura-grao'),
-    monograma: pegar('marca-monograma-fraca'),
+    monograma: pegar('marca-monograma'),
     flor: pegar('marca-flor'),
     vaso: pegar('marca-vaso'),
     fundo: pegar('cor-fundo'),
@@ -160,16 +178,85 @@ const formatarPreco = (v) => v.toLocaleString('pt-BR', { minimumFractionDigits: 
 // no nome quebre a arte.
 const escaparHtml = (s) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
+// ---- v4 (rodada "redesign dos posts", pedido explícito do Fabrício em
+// modo autônomo — ver DECISOES.md): nome com hierarquia — "tipo" da peça
+// (Jost, pequeno) em cima, nome poético (Fraunces itálico, grande)
+// embaixo. SEM campo novo em produtos.js (fonte única continua intacta):
+// um pequeno mapa "cabeça da peça -> palavras que ainda são TIPO, não
+// nome" cobre os casos reais do catálogo (ver levantamento manual de
+// todos os nomes antes desta rodada). Qualquer peça fora do padrão
+// (ex.: nome poético que começa com preposição, "Terço de Mesa Grãos de
+// Oração") cai no fallback: título inteiro numa linha só, como era
+// antes — nunca um corte que leia errado.
+const TIPO_CONTINUACAO = {
+  Prato: ['Decorativo', 'Decorativa'],
+  Vaso: ['Escultórico', 'Escultórica', 'Jarra'],
+  Travessa: ['Decorativa', 'Decorativo'],
+  Caneca: ['Artística', 'Artístico'],
+  Pote: ['Decorativo', 'Decorativa'],
+};
+const PREPOSICOES = new Set(['de', 'da', 'do', 'das', 'dos', 'e', 'a', 'o', 'em']);
+
+function dividirNome(nomeCompleto) {
+  const palavras = nomeCompleto.split(' ');
+  const [cabeca, ...resto] = palavras;
+  const continuacoes = TIPO_CONTINUACAO[cabeca] || [];
+  let fimTipo = 1;
+  while (fimTipo < palavras.length && continuacoes.includes(palavras[fimTipo])) fimTipo += 1;
+  const tipo = palavras.slice(0, fimTipo).join(' ');
+  const poetico = palavras.slice(fimTipo).join(' ');
+  // Nome poético vazio (nome só tem 1-2 palavras) ou começando com
+  // preposição (o corte caiu no meio de uma locução, tipo "de Mesa..."):
+  // não divide, mostra o nome inteiro — mais seguro que um corte errado.
+  if (!poetico || PREPOSICOES.has(palavras[fimTipo].toLowerCase())) {
+    return { tipo: null, poetico: nomeCompleto };
+  }
+  return { tipo, poetico };
+}
+
+// ---- v4: "destaques" da descrição real da peça (produtos.js) viram as
+// legendas dos slides de foto extra — NUNCA um texto inventado. A
+// descrição já marca as frases-chave em <span class='realce'>...</span>
+// (ver produto.html/main.js, mesma classe) — aqui só lemos de novo essas
+// frases como legenda curta ("Torneado e pintado à mão", "Borda em
+// terracota natural"). 'realce--ouro' fica de fora de propósito: marca
+// um tipo diferente de destaque (apelo de presente, não característica
+// técnica da peça) e não fica bem como legenda de foto.
+function extrairDestaques(descricaoHtml) {
+  const achados = [...descricaoHtml.matchAll(/<span class='realce'>(.*?)<\/span>/g)].map((m) => m[1]);
+  return achados.map((frase) => frase.charAt(0).toUpperCase() + frase.slice(1));
+}
+const LEGENDAS_FOTO_RESERVA = ['Visto de perto', 'Outro ângulo', 'Mais um detalhe'];
+
+// ---- v4: rosto da Anasor (img/institucional/quem-somos.jpg) num
+// círculo — substitui o círculo "AS" na chamada final e acompanha o
+// nome dela no slide "por que comprar" (pedido 2: "rosto da marca").
+// RECORTE medido à mão na imagem-fonte (1195x896px): janela quadrada de
+// 560px a partir de (280,290) cobre do topo do cabelo até os ombros,
+// centrada no rosto — se a foto-fonte for trocada, remedir aqui.
+const ROSTO_ANASOR_RECORTE = { x: 280, y: 290, lado: 560 };
+
+function rostoAnasorHtml(fotoUri, diametro, classeExtra = '') {
+  const escala = diametro / ROSTO_ANASOR_RECORTE.lado;
+  const larguraOriginal = 1195 * escala;
+  const alturaOriginal = 896 * escala;
+  const esquerda = -ROSTO_ANASOR_RECORTE.x * escala;
+  const topo = -ROSTO_ANASOR_RECORTE.y * escala;
+  return `<div class="rosto-anasor ${classeExtra}" style="width:${diametro}px;height:${diametro}px;">
+    <img src="${fotoUri}" alt="Anasor Sobreira" style="width:${larguraOriginal}px;height:${alturaOriginal}px;left:${esquerda}px;top:${topo}px;">
+  </div>`;
+}
+
 // ---- Selo da peça (mesma regra/cores/prioridade de js/main.js) ----
 // Lido aqui de novo (não importado) porque main.js é script de navegador,
 // sem module.exports; são só 5 linhas e um comentário explica o porquê
 // de qualquer divergência futura ter que ser corrigida nos dois lugares.
 function montarSelos(v) {
   return {
-    'mais-vendido': { label: 'Mais Vendido', bg: '#D9B06A', cor: v.texto },
-    assinada: { label: 'Peça Assinada', bg: v.destaque, cor: '#FFF' },
-    queridinho: { label: 'Queridinha do Ateliê', bg: v.fundo, cor: v.destaque, contorno: v.destaque },
-    novidade: { label: 'Novidade', bg: v.secundaria, cor: '#FFF' },
+    'mais-vendido': { label: 'Mais Vendido', bg: '#D9B06A', cor: v.texto, icone: 'star' },
+    assinada: { label: 'Peça Assinada', bg: v.destaque, cor: '#FFF', icone: 'pen-line' },
+    queridinho: { label: 'Queridinha do Ateliê', bg: v.fundo, cor: v.destaque, contorno: v.destaque, icone: 'coracao' },
+    novidade: { label: 'Novidade', bg: v.secundaria, cor: '#FFF', icone: 'sparkles' },
   };
 }
 
@@ -180,20 +267,32 @@ function seloDaPeca(produto, selos) {
   return Object.keys(selos).find((chave) => presentes.has(chave)) || null;
 }
 
+// v4: selo ganhou ícone + relevo 3D "gummy" (pedido 3: "etiqueta com
+// mais presença") — mesma receita de sombras em camadas do badge do
+// checkout (ver css/checkout.css .checkout-selo__icone-fundo), só que
+// aplicada à pílula inteira (não a um círculo à parte): brilho inset no
+// topo, sombra inset embaixo, um "degrau" sólido e uma sombra de
+// contato. Sobre fundo claro (queridinho/neutro) o brilho branco
+// ficaria invisível — por isso o modificador `--claro` troca o brilho
+// por um relevo mais sutil, coerente com um fundo já claro.
 function seloHtml(v, produto, classeExtra = '') {
   const selos = montarSelos(v);
   const chave = seloDaPeca(produto, selos);
+  const icone = (nome, tam, cor) => (nome === 'coracao' ? svgCoracao(tam, cor) : svgIcone(nome, tam, cor));
   if (chave) {
     const s = selos[chave];
-    const contorno = s.contorno ? `box-shadow: inset 0 0 0 3px ${s.contorno};` : '';
-    return `<div class="selo ${classeExtra}" style="background:${s.bg};color:${s.cor};${contorno}">${escaparHtml(s.label)}</div>`;
+    const claro = s.bg === v.fundo; // queridinho: fundo creme, precisa do modificador --claro
+    const contorno = s.contorno ? `box-shadow: inset 0 0 0 3px ${s.contorno}, 0 4px 0 rgba(62,46,34,.16), 0 10px 20px rgba(62,46,34,.2);` : '';
+    return `<div class="selo ${claro ? 'selo--claro' : ''} ${classeExtra}" style="background:${s.bg};color:${s.cor};${contorno}">
+      ${icone(s.icone, 32, s.cor)}<span>${escaparHtml(s.label)}</span>
+    </div>`;
   }
   // Peça sem selo: rótulo neutro (não é uma das 4 chamadas reais do
   // site, então não usa as cores delas — fundo neutro em vez de afirmar
   // algo que não é verdade sobre a peça). Coração em SVG, não emoji: o
   // 🤎 do Windows sai com contorno preto grosso nas artes (mesmo motivo
   // da troca no slide de chamada).
-  return `<div class="selo selo--neutro ${classeExtra}">Peça única ${svgCoracao(26, v.destaque)} feita à mão</div>`;
+  return `<div class="selo selo--neutro selo--claro ${classeExtra}">${svgCoracao(30, v.destaque)}<span>Peça única feita à mão</span></div>`;
 }
 
 // ---- Ícones (Lucide, mesmo traço do resto do site — ver o SVG inline
@@ -206,6 +305,10 @@ const ICONES = {
   'rotate-ccw': '<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/>',
   gem: '<path d="M10.5 3 8 9l4 13 4-13-2.5-6"/><path d="M17 3a2 2 0 0 1 1.6.8l3 4a2 2 0 0 1 .013 2.382l-7.99 10.986a2 2 0 0 1-3.247 0l-7.99-10.986A2 2 0 0 1 2.4 7.8l2.998-3.997A2 2 0 0 1 7 3z"/><path d="M2 9h20"/>',
   droplet: '<path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.5-4 6.3C6 11 5 12.8 5 15a7 7 0 0 0 7 7z"/>',
+  // v4: ícones novos pros selos da peça (seloHtml) — mesmo traço Lucide.
+  star: '<path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"/>',
+  'pen-line': '<path d="M12 20h9"/><path d="M16.376 3.622a1 1 0 0 1 3.002 3.002L7.368 18.635a2 2 0 0 1-.855.506l-2.872.838a.5.5 0 0 1-.62-.62l.838-2.872a2 2 0 0 1 .506-.854z"/>',
+  sparkles: '<path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/><path d="M20 3v4"/><path d="M22 5h-4"/><path d="M4 17v2"/><path d="M5 18H3"/>',
 };
 const CORACAO_PATH = 'M2 9.5a5.5 5.5 0 0 1 9.591-3.676.56.56 0 0 0 .818 0A5.49 5.49 0 0 1 22 9.5c0 2.29-1.5 4-3 5.5l-5.492 5.313a2 2 0 0 1-3 .019L5 15c-1.5-1.5-3-3.2-3-5.5';
 
@@ -225,13 +328,18 @@ function svgCoracao(tamanho = 28, cor = 'currentColor') {
 // negócio do CLAUDE.md) e "compra segura" (Mercado Pago processa o
 // pagamento — id="privacidade", e é o único canal de pagamento do site).
 //
-// v3: dois modificadores pros 4 layouts de capa (ver cssComum) —
-// `coluna` (layout 2, editorial: bloco estreito, lista vertical em vez
-// de linha horizontal) e `dourada` (layout 4, fundo marrom: texto/ícone
-// em DOURADO em vez da cor de texto padrão, perdida no fundo escuro).
-// Os ícones usam 'currentColor' (padrão de svgIcone) de propósito: a
-// cor vem só do CSS (.confianca svg{color:...}), não de um parâmetro
-// aqui — um lugar só controla a cor dos dois (ícone E texto).
+// v4 (pedido 3/6: "selos em pílulas ou medalhões circulares 3D, como os
+// selos de confiança do checkout do site"): cada item virou um medalhão
+// — círculo com gradiente terracota->ouro e a MESMA receita de sombras
+// em camadas de css/checkout.css .checkout-selo__icone-fundo (brilho
+// inset, sombra inset, degrau sólido, sombra de contato), com o texto
+// embaixo em vez de ao lado — "ícones maiores em terracota" + texto Jost
+// 500 em >=26px, legível no celular (antes: 21px, nowrap, estourava a
+// largura da arte — o motivo real do "fora de enquadramento" na chamada
+// final). `coluna` (layout 2, editorial) vira uma lista vertical com o
+// medalhão menor ao lado do texto, por falta de largura; `dourada`
+// (layout 4, fundo marrom) troca o texto pra dourado (a cor de texto
+// padrão, marrom escuro, sumiria no fundo marrom).
 function faixaConfiancaHtml({ coluna = false, dourada = false } = {}) {
   const itens = [
     ['truck', 'Frete grátis para todo o Brasil'],
@@ -239,8 +347,12 @@ function faixaConfiancaHtml({ coluna = false, dourada = false } = {}) {
     ['shield-check', 'Compra segura'],
   ];
   const classes = ['confianca', coluna && 'confianca--coluna', dourada && 'confianca--dourada'].filter(Boolean).join(' ');
+  const tamanhoIcone = coluna ? 56 : 92;
   return `<ul class="${classes}">
-    ${itens.map(([icone, texto]) => `<li>${svgIcone(icone, coluna ? 26 : 30)}<span>${escaparHtml(texto)}</span></li>`).join('')}
+    ${itens.map(([icone, texto]) => `<li>
+      <span class="confianca__medalhao" style="width:${tamanhoIcone}px;height:${tamanhoIcone}px;">${svgIcone(icone, coluna ? 26 : 40, '#FFF')}</span>
+      <span class="confianca__texto">${escaparHtml(texto)}</span>
+    </li>`).join('')}
   </ul>`;
 }
 
@@ -290,68 +402,119 @@ async function removerFundoLogo(pagina, jpgDataUri) {
 // a pousar sobre o creme que ela já foi desenhada pra ter) E funciona
 // como reforço de marca sobre um fundo tão diferente do site.
 function marcaDaguaHtml(logoUri, classeExtra = '', comChip = false) {
-  const img = `<img class="marca-dagua ${classeExtra}" src="${logoUri}" alt="">`;
-  return comChip ? `<div class="marca-dagua-chip">${img}</div>` : img;
+  const img = `<img class="marca-dagua ${comChip ? '' : classeExtra}" src="${logoUri}" alt="">`;
+  // classeExtra vai no WRAPPER quando há chip (é ele quem é posicionado
+  // na página — a img vira estática, centralizada por flex, lá dentro).
+  return comChip ? `<div class="marca-dagua-chip ${classeExtra}">${img}</div>` : img;
 }
+
+// ---- v4: margem de segurança única — nada importante a menos de 72px
+// das bordas (pedido explícito da rodada: "área segura ~80px"; 72 porque
+// é também o padding lateral já usado em vários corpos de slide, então
+// os elementos de canto ficam alinhados com o texto central em vez de
+// mais pra dentro ou mais pra fora). ERA 56px (selo/marca d'água) antes
+// desta rodada — bem dentro dos 80px pedidos.
+const MARGEM_SEGURA = 72;
 
 // ---- CSS comum a todo slide (selo, marca d'água, faixa de confiança) ----
 function cssComum(v) {
   return `
     .selo {
-      position: absolute; top: 56px; left: 56px; z-index: 2;
-      display: inline-flex; align-items: center; gap: 10px;
+      position: absolute; top: ${MARGEM_SEGURA}px; left: ${MARGEM_SEGURA}px; z-index: 2;
+      display: inline-flex; align-items: center; gap: 14px;
       font-family: 'Jost', sans-serif; font-weight: 600; font-size: 30px;
       letter-spacing: 0.02em; line-height: 1; white-space: nowrap;
-      padding: 20px 34px; border-radius: 999px;
-      box-shadow: 0 6px 18px rgba(62, 46, 34, 0.22);
+      padding: 22px 38px 22px 28px; border-radius: 999px;
+      /* relevo "gummy" (pedido 3: etiqueta com mais presença) — mesma
+         receita de sombras em camadas do badge do checkout: brilho
+         inset no topo-esquerda, sombra inset embaixo-direita, degrau
+         sólido e sombra de contato com a foto atrás. */
+      box-shadow:
+        inset 2px 2px 3px rgba(255, 255, 255, 0.35),
+        inset -2px -3px 5px rgba(62, 46, 34, 0.3),
+        0 4px 0 rgba(62, 46, 34, 0.3),
+        0 12px 22px rgba(62, 46, 34, 0.3);
     }
-    .selo svg { flex-shrink: 0; position: relative; top: -1px; }
+    .selo svg { flex-shrink: 0; }
+    .selo span { position: relative; top: -1px; }
+    /* fundo claro (queridinho/neutro): o brilho branco do relevo padrão
+       ficaria invisível e o degrau escuro pesado demais — troca pro
+       anel/relevo mais sutil (seloHtml já monta o box-shadow certo via
+       style inline pro "queridinho"; aqui só o neutro, sem contorno). */
+    .selo--claro { box-shadow: inset 0 0 0 2px rgba(62, 46, 34, 0.18), 0 4px 0 rgba(62, 46, 34, 0.14), 0 10px 20px rgba(62, 46, 34, 0.18); }
     .selo--neutro {
       background: rgba(251, 246, 239, 0.95);
       color: ${v.texto};
-      box-shadow: inset 0 0 0 2px rgba(62, 46, 34, 0.22), 0 6px 18px rgba(62, 46, 34, 0.14);
     }
     .marca-dagua {
-      position: absolute; right: 56px; bottom: 56px; width: 136px; height: auto;
+      position: absolute; right: ${MARGEM_SEGURA}px; bottom: ${MARGEM_SEGURA}px; width: 148px; height: auto;
       opacity: 0.85; pointer-events: none; z-index: 2;
       filter: drop-shadow(0 2px 6px rgba(62, 46, 34, 0.25));
-      /* a sombra suave ajuda o emblema (claro) a não "sumir" quando cai
-         sobre uma área clara da foto, já que não há mais blend-mode */
     }
-    /* layout 4 (fundo marrom) — ver comentário em marcaDaguaHtml() sobre
-       por que o chip existe. Repõe a posição absoluta NO WRAPPER (a img
-       lá dentro vira estática, centralizada por flex) e devolve 100% de
-       opacidade: dentro do chip a logo não precisa "flutuar" sobre nada. */
+    /* v4: o chip (fundo creme circular + sombra) deixou de ser exclusivo
+       do layout 4 (fundo marrom) — pedido 1: "sobre a foto do produto,
+       só o selo do logo" precisa que ele FIQUE NÍTIDO ali, e um emblema
+       claro flutuando direto sobre uma foto variada (fundos claros E
+       escuros, conforme a peça) é o motivo de "quase não aparece" no
+       celular. Agora todo slide com o emblema sobre uma FOTO usa o chip
+       (ver chamadas de marcaDaguaHtml com comChip=true); só sobre fundo
+       creme puro (chamada, por que comprar, carrosséis de conteúdo) o
+       emblema continua "solto", sem precisar de reforço. */
     .marca-dagua-chip {
-      position: absolute; right: 56px; bottom: 56px; z-index: 2;
-      width: 156px; height: 156px; border-radius: 50%; padding: 20px;
+      position: absolute; right: ${MARGEM_SEGURA}px; bottom: ${MARGEM_SEGURA}px; z-index: 2;
+      width: 172px; height: 172px; border-radius: 50%; padding: 22px;
       display: flex; align-items: center; justify-content: center;
-      background: rgba(251, 246, 239, 0.95);
-      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
+      background: rgba(251, 246, 239, 0.97);
+      box-shadow: 0 2px 0 rgba(255,255,255,0.5) inset, 0 10px 28px rgba(0, 0, 0, 0.35);
     }
     .marca-dagua-chip .marca-dagua {
       position: static; width: 100%; height: auto; opacity: 1; filter: none;
     }
+    /* ---- v4: faixa de confiança em medalhões 3D (pedido 3/6) ---- */
     .confianca {
       list-style: none; display: flex; align-items: flex-start; justify-content: center;
-      gap: 28px; color: ${v.texto};
+      gap: 28px; color: ${v.texto}; width: 100%; max-width: 920px; margin: 0 auto;
     }
     .confianca li {
-      display: flex; flex-direction: column; align-items: center; gap: 10px;
+      display: flex; flex-direction: column; align-items: center; gap: 16px;
       flex: 1 1 0; max-width: 300px; text-align: center;
     }
-    .confianca span { font-size: 21px; line-height: 1.3; color: inherit; white-space: nowrap; }
-    .confianca svg { color: ${v.destaque}; flex-shrink: 0; }
-    /* layout 2 (editorial): bloco estreito — lista vertical, ícone ao
-       lado do texto em vez de em cima, texto pode quebrar linha */
-    .confianca--coluna { flex-direction: column; align-items: flex-start; gap: 18px; }
-    .confianca--coluna li { flex-direction: row; align-items: center; gap: 16px; max-width: none; text-align: left; }
-    .confianca--coluna span { white-space: normal; }
+    .confianca__medalhao {
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+      border-radius: 50%;
+      background-image: linear-gradient(135deg, ${v.destaque}, ${DOURADO});
+      box-shadow:
+        inset 2px 2px 4px rgba(255, 255, 255, 0.4),
+        inset -3px -3px 6px rgba(62, 46, 34, 0.28),
+        0 5px 0 ${v.destaqueEscuro},
+        0 10px 20px rgba(62, 46, 34, 0.25);
+    }
+    .confianca__texto {
+      font-family: 'Jost', sans-serif; font-weight: 500; font-size: 27px;
+      line-height: 1.3; color: inherit;
+      /* SEM white-space:nowrap (era o bug real do "fora de enquadramento":
+         3 frases de até ~340px cada, lado a lado, nunca cabiam nos 1080px
+         da arte) — quebra em até 2 linhas dentro da coluna. */
+    }
+    /* layout 2 (editorial): bloco estreito — lista vertical, medalhão
+       menor ao lado do texto em vez de em cima */
+    .confianca--coluna { flex-direction: column; align-items: flex-start; gap: 20px; max-width: none; }
+    .confianca--coluna li { flex-direction: row; align-items: center; gap: 18px; max-width: none; text-align: left; }
+    .confianca--coluna .confianca__texto { font-size: 24px; }
     /* layout 4 (fundo marrom): cor de texto padrão (marrom escuro) some
-       no fundo escuro — usa o dourado da marca pros dois (texto E ícone,
-       já que svg usa currentColor) */
-    .confianca--dourada { color: ${DOURADO}; }
-    .confianca--dourada svg { color: ${DOURADO}; }
+       no fundo escuro — usa o dourado da marca só no TEXTO (o medalhão
+       já é colorido/gradiente, legível em qualquer fundo). */
+    .confianca--dourada .confianca__texto { color: ${DOURADO}; }
+    /* ---- v4: rosto da Anasor num círculo (pedido 2) ---- */
+    .rosto-anasor {
+      position: relative; border-radius: 50%; overflow: hidden; flex-shrink: 0;
+      box-shadow:
+        0 0 0 8px ${v.fundo},
+        0 0 0 15px ${v.destaque},
+        0 0 0 19px ${DOURADO},
+        0 18px 38px rgba(62, 46, 34, 0.35);
+    }
+    .rosto-anasor img { position: absolute; display: block; }
   `;
 }
 
@@ -381,36 +544,47 @@ function baseHtml(v, corpo, cssExtra, altura = ALTURA) {
 // creme no rodapé com o nome + a faixa de confiança (substitui a antiga
 // linha solta "Peça única, feita à mão": a faixa de confiança já cobre
 // essa mensagem, então repetir as duas seria redundante). A marca
-// d'água fica DENTRO da .faixa mas "flutua" 166px ACIMA dela (top
-// negativo) — pousa sobre a FOTO, não sobre o texto/ícones da faixa,
-// qualquer que seja a altura da faixa (1 ou 2 linhas de título).
+// d'água fica DENTRO da .faixa mas "flutua" ACIMA dela (top negativo) —
+// pousa sobre a FOTO, não sobre o texto/ícones da faixa, qualquer que
+// seja a altura da faixa (1 ou 2 linhas de título); por isso leva o chip
+// (comChip=true — pedido 1: "sobre a foto, só o selo do logo", nítido).
+//
+// v4 (pedido 3): nome com hierarquia — dividirNome() separa "tipo da
+// peça" (eyebrow Jost) de "nome poético" (Fraunces itálico grande).
 function slideCapa(v, foto, nome, recorte, produto, logoUri) {
+  const { tipo, poetico } = dividirNome(nome);
   return baseHtml(v, `
     <img class="foto" src="${foto}" alt="">
     ${seloHtml(v, produto)}
     <div class="faixa">
-      ${marcaDaguaHtml(logoUri, 'marca-dagua--capa')}
-      <h1 id="titulo">${escaparHtml(nome)}</h1>
+      ${marcaDaguaHtml(logoUri, 'marca-dagua--capa', true)}
+      ${tipo ? `<p class="capa__tipo">${escaparHtml(tipo)}</p>` : ''}
+      <h1 id="titulo">${escaparHtml(poetico)}</h1>
       ${faixaConfiancaHtml()}
     </div>`, `
     .foto { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: ${recorte}; }
     .faixa {
       position: absolute; left: 0; right: 0; bottom: 0;
-      padding: 40px 72px 52px;
+      padding: 40px 72px 56px;
       text-align: center;
-      /* creme quase opaco + monograma fraco: a faixa conversa com o site
-         sem esconder a foto atrás de um bloco pesado */
+      /* creme quase opaco + monograma: a faixa conversa com o site sem
+         esconder a foto atrás de um bloco pesado */
       background-color: rgba(251, 246, 239, 0.96);
       background-image: ${v.monograma}, ${v.grao};
       background-size: 220px, 140px;
       border-top: 2px solid ${v.destaque};
     }
-    .marca-dagua--capa { top: -166px; bottom: auto; right: 40px; }
+    .marca-dagua--capa { top: -182px; bottom: auto; right: ${MARGEM_SEGURA - 32}px; }
+    .capa__tipo {
+      font-family: 'Jost', sans-serif; font-weight: 500; font-size: 26px;
+      letter-spacing: 0.06em; text-transform: uppercase; color: ${v.destaque};
+      margin-bottom: 6px;
+    }
     h1 {
-      font-family: 'Fraunces', serif; font-weight: 600;
-      font-size: 68px; line-height: 1.08; letter-spacing: -0.01em;
+      font-family: 'Fraunces', serif; font-weight: 600; font-style: italic;
+      font-size: 68px; line-height: 1.08; letter-spacing: -0.005em;
       max-height: calc(68px * 1.08 * 2 + 4px);
-      margin-bottom: 26px;
+      margin-bottom: 30px;
     }`);
 }
 
@@ -422,7 +596,7 @@ function slideCapaStory(v, foto, nome, recorte, logoUri) {
   return baseHtml(v, `
     <img class="foto" src="${foto}" alt="">
     <div class="faixa">
-      ${marcaDaguaHtml(logoUri, 'marca-dagua--capa')}
+      ${marcaDaguaHtml(logoUri, 'marca-dagua--capa', true)}
       <h1 id="titulo">${escaparHtml(nome)}</h1>
       <p class="sub">Peça única, feita à mão ${svgCoracao(26, v.destaque)}</p>
     </div>`, `
@@ -592,72 +766,220 @@ function slideCapaPorLayout(layout, v, foto, nome, recorte, produto, logoUri) {
   return slideCapa(v, foto, nome, recorte, produto, logoUri);
 }
 
-// Foto extra: a imagem inteira (contain), sem texto de preço, só um
-// passe-partout branco fino com filete terracota sobre o fundo creme
-// do site + a marca d'água no canto e uma legendinha "Detalhe" opcional
-// (pedido 2.6: ajuda a variar o ritmo do carrossel sem inventar legenda
-// nova pra cada foto).
-function slideFoto(v, foto, logoUri, legenda) {
-  return baseHtml(v, `
-    <div class="moldura"><img src="${foto}" alt=""></div>
-    ${legenda ? `<p class="legenda-foto">${escaparHtml(legenda)}</p>` : ''}
-    ${marcaDaguaHtml(logoUri)}`, `
-    body {
-      display: flex; align-items: center; justify-content: center;
-      background-image: ${v.monograma}, ${v.grao};
-      background-size: 220px, 140px;
-    }
-    .moldura {
-      padding: 14px; background: #FFF;
-      box-shadow: 0 0 0 1.5px ${v.destaque}, 0 22px 48px rgba(62, 46, 34, 0.22);
-      border-radius: 4px;
-    }
-    img { display: block; max-width: ${LARGURA - 180}px; max-height: ${ALTURA - 230}px; border-radius: 2px; }
-    .legenda-foto {
-      position: absolute; left: 0; right: 0; bottom: 64px; text-align: center;
-      font-family: 'Fraunces', serif; font-style: italic; font-size: 30px;
-      color: ${v.destaque};
-    }`);
+// ---- v4 (pedido 4: "slides de foto muito simples — só uma borda branca
+// e a palavra 'Detalhe'"): 3 variantes de moldura com efeito 3D (em vez
+// de 1 moldura chapada), legenda ÚTIL extraída da própria descrição da
+// peça (extrairDestaques — nunca um texto inventado) e uma tira de
+// miniaturas das outras fotos da peça, com a atual destacada — pra quem
+// abre o carrossel sentir que são fotos de verdade da MESMA peça, não um
+// slide solto. As 3 variantes alternam entre os slides de foto do
+// carrossel (slideFotoPorVariante) pra não repetir composição.
+
+// Tira de miniaturas quadradas — reaproveitada pelas variantes 1 e 2.
+function tiraMiniaturasHtml(thumbs, indiceAtual, classeExtra = '') {
+  return `<div class="miniaturas ${classeExtra}">
+    ${thumbs.map((uri, i) => `<div class="miniatura ${i === indiceAtual ? 'miniatura--atual' : ''}"><img src="${uri}" alt=""></div>`).join('')}
+  </div>`;
 }
 
-// Novo slide "por que comprar com a Anasor" (pedido 2.4): 4 fatos reais
-// de politicas.html, nada inventado — ver leitura do arquivo:
-// id="prazo-envio" (frete grátis + prazo), FAQ "formas de pagamento"
-// (Pix/crédito/débito) e id="trocas-devolucoes" (7 dias de arrependimento,
-// CDC). "via Mercado Pago" no item de pagamento cobre o 5º ponto pedido
-// (processamento protegido) sem precisar de um 5º ícone — 4 fica mais
-// limpo que 5 numa tela só, e a frase carrega os dois fatos juntos.
-function slideConfianca(v, logoUri) {
+// Miniaturas CIRCULARES — só da variante 3 (cantos orgânicos), pra
+// acompanhar a forma redonda do recorte principal daquele layout.
+function miniaturasCircularesHtml(thumbs, indiceAtual) {
+  return `<div class="miniaturas-circulo">
+    ${thumbs.map((uri, i) => `<div class="miniatura-circulo ${i === indiceAtual ? 'miniatura-circulo--atual' : ''}"><img src="${uri}" alt=""></div>`).join('')}
+  </div>`;
+}
+
+const CSS_MINIATURAS = `
+  .miniaturas { display: flex; gap: 18px; }
+  .miniatura { width: 100px; height: 100px; border-radius: 10px; overflow: hidden; opacity: 0.5; box-shadow: 0 6px 14px rgba(62, 46, 34, 0.2); }
+  .miniatura img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .miniatura--atual { opacity: 1; box-shadow: 0 0 0 4px #FFF, 0 0 0 7px currentColor, 0 10px 22px rgba(62, 46, 34, 0.3); }
+  .miniaturas--coluna { flex-direction: column; }
+  .miniaturas-circulo { display: flex; gap: 16px; }
+  .miniatura-circulo { width: 86px; height: 86px; border-radius: 50%; overflow: hidden; opacity: 0.5; box-shadow: 0 6px 14px rgba(62, 46, 34, 0.2); }
+  .miniatura-circulo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .miniatura-circulo--atual { opacity: 1; box-shadow: 0 0 0 4px #FFF, 0 0 0 7px currentColor, 0 10px 22px rgba(62, 46, 34, 0.3); }
+`;
+
+// Variante 1 — "polaroid": foto no tamanho/proporção natural (sem
+// recorte — object-fit:contain via max-width/max-height), cartão branco
+// levemente inclinado com a legenda escrita na margem branca debaixo
+// (como uma legenda à mão), tira de miniaturas reta por baixo.
+function slideFotoPolaroid(v, fotoUri, legenda, thumbs, indiceAtual, logoUri) {
+  return baseHtml(v, `
+    <div class="flor"></div>
+    ${marcaDaguaHtml(logoUri, '', true)}
+    <div class="cena-polaroid">
+      <div class="polaroid">
+        <img src="${fotoUri}" alt="">
+        <p class="polaroid__legenda">${escaparHtml(legenda)}</p>
+      </div>
+      ${tiraMiniaturasHtml(thumbs, indiceAtual)}
+    </div>`, `
+    body { background-image: ${v.monograma}, ${v.grao}; background-size: 220px, 140px; color: ${v.destaque}; }
+    .flor {
+      position: absolute; top: -90px; left: -140px; width: 440px; height: 440px;
+      background-repeat: no-repeat; background-size: contain; transform: rotate(18deg) scaleX(-1);
+      background-image: ${v.flor};
+    }
+    .cena-polaroid { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 48px; padding: 0 ${MARGEM_SEGURA}px; }
+    .polaroid {
+      background: #FFF; padding: 24px 24px 64px; border-radius: 6px;
+      transform: rotate(-3deg);
+      box-shadow: 0 30px 56px rgba(62, 46, 34, 0.3), 0 2px 0 rgba(255, 255, 255, 0.6) inset;
+    }
+    .polaroid img { display: block; max-width: 680px; max-height: 680px; width: auto; height: auto; border-radius: 2px; }
+    .polaroid__legenda {
+      margin-top: 24px; text-align: center;
+      font-family: 'Fraunces', serif; font-style: italic; font-size: 32px; color: ${v.destaque};
+    }
+    .cena-polaroid .miniaturas { transform: rotate(2deg); }
+    ${CSS_MINIATURAS}`);
+}
+
+// Variante 2 — "moldura dupla": passe-partout creme + filete terracota +
+// sombra em camadas (sem inclinação — a mais "formal" das 3), legenda
+// como rótulo centralizado com linha divisória, miniaturas empilhadas
+// numa coluna ao lado.
+function slideFotoMolduraDupla(v, fotoUri, legenda, thumbs, indiceAtual, logoUri) {
+  return baseHtml(v, `
+    <div class="vaso"></div>
+    ${marcaDaguaHtml(logoUri, '', true)}
+    <div class="cena-dupla">
+      <div class="dupla__principal">
+        <div class="dupla__moldura"><img src="${fotoUri}" alt=""></div>
+        <div class="dupla__divisor"></div>
+        <p class="dupla__legenda">${escaparHtml(legenda)}</p>
+      </div>
+      ${tiraMiniaturasHtml(thumbs, indiceAtual, 'miniaturas--coluna')}
+    </div>`, `
+    body { background-image: ${v.monograma}, ${v.grao}; background-size: 220px, 140px; color: ${v.destaque}; }
+    .vaso {
+      position: absolute; bottom: -50px; right: -90px; width: 360px; height: 360px;
+      background-repeat: no-repeat; background-size: contain; transform: scaleX(-1);
+      background-image: ${v.vaso};
+    }
+    .cena-dupla { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; gap: 44px; padding: 0 ${MARGEM_SEGURA}px; }
+    .dupla__principal { display: flex; flex-direction: column; align-items: center; }
+    .dupla__moldura {
+      background: ${v.fundo}; padding: 26px; border: 2px solid ${v.destaque};
+      box-shadow: 0 0 0 10px rgba(255, 255, 255, 0.55) inset, 0 30px 56px rgba(62, 46, 34, 0.28);
+    }
+    .dupla__moldura img { display: block; max-width: 610px; max-height: 700px; width: auto; height: auto; }
+    .dupla__divisor { width: 70px; height: 2px; background: ${v.destaque}; opacity: 0.5; margin-top: 30px; }
+    .dupla__legenda {
+      margin-top: 18px; text-align: center; max-width: 560px;
+      font-family: 'Jost', sans-serif; font-weight: 500; font-size: 27px; letter-spacing: 0.02em; color: ${v.texto};
+    }
+    ${CSS_MINIATURAS}`);
+}
+
+// Variante 3 — "cantos orgânicos": recorte com a MESMA curva orgânica do
+// site (--raio-organico, ver css/style.css — forma tipo "gota/vaso" de
+// peça torneada à mão), filete terracota, legenda numa etiqueta que
+// sobrepõe a borda de baixo, miniaturas circulares.
+function slideFotoOrganica(v, fotoUri, legenda, thumbs, indiceAtual, logoUri) {
+  return baseHtml(v, `
+    ${marcaDaguaHtml(logoUri, '', true)}
+    <div class="cena-organica">
+      <div class="organica__moldura">
+        <img src="${fotoUri}" alt="">
+        <p class="organica__legenda">${escaparHtml(legenda)}</p>
+      </div>
+      ${miniaturasCircularesHtml(thumbs, indiceAtual)}
+    </div>`, `
+    body { background-image: ${v.monograma}, ${v.grao}; background-size: 220px, 140px; color: ${v.destaque}; }
+    .cena-organica { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 56px; padding: 0 ${MARGEM_SEGURA}px; }
+    .organica__moldura {
+      position: relative; width: 760px; height: 760px;
+      border-radius: 60% 40% 55% 45% / 45% 55% 40% 60%;
+      overflow: hidden;
+      box-shadow: 0 0 0 6px ${v.fundo}, 0 0 0 9px ${v.destaque}, 0 30px 60px rgba(62, 46, 34, 0.3);
+    }
+    .organica__moldura img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .organica__legenda {
+      position: absolute; left: 50%; bottom: 36px; transform: translateX(-50%);
+      background: ${v.destaque}; color: #FFF; white-space: nowrap;
+      font-family: 'Jost', sans-serif; font-weight: 500; font-size: 26px;
+      padding: 14px 32px; border-radius: 999px;
+      box-shadow: 0 4px 0 ${v.destaqueEscuro}, 0 10px 20px rgba(62, 46, 34, 0.3);
+    }
+    ${CSS_MINIATURAS}`);
+}
+
+// Dispatcher: 1=polaroid, 2=moldura dupla, 3=cantos orgânicos — mesmo
+// padrão de slideCapaPorLayout (um lugar só decide).
+function slideFotoPorVariante(variante, v, fotoUri, legenda, thumbs, indiceAtual, logoUri) {
+  if (variante === 2) return slideFotoMolduraDupla(v, fotoUri, legenda, thumbs, indiceAtual, logoUri);
+  if (variante === 3) return slideFotoOrganica(v, fotoUri, legenda, thumbs, indiceAtual, logoUri);
+  return slideFotoPolaroid(v, fotoUri, legenda, thumbs, indiceAtual, logoUri);
+}
+
+// Slide "por que comprar com a Anasor" (pedido 5: virar uma CTA
+// chamativa). 4 fatos reais de politicas.html, nada inventado — ver
+// leitura do arquivo: id="prazo-envio" (frete grátis + prazo), FAQ
+// "formas de pagamento" (Pix/crédito/débito via Mercado Pago) e a regra
+// de negócio do CLAUDE.md (estoque 1, peça única). O 4º item ERA "7 dias
+// pra se arrepender da compra" — pedido explícito da rodada v4 pra
+// tirar: a política continua valendo e seguindo no site, só não é mais
+// um bom gancho de venda numa arte de Instagram; entrou "peça única:
+// ninguém vai ter uma igual" (mesmo fato que já embasa o selo "Peça
+// única" do resto do carrossel, agora como argumento de compra).
+// Rosto da Anasor ao lado do nome dela (pedido 2) + botão gummy "Garanta
+// a sua" no fim (pedido 5).
+function slideConfianca(v, logoUri, rostoUri) {
   const itens = [
     ['truck', 'Frete grátis para todo o Brasil'],
     ['credit-card', 'Pix, crédito ou débito — via Mercado Pago'],
     ['package', 'Envio em até 7 dias úteis'],
-    ['rotate-ccw', '7 dias pra se arrepender da compra'],
+    ['gem', 'Peça única: ninguém vai ter uma igual'],
   ];
   return baseHtml(v, `
     ${marcaDaguaHtml(logoUri)}
     <main class="porque">
+      ${rostoAnasorHtml(rostoUri, 132, 'porque__rosto')}
       <p class="eyebrow">Por que comprar com a</p>
       <h1>Anasor Sobreira</h1>
-      <ul class="lista-porque">
-        ${itens.map(([icone, texto]) => `<li>${svgIcone(icone, 46)}<span>${escaparHtml(texto)}</span></li>`).join('')}
-      </ul>
+      <div class="porque__grid">
+        ${itens.map(([icone, texto]) => `<div class="porque__card">
+          <span class="porque__icone">${svgIcone(icone, 34, '#FFF')}</span>
+          <span class="porque__texto">${escaparHtml(texto)}</span>
+        </div>`).join('')}
+      </div>
+      <div class="botao">Garanta a sua <span class="botao__separador">•</span> Link na bio</div>
     </main>`, `
     body { background-image: ${v.monograma}, ${v.grao}; background-size: 220px, 140px; }
-    .porque { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0 96px; }
-    .eyebrow { font-size: 30px; color: ${v.destaque}; letter-spacing: 0.04em; }
+    .porque { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0 ${MARGEM_SEGURA}px; text-align: center; }
+    .porque__rosto { margin-bottom: 26px; }
+    .eyebrow { font-size: 28px; color: ${v.destaque}; letter-spacing: 0.04em; }
     .porque h1 {
       font-family: 'Fraunces', serif; font-weight: 600; font-style: italic;
-      font-size: 76px; margin-top: 10px; margin-bottom: 64px;
+      font-size: 64px; margin-top: 8px; margin-bottom: 48px;
     }
-    .lista-porque { list-style: none; width: 100%; max-width: 820px; }
-    .lista-porque li {
-      display: flex; align-items: center; gap: 30px;
-      padding: 26px 8px; border-bottom: 1px solid rgba(62, 46, 34, 0.14);
+    .porque__grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 22px;
+      width: 100%; max-width: 900px; margin-bottom: 52px;
     }
-    .lista-porque li:last-child { border-bottom: none; }
-    .lista-porque svg { color: ${v.destaque}; flex-shrink: 0; }
-    .lista-porque span { font-size: 36px; line-height: 1.3; }`);
+    .porque__card {
+      display: flex; align-items: center; gap: 20px; text-align: left;
+      background: rgba(255, 255, 255, 0.55); border-radius: 26px; padding: 22px 24px;
+      box-shadow: 0 2px 0 rgba(255, 255, 255, 0.6) inset, 0 14px 28px rgba(62, 46, 34, 0.14);
+    }
+    .porque__icone {
+      flex-shrink: 0; width: 64px; height: 64px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      background-image: linear-gradient(135deg, ${v.destaque}, ${DOURADO});
+      box-shadow: inset 2px 2px 3px rgba(255, 255, 255, 0.4), inset -2px -2px 4px rgba(62, 46, 34, 0.25), 0 4px 0 ${v.destaqueEscuro};
+    }
+    .porque__texto { font-size: 24px; line-height: 1.3; color: ${v.texto}; }
+    .botao {
+      padding: 26px 60px; border-radius: 999px;
+      background: ${v.destaque}; color: #FFF; font-size: 36px; font-weight: 500;
+      background-image: linear-gradient(to bottom, rgba(255, 255, 255, 0.13), rgba(255, 255, 255, 0) 55%);
+      box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.28), 0 10px 0 ${v.destaqueEscuro};
+    }
+    .botao__separador { opacity: 0.55; margin: 0 8px; }`);
 }
 
 // ---- v3/A3: carrosséis de CONTEÚDO (não são de uma peça específica) ----
@@ -690,8 +1012,8 @@ function slideCapaInformativa(v, icone, eyebrow, titulo, subtitulo, logoUri) {
     </main>`, `
     body { background-image: ${v.monograma}, ${v.grao}; background-size: 220px, 140px; }
     .flor, .vaso { position: absolute; background-repeat: no-repeat; background-size: contain; }
-    .flor { width: 560px; height: 560px; top: -70px; right: -150px; transform: rotate(-12deg); background-image: ${v.flor}; opacity: 0.85; }
-    .vaso { width: 360px; height: 360px; bottom: -40px; left: -80px; background-image: ${v.vaso}; opacity: 0.85; }
+    .flor { width: 560px; height: 560px; top: -70px; right: -150px; transform: rotate(-12deg); background-image: ${v.flor}; opacity: 1; }
+    .vaso { width: 360px; height: 360px; bottom: -40px; left: -80px; background-image: ${v.vaso}; opacity: 1; }
     .info-capa { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 0 90px; }
     .info-capa__icone {
       width: 124px; height: 124px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
@@ -750,7 +1072,7 @@ function slideParagrafo(v, titulo, corpo, logoUri) {
     .flor {
       position: absolute; top: -90px; right: -140px; width: 480px; height: 480px;
       background-repeat: no-repeat; background-size: contain; transform: rotate(-8deg);
-      background-image: ${v.flor}; opacity: 0.7;
+      background-image: ${v.flor}; opacity: 1;
     }
     .paragrafo {
       position: absolute; inset: 0; display: flex; flex-direction: column;
@@ -783,7 +1105,7 @@ function slideListaSimples(v, titulo, itens, logoUri) {
     .vaso {
       position: absolute; top: -60px; right: -100px; width: 380px; height: 380px;
       background-repeat: no-repeat; background-size: contain; transform: rotate(8deg) scaleX(-1);
-      background-image: ${v.vaso}; opacity: 0.7;
+      background-image: ${v.vaso}; opacity: 1;
     }
     .simples {
       position: absolute; inset: 0; display: flex; flex-direction: column;
@@ -809,14 +1131,14 @@ function slideCapaVendida(v, foto, logoUri) {
     <img class="foto foto--vendida" src="${foto}" alt="">
     <div class="selo-vendido">Vendido</div>
     <div class="faixa">
-      ${marcaDaguaHtml(logoUri, 'marca-dagua--capa')}
+      ${marcaDaguaHtml(logoUri, 'marca-dagua--capa', true)}
       <h1 id="titulo">Esta peça já encontrou um lar</h1>
       <p class="sub-vendida">Mas você pode encomendar uma parecida ${svgCoracao(26, v.destaque)}</p>
     </div>`, `
     .foto { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 50%; }
     .foto--vendida { filter: grayscale(0.7); opacity: 0.75; }
     .selo-vendido {
-      position: absolute; top: 56px; left: 56px; z-index: 2;
+      position: absolute; top: ${MARGEM_SEGURA}px; left: ${MARGEM_SEGURA}px; z-index: 2;
       background: ${v.texto}; color: ${v.fundo};
       font-family: 'Jost', sans-serif; font-weight: 600; font-size: 30px; letter-spacing: 0.02em;
       padding: 20px 34px; border-radius: 999px; box-shadow: 0 6px 18px rgba(62, 46, 34, 0.22);
@@ -827,7 +1149,7 @@ function slideCapaVendida(v, foto, logoUri) {
       background-image: ${v.monograma}, ${v.grao}; background-size: 220px, 140px;
       border-top: 2px solid ${v.destaque};
     }
-    .marca-dagua--capa { top: -166px; bottom: auto; right: 40px; }
+    .marca-dagua--capa { top: -182px; bottom: auto; right: ${MARGEM_SEGURA - 32}px; }
     h1 {
       font-family: 'Fraunces', serif; font-weight: 600; font-size: 54px; line-height: 1.12;
       max-height: calc(54px * 1.12 * 2 + 4px); margin-bottom: 20px;
@@ -835,16 +1157,19 @@ function slideCapaVendida(v, foto, logoUri) {
     .sub-vendida { font-size: 29px; color: ${v.destaque}; display: flex; align-items: center; justify-content: center; gap: 10px; }`);
 }
 
-// Chamada final: monograma, "Peça única" (coração em SVG, não emoji),
-// um botão gummy "Link na bio" (mesmo desenho dos botões do site) e,
-// no rodapé, a MESMA faixa de confiança da capa (pedido 2.3/2.5).
-function slideChamada(v, logoUri) {
+// Chamada final: rosto da Anasor (pedido 6 — substitui o círculo "AS"),
+// "Peça única" com coração TERRACOTA (era branco sobre fundo creme — por
+// isso "sumia" e desequilibrava o título, pedido 6), botão gummy "Link
+// na bio" e, no rodapé, a MESMA faixa de confiança da capa, agora em
+// grid de 3 colunas iguais e centralizada (pedido 6 — antes era uma
+// linha com texto nowrap que não cabia nos 1080px da arte).
+function slideChamada(v, logoUri, rostoUri) {
   return baseHtml(v, `
     <div class="flor"></div><div class="vaso"></div>
     ${marcaDaguaHtml(logoUri)}
     <main>
-      <div class="selo-marca">AS</div>
-      <h1>Peça única ${svgCoracao(84, '#FFF')}</h1>
+      ${rostoAnasorHtml(rostoUri, 168, 'chamada__rosto')}
+      <h1>Peça única ${svgCoracao(64, v.destaque)}</h1>
       <p class="sub">Feita à mão, uma de cada vez</p>
       <div class="botao">Link na bio</div>
       <p class="arroba">@anasor.ceramica</p>
@@ -853,20 +1178,13 @@ function slideChamada(v, logoUri) {
     </main>`, `
     body { background-image: ${v.monograma}, ${v.grao}; background-size: 220px, 140px; }
     .flor, .vaso { position: absolute; background-repeat: no-repeat; background-size: contain; }
-    .flor { width: 560px; height: 560px; top: -60px; right: -150px; transform: rotate(-14deg); background-image: ${v.flor}; opacity: 0.9; }
-    .vaso { width: 360px; height: 360px; bottom: -30px; left: -70px; background-image: ${v.vaso}; opacity: 0.9; }
-    main { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 0 60px; }
-    .selo-marca {
-      width: 168px; height: 168px; border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      background: ${v.destaque}; color: ${v.fundo};
-      font-family: 'Fraunces', serif; font-style: italic; font-weight: 500; font-size: 84px;
-      box-shadow: 0 0 0 10px ${v.fundo}, 0 0 0 12px ${v.destaque};
-      margin-bottom: 56px;
-    }
+    .flor { width: 560px; height: 560px; top: -60px; right: -150px; transform: rotate(-14deg); background-image: ${v.flor}; opacity: 1; }
+    .vaso { width: 360px; height: 360px; bottom: -30px; left: -70px; background-image: ${v.vaso}; opacity: 1; }
+    main { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 0 ${MARGEM_SEGURA - 12}px; }
+    .chamada__rosto { margin-bottom: 52px; }
     h1 {
       font-family: 'Fraunces', serif; font-weight: 600; font-size: 104px; line-height: 1; letter-spacing: -0.015em;
-      display: flex; align-items: center; gap: 24px;
+      display: flex; align-items: center; justify-content: center; gap: 22px;
     }
     .sub { margin-top: 20px; font-size: 36px; color: ${v.destaque}; }
     .botao {
@@ -876,7 +1194,7 @@ function slideChamada(v, logoUri) {
       box-shadow: inset 0 2px 0 rgba(255,255,255,0.28), 0 12px 0 ${v.destaqueEscuro};
     }
     .arroba { margin-top: 36px; font-size: 32px; color: ${v.secundaria}; }
-    .divisor { width: 120px; height: 1px; background: rgba(62, 46, 34, 0.18); margin: 40px 0 36px; }`);
+    .divisor { width: 120px; height: 1px; background: rgba(62, 46, 34, 0.18); margin: 40px 0 44px; }`);
 }
 
 // ---- Renderização ----
@@ -999,7 +1317,7 @@ const VARIACOES_TEXTO = 'Cada peça de cerâmica é única e pode apresentar peq
 // ---- v3/A3: os 4 carrosséis de CONTEÚDO (não são de uma peça) ----
 // Gerados DEPOIS dos 9 posts de peça, numeração contínua (post-10 a
 // post-13) — mesma pasta de saída, mesmo padrão de nome de arquivo.
-async function gerarCarrosseisConteudo(pagina, v, produtos, logoUri) {
+async function gerarCarrosseisConteudo(pagina, v, produtos, logoUri, rostoUri) {
   let proximoN = 10;
 
   // Helper local: mesma lógica de "salvar" do loop de peças (função
@@ -1043,7 +1361,7 @@ async function gerarCarrosseisConteudo(pagina, v, produtos, logoUri) {
       await salvar(slidePassoGrande(v, 3, 3, 'package', 'Receba com frete grátis',
         'Produzimos e embalamos com cuidado — envio em até 7 dias úteis.', logoUri),
         'passo', 'Passo 3: frete grátis e envio', 'Passo 3: receba com frete grátis, envio em até 7 dias úteis');
-      await salvar(slideChamada(v, logoUri),
+      await salvar(slideChamada(v, logoUri, rostoUri),
         'chamada', '"Peça única / Link na bio" + faixa de confiança', 'Peça única, feita à mão — @anasor.ceramica, link na bio');
     },
     `Como comprar uma peça da Anasor Sobreira 🛍️
@@ -1076,7 +1394,7 @@ A gente produz e embala com cuidado antes de enviar: até 7 dias úteis, pelos C
       await salvar(slideParagrafo(v, VARIACOES_TITULO, VARIACOES_TEXTO, logoUri),
         'paragrafo', 'Pequenas variações são normais e fazem parte da autenticidade do trabalho manual, não são defeito',
         'Pequenas variações de cor, textura e formato em relação às fotos são normais, fazem parte da autenticidade do trabalho manual — não são defeito');
-      await salvar(slideChamada(v, logoUri),
+      await salvar(slideChamada(v, logoUri, rostoUri),
         'chamada', '"Peça única / Link na bio" + faixa de confiança', 'Peça única, feita à mão — @anasor.ceramica, link na bio');
     },
     `Cuidados com a sua peça de cerâmica 🧼
@@ -1114,7 +1432,7 @@ Salve este post para não esquecer. Mais dicas no link na bio 🤎`,
         'Como cada peça é única e feita à mão, não trabalhamos com troca por uma peça idêntica — não existe estoque de reposição igual.', logoUri),
         'paragrafo', 'Não há troca por peça idêntica: não existe estoque de reposição igual',
         'Não trabalhamos com troca por peça idêntica, porque não existe estoque de reposição igual');
-      await salvar(slideChamada(v, logoUri),
+      await salvar(slideChamada(v, logoUri, rostoUri),
         'chamada', '"Peça única / Link na bio" + faixa de confiança', 'Peça única, feita à mão — @anasor.ceramica, link na bio');
     },
     `O que significa "peça única" aqui no ateliê 🏺
@@ -1160,7 +1478,7 @@ E é por isso também que não existe troca por uma peça "idêntica" — mas se
           ], logoUri),
             'lista', 'Como funciona uma encomenda: WhatsApp, ideia, combinar detalhes, fazer à mão',
             'Como funciona uma encomenda: chame no WhatsApp, conte a ideia, combine prazo e valor, a peça é feita à mão');
-          await salvar(slideChamada(v, logoUri),
+          await salvar(slideChamada(v, logoUri, rostoUri),
             'chamada', '"Peça única / Link na bio" + faixa de confiança', 'Peça única, feita à mão — @anasor.ceramica, link na bio');
         },
         `Essa já encontrou um lar 🤎
@@ -1183,6 +1501,9 @@ async function main() {
   const legendas = carregarLegendas();
   const v = lerVariaveisCss();
   const logoJpgUri = dataUri(path.join(RAIZ, 'img', 'institucional', 'logo-anasor.jpg'));
+  // v4 (pedido 2): rosto real da Anasor (a mesma ilustração de "Quem
+  // Somos" no site) — ver ROSTO_ANASOR_RECORTE/rostoAnasorHtml.
+  const rostoUri = dataUri(path.join(RAIZ, 'img', 'institucional', 'quem-somos.jpg'));
 
   // Começa de pasta limpa: arte de uma rodada anterior (peça já vendida,
   // slide a mais) não pode ficar misturada com a nova e ir parar no feed.
@@ -1237,21 +1558,30 @@ async function main() {
         `${produto.nome}, peça de cerâmica artesanal da Anasor Sobreira`
       );
       const fotosExtras = fotos.slice(1, 1 + MAX_FOTOS_EXTRAS);
+      // v4 (pedido 4): legenda de cada foto extra vem dos trechos
+      // <span class='realce'> da própria descrição da peça (nunca
+      // inventada — ver extrairDestaques); faltando destaques reais
+      // suficientes, cai numa legenda genérica mas verdadeira. Miniaturas
+      // = as mesmas fotos já carregadas (capa + extras), pra não ler o
+      // disco de novo; a atual de cada slide vem destacada.
+      const destaques = extrairDestaques(produto.descricao || '');
+      const thumbsUris = fotos.slice(0, fotosExtras.length + 1).map((f) => dataUri(f));
       for (const [i, foto] of fotosExtras.entries()) {
-        const legendaFoto = i === 0 ? 'Detalhe' : null;
+        const legendaFoto = destaques[i] || LEGENDAS_FOTO_RESERVA[i % LEGENDAS_FOTO_RESERVA.length];
+        const variante = (i % 3) + 1; // alterna 1/2/3 pra não repetir composição no carrossel
         await salvar(
-          slideFoto(v, dataUri(foto), logoUri, legendaFoto),
-          'foto', `foto extra (${path.basename(foto)})`,
-          `Detalhe de ${nome}, peça de cerâmica artesanal`
+          slideFotoPorVariante(variante, v, dataUri(foto), legendaFoto, thumbsUris, i + 1, logoUri),
+          'foto', `foto extra (${path.basename(foto)}) — legenda "${legendaFoto}", layout ${variante}`,
+          `${legendaFoto}: ${nome}, peça de cerâmica artesanal`
         );
       }
       await salvar(
-        slideConfianca(v, logoUri),
-        'porque', '"Por que comprar com a Anasor Sobreira" — frete, pagamento, envio, trocas',
-        'Por que comprar com a Anasor Sobreira: frete grátis para todo o Brasil, Pix/crédito/débito via Mercado Pago, envio em até 7 dias úteis, 7 dias para se arrepender da compra'
+        slideConfianca(v, logoUri, rostoUri),
+        'porque', '"Por que comprar com a Anasor Sobreira" — frete, pagamento, envio, peça única',
+        'Por que comprar com a Anasor Sobreira: frete grátis para todo o Brasil, Pix/crédito/débito via Mercado Pago, envio em até 7 dias úteis, peça única'
       );
       await salvar(
-        slideChamada(v, logoUri),
+        slideChamada(v, logoUri, rostoUri),
         'chamada', '"Peça única / Link na bio" + faixa de confiança',
         'Peça única, feita à mão, uma de cada vez — @anasor.ceramica, link na bio'
       );
@@ -1278,7 +1608,7 @@ async function main() {
     console.log(`grade do perfil: ${path.join(SAIDA, '_grade-perfil.png')}`);
 
     // A3: os 4 carrosséis de conteúdo (não são de peça específica).
-    await gerarCarrosseisConteudo(pagina, v, produtos, logoUri);
+    await gerarCarrosseisConteudo(pagina, v, produtos, logoUri, rostoUri);
   } finally {
     // Fecha o Chromium mesmo se algum slide falhar no meio
     await navegador.close();
