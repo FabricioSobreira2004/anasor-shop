@@ -8,17 +8,29 @@
 
 Tipos (só para organizar, o emoji do título não vai no post): 🏺 peça do site · 🎨 bastidores · 🧼 cuidados · ✉️ encomenda · 💬 prova social
 
+**v4 (rodada "redesign dos posts"):** o `**negrito**` e `_itálico_` que aparecem no texto das legendas são marcação de intenção, não Markdown de verdade (o Instagram não reconhece `**`/`_`). Antes de postar, rode `node formatar-legenda.js <número da legenda>` — ele troca pelas letras Unicode em negrito/itálico de verdade e salva um `.txt` pronto pra colar em `legendas-formatadas/`. Estrutura padrão de uma legenda de peça (🏺), a partir da nº 1: gancho (emoji + nome em negrito + frase que desperta vontade) → descrição curta e sensorial → "Por que ela é especial" (3 bullets de emoji) → bloco de compra (frete grátis, pagamento, preço uma vez só, CTA "link da bio" com urgência de peça única) → CTA de encomenda → 8-15 hashtags.
+
 ---
 
 ### 1. 🏺 Prato Decorativo Melodia da Primavera — R$ 134,90
 
-Um pássaro amarelo pousado num ramo de roseiras silvestres, pintado com pinceladas soltas, quase de aquarela, sobre um fundo marfim. A borda fica em terracota natural, sem esmalte, para dar aquele contraste rústico. 🌿
+🌸 **Melodia da Primavera** 🐦
+_Um canto amarelo num ramo de rosas silvestres._
 
-Fica lindo na parede, num aparador ou compondo a mesa posta. Peça única, torneada e pintada à mão no ateliê.
+Pintada à mão com pinceladas soltas, quase aquarela, sobre fundo marfim. A borda fica em terracota natural, sem esmalte: aquele contraste rústico que só a argila dá. 🌿
 
-R$ 134,90 com frete grátis para todo o Brasil. Link na bio 🤎
+✨ **Por que ela é especial**
+🤲 Torneada e pintada à mão no ateliê
+💎 Peça única: não existe outra igual
+🖼️ Linda na parede, no aparador ou na mesa posta
 
-#ceramicaartesanal #pratodecorativo #pintadoamao #pecaunica #decoracaoafetiva #feitoamao
+🚚 **Frete grátis para todo o Brasil**
+💳 Pix, crédito ou débito
+🤎 R$ 134,90 · toque no **link da bio** e garanta a sua antes que alguém leve
+
+📩 Quer uma parecida, com a sua cara? Chama no direct que a gente faz por encomenda.
+
+#ceramicaartesanal #pratodecorativo #pintadoamao #pecaunica #decoracaoafetiva #feitoamao #ceramicapintada #mesaposta #artesanatobrasileiro #presentecriativo
 
 ---
 
