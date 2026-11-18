@@ -151,3 +151,63 @@ final medido via pixel (script Playwright/canvas) em x=538,5 de centro
 contra um canvas de 540 de centro (1,5px de diferença). `grade-perfil-
 simulacao.png` nesta pasta é uma cópia do mock de grade 3:4 (ver seção
 v3 acima) já com o visual v4.
+
+## Catálogo completo — posts + stories de TODOS os outros produtos
+(pedido explícito do Fabrício, modo autônomo, 2026-11-18 — Rodada 16 do
+DECISOES.md)
+
+`gerar-posts.js` só cobre 9 peças curadas (post-01 a 09) + 4 carrosséis de
+conteúdo. `gerar-posts-catalogo.js` (novo script) cobre TODAS as outras
+peças disponíveis do catálogo, reaproveitando o motor de `gerar-posts.js`
+via `module.exports` (ver o fim daquele arquivo) — nenhuma duplicação do
+HTML/CSS/Playwright.
+
+```
+cd marketing/instagram
+node gerar-posts-catalogo.js
+```
+
+Saída: `marketing/instagram/conteudo/` — pedido explícito desta rodada
+(diferente de `instagram-posts/`, que fica em `site-mae/`); fica DENTRO
+do repositório mas fora do git (`.gitignore`), porque são PNGs gerados,
+pesados, 100% reproduzíveis a partir deste script.
+
+```
+conteudo/
+  _LEIA-ME.txt                      ordem sugerida de postagem
+  posts/NN-nome-da-peca/            1.png, 2.png... + legenda.txt + alt-text.txt
+  stories/produtos/NN-nome-da-peca/ story-1.png (foto+nome), story-2.png (detalhe+frete)
+  stories/institucionais/           contato/ como-comprar/ frete/ encomendas/ cuidados/ atelie/
+```
+
+**Diferenças de design em relação a `gerar-posts.js`:**
+- Capa SEMPRE no layout 1 (`slideCapa`) — é o único dos 4 layouts de capa
+  com a hierarquia de nome do v4 por completo (ver seção "v4" acima: os
+  layouts 2/3/4 ainda não foram adaptados). Usar só o 1 garante que TODO
+  post novo saia no mesmo padrão premium do post-01, sem risco de
+  inconsistência visual entre peças.
+- 1 a 4 fotos extra por peça (era fixo em 3 nos posts curados) — conforme
+  o número de fotos reais que cada peça tem no catálogo.
+- Stories de produto (`storyFotoPeca`/`storyDetalhePeca`, dentro do
+  próprio `gerar-posts-catalogo.js`) são NOVOS — `gerar-posts.js` só tinha
+  a capa em formato Story. Área seguro: 280px topo / 340px base (folga
+  acima do mínimo pedido de 250/300, mesmo espírito do `MARGEM_SEGURA`
+  "72 não 56"). O story-2 de cada peça deixa o terço inferior (abaixo de
+  ~1280px de 1920px) deliberadamente vazio — é onde o Fabrício cola o
+  sticker de link do Instagram (nunca desenhado na arte).
+- Stories institucionais (contato/como-comprar/frete/encomendas/
+  cuidados/ateliê) reaproveitam a identidade visual de
+  `gerar-capas-destaque.js` v3 (medalhões 3D, ícones de traço único,
+  rosto da Anasor) — ver funções `cssStoryBase`/`storyContato`/etc.
+- Legendas: 7 peças já tinham legenda pronta em `legendas.md` (achadas
+  pelo NOME da peça, mesma lógica de `main()` em `gerar-posts.js`) — as
+  outras 26 são novas, escritas nesta rodada direto em
+  `gerar-posts-catalogo.js` (`LEGENDAS_NOVAS`), na mesma estrutura da
+  legenda nº1 (gancho → sensorial → "por que é especial" → bloco de
+  compra → CTA de encomenda), convertidas pelo mesmo `formatar-legenda.js`.
+- Peças puladas: id 33 (vendida, já é o exemplo do carrossel "Encomende a
+  sua") e id 29 "Caneca Pássaro e Rosa" (pedido explícito, só 1 foto).
+  "Caneca Surpresa Raposinha" e "Guirlanda de Contas com Franjas" (citadas
+  no pedido como duvidosas) não existem mais no catálogo sob esses nomes —
+  ver comentário no topo de `gerar-posts-catalogo.js` e Rodada 16 do
+  DECISOES.md.

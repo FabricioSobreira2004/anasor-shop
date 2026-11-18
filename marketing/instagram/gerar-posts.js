@@ -1642,7 +1642,24 @@ async function main() {
   console.log(`\nPronto: ${SAIDA}`);
 }
 
-main().catch((erro) => {
-  console.error(erro);
-  process.exit(1);
-});
+// Rodada "catálogo completo" (gerar-conteudo-catalogo.js, novo script):
+// reaproveita estas funções em vez de duplicar o motor de HTML/CSS/
+// Playwright — por isso module.exports, só rodando main() quando chamado
+// direto (mesma guarda de formatar-legenda.js, já usada nesta pasta).
+module.exports = {
+  RAIZ, LARGURA, ALTURA, ALTURA_STORY, MARGEM_SEGURA, DOURADO,
+  carregarProdutos, carregarLegendas, lerVariaveisCss, dataUri, nomeCurto, formatarPreco, escaparHtml,
+  dividirNome, extrairDestaques, LEGENDAS_FOTO_RESERVA, rostoAnasorHtml,
+  montarSelos, seloDaPeca, seloHtml, svgIcone, svgCoracao, faixaConfiancaHtml,
+  marcaDaguaHtml, removerFundoLogo, cssComum, baseHtml,
+  slideCapa, slideCapaStory, slideConfianca, slideChamada, slideFotoPorVariante,
+  slideCapaInformativa, slidePassoGrande, slideListaSimples, slideParagrafo,
+  renderizar,
+};
+
+if (require.main === module) {
+  main().catch((erro) => {
+    console.error(erro);
+    process.exit(1);
+  });
+}

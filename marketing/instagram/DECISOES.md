@@ -705,3 +705,99 @@ imagem gerada) já não resolvesse.
 imagem estática via Playwright (mesmo motor dos outros scripts desta
 pasta), não interação com uma página viva — a verificação visual foi
 feita lendo os PNGs gerados diretamente, sem abrir navegador.
+
+---
+
+## Rodada 16 — catálogo completo (posts + stories de todos os outros
+produtos, modo 100% autônomo)
+
+Pedido em 2026-11-18. Fabrício avisou que ia ficar fora — toda decisão
+abaixo foi tomada sozinho, sem pausar para perguntar.
+
+2026-11-18 — Reaproveitamento do motor: `gerar-posts.js` ganhou
+`module.exports` (guardado por `if (require.main === module)`, mesmo
+padrão já usado em `formatar-legenda.js`) em vez de duplicar o HTML/CSS/
+Playwright num script novo — `gerar-posts-catalogo.js` importa as funções
+de slide/CSS/dados direto de lá. `require('./gerar-posts.js')` confirmado
+que NÃO dispara `main()` (testado isoladamente antes de integrar).
+2026-11-18 — Pasta de saída: o pedido escreveu literalmente
+"marketing/instagram/conteudo/ (fora do git, como instagram-posts/)" —
+um caminho DENTRO do repositório (diferente de `instagram-posts/`, que
+fica em `site-mae/`, fora do repo inteiro). Interpretei como "mesmo
+tratamento de `destaques/`": pasta física dentro de `marketing/instagram/`,
+git-ignorada — e não como "mover pra site-mae". Mesma lógica já usada em
+`gerar-capas-destaque.js` (ver comentário de cabeçalho daquele arquivo).
+2026-11-18 — Capa sempre no layout 1 (`slideCapa`), nunca os layouts 2/3/4
+de `gerar-posts.js`: só o 1 tem a hierarquia de nome do redesign v4 por
+completo (README.md "v4" já registra que os outros 3 layouts não foram
+adaptados). Rotear por peça entre os 4 misturaria posts 100% v4 com posts
+só parcialmente v4 no mesmo catálogo — pior para a consistência do perfil
+do que simplesmente usar um layout só, mesmo abrindo mão da variedade de
+capa que a v3 original buscava.
+2026-11-18 — Peças puladas: id 33 (Pote Decorativo Bruma Dourada,
+`disponivel:false`) e id 29 (Caneca Artística Pássaro e Rosa, pedido
+explícito "duvidosa" — só 1 foto registrada, com histórico de recorte
+problemático, ver comentário em `produtos.js`). As outras 2 citadas no
+pedido como duvidosas — "Caneca Surpresa Raposinha" e "Guirlanda de
+Contas com Franjas" — **não existem mais no catálogo sob esses nomes**:
+já foram corrigidas em rodadas anteriores (comentários em `produtos.js`,
+linha ~619 e ~1147) — a "raposinha" era a MESMA caneca do cachorrinho
+(id 19, já curada em post-01..09) e a "guirlanda" foi re-identificada
+como id 42 "Terço de Mesa Grãos de Oração", um produto confirmado, com
+descrição e fotos reais, sem motivo pra continuar de fora. Decisão:
+incluir o id 42 normalmente — ficou registrado aqui em vez de simplesmente
+pular algo que o pedido citava, para o Fabrício poder corrigir se a
+intenção fosse outra.
+2026-11-18 — Ordem de postagem (`_LEIA-ME.txt`/`ORDEM_IDS`): escolhida à
+mão (mesmo espírito de `PECAS` em `gerar-posts.js`, não um algoritmo
+genérico pra um uso só) — ranqueei cada categoria internamente por
+"melhor primeiro" (selo queridinho/assinada, mais fotos) e intercalei as
+categorias em rodízio (prato → caneca → vaso → kit → objeto decorativo →
+repete), encaixando as 3 categorias de 1 peça só (travessa/jarra/devoção)
+em pontos espaçados do meio pra não ficarem todas juntas no fim.
+2026-11-18 — Fotos extras por peça: subiu de 3 (padrão de
+`gerar-posts.js`) pra até 4 (pedido explícito "mínimo 1, máximo 4").
+Nenhuma peça deste catálogo tem só 1 foto no total (a id 29, que tinha,
+foi pulada por outro motivo) — o fallback de "reusar a foto principal
+quando não há nenhuma extra" existe no código mas não chegou a ser
+exercitado nesta rodada; registrado pra não ficar como código morto sem
+explicação se alguém revisar depois.
+2026-11-18 — Stories de peça são NOVOS (não existiam em `gerar-posts.js`,
+que só tem a capa em Story) — área segura 280px topo / 340px base, com
+folga sobre o mínimo pedido (250/300), mesmo espírito do `MARGEM_SEGURA`
+"72 não 56" já documentado em `gerar-posts.js`. O story-2 (detalhe+frete)
+deixa o terço inferior (abaixo de ~1280px de 1920px, bem mais que os 300px
+mínimos) deliberadamente vazio — reservado pro sticker de link do
+Instagram, indicado só no `_LEIA-ME.txt`/relatório, nunca desenhado na
+arte (pedido explícito: "indicar só no relatório, não na arte").
+2026-11-18 — Ícones de "contato" (conversa/envelope/globo) são desenho
+próprio (SVG de traço único, viewBox 24, mesmo estilo Lucide do resto do
+site) em vez de ícones Lucide exatos — não existe um ícone de "conversa"/
+"globo" já usado no site pra copiar com certeza de fidelidade, mesmo
+raciocínio já registrado em `gerar-capas-destaque.js` pros ícones
+vaso/roda-de-oleiro/pincel. O "@" do Instagram usa um glifo tipográfico
+grande (Fraunces) em vez de ícone — mesma técnica do "?" em
+`gerar-capas-destaque.js` (`DESTAQUES.comprar`).
+2026-11-18 — Legendas novas (26 de 33): campo `cuidados` de `produtos.js`
+está "A definir" em TODA peça deste catálogo (conferido antes de
+escrever) — nenhuma dica de cuidado específica por peça existe além do
+fato geral do site (politicas.html #cuidados), por isso o Story
+"Cuidados com a peça" usa só esse fato geral, igual ao carrossel de
+conteúdo equivalente de `gerar-posts.js`.
+2026-11-18 — Kits (7 peças: ids 22/23/32/34/35/36/40): "deixar claro o
+que vem no kit" foi resolvido SEM precisar de código novo — o nome de
+cada kit já descreve o conteúdo por extenso ("Kit 4 Canequinhas Arlequim
+Marmorizado", "Kit Jarra e 2 Copos Textura Casca"...), e `dividirNome()`
+(já existente) naturalmente separa "Kit" (eyebrow) do resto do nome
+(título grande), deixando a contagem+itens em destaque na capa sem
+nenhum caso especial. Reforçado nas legendas também (ex.: "1 jarra + 2
+copos, queimados juntos").
+2026-11-18 — Validação automática (economia de tokens): `validarPng()`
+lê o cabeçalho IHDR do PNG direto (bytes 16-23, sem depender de nenhuma
+lib de imagem) pra conferir dimensão exata de TODO arquivo gerado — 33
+posts + 66 stories de produto + 9 stories institucionais, sem abrir
+nenhum visualmente. Amostra aberta de verdade: post-01 completo (7
+slides), 1 capa de kit, 2 capas de peça comum em pontos espaçados da
+lista (post-21, post-31), os 2 stories de produto do post-01, e os 9
+stories institucionais — todos ok, nenhum problema achado, nenhum lote
+precisou ser regenerado.

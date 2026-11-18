@@ -45,6 +45,12 @@ desktop.ini
 # para o git.
 /marketing/instagram/destaques/
 
+# Posts + Stories do catálogo completo (marketing/instagram/gerar-posts-
+# catalogo.js): mesmo motivo de /destaques/ acima — pedido explícito desta
+# rodada foi "marketing/instagram/conteudo/ (fora do git, como instagram-
+# posts/)", ou seja, DENTRO do repositório mas nunca versionado.
+/marketing/instagram/conteudo/
+
 # Prints das verificações com Playwright: ficam no projeto (sem precisar de
 # permissão para ler fora dele), mas nunca vão para o git.
 /_prints/
