@@ -828,19 +828,41 @@ const CSS_MINIATURAS = `
   .miniatura-circulo--atual { opacity: 1; box-shadow: 0 0 0 4px #FFF, 0 0 0 7px currentColor, 0 10px 22px rgba(62, 46, 34, 0.3); }
 `;
 
-// Variante 1 — "polaroid": foto no tamanho/proporção natural (sem
-// recorte — object-fit:contain via max-width/max-height), cartão branco
-// levemente inclinado com a legenda escrita na margem branca debaixo
-// (como uma legenda à mão), tira de miniaturas reta por baixo.
+// Legenda do nome da peça — caixa "gummy" 3D (mesma linguagem dos
+// botões do Reel da Anasor: cor sólida + sombra sólida deslocada
+// embaixo, friso de luz no topo), Fraunces itálico, 1-2 linhas. v5
+// (pedido explícito: "o nome está em texto avulso" nos slides de foto —
+// vira sempre esta caixa agora, não mais texto solto). Função (não
+// constante) porque o CSS depende de `v` (cores lidas de style.css).
+function cssLegendaGummy(v) {
+  return `
+    .legenda-gummy {
+      display: inline-block; max-width: 700px; text-align: center;
+      background: ${v.destaque}; color: #FFF8EE;
+      font-family: 'Fraunces', serif; font-style: italic; font-weight: 600;
+      font-size: 32px; line-height: 1.25;
+      padding: 18px 40px; border-radius: 999px;
+      box-shadow: 0 6px 0 ${v.destaqueEscuro}, 0 16px 28px rgba(62, 46, 34, 0.32), inset 0 2px 0 rgba(255,255,255,0.28);
+      background-image: linear-gradient(to bottom, rgba(255,255,255,0.16), rgba(255,255,255,0) 55%);
+    }`;
+}
+
+// Variante 1 — "polaroid": v5 — a foto agora PREENCHE a moldura
+// (object-fit:cover numa área de tamanho fixo, só recortando o excesso
+// de fundo da foto-fonte — as fotos brutas têm bastante parede sobrando
+// ao redor da peça; "contain" antigo mostrava essa parede inteira como
+// uma faixa branca/vazia enorme dentro do cartão). Passe-partout fino e
+// uniforme (20px, não mais 24/64 assimétrico) e o nome da peça saiu do
+// rodapé branco pra virar uma caixa gummy logo abaixo do cartão.
 function slideFotoPolaroid(v, fotoUri, legenda, thumbs, indiceAtual, logoUri) {
   return baseHtml(v, `
     <div class="flor"></div>
     ${marcaDaguaHtml(logoUri, '', true)}
     <div class="cena-polaroid">
       <div class="polaroid">
-        <img src="${fotoUri}" alt="">
-        <p class="polaroid__legenda">${escaparHtml(legenda)}</p>
+        <div class="polaroid__foto"><img src="${fotoUri}" alt=""></div>
       </div>
+      <div class="legenda-gummy">${escaparHtml(legenda)}</div>
       ${tiraMiniaturasHtml(thumbs, indiceAtual)}
     </div>`, `
     body { background-image: ${v.monograma}, ${v.grao}; background-size: 220px, 140px; color: ${v.destaque}; }
@@ -849,34 +871,32 @@ function slideFotoPolaroid(v, fotoUri, legenda, thumbs, indiceAtual, logoUri) {
       background-repeat: no-repeat; background-size: contain; transform: rotate(18deg) scaleX(-1);
       background-image: ${v.flor};
     }
-    .cena-polaroid { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 48px; padding: 0 ${MARGEM_SEGURA}px; }
+    .cena-polaroid { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 36px; padding: 0 ${MARGEM_SEGURA}px; }
     .polaroid {
-      background: #FFF; padding: 24px 24px 64px; border-radius: 6px;
+      background: #FFF; padding: 20px; border-radius: 6px;
       transform: rotate(-3deg);
       box-shadow: 0 30px 56px rgba(62, 46, 34, 0.3), 0 2px 0 rgba(255, 255, 255, 0.6) inset;
     }
-    .polaroid img { display: block; max-width: 680px; max-height: 680px; width: auto; height: auto; border-radius: 2px; }
-    .polaroid__legenda {
-      margin-top: 24px; text-align: center;
-      font-family: 'Fraunces', serif; font-style: italic; font-size: 32px; color: ${v.destaque};
-    }
+    .polaroid__foto { width: 640px; height: 760px; overflow: hidden; border-radius: 2px; }
+    .polaroid__foto img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: 50% 42%; }
     .cena-polaroid .miniaturas { transform: rotate(2deg); }
-    ${CSS_MINIATURAS}`);
+    ${CSS_MINIATURAS}
+    ${cssLegendaGummy(v)}`);
 }
 
-// Variante 2 — "moldura dupla": passe-partout creme + filete terracota +
-// sombra em camadas (sem inclinação — a mais "formal" das 3), legenda
-// como rótulo centralizado com linha divisória, miniaturas empilhadas
-// numa coluna ao lado.
+// Variante 2 — "moldura dupla": v5 — mesma correção da variante 1 (foto
+// preenchendo um tamanho fixo via object-fit:cover, não mais "contain";
+// nome da peça virou caixa gummy, saiu do rótulo de texto solto com
+// linha divisória). Passe-partout creme + filete terracota + sombra em
+// camadas continuam (é o que diferencia esta variante da polaroid).
 function slideFotoMolduraDupla(v, fotoUri, legenda, thumbs, indiceAtual, logoUri) {
   return baseHtml(v, `
     <div class="vaso"></div>
     ${marcaDaguaHtml(logoUri, '', true)}
     <div class="cena-dupla">
       <div class="dupla__principal">
-        <div class="dupla__moldura"><img src="${fotoUri}" alt=""></div>
-        <div class="dupla__divisor"></div>
-        <p class="dupla__legenda">${escaparHtml(legenda)}</p>
+        <div class="dupla__moldura"><div class="dupla__foto"><img src="${fotoUri}" alt=""></div></div>
+        <div class="legenda-gummy" style="margin-top: 26px;">${escaparHtml(legenda)}</div>
       </div>
       ${tiraMiniaturasHtml(thumbs, indiceAtual, 'miniaturas--coluna')}
     </div>`, `
@@ -889,16 +909,13 @@ function slideFotoMolduraDupla(v, fotoUri, legenda, thumbs, indiceAtual, logoUri
     .cena-dupla { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; gap: 44px; padding: 0 ${MARGEM_SEGURA}px; }
     .dupla__principal { display: flex; flex-direction: column; align-items: center; }
     .dupla__moldura {
-      background: ${v.fundo}; padding: 26px; border: 2px solid ${v.destaque};
+      background: ${v.fundo}; padding: 20px; border: 2px solid ${v.destaque};
       box-shadow: 0 0 0 10px rgba(255, 255, 255, 0.55) inset, 0 30px 56px rgba(62, 46, 34, 0.28);
     }
-    .dupla__moldura img { display: block; max-width: 610px; max-height: 700px; width: auto; height: auto; }
-    .dupla__divisor { width: 70px; height: 2px; background: ${v.destaque}; opacity: 0.5; margin-top: 30px; }
-    .dupla__legenda {
-      margin-top: 18px; text-align: center; max-width: 560px;
-      font-family: 'Jost', sans-serif; font-weight: 500; font-size: 27px; letter-spacing: 0.02em; color: ${v.texto};
-    }
-    ${CSS_MINIATURAS}`);
+    .dupla__foto { width: 590px; height: 700px; overflow: hidden; }
+    .dupla__foto img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: 50% 42%; }
+    ${CSS_MINIATURAS}
+    ${cssLegendaGummy(v)}`);
 }
 
 // Variante 3 — "cantos orgânicos": recorte com a MESMA curva orgânica do
@@ -906,32 +923,31 @@ function slideFotoMolduraDupla(v, fotoUri, legenda, thumbs, indiceAtual, logoUri
 // peça torneada à mão), filete terracota, legenda numa etiqueta que
 // sobrepõe a borda de baixo, miniaturas circulares.
 function slideFotoOrganica(v, fotoUri, legenda, thumbs, indiceAtual, logoUri) {
+  // v5: esta variante já usava object-fit:cover num tamanho fixo (nunca
+  // teve o bug da "faixa branca" das outras 2) — só a legenda mudou,
+  // pra usar a MESMA caixa gummy (era um rótulo Jost sobreposto na
+  // borda de baixo da moldura; agora é Fraunces itálico, centralizada
+  // ABAIXO da moldura, igual às variantes 1 e 2 — "mesmo componente").
   return baseHtml(v, `
     ${marcaDaguaHtml(logoUri, '', true)}
     <div class="cena-organica">
       <div class="organica__moldura">
         <img src="${fotoUri}" alt="">
-        <p class="organica__legenda">${escaparHtml(legenda)}</p>
       </div>
+      <div class="legenda-gummy">${escaparHtml(legenda)}</div>
       ${miniaturasCircularesHtml(thumbs, indiceAtual)}
     </div>`, `
     body { background-image: ${v.monograma}, ${v.grao}; background-size: 220px, 140px; color: ${v.destaque}; }
-    .cena-organica { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 56px; padding: 0 ${MARGEM_SEGURA}px; }
+    .cena-organica { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 40px; padding: 0 ${MARGEM_SEGURA}px; }
     .organica__moldura {
       position: relative; width: 760px; height: 760px;
       border-radius: 60% 40% 55% 45% / 45% 55% 40% 60%;
       overflow: hidden;
       box-shadow: 0 0 0 6px ${v.fundo}, 0 0 0 9px ${v.destaque}, 0 30px 60px rgba(62, 46, 34, 0.3);
     }
-    .organica__moldura img { width: 100%; height: 100%; object-fit: cover; display: block; }
-    .organica__legenda {
-      position: absolute; left: 50%; bottom: 36px; transform: translateX(-50%);
-      background: ${v.destaque}; color: #FFF; white-space: nowrap;
-      font-family: 'Jost', sans-serif; font-weight: 500; font-size: 26px;
-      padding: 14px 32px; border-radius: 999px;
-      box-shadow: 0 4px 0 ${v.destaqueEscuro}, 0 10px 20px rgba(62, 46, 34, 0.3);
-    }
-    ${CSS_MINIATURAS}`);
+    .organica__moldura img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 42%; display: block; }
+    ${CSS_MINIATURAS}
+    ${cssLegendaGummy(v)}`);
 }
 
 // Dispatcher: 1=polaroid, 2=moldura dupla, 3=cantos orgânicos — mesmo

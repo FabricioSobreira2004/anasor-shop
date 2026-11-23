@@ -67,7 +67,7 @@ Separei 4 canecas que combinam com um café (ou chá) bem servido — cada uma c
 🤎 Toque no **link da bio** e escolha a sua antes que alguém leve
 
 📩 Quer uma parecida? Chama no direct que a gente conversa sobre encomenda.`,
-    hashtags: '#canecaartesanal #ceramicaartesanal #pintadoamao #cafedatarde #feitoamao #artesanatobrasileiro #presentecriativo #canecadecerra #xicaradecafé #decoracaodecozinha',
+    hashtags: '#canecaartesanal #ceramicaartesanal #pintadoamao #cafedatarde #feitoamao #artesanatobrasileiro #presentecriativo #canecadeceramica #xicaradecafe #decoracaodecozinha',
   },
   {
     titulo: 'Mesa de Domingo',
@@ -88,7 +88,7 @@ _As peças que fazem a mesa parecer um presente._
 🤎 Toque no **link da bio** e veja cada peça de perto
 
 📩 Alguma te lembrou de alguém? Chama no direct que a gente combina uma parecida por encomenda.`,
-    hashtags: '#pratodecorativo #travessadecorativa #mesaposta #ceramicaartesanal #pecaunica #pintadoamao #decoracaodemesa #artesanatobrasileiro #presentecriativo #louçaartesanal',
+    hashtags: '#pratodecorativo #travessadecorativa #mesaposta #ceramicaartesanal #pecaunica #pintadoamao #decoracaodemesa #artesanatobrasileiro #presentecriativo #loucaartesanal',
   },
   {
     titulo: 'Flores e Vasos',
@@ -172,7 +172,7 @@ _Peças pequenas que mudam um cantinho inteiro._
 🤎 Toque no **link da bio** e dá uma volta pela loja completa
 
 📩 Quer uma parecida? Chama no direct que a gente conversa sobre encomenda.`,
-    hashtags: '#objetodecorativo #ceramicaartesanal #decoracaodebanheiro #decoracaodecozinha #feitoamao #artesanatobrasileiro #pecaunica #presentecriativo #cantinhodecorado #porta-joias',
+    hashtags: '#objetodecorativo #ceramicaartesanal #decoracaodebanheiro #decoracaodecozinha #feitoamao #artesanatobrasileiro #pecaunica #presentecriativo #cantinhodecorado #portajoias',
   },
   {
     titulo: 'Queridinhas do Ateliê',
@@ -213,7 +213,7 @@ _Peças que carregam um pouco de cuidado e proteção._
 🤎 Toque no **link da bio** e conheça cada uma de perto
 
 📩 Quer uma parecida? Chama no direct que a gente conversa sobre encomenda.`,
-    hashtags: '#pecadedevocao #terçoterapia #ceramicaartesanal #anjodacasa #feitoamao #artesanatobrasileiro #presentedefe #decoracaoafetiva #pecaunica #oracaoemcasa',
+    hashtags: '#pecadedevocao #tercoterapia #ceramicaartesanal #anjodacasa #feitoamao #artesanatobrasileiro #presentedefe #decoracaoafetiva #pecaunica #oracaoemcasa',
   },
   {
     titulo: 'Combinações de Casa',
@@ -234,7 +234,7 @@ Separei 4 peças que ficam ainda mais bonitas combinadas — um prato e uma cane
 🤎 Toque no **link da bio** e monte a sua combinação
 
 📩 Quer montar um conjunto diferente? Chama no direct que a gente combina por encomenda.`,
-    hashtags: '#combinedecoracao #ceramicaartesanal #mesaposta #feitoamao #artesanatobrasileiro #pecaunica #decoracaoafetiva #presentecriativo #composicaodemesa #louçaartesanal',
+    hashtags: '#combinedecoracao #ceramicaartesanal #mesaposta #feitoamao #artesanatobrasileiro #pecaunica #decoracaoafetiva #presentecriativo #composicaodemesa #loucaartesanal',
   },
 ];
 
