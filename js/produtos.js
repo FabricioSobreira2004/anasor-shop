@@ -1265,6 +1265,25 @@ const produtos = [
     cuidados: "A definir",
     oculto: true,
   },
+  {
+    id: 48,
+    nome: "Prato Noite de Pizza",
+    descricao:
+      "Uma fatia de pizza em prato de cerâmica, pintada à mão com rodelas de calabresa e cebola — o sabor clássico das noites de pizza em casa. Veio de uma casa que leva pizza a sério (tem até forno a lenha) e pode ir à mesa para servir e comer de verdade, além de funcionar como peça decorativa na parede ou num cavalete entre um uso e outro. Peça <span class='realce--ouro'>assinada pela artesã</span>, pintada e modelada à mão, uma de cada vez.",
+    preco: 129.9,
+    categoria: "ceramica",
+    subcategoria: "Pratos de Pizza",
+    selo: "assinada",
+    imagem: "img/produtos/prato-noite-de-pizza.webp",
+    imagensExtras: [
+      "img/produtos/angulos-extras/prato-noite-de-pizza-2.webp",
+      "img/produtos/angulos-extras/prato-noite-de-pizza-3.webp",
+    ],
+    videoUrl: "img/produtos/videos/prato-noite-de-pizza.mp4",
+    dimensoes: "A definir",
+    cuidados: "A definir",
+    oculto: true,
+  },
   // --- CROCHÊ -------------------------------------------------
   // Sem fotos ainda. Modelo para quando houver peças (copie o
   // bloco, troque os valores e some as fotos extras que tiver):
