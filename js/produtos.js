@@ -1284,6 +1284,29 @@ const produtos = [
     cuidados: "A definir",
     oculto: true,
   },
+  {
+    // ACHADO EXTRA (não pedido): a mãe enviou 2 fatias com o mesmo
+    // desenho de calabresa/cebola, não 1. Tratada como peça separada
+    // (cada peça é única — ver regra do catálogo), mas com preço só
+    // REPETINDO o da irmã (id 48) como provisório. oculto:true FICA
+    // assim até a Anasor confirmar o preço (ver relatório final).
+    id: 49,
+    nome: "Prato Fatia de Calabresa",
+    descricao:
+      "Uma segunda fatia da mesma leva de calabresa e cebola, irmã do Prato Noite de Pizza — pintada à mão com a mesma receita, mas nenhuma sai exatamente igual à outra, porque cada traço de pincel é único. Pode ir à mesa para servir pizza de verdade (essa casa tem forno a lenha) ou compor a decoração da cozinha. Peça <span class='realce--ouro'>assinada pela artesã</span>, pintada à mão.",
+    preco: 129.9,
+    categoria: "ceramica",
+    subcategoria: "Pratos de Pizza",
+    selo: "assinada",
+    imagem: "img/produtos/prato-fatia-de-calabresa.webp",
+    imagensExtras: [
+      "img/produtos/angulos-extras/prato-fatia-de-calabresa-2.webp",
+    ],
+    videoUrl: "img/produtos/videos/prato-fatia-de-calabresa.mp4",
+    dimensoes: "A definir",
+    cuidados: "A definir",
+    oculto: true,
+  },
   // --- CROCHÊ -------------------------------------------------
   // Sem fotos ainda. Modelo para quando houver peças (copie o
   // bloco, troque os valores e some as fotos extras que tiver):
