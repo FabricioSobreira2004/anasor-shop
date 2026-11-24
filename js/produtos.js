@@ -1307,6 +1307,25 @@ const produtos = [
     cuidados: "A definir",
     oculto: true,
   },
+  {
+    id: 50,
+    nome: "Prato Margherita ao Sol",
+    descricao:
+      "Uma fatia de pizza em prato de cerâmica, pintada à mão com rodelas de tomate maduro e folhas de manjericão sobre a massa crua — a clássica margherita, do jeito que essa casa gosta (tem até forno a lenha). Pode ir à mesa para servir e comer pizza de verdade, ou ficar de decoração na parede entre uma fatia e outra. Peça <span class='realce--ouro'>assinada pela artesã</span>, pintada à mão, sem duas iguais.",
+    preco: 129.9,
+    categoria: "ceramica",
+    subcategoria: "Pratos de Pizza",
+    selo: "assinada",
+    imagem: "img/produtos/prato-margherita-ao-sol.webp",
+    imagensExtras: [
+      "img/produtos/angulos-extras/prato-margherita-ao-sol-2.webp",
+      "img/produtos/angulos-extras/prato-margherita-ao-sol-3.webp",
+    ],
+    videoUrl: "img/produtos/videos/prato-margherita-ao-sol.mp4",
+    dimensoes: "A definir",
+    cuidados: "A definir",
+    oculto: true,
+  },
   // --- CROCHÊ -------------------------------------------------
   // Sem fotos ainda. Modelo para quando houver peças (copie o
   // bloco, troque os valores e some as fotos extras que tiver):
