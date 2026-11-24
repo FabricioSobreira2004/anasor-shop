@@ -1326,6 +1326,24 @@ const produtos = [
     cuidados: "A definir",
     oculto: true,
   },
+  {
+    id: 51,
+    nome: "Prato Horta de Manjericão",
+    descricao:
+      "Uma fatia de pizza irmã da Margherita ao Sol, com a mesma combinação de tomate e manjericão pintada à mão — mas cada traço de pincel sai diferente, então nenhuma fatia nasce igual à outra. Boa para servir pizza de verdade à mesa (essa casa tem forno a lenha) ou para compor a decoração da cozinha. Peça <span class='realce--ouro'>assinada pela artesã</span>, pintada à mão.",
+    preco: 129.9,
+    categoria: "ceramica",
+    subcategoria: "Pratos de Pizza",
+    selo: "assinada",
+    imagem: "img/produtos/prato-horta-de-manjericao.webp",
+    imagensExtras: [
+      "img/produtos/angulos-extras/prato-horta-de-manjericao-2.webp",
+    ],
+    videoUrl: "img/produtos/videos/prato-horta-de-manjericao.mp4",
+    dimensoes: "A definir",
+    cuidados: "A definir",
+    oculto: true,
+  },
   // --- CROCHÊ -------------------------------------------------
   // Sem fotos ainda. Modelo para quando houver peças (copie o
   // bloco, troque os valores e some as fotos extras que tiver):
