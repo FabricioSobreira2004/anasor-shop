@@ -2784,6 +2784,10 @@ window.matchMedia('(min-width: 769px)').addEventListener('change', () => {
   montarVitrineCurada(gradeCafeDaTarde, IDS_CAFE_DA_TARDE);
   // a esteira de subcategorias também é "manual" (2 x 4 cards por slide)
   montarColecoesHome();
+  // idem pra grade de produtos da seção "Hora da Pizza" (também usa
+  // cardsPorSlideCarrossel()) — secaoPizza só existe na Home (ver
+  // "if (secaoPizza)" mais abaixo, onde ela é declarada).
+  if (secaoPizza) montarSecaoPizza(secaoPizza);
 });
 
 // ============================================================
@@ -2980,22 +2984,29 @@ if (secaoSelecaoEspecial) {
 // CSS) do resto da Home, sem brigar por espaço com nenhuma seção
 // existente: entra DEPOIS de "Seleção Especial" e usa o MESMO
 // --espaco-secao de todas as outras.
+const SUBCATEGORIA_PIZZA = 'Pratos de Pizza';
+const HREF_SUBCATEGORIA_PIZZA = `ceramica.html?sub=${slugificar(SUBCATEGORIA_PIZZA)}`;
+
 function montarSecaoPizza(secao) {
   // reservarPecasHome: mesma função que Edição Surpresa/Seleção
   // Especial usam pra nunca repetir uma peça já escalada noutra
   // vitrine manual da Home — aqui não deveria colidir (nenhum dos
   // IDs fixos das outras seções é de pizza), mas custa nada manter o
-  // mesmo cuidado.
+  // mesmo cuidado. vendidasNoFim(): mesma regra de toda listagem por
+  // subcategoria (ex.: linha 899) — peça de pizza vendida continua
+  // aparecendo, só que no fim da fila, nunca some.
   const pratos = reservarPecasHome(
     'pizza-corner',
-    produtosVisiveis().filter((p) => p.subcategoria === 'Pratos de Pizza')
+    vendidasNoFim(produtosVisiveis().filter((p) => p.subcategoria === SUBCATEGORIA_PIZZA))
   );
   const comVideo = pratos.filter((p) => p.videoUrl);
 
-  // Sem peça (ainda oculta, ou nenhuma pizza no catálogo) ou sem
-  // nenhum vídeo: a seção inteira não faz sentido — mesma robustez de
-  // montarProdutoDestaque/montarSelecaoEspecial (função mais abaixo).
-  if (pratos.length === 0 || comVideo.length === 0) {
+  // comVideo é sempre um subconjunto de pratos: pratos.length === 0
+  // já implica comVideo.length === 0, não precisa checar os dois.
+  // Sem nenhum vídeo: a seção inteira não faz sentido — mesma
+  // robustez de montarProdutoDestaque/montarSelecaoEspecial (função
+  // mais abaixo).
+  if (comVideo.length === 0) {
     liberarPecasHome('pizza-corner');
     return;
   }
@@ -3024,9 +3035,11 @@ function montarSecaoPizza(secao) {
     .join('');
 
   // "Ver todos" como último card da grade — mesmo padrão de
-  // montarRelacionados() (produto.js): um link, não outro produto.
+  // montarRelacionados() (produto.js): um link, não outro produto (e
+  // só AQUI, uma vez — nada de repetir o mesmo link como parágrafo
+  // solto abaixo da grade).
   const cardVerTodos = `
-    <a class="produto-card produto-card--ver-todos reveal" href="ceramica.html?sub=pratos-de-pizza">
+    <a class="produto-card produto-card--ver-todos reveal" href="${HREF_SUBCATEGORIA_PIZZA}">
       <span class="produto-card--ver-todos__texto">Ver todos os pratos de pizza</span>
     </a>`;
   const criarCard = (item) => (item === null ? cardVerTodos : criarCardProduto(item));
@@ -3039,7 +3052,6 @@ function montarSecaoPizza(secao) {
     <div class="produtos-grid" data-grade-produtos="pizza-cards" data-manual>
       ${montarSlidesCarrossel([...pratos, null], cardsPorSlideCarrossel(), criarCard)}
     </div>
-    <p class="pizza-corner__ver-todos reveal"><a href="ceramica.html?sub=pratos-de-pizza">Ver todos os pratos de pizza</a></p>
   `;
   secao.hidden = false;
 
@@ -3056,21 +3068,26 @@ function montarSecaoPizza(secao) {
 // CSS), o threshold alto (0.6) garante que só o card BEM centralizado
 // na tela conta como "visível" — nunca dois ao mesmo tempo.
 function ativarCarrosselVideosPizza(secao) {
-  const cards = Array.from(secao.querySelectorAll('.pizza-video-card'));
-  if (cards.length === 0) return;
+  // video/botão de cada card, consultados 1x só (em vez de cada
+  // função abaixo repetir o próprio querySelector a cada card, a
+  // cada disparo — o observer dispara toda hora enquanto rola).
+  const pares = Array.from(secao.querySelectorAll('.pizza-video-card'))
+    .map((card) => ({
+      card,
+      video: card.querySelector('.pizza-video-card__video'),
+      botao: card.querySelector('.pizza-video-card__som'),
+    }))
+    .filter((par) => par.video);
+  if (pares.length === 0) return;
 
-  function pausarOutros(videoAtual) {
-    cards.forEach((card) => {
-      const video = card.querySelector('.pizza-video-card__video');
-      if (video && video !== videoAtual) video.pause();
-    });
-  }
-
-  function mutarOutros(videoAtual) {
-    cards.forEach((card) => {
-      const video = card.querySelector('.pizza-video-card__video');
-      const botao = card.querySelector('.pizza-video-card__som');
-      if (video && video !== videoAtual) {
+  // pausa e tira o som de todo mundo, MENOS o par do vídeo atual —
+  // usada tanto pelo observer (pausa) quanto pelo clique no som
+  // (mutarOutros, que só tira o som e deixa o play/pause como está).
+  function paraTodosMenos(videoAtual, { pausar, mutar }) {
+    pares.forEach(({ video, botao }) => {
+      if (video === videoAtual) return;
+      if (pausar) video.pause();
+      if (mutar) {
         video.muted = true;
         if (botao) botao.setAttribute('aria-pressed', 'false');
       }
@@ -3083,30 +3100,28 @@ function ativarCarrosselVideosPizza(secao) {
     const observador = new IntersectionObserver(
       (entradas) => {
         entradas.forEach((entrada) => {
-          const video = entrada.target.querySelector('.pizza-video-card__video');
-          if (!video) return;
+          const par = pares.find(({ card }) => card === entrada.target);
+          if (!par) return;
           if (entrada.isIntersecting) {
-            pausarOutros(video);
-            video.play().catch(() => {});
+            paraTodosMenos(par.video, { pausar: true, mutar: false });
+            par.video.play().catch(() => {});
           } else {
-            video.pause();
+            par.video.pause();
           }
         });
       },
       { threshold: 0.6 }
     );
-    cards.forEach((card) => observador.observe(card));
+    pares.forEach(({ card }) => observador.observe(card));
   }
 
-  cards.forEach((card) => {
-    const video = card.querySelector('.pizza-video-card__video');
-    const botao = card.querySelector('.pizza-video-card__som');
-    if (!video || !botao) return;
+  pares.forEach(({ video, botao }) => {
+    if (!botao) return;
     botao.addEventListener('click', (evento) => {
       evento.preventDefault();
       evento.stopPropagation();
       video.muted = !video.muted;
-      if (!video.muted) mutarOutros(video);
+      if (!video.muted) paraTodosMenos(video, { pausar: false, mutar: true });
       botao.setAttribute('aria-pressed', String(!video.muted));
     });
   });

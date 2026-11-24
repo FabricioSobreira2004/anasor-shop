@@ -6941,13 +6941,6 @@ footer {
   }
 }
 
-.pizza-corner__ver-todos a {
-  color: var(--cor-destaque);
-  font-weight: 600;
-  text-decoration: underline;
-  text-underline-offset: 3px;
-}
-
 @media (max-width: 768px) {
   .pizza-corner {
     padding: var(--espaco-secao-mobile) 6%;
