@@ -1222,6 +1222,30 @@ const produtos = [
     cuidados: "A definir",
   },
 
+  // --- LEVA NOVA (24/11) — pote, pratos de pizza e saboneteira ---
+  // oculto: true em todas até a rodada de testes terminar (ver
+  // CLAUDE.md: "o site no ar nunca mostra peça incompleta").
+  {
+    id: 46,
+    nome: "Pote Âmbar e Meia-Noite",
+    descricao:
+      "Um pote com tampa em esmalte dourado-âmbar que desce em degradê até um aro bege natural na base — por dentro, a surpresa é um <span class='realce'>azul-marinho profundo</span>, visível só na hora de abrir. O cabo esculpido em bolinha no topo da tampa completa o acabamento delicado. Perfeito para guardar pequenos tesouros (joias, chaves, doces) ou simplesmente para ficar à vista como <span class='realce'>objeto decorativo</span> sobre a mesa. Peça <span class='realce--ouro'>assinada pela artesã</span>, com o acabamento reativo da queima tornando essa combinação de cores impossível de repetir.",
+    preco: 109.9,
+    categoria: "ceramica",
+    subcategoria: "Objetos Decorativos",
+    selo: "assinada",
+    imagem: "img/produtos/pote-ambar-e-meia-noite.webp",
+    imagensExtras: [
+      "img/produtos/angulos-extras/pote-ambar-e-meia-noite-2.webp",
+      "img/produtos/angulos-extras/pote-ambar-e-meia-noite-3.webp",
+      "img/produtos/angulos-extras/pote-ambar-e-meia-noite-4.webp",
+      "img/produtos/angulos-extras/pote-ambar-e-meia-noite-5.webp",
+    ],
+    videoUrl: "img/produtos/videos/pote-ambar-e-meia-noite.mp4",
+    dimensoes: "A definir",
+    cuidados: "A definir",
+    oculto: true,
+  },
   // --- CROCHÊ -------------------------------------------------
   // Sem fotos ainda. Modelo para quando houver peças (copie o
   // bloco, troque os valores e some as fotos extras que tiver):
