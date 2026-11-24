@@ -199,6 +199,45 @@ conteudo/
   cuidados/ateliê) reaproveitam a identidade visual de
   `gerar-capas-destaque.js` v3 (medalhões 3D, ícones de traço único,
   rosto da Anasor) — ver funções `cssStoryBase`/`storyContato`/etc.
+## Carrossel de história ("do barro à peça") — formato novo
+
+`gerar-carrossel-historia.js` (pedido explícito, 2026-11-23) é um
+formato DIFERENTE dos dois acima: em vez de 1 produto por carrossel,
+conta um PROCESSO (ex.: barro → forno → esmalte → luz, no caso dos
+"Anjos de Luz") num tema visual próprio — aqui, "noite dourada" (fundo
+marrom escuro, fio dourado contínuo estilo terço, medalhão redondo 3D
+com a assinatura floral da Anasor em vez do emblema "AS"). Não reaproveita
+o motor de slides de `gerar-posts.js` (a composição é diferente demais:
+os 9 slides são recortes de UMA tela larga de 9720x1350 renderizada de
+uma vez, não 9 páginas separadas) — só reaproveita utilitários soltos
+(`dataUri`, `rostoAnasorHtml`, ícones, `MARGEM_SEGURA`). Detalhe de cada
+decisão (fotos descartadas por segurança, bugs de coordenada, ajuste da
+marca d'água) na Rodada 15 do `DECISOES.md`.
+
+```
+cd marketing/instagram
+node gerar-carrossel-historia.js
+```
+
+Pra contar uma história de peça diferente depois: trocar a pasta de
+fotos-fonte, o array `SLIDES`/as chamadas de `slideEtapa` e os textos de
+legenda/alt-text no topo do arquivo — o motor visual (fio de luz, bokeh,
+medalhão, badges numerados) é genérico e não precisa mudar.
+
+**2 melhorias desta rodada, válidas pra QUALQUER post gerado daqui pra
+frente** (pedido explícito; não precisa regerar posts antigos):
+- **Selo da assinatura sempre em medalhão redondo** — conferido: o
+  `.marca-dagua-chip` de `gerar-posts.js` já é `border-radius:50%` desde
+  a v4, ou seja, já cumpria isso. O medalhão NOVO (assinatura floral,
+  exclusivo do carrossel de história) também nasce redondo.
+- **Fotos sem borda branca sobrando** — conferido nos 3 layouts de foto-
+  detalhe: "moldura dupla" já usa passe-partout creme (não branco),
+  "cantos orgânicos" sangra até o filete dourado. Só a variante
+  "polaroid" tem uma borda branca de 20px, mantida DE PROPÓSITO (é a
+  identidade do formato polaroid em si, não uma sobra acidental).
+
+## Legendas prontas (gerar-posts-catalogo.js)
+
 - Legendas: 7 peças já tinham legenda pronta em `legendas.md` (achadas
   pelo NOME da peça, mesma lógica de `main()` em `gerar-posts.js`) — as
   outras 26 são novas, escritas nesta rodada direto em

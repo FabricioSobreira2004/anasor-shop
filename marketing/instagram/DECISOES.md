@@ -801,3 +801,105 @@ slides), 1 capa de kit, 2 capas de peça comum em pontos espaçados da
 lista (post-21, post-31), os 2 stories de produto do post-01, e os 9
 stories institucionais — todos ok, nenhum problema achado, nenhum lote
 precisou ser regenerado.
+
+---
+
+## Rodada 15 — Carrossel "Do barro à luz" (Anjos de Luz), formato novo de
+história contínua (modo autônomo, 2026-11-23)
+
+Pedido explícito: 1 carrossel novo (9 slides) contando o processo dos
+"Anjos de Luz" (barro → forno → esmalte → luz), tema visual "noite
+dourada" diferente do resto do feed, "carrossel contínuo" (1 tela larga
+cortada em 9 pedaços, com um fio dourado atravessando as divisas), a
+partir de 17 fotos brutas em `site-mae\Criativos\anjos\fotos\`. Script
+novo: `gerar-carrossel-historia.js` (motor próprio — NÃO usa o de
+`gerar-posts.js`, só reaproveita utilitários dele: `dataUri`, `RAIZ`,
+`rostoAnasorHtml`, `svgIcone`/`svgCoracao`, `MARGEM_SEGURA`).
+
+2026-11-23 — **Preço**: procurei "Anjo" em `js/produtos.js` — existe só
+1 produto (`id 43`, "Anjo Guardião Porta-Incenso", R$ 159,90), e é um
+porta-INCENSO diferente das peças fotografadas (porta-VELA, 3 modelos —
+cone grande, cone menor, plaquinha — com terço dourado no pescoço; a
+peça do site é só 1 modelo, sem terço, pra incenso). Não é a mesma peça
+nem uma variação dela com preço conhecido — **nenhum preço entra na
+legenda** (regra do pedido: nunca inventar). Avisado no relatório final
+pro Fabrício: se os Anjos de Luz forem anunciados sem estar no catálogo
+do site, o link da bio/DM é o único caminho de compra até cadastrá-los.
+2026-11-23 — **Fotos "QUADRO" (08, 09, 10, 14, 15) — NENHUMA usada**: as
+5 têm ao fundo o mesmo quadro (figura masculina nua de corpo inteiro, e
+em 10/14/15 também uma figura feminina parcialmente à mostra) ocupando
+boa parte do fundo, bem atrás/entre o grupo de anjos que é o motivo da
+foto — não existe recorte que exclua o quadro inteiro sem cortar fora a
+maior parte dos anjos (o que esvaziaria a própria foto). Regra do
+pedido ("na dúvida, não use a foto") aplicada à risca: as 5 ficaram de
+fora por completo, inclusive do slide "antes x depois" que o pedido
+citava como exemplo (08/09 x 14/15) — refeito com 07 (esmalte, apagado)
+× 13 (closeup aceso), mesma ideia visual, zero risco de reprovação no
+Meta. Isso também simplificou a composição (2 fotos de 1 peça só, em
+vez de 2 grupos de ~12 peças cada).
+2026-11-23 — **Balde rosa da foto 01**: em vez de recortar com medida de
+pixel fixa (as fotos variam de proporção), usei `object-position`
+polarizado pra direita/cima (78% 36%) dentro de um cartão com proporção
+mais larga que a foto-fonte — isso força o `object-fit:cover` a cortar
+mais das LATERAIS (onde está o balde) do que do topo/base. Conferido no
+render final: balde fora de quadro, só perde uma pontinha da asa
+esquerda (troca aceitável, pedida explicitamente: "recorte o balde").
+2026-11-23 — **2 bugs achados na 1ª rodada de crítica visual** (abri os
+9 slides um a um antes de aceitar, não só a prévia): (1) TODOS os
+cartões de foto dos slides de etapa (1, 2, 4, 6) e o cartão da
+embalagem (slide 7) sumiram — causa: cada `.slide-conteudo` já é
+`position:absolute; left:xBase` (é ele quem desloca o slide pro seu
+trecho dos 9720px do canvas) e vira o "containing block" de tudo dentro
+dele, mas eu estava passando `xBase + x` pros cartões de foto (cartão
+somava o deslocamento 2x e ia parar fora da área visível daquele
+slide). Corrigido pra coordenada LOCAL (só `x`, igual ao badge/título já
+faziam) — nenhum outro elemento tinha esse bug (badge, título, selo de
+canto já usavam local ou canvas-absoluto corretamente, conforme o caso).
+(2) o retrato da Anasor (slide 8, `P.rostoAnasorHtml`) saiu como um
+retângulo cru, sem recorte redondo nem anéis — a função só devolve a
+`<div>`/`<img>`; quem desenha o círculo é a classe CSS `.rosto-anasor`
+de `cssComum()` em `gerar-posts.js`, que eu nunca importei pro CSS
+próprio deste script. Corrigido copiando a classe (mesma técnica de
+sempre: copiar o componente visual, nunca importar entre os 2 arquivos,
+evita acoplamento) com os anéis recoloridos pro tema escuro.
+2026-11-23 — **Marca d'água "AS"**: a 1ª versão (ladrilho 260px, 0,06 de
+opacidade — mesmos números do `--marca-monograma` "forte" do site)
+ficou "tapeçaria" num fundo liso escuro — a repetição reforça o traço
+mesmo em baixa opacidade por tile, efeito que o bege granulado do site
+disfarça mas o marrom liso não. Corrigido pra ladrilho 380px + 0,035 de
+opacidade (menos repetições por slide, cada uma mais fraca) — só
+perceptível de perto, como pedido ("bem sutil").
+2026-11-23 — **Medalhão da assinatura**: reaproveitei a MESMA técnica de
+corte por luminância de `removerFundoLogo()` (gerar-posts.js), mas com
+faixa de corte mais alta (238-253, não 228-250) — a logo do site tem
+fundo CREME (~246 de luminância, precisa de faixa larga); a assinatura
+floral tem fundo BRANCO PURO (255) com rosas rosa-claras também de
+luminância alta — faixa estreita evita comer as pétalas. Conferido no
+render final (slide 9, medalhão grande): sem halo, sem fundo branco
+sobrando, rosas preservadas.
+2026-11-23 — **"Selo da assinatura sempre redondo" (melhoria pedida pra
+TODOS os posts)**: conferi o `.marca-dagua-chip` de `gerar-posts.js`
+(usado em `gerar-posts.js`/`gerar-posts-tematicos.js`/`gerar-posts-
+catalogo.js`) — já é `border-radius:50%` desde a v4 (Rodada 14), ou
+seja, **já nasce redondo**; não havia nada quadrado pra corrigir. Só o
+NOVO medalhão de assinatura floral (exclusivo desta rodada, pensado pro
+tema "noite") precisava nascer redondo, e nasceu. Nenhuma mudança em
+`gerar-posts.js` foi necessária aqui.
+2026-11-23 — **"Fotos sem borda branca sobrando" (mesma melhoria)**:
+conferidos os 3 layouts de foto-detalhe de `gerar-posts.js`
+(`slideFotoPolaroid`/`MolduraDupla`/`Organica`) — a variante "moldura
+dupla" já usa passe-partout CREME (não branco) e a "cantos orgânicos"
+não tem moldura nenhuma (sangra até o filete dourado). Só a "polaroid"
+tem uma borda branca de 20px — decisão: MANTIDA de propósito, porque é
+a identidade do próprio formato "polaroid" (pedido assim na v5, Rodada
+14: "passe-partout fino e uniforme"), não uma sobra acidental de
+`object-fit:contain` (esse bug, de fundo vazio DENTRO do cartão, já foi
+corrigido na própria v5). Removê-la descaracterizaria a variante.
+Nenhuma mudança em `gerar-posts.js`; decisão registrada aqui pro
+Fabrício corrigir meu entendimento se não for essa a intenção.
+2026-11-23 — Fechamento: `node --check` no script novo: OK. Nenhum
+arquivo do site/backend tocado — só `marketing/instagram/
+gerar-carrossel-historia.js` (novo) e as entradas de documentação desta
+rodada. Saída só em `site-mae\instagram-posts\anjos-do-barro-a-luz\`
+(fora do git). Git limpo antes de qualquer commit (nada commitado nesta
+rodada até o Fabrício revisar as imagens).

@@ -853,3 +853,18 @@ aritmética, sem chamar o Piper.
   está.
 - `node --check` nos 3 scripts tocados/criados (`gerar-v5.js` só
   ganhou exports novos, nenhum comportamento mudou): OK.
+
+## P) Carrossel "Do barro à luz" (Anjos de Luz) — ✅ CONCLUÍDO (Rodada 15, 2026-11-23)
+
+Formato novo: carrossel de HISTÓRIA (processo, não 1 produto), tema
+"noite dourada", 9 slides contínuos (1 tela larga de 9720x1350 recortada
+em 9, com fio dourado atravessando as divisas). Script novo
+`gerar-carrossel-historia.js`. 2 bugs achados e corrigidos na crítica
+visual (cartões de foto somando o deslocamento do slide 2x e saindo da
+área visível; retrato da Anasor sem o recorte redondo por faltar a
+classe CSS `.rosto-anasor`) — ver Rodada 15 do `DECISOES.md` para esses
+e os demais (preço não encontrado/não inventado, as 5 fotos "QUADRO"
+descartadas por segurança, ajuste da marca d'água). Saída:
+`E:\projetos\site-mae\instagram-posts\anjos-do-barro-a-luz\` (9 PNGs
+1080x1350 + legenda.txt + alt-text.txt + prévia contínua). `node --check`
+OK. Nenhum arquivo do site/backend tocado.
