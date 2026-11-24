@@ -1244,7 +1244,7 @@ const produtos = [
     videoUrl: "img/produtos/videos/pote-ambar-e-meia-noite.mp4",
     dimensoes: "A definir",
     cuidados: "A definir",
-    oculto: true,
+    oculto: false,
   },
   {
     id: 47,
@@ -1263,7 +1263,7 @@ const produtos = [
     videoUrl: "img/produtos/videos/prato-eu-amo-pizza.mp4",
     dimensoes: "A definir",
     cuidados: "A definir",
-    oculto: true,
+    oculto: false,
   },
   {
     id: 48,
@@ -1282,7 +1282,7 @@ const produtos = [
     videoUrl: "img/produtos/videos/prato-noite-de-pizza.mp4",
     dimensoes: "A definir",
     cuidados: "A definir",
-    oculto: true,
+    oculto: false,
   },
   {
     // ACHADO EXTRA (não pedido): a mãe enviou 2 fatias com o mesmo
@@ -1324,7 +1324,7 @@ const produtos = [
     videoUrl: "img/produtos/videos/prato-margherita-ao-sol.mp4",
     dimensoes: "A definir",
     cuidados: "A definir",
-    oculto: true,
+    oculto: false,
   },
   {
     id: 51,
@@ -1342,7 +1342,7 @@ const produtos = [
     videoUrl: "img/produtos/videos/prato-horta-de-manjericao.mp4",
     dimensoes: "A definir",
     cuidados: "A definir",
-    oculto: true,
+    oculto: false,
   },
   {
     id: 52,
@@ -1362,7 +1362,7 @@ const produtos = [
     videoUrl: "img/produtos/videos/saboneteira-folha-verde-noturna.mp4",
     dimensoes: "A definir",
     cuidados: "A definir",
-    oculto: true,
+    oculto: false,
   },
 
   // --- CROCHÊ -------------------------------------------------

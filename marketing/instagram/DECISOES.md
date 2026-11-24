@@ -903,3 +903,37 @@ gerar-carrossel-historia.js` (novo) e as entradas de documentação desta
 rodada. Saída só em `site-mae\instagram-posts\anjos-do-barro-a-luz\`
 (fora do git). Git limpo antes de qualquer commit (nada commitado nesta
 rodada até o Fabrício revisar as imagens).
+
+## Cadastro das peças novas (24/11) — pote, pratos de pizza, saboneteira
+
+2026-11-24 — Nomes artísticos escolhidos sem repetir nada do catálogo:
+"Pote Âmbar e Meia-Noite" (potinho dourado/azul, evita confusão com o
+id 33 "Pote Bruma Dourada", vendido); pratos de pizza com nomes leves e
+culinários ("Prato Eu Amo Pizza" — traz a frase pintada na peça, "Eu ❤
+Pizza"; "Prato Noite de Pizza" para a calabresa; "Prato Margherita ao
+Sol" e "Prato Horta de Manjericão" para as 2 tradicionais de
+tomate/manjericão); "Saboneteira Folha Verde-Noturna" para a saboneteira
+(folha lisa, sem pássaro — nome não reaproveita as 2 saboneteiras
+"Pássaro" já existentes).
+2026-11-24 — **Achado não pedido**: a leva trouxe 2 fatias de
+calabresa/cebola com o mesmo desenho (pedido original falava em 1 só).
+Tratei como 2 produtos (cada peça é única, regra do catálogo) — "Prato
+Noite de Pizza" (id 48) é o oficial, visível; "Prato Fatia de
+Calabresa" (id 49) entra oculto:true, com o MESMO preço da irmã
+(R$ 129,90) como provisório, até a Anasor confirmar se quer vender a
+2ª também e por quanto.
+2026-11-24 — Selo "assinada" em todas as peças de pizza (o próprio
+pedido confirmou que todas têm a assinatura da artesã) e no potinho
+(assinatura vista na foto do fundo). Saboneteira ficou sem "assinada"
+(nenhuma foto mostra o fundo dela) — usei "modelada-a-mao" em vez
+disso, já que a descrição menciona isso e é visivelmente verdade
+(peça de folha moldada à mão, com furos feitos um a um).
+2026-11-24 — Sem chat do WhatsApp (`_chat.txt`) na pasta — só fotos e
+vídeos. Medidas, "pintada/modelada à mão" (quando não visível) e
+confirmação de uso no forno/micro-ondas/lava-louça do prato de pizza
+ficaram para a Anasor confirmar (ver relatório final da tarefa).
+2026-11-24 — Seção "Hora da Pizza" entra na Home entre "Seleção
+Especial" e "Crochê" (duas seções já bege ali — inserir uma seção nova,
+também bege, nesse ponto não quebra o ritmo bege/marrom existente,
+diferente de inserir entre duas seções escuras).
+
