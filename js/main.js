@@ -2968,6 +2968,155 @@ if (secaoSelecaoEspecial) {
   montarSelecaoEspecial(secaoSelecaoEspecial);
 }
 
+// ============================================================
+//  CANTO DA PIZZA (Home) — leva 24/11: carrossel de vídeos + grade
+// ============================================================
+// Por que uma seção própria (não só "mais uma subcategoria" dentro da
+// grade comum de cerâmica): a subcategoria "Pratos de Pizza" é nova
+// no catálogo e pediu um gancho visual mais forte — um carrossel de
+// VÍDEOS reais das peças (mesma ideia de "o vídeo é que vende",
+// comentário de montarEdicaoSurpresa() mais abaixo) com uma
+// identidade diferente (formato de "prato" — ver .pizza-video-card no
+// CSS) do resto da Home, sem brigar por espaço com nenhuma seção
+// existente: entra DEPOIS de "Seleção Especial" e usa o MESMO
+// --espaco-secao de todas as outras.
+function montarSecaoPizza(secao) {
+  // reservarPecasHome: mesma função que Edição Surpresa/Seleção
+  // Especial usam pra nunca repetir uma peça já escalada noutra
+  // vitrine manual da Home — aqui não deveria colidir (nenhum dos
+  // IDs fixos das outras seções é de pizza), mas custa nada manter o
+  // mesmo cuidado.
+  const pratos = reservarPecasHome(
+    'pizza-corner',
+    produtosVisiveis().filter((p) => p.subcategoria === 'Pratos de Pizza')
+  );
+  const comVideo = pratos.filter((p) => p.videoUrl);
+
+  // Sem peça (ainda oculta, ou nenhuma pizza no catálogo) ou sem
+  // nenhum vídeo: a seção inteira não faz sentido — mesma robustez de
+  // montarProdutoDestaque/montarSelecaoEspecial (função mais abaixo).
+  if (pratos.length === 0 || comVideo.length === 0) {
+    liberarPecasHome('pizza-corner');
+    return;
+  }
+
+  const videoCardsHTML = comVideo
+    .map(
+      (produto) => `
+      <li class="pizza-video-card">
+        <a class="pizza-video-card__link" href="produto.html?id=${produto.id}">
+          <video
+            class="pizza-video-card__video"
+            src="${produto.videoUrl}"
+            poster="${produto.imagem}"
+            muted
+            loop
+            playsinline
+            preload="none"
+          ></video>
+          <span class="pizza-video-card__nome">${produto.nome}</span>
+        </a>
+        <button type="button" class="pizza-video-card__som" aria-pressed="false" aria-label="Ativar som do vídeo de ${produto.nome}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H2v6h4l5 4V5Z"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
+        </button>
+      </li>`
+    )
+    .join('');
+
+  // "Ver todos" como último card da grade — mesmo padrão de
+  // montarRelacionados() (produto.js): um link, não outro produto.
+  const cardVerTodos = `
+    <a class="produto-card produto-card--ver-todos reveal" href="ceramica.html?sub=pratos-de-pizza">
+      <span class="produto-card--ver-todos__texto">Ver todos os pratos de pizza</span>
+    </a>`;
+  const criarCard = (item) => (item === null ? cardVerTodos : criarCardProduto(item));
+
+  secao.innerHTML = `
+    <p class="produto-destaque__etiqueta">&#127829; Novidade do Ateliê</p>
+    <h2 class="pizza-corner__titulo reveal">Hora da <span class="realce realce--ouro">Pizza</span></h2>
+    <p class="pizza-corner__subtitulo reveal">Pratos nascidos numa casa que leva pizza a sério — tem até <span class="realce">forno a lenha</span>. Cada fatia é <span class="realce">pintada à mão</span>, uma de cada vez.</p>
+    <ul class="pizza-video-carrossel">${videoCardsHTML}</ul>
+    <div class="produtos-grid" data-grade-produtos="pizza-cards" data-manual>
+      ${montarSlidesCarrossel([...pratos, null], cardsPorSlideCarrossel(), criarCard)}
+    </div>
+    <p class="pizza-corner__ver-todos reveal"><a href="ceramica.html?sub=pratos-de-pizza">Ver todos os pratos de pizza</a></p>
+  `;
+  secao.hidden = false;
+
+  escanearReveal();
+  sincronizarDotsCarrossel();
+  ativarCarrosselVideosPizza(secao);
+}
+
+// Autoplay mudo/loop ao entrar na tela, pausa ao sair, som só com
+// toque explícito (máximo 1 vídeo com som por vez) — pedido original:
+// "tocam mudos em loop só quando entram na tela... pausam ao sair...
+// toque para ligar o som... no máximo 1 vídeo tocando por vez". Como
+// os cards ficam lado a lado num scroll horizontal (scroll-snap, ver
+// CSS), o threshold alto (0.6) garante que só o card BEM centralizado
+// na tela conta como "visível" — nunca dois ao mesmo tempo.
+function ativarCarrosselVideosPizza(secao) {
+  const cards = Array.from(secao.querySelectorAll('.pizza-video-card'));
+  if (cards.length === 0) return;
+
+  function pausarOutros(videoAtual) {
+    cards.forEach((card) => {
+      const video = card.querySelector('.pizza-video-card__video');
+      if (video && video !== videoAtual) video.pause();
+    });
+  }
+
+  function mutarOutros(videoAtual) {
+    cards.forEach((card) => {
+      const video = card.querySelector('.pizza-video-card__video');
+      const botao = card.querySelector('.pizza-video-card__som');
+      if (video && video !== videoAtual) {
+        video.muted = true;
+        if (botao) botao.setAttribute('aria-pressed', 'false');
+      }
+    });
+  }
+
+  // prefers-reduced-motion: nenhum autoplay — só o poster parado em
+  // todos os cards (mesma regra de montarEdicaoSurpresa, mais abaixo).
+  if (!reduzirMovimento && 'IntersectionObserver' in window) {
+    const observador = new IntersectionObserver(
+      (entradas) => {
+        entradas.forEach((entrada) => {
+          const video = entrada.target.querySelector('.pizza-video-card__video');
+          if (!video) return;
+          if (entrada.isIntersecting) {
+            pausarOutros(video);
+            video.play().catch(() => {});
+          } else {
+            video.pause();
+          }
+        });
+      },
+      { threshold: 0.6 }
+    );
+    cards.forEach((card) => observador.observe(card));
+  }
+
+  cards.forEach((card) => {
+    const video = card.querySelector('.pizza-video-card__video');
+    const botao = card.querySelector('.pizza-video-card__som');
+    if (!video || !botao) return;
+    botao.addEventListener('click', (evento) => {
+      evento.preventDefault();
+      evento.stopPropagation();
+      video.muted = !video.muted;
+      if (!video.muted) mutarOutros(video);
+      botao.setAttribute('aria-pressed', String(!video.muted));
+    });
+  });
+}
+
+const secaoPizza = document.querySelector('#pizza-corner');
+if (secaoPizza) {
+  montarSecaoPizza(secaoPizza);
+}
+
 // "Ver mais sobre esta peça": um marcado só pras 3 vitrines da Home, pra
 // o botão nunca divergir de uma seção pra outra. "claro" troca a paleta
 // pra fundo bege/pergaminho (ver .btn-ver-mais--claro). Ícone de olho
