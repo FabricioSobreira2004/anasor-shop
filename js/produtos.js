@@ -1246,6 +1246,25 @@ const produtos = [
     cuidados: "A definir",
     oculto: true,
   },
+  {
+    id: 47,
+    nome: "Prato Eu Amo Pizza",
+    descricao:
+      "Uma fatia de pizza em tamanho de prato, modelada e pintada à mão com a frase <span class='realce'>&ldquo;Eu ❤ Pizza&rdquo;</span> em tons terrosos sobre a massa crua — um prato de conversa para quem ama pizza de verdade. Veio de uma casa que leva pizza a sério, com forno a lenha e tudo, então pode ir à mesa para servir e comer, não só para decorar. Peça <span class='realce--ouro'>assinada pela artesã</span>, pintada à mão — a próxima fatia que sair do forno nunca vem exatamente igual.",
+    preco: 139.9,
+    categoria: "ceramica",
+    subcategoria: "Pratos de Pizza",
+    selo: "assinada",
+    imagem: "img/produtos/prato-eu-amo-pizza.webp",
+    imagensExtras: [
+      "img/produtos/angulos-extras/prato-eu-amo-pizza-2.webp",
+      "img/produtos/angulos-extras/prato-eu-amo-pizza-3.webp",
+    ],
+    videoUrl: "img/produtos/videos/prato-eu-amo-pizza.mp4",
+    dimensoes: "A definir",
+    cuidados: "A definir",
+    oculto: true,
+  },
   // --- CROCHÊ -------------------------------------------------
   // Sem fotos ainda. Modelo para quando houver peças (copie o
   // bloco, troque os valores e some as fotos extras que tiver):
