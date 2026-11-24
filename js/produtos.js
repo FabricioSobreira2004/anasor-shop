@@ -1344,6 +1344,27 @@ const produtos = [
     cuidados: "A definir",
     oculto: true,
   },
+  {
+    id: 52,
+    nome: "Saboneteira Folha Verde-Noturna",
+    descricao:
+      "Uma saboneteira em formato de folha, modelada à mão com nervuras marcadas uma a uma e esmalte verde-escuro quase noturno, perfurada para escoar a água e manter o sabonete sempre seco. Uma peça simples e funcional que eleva a rotina do lavabo ou da pia da cozinha com um toque artesanal. <span class='realce--ouro'>Peça única</span>, sem produção repetida — a textura da folha nunca sai igual de queima para queima.",
+    preco: 94.9,
+    categoria: "ceramica",
+    subcategoria: "Objetos Decorativos",
+    selo: "modelada-a-mao",
+    imagem: "img/produtos/saboneteira-folha-verde-noturna.webp",
+    imagensExtras: [
+      "img/produtos/angulos-extras/saboneteira-folha-verde-noturna-2.webp",
+      "img/produtos/angulos-extras/saboneteira-folha-verde-noturna-3.webp",
+      "img/produtos/angulos-extras/saboneteira-folha-verde-noturna-4.webp",
+    ],
+    videoUrl: "img/produtos/videos/saboneteira-folha-verde-noturna.mp4",
+    dimensoes: "A definir",
+    cuidados: "A definir",
+    oculto: true,
+  },
+
   // --- CROCHÊ -------------------------------------------------
   // Sem fotos ainda. Modelo para quando houver peças (copie o
   // bloco, troque os valores e some as fotos extras que tiver):
