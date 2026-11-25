@@ -199,9 +199,21 @@
    em <video> porque a moldura é feita só de padding/border/box-shadow
    (nenhuma regra depende da tag). width:100% + altura automática
    mantém a proporção nativa do vídeo dentro da moldura. */
+/* aspect-ratio FIXO (todo vídeo do catálogo é 9:16, ver padrão em
+   produtos.js) + object-fit:cover, em vez de depender do navegador
+   calcular a altura pela proporção NATURAL do vídeo (height:auto) —
+   achado real (Leva 2): confirmado por screenshot que o player
+   renderizava com FAIXAS PRETAS grossas dos dois lados (pillarbox)
+   nalguns vídeos, porque o elemento <video> relatava um tamanho
+   intrínseco (videoWidth/videoHeight) desproporcional ao conteúdo de
+   verdade — com o box já vindo do CSS na proporção certa, o vídeo
+   preenche a moldura de ponta a ponta não importa o que o navegador
+   ache que é o "tamanho natural" dele. */
 .produto-video__player {
   display: block;
   width: 100%;
+  aspect-ratio: 9 / 16;
+  object-fit: cover;
   background: #000; /* evita "flash" branco antes do poster carregar */
 }
 

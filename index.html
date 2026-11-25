@@ -41,7 +41,7 @@
 <!-- Importa as duas fontes que vamos usar
  : Fraunces (títulos) e Jost (texto) -->
 
-   <link rel="stylesheet" href="css/style.css?v=49">
+   <link rel="stylesheet" href="css/style.css?v=50">
 
    <!-- Marca no <html> que o JS rodou logo no início. O CSS do
         "scroll reveal" só esconde os elementos (opacity 0) quando
@@ -447,14 +447,28 @@
 
            "transicao-topo": suaviza o corte vindo de Queridinhos do
            Ateliê (bege) — segue igual a antes. SEM "transicao-base"
-           aqui: quem vem logo depois agora é "Cerâmica no Seu Café da
-           Tarde" (nova seção, mesmo bege de Queridinhos) — mas a
-           transição pra ELA mora do OUTRO lado da emenda (na própria
-           seção de café da tarde, como "transicao-topo" dela, MESMO
-           padrão de como esta própria seção resolve sua entrada vinda
-           de Queridinhos). Ver o comentário na seção de café da tarde,
-           logo abaixo. -->
+           aqui: quem vem logo depois agora é "Canto da Pizza" (Leva 2:
+           movida pra cá, tema terracota escuro próprio) — ela é quem
+           resolve a ENTRADA dela, com "transicao-topo" funde com
+           --cor-texto (a cor desta seção), igual ao padrão já usado
+           por "Café da Tarde" antes dela mudar de vizinha. -->
 <section class="produto-destaque reveal transicao-topo" id="produto-destaque" hidden></section>
+
+      <!-- ===== CANTO DA PIZZA =====
+           Seção compacta pras peças novas da leva 24/11 (pratos de
+           pizza): carrossel de vídeos + grade de produtos, montada
+           inteira por montarSecaoPizza() (js/main.js) — mesmo padrão
+           "nasce vazia e hidden, JS decide" de #produto-destaque,
+           acima. Some sozinha (JS) se não houver nenhuma peça visível
+           em "Pratos de Pizza" ainda.
+
+           POSIÇÃO (Leva 2, pedido explícito): logo depois de "Escolha
+           do Ateliê" (escura) — por isso o tema próprio "forno a
+           lenha" (terracota bem escuro, ver CSS) também serve de
+           transição visual: começa escura (funde com a seção de cima)
+           e termina clara o bastante pra entregar pro bege de "Café da
+           Tarde" (ver --transicao-topo-cor dela, atualizada no CSS). -->
+<section class="pizza-corner reveal transicao-topo" id="pizza-corner" hidden></section>
 
       <!-- ===== CERÂMICA NO SEU CAFÉ DA TARDE 🤎 (NOVA) =====
            MESMO formato/estrutura de "Queridinhos do Ateliê" (mesma
@@ -530,15 +544,6 @@
      Corrigido fundindo com a cor REAL do fim do gradiente de cima
      (#2b1f17 — ver a variável logo abaixo, em style.css). -->
 <section class="selecao-especial reveal transicao-topo transicao-base" id="selecao-especial" hidden></section>
-
-      <!-- ===== CANTO DA PIZZA =====
-           Seção compacta pras peças novas da leva 24/11 (pratos de
-           pizza): carrossel de vídeos + grade de produtos, montada
-           inteira por montarSecaoPizza() (js/main.js) — mesmo padrão
-           "nasce vazia e hidden, JS decide" de #produto-destaque e
-           #selecao-especial, acima. Some sozinha (JS) se não houver
-           nenhuma peça visível em "Pratos de Pizza" ainda. -->
-<section class="pizza-corner reveal transicao-topo" id="pizza-corner" hidden></section>
 
       <!-- ===== CROCHÊ =====
            ANTES: enquanto não houvesse nenhuma peça de crochê no
@@ -833,8 +838,8 @@
            main.js DEPOIS (usa essa lista para montar os cards). Os dois
            ficam no fim do <body> para o HTML já estar carregado quando
            o JavaScript rodar. -->
-      <script src="js/produtos.js?v=49"></script>
-      <script src="js/main.js?v=49"></script>
+      <script src="js/produtos.js?v=50"></script>
+      <script src="js/main.js?v=50"></script>
 
 </body>
 

@@ -3291,6 +3291,9 @@ function montarSecaoPizza(secao) {
     return;
   }
 
+  // SEM botão de som (achado/regra desta rodada: todo vídeo do site
+  // fica SEMPRE mudo — "toque pra ligar o som" saiu, não faz mais
+  // sentido existir num vídeo que nunca toca com áudio).
   const videoCardsHTML = comVideo
     .map(
       (produto) => `
@@ -3305,11 +3308,11 @@ function montarSecaoPizza(secao) {
             playsinline
             preload="none"
           ></video>
+          <button type="button" class="pizza-video-card__play" aria-label="Tocar vídeo de ${produto.nome}" hidden>
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
+          </button>
           <span class="pizza-video-card__nome">${produto.nome}</span>
         </a>
-        <button type="button" class="pizza-video-card__som" aria-pressed="false" aria-label="Ativar som do vídeo de ${produto.nome}">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H2v6h4l5 4V5Z"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
-        </button>
       </li>`
     )
     .join('');
@@ -3324,7 +3327,20 @@ function montarSecaoPizza(secao) {
     </a>`;
   const criarCard = (item) => (item === null ? cardVerTodos : criarCardProduto(item));
 
+  // Selo giratório "HORA DA PIZZA" em círculo — texto desenhado num
+  // <path> circular invisível (SVG <textPath>), só decorativo
+  // (aria-hidden: o h2 logo abaixo já diz a mesma coisa pra quem usa
+  // leitor de tela). Gira devagar via CSS (.pizza-corner__selo-giratorio).
+  const seloGiratorioHTML = `
+    <svg class="pizza-corner__selo-giratorio" viewBox="0 0 100 100" aria-hidden="true">
+      <path id="pizza-selo-caminho" fill="none" d="M 50,50 m -38,0 a 38,38 0 1,1 76,0 a 38,38 0 1,1 -76,0"/>
+      <text font-size="11.5" font-weight="700" letter-spacing="2">
+        <textPath href="#pizza-selo-caminho" startOffset="0%">HORA DA PIZZA • HORA DA PIZZA •</textPath>
+      </text>
+    </svg>`;
+
   secao.innerHTML = `
+    ${seloGiratorioHTML}
     <p class="produto-destaque__etiqueta">&#127829; Novidade do Ateliê</p>
     <h2 class="pizza-corner__titulo reveal">Hora da <span class="realce realce--ouro">Pizza</span></h2>
     <p class="pizza-corner__subtitulo reveal">Pratos nascidos numa casa que leva pizza a sério — tem até <span class="realce">forno a lenha</span>. Cada fatia é <span class="realce">pintada à mão</span>, uma de cada vez.</p>
@@ -3340,14 +3356,30 @@ function montarSecaoPizza(secao) {
   ativarCarrosselVideosPizza(secao);
 }
 
-// Autoplay mudo/loop ao entrar na tela, pausa ao sair, som só com
-// toque explícito (máximo 1 vídeo com som por vez) — pedido original:
-// "tocam mudos em loop só quando entram na tela... pausam ao sair...
-// toque para ligar o som... no máximo 1 vídeo tocando por vez". Como
-// os cards ficam lado a lado num scroll horizontal (scroll-snap, ver
-// CSS), o threshold alto (0.6) garante que só o card BEM centralizado
-// na tela conta como "visível" — nunca dois ao mesmo tempo.
+// Autoplay mudo/loop ao entrar na tela, pausa ao sair, no máximo 1
+// vídeo tocando por vez. Todo vídeo do site é SEMPRE mudo agora — não
+// existe mais toque pra ligar som (ver videoCardsHTML, acima).
+//
+// ACHADO REAL desta rodada (vídeo não tocava na Home): o observer
+// antigo usava o VIEWPORT como "root" (padrão do IntersectionObserver
+// sem a opção "root"). Isso mede "o card está visível na tela?" —
+// mas os 3 cards do carrossel ficam lado a lado na MESMA altura
+// (scroll HORIZONTAL, scroll-snap, ver CSS); verticalmente os 3 ficam
+// 100% visíveis ao mesmo tempo assim que a seção entra na tela, não
+// importa qual deles está centralizado no scroll horizontal. Isso
+// disparava "isIntersecting:true" pros 3 JUNTOS, e como cada entrada
+// chama paraTodosMenos() (pausa os outros 2) antes de dar play, o
+// ÚLTIMO da lista "vencia" a corrida e os outros 2 ficavam pausados
+// logo depois de tocar — na prática, quase nunca o vídeo certo (ou
+// nenhum) ficava tocando. A correção: "root" passa a ser o PRÓPRIO
+// contêiner que rola (.pizza-video-carrossel) — aí a interseção é
+// medida contra a ÁREA VISÍVEL DO SCROLL HORIZONTAL dele, não contra
+// o viewport inteiro, e só o card de fato centralizado no scroll-snap
+// cruza o threshold.
 function ativarCarrosselVideosPizza(secao) {
+  const carrossel = secao.querySelector('.pizza-video-carrossel');
+  if (!carrossel) return;
+
   // video/botão de cada card, consultados 1x só (em vez de cada
   // função abaixo repetir o próprio querySelector a cada card, a
   // cada disparo — o observer dispara toda hora enquanto rola).
@@ -3355,23 +3387,35 @@ function ativarCarrosselVideosPizza(secao) {
     .map((card) => ({
       card,
       video: card.querySelector('.pizza-video-card__video'),
-      botao: card.querySelector('.pizza-video-card__som'),
+      botaoPlay: card.querySelector('.pizza-video-card__play'),
     }))
     .filter((par) => par.video);
   if (pares.length === 0) return;
 
-  // pausa e tira o som de todo mundo, MENOS o par do vídeo atual —
-  // usada tanto pelo observer (pausa) quanto pelo clique no som
-  // (mutarOutros, que só tira o som e deixa o play/pause como está).
-  function paraTodosMenos(videoAtual, { pausar, mutar }) {
-    pares.forEach(({ video, botao }) => {
-      if (video === videoAtual) return;
-      if (pausar) video.pause();
-      if (mutar) {
-        video.muted = true;
-        if (botao) botao.setAttribute('aria-pressed', 'false');
-      }
+  // pausa todo mundo, MENOS o par do vídeo atual.
+  function pausarTodosMenos(videoAtual) {
+    pares.forEach(({ video }) => {
+      if (video !== videoAtual) video.pause();
     });
+  }
+
+  // Tenta tocar: garante muted/playsinline/loop ANTES do play() (cinto
+  // e suspensório — já vêm como atributo no HTML, mas o pedido explícito
+  // foi reforçar isso em JS também), dá load() se os dados ainda não
+  // chegaram (preload="none" não baixa nada sozinho) e só então chama
+  // play(). Se o navegador bloquear mesmo assim (raríssimo pra vídeo
+  // mudo, mas acontece em modo economia de bateria), mostra o botão de
+  // play discreto em vez de fingir que está tocando.
+  function tentarTocar(par) {
+    const { video, botaoPlay } = par;
+    video.muted = true;
+    video.playsInline = true;
+    video.loop = true;
+    if (video.readyState < 2) video.load();
+    video.play().then(
+      () => { if (botaoPlay) botaoPlay.hidden = true; },
+      () => { if (botaoPlay) botaoPlay.hidden = false; }
+    );
   }
 
   // prefers-reduced-motion: nenhum autoplay — só o poster parado em
@@ -3383,26 +3427,27 @@ function ativarCarrosselVideosPizza(secao) {
           const par = pares.find(({ card }) => card === entrada.target);
           if (!par) return;
           if (entrada.isIntersecting) {
-            paraTodosMenos(par.video, { pausar: true, mutar: false });
-            par.video.play().catch(() => {});
+            pausarTodosMenos(par.video);
+            tentarTocar(par);
           } else {
             par.video.pause();
           }
         });
       },
-      { threshold: 0.6 }
+      { root: carrossel, threshold: 0.6 }
     );
     pares.forEach(({ card }) => observador.observe(card));
   }
 
-  pares.forEach(({ video, botao }) => {
-    if (!botao) return;
-    botao.addEventListener('click', (evento) => {
+  // Botão de play discreto (só aparece se o autoplay for bloqueado) —
+  // clique manual sempre funciona, é um gesto do usuário.
+  pares.forEach((par) => {
+    if (!par.botaoPlay) return;
+    par.botaoPlay.addEventListener('click', (evento) => {
       evento.preventDefault();
       evento.stopPropagation();
-      video.muted = !video.muted;
-      if (!video.muted) paraTodosMenos(video, { pausar: false, mutar: true });
-      botao.setAttribute('aria-pressed', String(!video.muted));
+      pausarTodosMenos(par.video);
+      tentarTocar(par);
     });
   });
 }

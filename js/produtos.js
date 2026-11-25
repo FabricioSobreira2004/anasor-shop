@@ -1362,6 +1362,10 @@ const produtos = [
     oculto: false,
   },
   {
+    // MESMO DESENHO do Prato Margherita ao Sol (id 50) — confirmado
+    // visualmente (mesmo tomate/manjericão, mesma composição) nas
+    // fotos. Um anúncio visível por desenho (ver CLAUDE.md): esta fica
+    // oculta, igual ao par 48/49. Nunca apagar nem mudar o id.
     id: 51,
     nome: "Prato Horta de Manjericão",
     descricao:
@@ -1377,7 +1381,7 @@ const produtos = [
     videoUrl: "img/produtos/videos/prato-horta-de-manjericao.mp4",
     dimensoes: "A definir",
     cuidados: "A definir",
-    oculto: false,
+    oculto: true,
   },
   {
     id: 52,

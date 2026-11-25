@@ -22,6 +22,10 @@
 - **"De" riscado (`precoOriginal`):** só um preço que a peça realmente teve. O selo mostra "Lançamento -N%"; com desconto abaixo de 5%, o "de/por" inteiro (riscado e selo) não aparece.
 - Preços e produtos ficam em `js/produtos.js`, a fonte única. O backend recalcula os valores a partir dele.
 - O frete é **grátis**, embutido no preço.
+- **Desenho repetido (duas peças idênticas):** um anúncio VISÍVEL por desenho — a 2ª vira `oculto:true` (nunca apaga, nunca muda o id). Ver ids 48/49 (Noite de Pizza/Fatia de Calabresa) e 50/51 (Margherita ao Sol/Horta de Manjericão).
+- **Vídeo de produto, player da página (`.produto-video__player`):** usa `aspect-ratio` FIXO (9:16, o padrão de todo vídeo do catálogo) + `object-fit:cover`, nunca `width:100%; height:auto` dependendo da proporção que o navegador relatar pro `<video>` — achado real (Leva 2): confirmado por screenshot que isso gerava faixas pretas grossas (pillarbox) em alguns vídeos, porque o `videoWidth`/`videoHeight` que o elemento relata nem sempre bate com o conteúdo de verdade.
+- **Carrossel horizontal de vídeos com autoplay (IntersectionObserver):** o `root` do observer precisa ser o PRÓPRIO contêiner que rola (ex.: `.pizza-video-carrossel`), nunca o padrão (viewport) — achado real (Leva 2): com `root` = viewport, cards lado a lado na mesma altura ficavam todos "isIntersecting:true" ao mesmo tempo (viewport não distingue qual está centralizado no scroll horizontal), e a lógica de "pausa os outros antes de tocar" virava uma corrida onde o vídeo errado (ou nenhum) tocava.
+- **Todo vídeo do site é sempre mudo** (`-an` no ffmpeg, `muted` no HTML) — não existe mais botão de "toque pra ligar o som" em nenhum carrossel.
 
 ## Identidade visual
 - Bege/marrom artesanal, fontes **Fraunces + Jost**, botões *gummy* 3D.

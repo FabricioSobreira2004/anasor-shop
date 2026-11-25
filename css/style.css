@@ -2098,8 +2098,14 @@ nav {
    mais abaixo) — só troca QUAL cor funde, cada seção com a cor de
    quem fica IMEDIATAMENTE acima dela. */
 .cafe-da-tarde {
-  --transicao-topo-cor: var(--cor-texto);
-  --transicao-topo-cor-fraca: rgba(62, 46, 34, 0.35); /* --cor-texto a 35% */
+  /* Leva 2: a vizinha de cima deixou de ser "Escolha do Ateliê"
+     (--cor-texto) e virou "Canto da Pizza" (tema terracota próprio,
+     ver .pizza-corner) — a cor aqui funde com o FIM do gradiente dela
+     (#2E130B), não mais com --cor-texto. A curva física já fica por
+     conta do ::after de .pizza-corner (ver comentário lá); isto aqui
+     só resolve a fração final de opacidade, igual sempre fez. */
+  --transicao-topo-cor: #2E130B;
+  --transicao-topo-cor-fraca: rgba(46, 19, 11, 0.35); /* #2E130B a 35% */
 }
 
 .queridinhos h1,
@@ -6896,35 +6902,114 @@ footer {
 /* ============================================================
    CANTO DA PIZZA (Home) — leva 24/11 (pratos de pizza)
    ============================================================
-   Seção montada inteira por montarSecaoPizza() (js/main.js). Fundo
-   bege claro (--cor-fundo, mesmo tom de .croche-vitrine, que vem logo
-   depois) — mantém o ritmo bege/marrom da Home sem precisar inventar
-   uma 3ª cor de fundo. O visual "diferente" pedido fica por conta só
-   do carrossel de vídeos abaixo (molduras redondas, borda em degradê
-   terracota->dourado lembrando a casca da pizza). */
+   REDESENHADA na Leva 2 (pedido explícito: "está branca e parada" —
+   precisava de identidade PRÓPRIA, "forno a lenha / pizzaria
+   artesanal"). Fundo terracota/tomate bem escuro (gradiente, nem o
+   --cor-texto marrom de "Escolha do Ateliê" logo acima nem o dourado
+   de "Anjos de Luz" — cor NOVA, só desta seção) com um brilho de
+   brasa (radial-gradient, dois focos quentes perto da base, onde um
+   forno a lenha de verdade brilha mais). Divisor curvo no topo e na
+   base: 2 elipses (clip-path), uma clara por cima entrando, outra por
+   baixo saindo — dá o relevo "de prato" sem precisar de SVG externo.
+   --transicao-topo-cor: funde com --cor-texto (a seção de cima,
+   "Escolha do Ateliê", ver index.html — a Leva 2 moveu esta seção pra
+   logo depois dela). */
 .pizza-corner {
-  padding: var(--espaco-secao) 5%;
+  position: relative;
+  padding: calc(var(--espaco-secao) + 1.5rem) 5% calc(var(--espaco-secao) + 1rem);
   text-align: center;
-  background-color: var(--cor-fundo);
-  background-image: var(--textura-grao);
-  background-repeat: repeat;
-  background-size: 140px;
+  color: var(--cor-fundo);
+  overflow: hidden;
+  background-image:
+    radial-gradient(ellipse 55% 40% at 15% 95%, rgba(255, 138, 61, 0.35), transparent 70%),
+    radial-gradient(ellipse 45% 35% at 85% 100%, rgba(255, 94, 31, 0.3), transparent 70%),
+    linear-gradient(165deg, #9E4F2E 0%, #6B2E17 55%, #2E130B 100%);
 
-  --transicao-topo-cor: var(--cor-fundo-alt);
-  --transicao-topo-cor-fraca: rgba(239, 227, 208, 0.35); /* --cor-fundo-alt a 35% */
+  --transicao-topo-cor: var(--cor-texto);
+  --transicao-topo-cor-fraca: rgba(62, 46, 34, 0.35); /* --cor-texto a 35% */
+}
+
+/* Divisor curvo NA BASE (saída pra "Café da Tarde", bege): uma elipse
+   bege "mordendo" a borda de baixo da seção — lembra a abertura de uma
+   caixa de pizza. Só na base (não no topo): a entrada já é suavizada
+   pelo .transicao-topo de sempre (gradiente, ver classe utilitária
+   acima) — duas técnicas de curva diferentes nas duas bordas ficariam
+   inconsistentes entre si; aqui a curva "física" fica reservada pra
+   ONDE o pedido pediu destaque (a saída, "divisor curvo... na base"). */
+.pizza-corner::after {
+  content: '';
+  position: absolute;
+  left: -5%;
+  bottom: -1px;
+  width: 110%;
+  height: 2.5rem;
+  background-color: var(--cor-fundo-alt);
+  clip-path: ellipse(55% 100% at 50% 0%);
+  pointer-events: none;
 }
 
 .pizza-corner__titulo {
+  position: relative;
   font-size: 1.75rem;
   margin: 0.5rem auto 0.75rem;
+  color: var(--cor-fundo);
 }
 
 .pizza-corner__subtitulo {
+  position: relative;
   max-width: 480px;
   margin: 0 auto 2rem;
   font-size: 1rem;
   line-height: 1.6;
-  color: var(--cor-texto);
+  color: rgba(251, 246, 239, 0.88);
+}
+
+.pizza-corner__subtitulo .realce {
+  color: var(--cor-ouro-claro);
+}
+
+/* SELO GIRATÓRIO "HORA DA PIZZA" — texto em círculo (SVG <textPath>),
+   girando bem devagar (24s/volta). position:absolute, canto superior
+   direito da seção — um detalhe de assinatura, não compete com o
+   título. prefers-reduced-motion: para de girar (fica só o selo
+   parado), nunca escondido — ainda é informação (mesmo texto do h2). */
+.pizza-corner__selo-giratorio {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  width: 72px;
+  height: 72px;
+  fill: var(--cor-ouro-claro);
+  opacity: 0.9;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .pizza-corner__selo-giratorio {
+    animation: pizza-selo-girar 24s linear infinite;
+  }
+}
+
+@keyframes pizza-selo-girar {
+  to { transform: rotate(360deg); }
+}
+
+/* GRADE DE PRATOS: centralizada (não esticada) e com um leve toque de
+   "inclinar e girar" no hover — pedido explícito ("hover com leve
+   inclinação/giro"). Os cards continuam brancos (.produto-card
+   padrão): sobre o terracota escuro, viram literalmente "pratos numa
+   mesa escura", sem precisar reestilizar o card em si. */
+.pizza-corner .produtos-grid {
+  justify-content: center;
+}
+
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .pizza-corner .produto-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  .pizza-corner .produto-card:hover {
+    transform: rotate(-1.5deg) translateY(-4px);
+    box-shadow: 0 16px 32px rgba(0, 0, 0, 0.35);
+  }
 }
 
 /* Carrossel de vídeos: scroll horizontal com scroll-snap — mesma
@@ -7014,12 +7099,16 @@ footer {
   pointer-events: none;
 }
 
-.pizza-video-card__som {
+/* Botão de play discreto — só aparece (via "hidden" removido pelo JS,
+   ver tentarTocar/main.js) se o autoplay mudo for bloqueado pelo
+   navegador (raro, mas acontece em modo economia de bateria). Nunca é
+   sobre SOM: todo vídeo do site é sempre mudo. */
+.pizza-video-card__play {
   position: absolute;
-  top: 0.6rem;
-  right: 0.6rem;
-  width: 2rem;
-  height: 2rem;
+  inset: 0;
+  margin: auto;
+  width: 3rem;
+  height: 3rem;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -7030,13 +7119,16 @@ footer {
   cursor: pointer;
 }
 
-.pizza-video-card__som svg {
-  width: 1.1rem;
-  height: 1.1rem;
+.pizza-video-card__play[hidden] {
+  display: none;
 }
 
-.pizza-video-card__som[aria-pressed='true'] {
-  background-color: var(--cor-destaque);
+.pizza-video-card__play svg {
+  width: 1.4rem;
+  height: 1.4rem;
+  /* o ícone de "play" (triângulo) tem o peso visual puxado pra
+     esquerda — desloca 2px pra parecer centralizado de verdade */
+  margin-left: 2px;
 }
 
 /* "pequeno giro suave do prato ao passar o mouse" — só em dispositivos
