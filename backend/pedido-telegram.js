@@ -21,7 +21,7 @@
 //  backend/scripts/teste-telegram-pedido.js).
 // ============================================================
 
-const { formatarReal, sugestoesEstoqueAnjos } = require('./pedido-email');
+const { formatarReal, sugestoesEstoqueAnjos, lembretesKitVendido } = require('./pedido-email');
 
 // 5 s: o webhook roda numa função serverless e espera os avisos antes
 // de responder ao Mercado Pago. Um Telegram lento não pode segurar a
@@ -88,10 +88,14 @@ function montarMensagemTelegram(dadosPedido) {
   const textoEstoque = sugestoes.length
     ? ` · Atualizar estoque: ${sugestoes.map((s) => linhaLimpa(s, 80)).join('; ')}`
     : '';
+  const lembretesKit = lembretesKitVendido(dadosPedido.itens);
+  const textoKit = lembretesKit.length
+    ? ` · ⚠️ ${lembretesKit.map((s) => linhaLimpa(s, 100)).join('; ')}`
+    : '';
 
   const texto =
     `🤎 Nova venda paga! Pedido ${linhaLimpa(dadosPedido.codigoPedido, 40)} · ` +
-    `${textoItens(dadosPedido)} · Total ${formatarReal(dadosPedido.valorTotal)} · ${local}.${textoEstoque} ` +
+    `${textoItens(dadosPedido)} · Total ${formatarReal(dadosPedido.valorTotal)} · ${local}.${textoEstoque}${textoKit} ` +
     'Endereço completo e dados do cliente no e-mail.';
   return cortar(texto, LIMITE_MENSAGEM);
 }

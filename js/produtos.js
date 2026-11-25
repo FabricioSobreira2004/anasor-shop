@@ -1074,15 +1074,25 @@ const produtos = [
     categoria: "ceramica",
     subcategoria: "Conjuntos Artesanais",
     selo: ["queridinho", "kit", "pintada-a-mao"],
-    // FOTO PRINCIPAL TROCADA: a antiga (agora extra nº2) só mostrava 3
-    // das 4 casinhas claramente. Esta (conteúdo trocado, nome do
-    // arquivo igual) mostra as 4 peças do kit lado a lado, o que
-    // importa MAIS aqui do que o enquadramento perfeito — um kit
-    // precisa mostrar TODAS as peças que o compõem.
+    // FOTO PRINCIPAL TROCADA (achado anterior, mantido): a antiga
+    // (agora extra nº2) só mostrava 3 das 4 casinhas claramente. Esta
+    // mostra as 4 peças do kit lado a lado, o que importa MAIS aqui do
+    // que o enquadramento perfeito — um kit precisa mostrar TODAS as
+    // peças que o compõem.
+    // VERTICAL 4:5 (Leva 3, "primeira foto sempre em pé"): esta foto é
+    // horizontal (1600x900) e NENHUMA das duas extras já tinha versão
+    // vertical pra reaproveitar. Recortar cortaria pelo menos 1 das 4
+    // casinhas (elas se espalham por quase toda a largura do quadro) —
+    // proibido pela regra "nunca corte o produto". Em vez disso, a
+    // foto foi ESCALADA (sem cortar nada) e completada com uma barra
+    // sólida da MESMA cor do fundo (cinza-claro, amostrada da própria
+    // foto) em cima e embaixo, até fechar 4:5. A foto ORIGINAL
+    // (sem padding, 1600x900) virou a extra nº4 — nada foi apagado.
     imagem: "img/produtos/kit-4-casinhas-de-fada-luminaria.jpg",
     imagensExtras: [
       "img/produtos/angulos-extras/kit-4-casinhas-de-fada-luminaria-2.jpg",
       "img/produtos/angulos-extras/kit-4-casinhas-de-fada-luminaria-3.jpg",
+      "img/produtos/angulos-extras/kit-4-casinhas-de-fada-luminaria-4.jpg",
     ],
     videoUrl: "img/produtos/videos/kit-4-casinhas-de-fada-luminaria.mp4",
     dimensoes: "A definir",
@@ -1483,6 +1493,142 @@ const produtos = [
     cuidados: "A definir",
   },
 
+  // --- VASOS RAKU (leva 24/11) ----------------------------------
+  // 3 vasos de queima Raku, fotografados juntos (trio-raku-*.jpg) e
+  // cada um também em sessão solo (raku-verde-*/raku-escuro-*) — menos
+  // o primeiro (squat, sem sessão própria no material entregue; usa um
+  // recorte da foto de grupo como capa, ver comentário nele). Só
+  // descrevo efeito de queima/esmalte que aparece NA FOTO (fumaça,
+  // brilho metálico) — nada de craquelado ou processo que eu não veja.
+  {
+    // SEM sessão solo no material (só aparece nas fotos de grupo,
+    // trio-raku-*.jpg) — a capa é um RECORTE 4:5 de trio-raku-2.jpg
+    // isolando só este vaso (conferido visualmente, produto inteiro
+    // visível, sem cortar nada).
+    id: 56,
+    nome: "Vaso Raku Terra Firme",
+    descricao:
+      "Vaso em cerâmica queimado pela técnica <span class='realce'>Raku</span>, com a superfície marcada pela fumaça da queima em tons de terra queimada e preto fosco — cada mancha nasceu do próprio fogo, então não existe um igual. Silhueta baixa e encorpada, com ombros largos que se fecham suavemente até a boca. Peça <span class='realce--ouro'>única no ateliê</span>, decorativa, para compor uma mesa de centro, um aparador ou uma estante.",
+    preco: 129.0,
+    categoria: "ceramica",
+    subcategoria: "Vasos Raku",
+    selo: "queima-raku",
+    materiaPrima: "Cerâmica queimada pela técnica Raku, com redução em fumaça.",
+    imagem: "img/produtos/vaso-raku-terra-firme.webp",
+    imagensExtras: ["img/produtos/angulos-extras/vaso-raku-terra-firme-2.webp"],
+    dimensoes: "A definir",
+    cuidados: "A definir",
+  },
+  {
+    id: 57,
+    nome: "Vaso Raku Bruma Esmeralda",
+    descricao:
+      "Vaso em cerâmica queimado pela técnica <span class='realce'>Raku</span>, com um brilho metálico esverdeado que atravessa o corpo em nuvens — efeito que só essa queima consegue, e que nunca sai igual duas vezes. Corpo alongado, ombros marcados e boca levemente irregular, como só se vê em peça feita à mão. Peça <span class='realce--ouro'>única no ateliê</span>, decorativa, para um canto que pede um toque de cor rara.",
+    preco: 129.0,
+    categoria: "ceramica",
+    subcategoria: "Vasos Raku",
+    selo: "queima-raku",
+    materiaPrima: "Cerâmica queimada pela técnica Raku, com redução em fumaça.",
+    imagem: "img/produtos/vaso-raku-bruma-esmeralda.webp",
+    imagensExtras: [
+      "img/produtos/angulos-extras/vaso-raku-bruma-esmeralda-2.webp",
+      "img/produtos/angulos-extras/vaso-raku-bruma-esmeralda-3.webp",
+    ],
+    videoUrl: "img/produtos/videos/vaso-raku-bruma-esmeralda.mp4",
+    dimensoes: "A definir",
+    cuidados: "A definir",
+  },
+  {
+    id: 58,
+    nome: "Vaso Raku Noite Lavrada",
+    descricao:
+      "Vaso em cerâmica queimado pela técnica <span class='realce'>Raku</span>, em preto fosco profundo, com a superfície lavrada por marcas da própria queima — uma textura que lembra madeira talhada, mas é só o fogo e a fumaça trabalhando o barro. O maior dos três vasos Raku do ateliê, com corpo generoso e boca larga. Peça <span class='realce--ouro'>única no ateliê</span>, decorativa, perfeita como destaque solo.",
+    preco: 129.0,
+    categoria: "ceramica",
+    subcategoria: "Vasos Raku",
+    selo: "queima-raku",
+    materiaPrima: "Cerâmica queimada pela técnica Raku, com redução em fumaça.",
+    imagem: "img/produtos/vaso-raku-noite-lavrada.webp",
+    imagensExtras: [
+      "img/produtos/angulos-extras/vaso-raku-noite-lavrada-2.webp",
+      "img/produtos/angulos-extras/vaso-raku-noite-lavrada-3.webp",
+    ],
+    videoUrl: "img/produtos/videos/vaso-raku-noite-lavrada.mp4",
+    dimensoes: "A definir",
+    cuidados: "A definir",
+  },
+  {
+    // KIT: preço real = soma dos 3 avulsos (129*3 = 387), ver
+    // precoOriginal — o selo "Lançamento -N%" sai sozinho, pela MESMA
+    // regra de qualquer outra peça com desconto real (main.js).
+    // "componentesKit": se QUALQUER um dos 3 vasos virar
+    // "disponivel: false" (vendido avulso), o kit inteiro bloqueia a
+    // compra sozinho (kitTemComponenteVendido, produtos.js) — e quando
+    // o KIT vender, os 3 precisam virar "disponivel: false" também (o
+    // aviso de pedido já lembra disso, ver pedido-email.js).
+    id: 59,
+    nome: "Kit dos 3 Vasos Raku",
+    descricao:
+      "Os três vasos <span class='realce'>Raku</span> do ateliê, juntos: Terra Firme, Bruma Esmeralda e Noite Lavrada — cada um com sua própria queima, sua própria fumaça, seu próprio brilho. Compram-se juntos ou separados; levando os três, sai mais em conta. Peças <span class='realce--ouro'>únicas, feitas à mão</span>, para compor uma mesa ou estante com três personalidades que conversam entre si.",
+    precoOriginal: 387.0,
+    preco: 300.0,
+    categoria: "ceramica",
+    subcategoria: "Vasos Raku",
+    selo: ["kit", "queima-raku"],
+    componentesKit: [56, 57, 58],
+    materiaPrima: "Cerâmica queimada pela técnica Raku, com redução em fumaça.",
+    imagem: "img/produtos/kit-3-vasos-raku.webp",
+    imagensExtras: [
+      "img/produtos/angulos-extras/kit-3-vasos-raku-2.webp",
+      "img/produtos/angulos-extras/kit-3-vasos-raku-3.webp",
+    ],
+    dimensoes: "A definir",
+    cuidados: "A definir",
+  },
+
+  // --- VASO VESTIDO (leva 24/11) ---------------------------------
+  {
+    id: 60,
+    nome: "Vaso Vestido Rendado",
+    descricao:
+      "Um vaso escultórico em formato de vestido, com a silhueta evasê de uma saia rodada — a &ldquo;saia&rdquo; toda <span class='realce'>texturizada com estampa de renda</span>, impressa à mão na argila ainda mole, e um buquê de rosinhas <span class='realce'>modeladas em relevo</span> na cintura. O acabamento em tom rosa-argila, fosco, reforça o ar delicado da peça. Peça <span class='realce--ouro'>única, modelada à mão</span>, para quem quer um vaso que também é escultura.",
+    preco: 224.9,
+    categoria: "ceramica",
+    subcategoria: "Vasos Escultóricos",
+    selo: "modelada-a-mao",
+    imagem: "img/produtos/vaso-vestido-rendado.webp",
+    imagensExtras: [
+      "img/produtos/angulos-extras/vaso-vestido-rendado-2.webp",
+      "img/produtos/angulos-extras/vaso-vestido-rendado-3.webp",
+    ],
+    videoUrl: "img/produtos/videos/vaso-vestido-rendado.mp4",
+    dimensoes: "A definir",
+    cuidados: "A definir",
+  },
+
+  // --- POTINHO AZUL (leva 24/11) ----------------------------------
+  // COMPARADO com o id 46 (Pote Âmbar e Meia-Noite): peça DIFERENTE —
+  // o 46 é esmalte âmbar/dourado por fora com azul só por dentro; este
+  // é azul-marinho reativo por fora E por dentro, com manchas escuras
+  // em formato de raio, tampa com alça em bolinha (o 46 tem tampa em
+  // cúpula com alça pontuda). Mesmo preço-padrão da linha (R$ 109,90).
+  // Listado no relatório final pra Anasor confirmar que são peças
+  // mesmo distintas.
+  {
+    id: 61,
+    nome: "Potinho Manto Azul-Marinho",
+    descricao:
+      "Um potinho com tampa em esmalte azul-marinho reativo, com manchas escuras em formato de raio que surgem só na queima — cada potinho sai de um jeito, sem repetir o desenho. O cabo da tampa é uma bolinha simples, a combinar com o corpo arredondado. Perfeito para guardar pequenos tesouros (joias, chaves, doces) ou para ficar à vista como <span class='realce'>objeto decorativo</span> sobre a mesa. Peça <span class='realce--ouro'>única no ateliê</span>, com o acabamento reativo da queima tornando essa cor impossível de repetir.",
+    preco: 109.9,
+    categoria: "ceramica",
+    subcategoria: "Objetos Decorativos",
+    selo: "novidade",
+    imagem: "img/produtos/potinho-manto-azul.webp",
+    videoUrl: "img/produtos/videos/potinho-manto-azul.mp4",
+    dimensoes: "A definir",
+    cuidados: "A definir",
+  },
+
   // --- CROCHÊ -------------------------------------------------
   // Sem fotos ainda. Modelo para quando houver peças (copie o
   // bloco, troque os valores e some as fotos extras que tiver):
@@ -1584,4 +1730,19 @@ function totalNoGrupoAtacado(itens, produto) {
 // isso o selo e a mensagem são "Esgotado" (temporário), não "Vendido".
 function estaEsgotada(produto) {
   return produto.permiteQuantidade === true && Number(produto.estoque) <= 0;
+}
+
+// KIT com peças vendidas AVULSO (hoje, só o Kit dos 3 Vasos Raku — ver
+// "componentesKit", produtos.js): se qualquer vaso que compõe o kit já
+// foi vendido separado, o kit inteiro para de poder ser comprado —
+// venderia algo que não existe mais em conjunto. Diferente de
+// "disponivel: false" no PRÓPRIO kit (que o lugar certo pra usar é
+// quando o KIT MESMO vende, ver o lembrete no aviso de pedido) —
+// esta função olha os COMPONENTES, não o produto em si.
+function kitTemComponenteVendido(produto) {
+  if (!Array.isArray(produto.componentesKit)) return false;
+  return produto.componentesKit.some((id) => {
+    const componente = produtos.find((p) => p.id === id);
+    return componente?.disponivel === false;
+  });
 }

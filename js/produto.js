@@ -324,7 +324,10 @@ function montarDetalhe(produto) {
   // a função.
   const anjoDeLuz = produto.grupoAtacado === 'anjos-de-luz';
   const esgotada = estaEsgotada(produto);
-  const podeComprar = produtoDisponivel && !esgotada;
+  // Kit com componente vendido avulso (hoje, só o Kit dos 3 Vasos
+  // Raku — ver "componentesKit"/kitTemComponenteVendido, produtos.js).
+  const kitIndisponivel = kitTemComponenteVendido(produto);
+  const podeComprar = produtoDisponivel && !esgotada && !kitIndisponivel;
   sincronizarQuantidade(1); // reinicia o seletor sempre que a peça muda
 
   // Bloco HTML do convite — MUDA de visual conforme a disponibilidade:
@@ -371,6 +374,26 @@ function montarDetalhe(produto) {
           rel="noopener noreferrer"
           aria-label="Encomendar ${produto.nome} pelo WhatsApp">
           Encomende o seu
+        </a>
+      </div>`
+    // Kit com um dos vasos já vendido avulso: venderia o conjunto sem
+    // os 3 que o compõem — o convite é falar com a Anasor, não uma
+    // "encomenda parecida" (ela pode, ou não, montar outro conjunto).
+    : kitIndisponivel
+    ? `
+      <div class="produto-encomenda produto-encomenda--indisponivel">
+        <p class="produto-encomenda__status">Uma das peças deste kit já foi vendida avulsa 🤎</p>
+        <p class="produto-encomenda__texto">
+          O conjunto não está completo no momento. Fale com a Anasor
+          pra saber se dá pra montar outro kit parecido.
+        </p>
+        <a
+          class="btn-comprar-agora produto-encomenda__btn produto-encomenda__btn--grande"
+          href="${linkEncomendaIndisponivel}"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Perguntar sobre ${produto.nome} pelo WhatsApp">
+          Perguntar disponibilidade
         </a>
       </div>`
     : `
@@ -451,7 +474,7 @@ function montarDetalhe(produto) {
       <div class="galeria">
         <!-- foto grande (eager: é a 1ª coisa visível), setas, dots e
              miniaturas: o mesmo molde da Home, ver galeriaHTML (main.js) -->
-        ${galeriaHTML(imagens, produto.nome, { eager: true, molduraFixa: anjoDeLuz, foco: produto.focoPrincipal })}
+        ${galeriaHTML(imagens, produto.nome, { eager: true, molduraFixa: true, foco: produto.focoPrincipal })}
 
         <!-- VÍDEO DA PEÇA (campo opcional produto.videoUrl). DECISÃO DE
              DESIGN: em vez de misturar o vídeo como mais um "slide"
@@ -991,7 +1014,8 @@ function montarBarraCompraFlutuante(produto) {
   // de WhatsApp; só o texto do botão/preço muda conforme o motivo.
   const vendida = produto.disponivel === false;
   const esgotada = estaEsgotada(produto);
-  const disponivel = !vendida && !esgotada;
+  const kitIndisponivel = kitTemComponenteVendido(produto);
+  const disponivel = !vendida && !esgotada && !kitIndisponivel;
 
   const barra = document.createElement('div');
   // modificador ".barra-compra--indisponivel": só muda o botão (ver
@@ -1016,6 +1040,8 @@ function montarBarraCompraFlutuante(produto) {
     ? '<strong>Peça vendida</strong>'
     : esgotada
     ? '<strong>Esgotado</strong>'
+    : kitIndisponivel
+    ? '<strong>Kit incompleto</strong>'
     : estaEmPromocao(produto)
     ? `<s>${formatarPreco(produto.precoOriginal)}</s>
        <strong>${formatarPreco(produto.preco)}</strong>`

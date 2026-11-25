@@ -128,6 +128,7 @@ const {
   precoUnitario: calcularPrecoUnitario,
   totalNoGrupoAtacado,
   estaEsgotada,
+  kitTemComponenteVendido,
 } = require('./data/produtos');
 const { extrairDadosPedido, formatarReal, EMAIL_DESTINO_PADRAO } = require('./pedido-email');
 const { cpfValido, telefoneValido, nomeCompletoValido, separarNome, soDigitos, normalizarTelefone } = require('./documentos');
@@ -625,23 +626,27 @@ app.post('/api/checkout', async (req, res) => {
     porId.set(produto.id, { produto, quantidade: (porId.get(produto.id)?.quantidade || 0) + quantidade });
   }
 
-  // "Fora de compra": peça única vendida (disponivel: false) OU Anjo
-  // de Luz com estoque zerado (estaEsgotada — ver produtos.js). Os dois
-  // bloqueiam o pedido do mesmo jeito (409, mesmo "codigo"), mas a
-  // FRASE distingue os dois motivos — "vendida" nunca repõe, "esgotada"
+  // "Fora de compra": peça única vendida (disponivel: false), Anjo de
+  // Luz com estoque zerado (estaEsgotada) OU um KIT (hoje, só o Kit dos
+  // 3 Vasos Raku) com algum vaso componente já vendido avulso
+  // (kitTemComponenteVendido — ver "componentesKit", produtos.js). Os
+  // três bloqueiam o pedido do mesmo jeito (409, mesmo "codigo"), mas a
+  // FRASE distingue os motivos — "vendida"/kit nunca repõem, "esgotada"
   // é um estoque temporário que a Anasor reabastece numa fornada nova.
   const indisponiveis = [...porId.values()].filter(
-    ({ produto }) => produto.disponivel === false || estaEsgotada(produto)
+    ({ produto }) => produto.disponivel === false || estaEsgotada(produto) || kitTemComponenteVendido(produto)
   );
   // 409 (conflito com o estado do catálogo), não 400: o pedido estava
   // bem formado, a peça é que deixou de estar à venda. O "codigo" deixa
   // o front tratar o caso sem depender do texto da mensagem.
   if (indisponiveis.length > 0) {
     const soVendidas = indisponiveis.every(({ produto }) => produto.disponivel === false);
+    const motivo = (produto) =>
+      produto.disponivel === false ? 'vendida' : kitTemComponenteVendido(produto) ? 'um componente do kit já foi vendido' : 'esgotada';
     const erro = soVendidas
       ? `Esta peça já foi vendida: ${indisponiveis.map(({ produto }) => produto.nome).join(', ')}. Tire do carrinho para continuar.`
       : `Esta peça não está disponível agora: ${indisponiveis
-          .map(({ produto }) => `${produto.nome} (${produto.disponivel === false ? 'vendida' : 'esgotada'})`)
+          .map(({ produto }) => `${produto.nome} (${motivo(produto)})`)
           .join(', ')}. Tire do carrinho para continuar.`;
     return res.status(409).json({ codigo: 'peca_vendida', erro });
   }

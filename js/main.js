@@ -456,6 +456,7 @@ const SELOS_PECA = {
   esgotado: 'Esgotado',
   'mais-vendido': 'Mais Vendido',
   assinada: 'Peça Assinada',
+  'queima-raku': 'Queima Raku',
   'lembranca-batizado': 'Lembrança de Batizado',
   'edicao-limitada': 'Edição Limitada',
   queridinho: 'Queridinha do Ateliê',
@@ -569,16 +570,18 @@ function renderSeloFeitoAMao() {
 // "Escolha do Ateliê", para as duas nunca divergirem. Devolve só o
 // miolo: quem chama decide o contêiner (a página da peça põe o vídeo
 // junto). Com 1 foto, só a foto: não há o que navegar.
-// "molduraFixa"/"foco": moldura 4:5 (em pé) com object-fit:cover, pedida
-// pro site todo — mas só LIGADA por enquanto onde a 1ª foto já é
-// garantidamente vertical (os Anjos de Luz, ver produto.js), porque
-// cover CORTA a imagem pra caber na proporção. Ligar isso pro catálogo
-// inteiro antes de toda peça ter a 1ª foto vertical cortaria produto em
-// peças com foto principal horizontal (ex.: Hora da Pizza) — essa
-// conversão é um passo à parte (ver CLAUDE.md, "primeira foto sempre em
-// pé"). "foco" é o object-position opcional (produto.focoPrincipal em
-// produtos.js), padrão "center 40%" (um pouco acima do meio) na classe
-// --4x5 em produto.css.
+// "molduraFixa"/"foco": moldura 4:5 (em pé) com object-fit:cover —
+// LIGADA pro catálogo inteiro (produto.js sempre passa true) desde a
+// Leva 3: a regra "a 1ª foto de cada peça é sempre vertical" (ver
+// CLAUDE.md e scripts/auditoria-primeira-foto.js) garante que cover
+// nunca vai CORTAR o produto — ele só preenche a moldura de ponta a
+// ponta porque a foto já nasce quase na proporção certa. Ficou como
+// parâmetro (em vez de sempre-true embutido aqui) só por cautela: se
+// um dia entrar uma peça nova com a 1ª foto horizontal por engano, dá
+// pra desligar SÓ pra ela sem mexer no resto. "foco" é o
+// object-position opcional (produto.focoPrincipal em produtos.js),
+// padrão "center 40%" (um pouco acima do meio) na classe --4x5 em
+// produto.css.
 function galeriaHTML(imagens, nome, { eager = false, molduraFixa = false, foco } = {}) {
   const varias = imagens.length > 1;
   const rotulo = (i) => `Ver foto ${i + 1} de ${imagens.length}`;
@@ -758,6 +761,9 @@ function ativarGaleriaDeFotos(container, imagens) {
 function criarCardProduto(produto) {
   const vendida = estaVendida(produto);
   const esgotada = estaEsgotada(produto);
+  // Kit com componente vendido avulso (hoje, só o Kit dos 3 Vasos
+  // Raku, ver "componentesKit"/kitTemComponenteVendido, produtos.js).
+  const kitIndisponivel = kitTemComponenteVendido(produto);
 
   // Vendida: um botão só, para encomendar. É <a> (não <button>), então
   // o listener do carrinho, que escuta button.btn-comprar, nunca pega.
@@ -795,11 +801,21 @@ function criarCardProduto(produto) {
            target="_blank" rel="noopener noreferrer"
            aria-label="Encomendar ${produto.nome} pelo WhatsApp">Encomende o seu&nbsp;🤎</a>
       </div>`
+    // Kit com um vaso já vendido avulso: nada de "Adicionar ao
+    // Carrinho" (venderia algo que não existe mais em conjunto) — só o
+    // convite de falar com a Anasor pra saber se monta outro conjunto.
+    : kitIndisponivel
+    ? `<div class="produto-card__acoes-vendida">
+        <p class="produto-card__status-vendida">Uma das peças deste kit já foi vendida avulsa.</p>
+        <a class="btn-comprar btn-encomendar" href="${linkEncomendaWhatsApp(produto, { indisponivel: true })}"
+           target="_blank" rel="noopener noreferrer"
+           aria-label="Perguntar sobre ${produto.nome} pelo WhatsApp">Perguntar disponibilidade&nbsp;🤎</a>
+      </div>`
     : `<button class="btn-comprar">${estaNoCarrinho(produto.id) ? TEXTO_NO_CARRINHO : 'Adicionar ao Carrinho'}</button>
       <button class="btn-comprar-agora">Comprar Agora</button>`;
 
   return `
-    <div class="produto-card reveal ${vendida ? 'produto-card--vendida' : ''} ${esgotada ? 'produto-card--esgotada' : ''}"
+    <div class="produto-card reveal ${vendida ? 'produto-card--vendida' : ''} ${esgotada || kitIndisponivel ? 'produto-card--esgotada' : ''}"
          data-id="${produto.id}"
          data-nome="${produto.nome}"
          data-preco="${produto.preco}"
@@ -4197,6 +4213,24 @@ const fotosAtelie = [
   // empilhadas, não um grid de células fixas — ver renderização
   // abaixo), tirar o último item aqui já é suficiente: não sobra
   // nenhum espaço vazio nem quebra o zigue-zague das linhas restantes.
+  //
+  // atelie-08/09 (leva 24/11, pasta atelie-bastidores): só as 2 fotos
+  // SEM o rosto da Anasor (ela é tímida) e mais distintas entre si —
+  // o material tinha 6 fotos da mesma estante em ângulos parecidos;
+  // as outras 4 (2 quase repetidas desta mesma mesa + 2 do cenário de
+  // fotos no quintal, sem peça nenhuma à vista) ficaram de fora por
+  // seriam redundantes aqui, não por causa de rosto (relatado no
+  // relatório final da tarefa).
+  {
+    src: 'img/atelie/atelie-08.jpg',
+    alt: 'Mesa do ateliê coberta de peças de cerâmica: pratos pintados, vasos, potes e anjinhos, sobre azulejo com estampa de rosas',
+    legenda: 'Um cantinho da loja do ateliê, com peças de todas as séries lado a lado — do prato pintado à mão ao vaso ainda por batizar.',
+  },
+  {
+    src: 'img/atelie/atelie-09.jpg',
+    alt: 'Outro ângulo da mesa do ateliê, com pratos decorativos, potes e o vaso em formato de vestido entre as peças',
+    legenda: 'A mesma mesa, de outro ângulo: cada peça esperando a vez de ganhar uma foto própria e um lugar na loja.',
+  },
 ];
 
 // Monta a galeria dentro de #atelie-galeria (index.html). Guardado

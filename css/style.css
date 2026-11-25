@@ -6589,6 +6589,14 @@ footer {
   color: #FFF;
 }
 
+/* Queima Raku (vasos raku) — cinza-carvão quente, cor NOVA (nenhum
+   outro selo usa): lembra a fumaça da queima, sem repetir o terracota
+   de "assinada" nem o marrom escuro de "esgotado"/"modelada-a-mao". */
+.selo-peca--queima-raku {
+  background-color: #4A3F35; /* branco por cima: 11,8:1 */
+  color: #FFF;
+}
+
 .selo-peca--queridinho {
   background-color: var(--cor-fundo);    /* terracota sobre creme: 5,4:1 */
   color: var(--cor-destaque);

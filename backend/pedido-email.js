@@ -76,6 +76,27 @@ function sugestoesEstoqueAnjos(itensPedido) {
     .filter(Boolean);
 }
 
+// ---------- LEMBRETE: KIT VENDIDO = COMPONENTES VENDIDOS TAMBÉM ----------
+// Hoje só o Kit dos 3 Vasos Raku (campo "componentesKit" em
+// produtos.js): quando o KIT vende, os 3 vasos que o compõem também
+// precisam virar "disponivel: false" em produtos.js (eles não têm
+// pedido próprio — sumir do estoque junto é manual, como tudo aqui
+// sem banco de dados). Casamento por NOME, mesmo motivo de
+// sugestoesEstoqueAnjos, acima.
+function lembretesKitVendido(itensPedido) {
+  if (!Array.isArray(itensPedido)) return [];
+  return itensPedido
+    .map((item) => {
+      const catalogo = produtos.find((p) => Array.isArray(p.componentesKit) && p.nome === item.nome);
+      if (!catalogo) return null;
+      const nomesComponentes = catalogo.componentesKit
+        .map((id) => produtos.find((p) => p.id === id)?.nome || `id ${id}`)
+        .join(', ');
+      return `${catalogo.nome} vendido — marcar "disponivel: false" também em: ${nomesComponentes} (ids ${catalogo.componentesKit.join(', ')}).`;
+    })
+    .filter(Boolean);
+}
+
 // Escapa os 5 caracteres que importam pra HTML — qualquer texto que
 // vem do CLIENTE (nome, endereço, telefone...) precisa passar por
 // aqui antes de entrar no corpo HTML do e-mail. O corpo em TEXTO
@@ -436,8 +457,12 @@ function montarEmailPedido(dadosPedido) {
     : itensResumoTexto || `${NAO_INFORMADO_TEXTO} (confira o pagamento no painel do Mercado Pago)`;
 
   const sugestoesEstoque = sugestoesEstoqueAnjos(itens);
+  const lembretesKit = lembretesKitVendido(itens);
   const blocoEstoqueTexto = sugestoesEstoque.length
     ? `\nATUALIZAR ESTOQUE (Anjos de Luz)\n${sugestoesEstoque.join('\n')}\n`
+    : '';
+  const blocoKitTexto = lembretesKit.length
+    ? `\nATENÇÃO — KIT VENDIDO\n${lembretesKit.join('\n')}\n`
     : '';
 
   const texto = `NOVO PEDIDO PAGO — ${codigoPedido}
@@ -455,7 +480,7 @@ ${blocoTexto(blocoEndereco)}
 
 ITENS
 ${linhasItensTexto}
-${blocoEstoqueTexto}
+${blocoEstoqueTexto}${blocoKitTexto}
 ${blocoTexto(blocoValores)}
 
 ============================================
@@ -492,6 +517,12 @@ Responda este e-mail ou chame o cliente pelo WhatsApp para combinar o envio.
         .join('')}</table>`
     : '';
 
+  const blocoKitHtml = lembretesKit.length
+    ? `${tituloHtml('⚠️ Atenção — kit vendido')}<table style="border-collapse:collapse;">${lembretesKit
+        .map((linha) => `<tr><td style="padding:3px 0;color:#9E4F2E;font-weight:bold;">${escaparHtml(linha)}</td></tr>`)
+        .join('')}</table>`
+    : '';
+
   const linhaWhatsAppHtml = linkWhatsApp
     ? `<tr><td></td><td style="padding:3px 0;"><a href="${escaparHtml(linkWhatsApp)}">Abrir WhatsApp</a></td></tr>`
     : '';
@@ -510,6 +541,7 @@ Responda este e-mail ou chame o cliente pelo WhatsApp para combinar o envio.
     ${tituloHtml('Itens')}
     <table style="border-collapse:collapse;">${linhasItensHtml}</table>
     ${blocoEstoqueHtml}
+    ${blocoKitHtml}
     <div style="margin-top:10px;">${tabelaHtml(blocoValores)}</div>
   </div>
   <p style="margin:16px 0 0;">Responda este e-mail ou chame o cliente pelo WhatsApp para combinar o envio.</p>
@@ -604,4 +636,5 @@ module.exports = {
   criarTransportadorGmail,
   enviarEmailPedido,
   sugestoesEstoqueAnjos,
+  lembretesKitVendido,
 };

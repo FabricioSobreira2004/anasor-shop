@@ -51,7 +51,7 @@ function carregarProdutosDoFront() {
   // função vem junto (em vez de reescrever o filtro aqui) pra a regra
   // de "o que é oculto" continuar morando num lugar só: js/produtos.js.
   return vm.runInContext(
-    codigo + '\n({ produtos, produtosVisiveis, precoUnitario, totalNoGrupoAtacado, estaEsgotada });',
+    codigo + '\n({ produtos, produtosVisiveis, precoUnitario, totalNoGrupoAtacado, estaEsgotada, kitTemComponenteVendido });',
     sandbox,
     { filename: caminhoArquivoFront }
   );
@@ -60,7 +60,7 @@ function carregarProdutosDoFront() {
 // Lê UMA vez, quando o servidor sobe (o arquivo não muda em runtime).
 // Se der erro de leitura/parse, é melhor o servidor NEM subir do que
 // subir servindo um catálogo vazio silenciosamente.
-const { produtos, produtosVisiveis, precoUnitario, totalNoGrupoAtacado, estaEsgotada } =
+const { produtos, produtosVisiveis, precoUnitario, totalNoGrupoAtacado, estaEsgotada, kitTemComponenteVendido } =
   carregarProdutosDoFront();
 
 if (!Array.isArray(produtos) || produtos.length === 0) {
@@ -78,4 +78,4 @@ if (!Array.isArray(produtos) || produtos.length === 0) {
 //   funções do front, pra nunca cobrar diferente do que o cliente viu.
 // estaEsgotada: estoque zerado (permiteQuantidade) — bloqueia o pedido
 //   igual a uma peça vendida, mas sem marcar "disponivel: false".
-module.exports = { produtos, produtosVisiveis, precoUnitario, totalNoGrupoAtacado, estaEsgotada };
+module.exports = { produtos, produtosVisiveis, precoUnitario, totalNoGrupoAtacado, estaEsgotada, kitTemComponenteVendido };
