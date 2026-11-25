@@ -114,7 +114,21 @@ const {
 
 // Dois acessos ao MESMO catálogo: "produtos" (completo, pra buscar por
 // id) e "produtosVisiveis()" (sem as peças "oculto: true", pra listar).
-const { produtos, produtosVisiveis } = require('./data/produtos');
+// precoUnitario/totalNoGrupoAtacado/estaEsgotada: regra de preço por
+// quantidade dos Anjos de Luz — AS MESMAS funções que o front usa (ver
+// js/produtos.js), lidas daqui pela ponte em data/produtos.js, pra
+// nunca existir um cálculo "do servidor" divergente do que o cliente viu.
+// "precoUnitario" renomeada pra "calcularPrecoUnitario" aqui: o objeto
+// de cada item resolvido (mais abaixo) já usa a chave "precoUnitario"
+// (o valor em R$ cobrado por unidade) — importar a FUNÇÃO com o mesmo
+// nome só confundiria quem lê "item.precoUnitario" vs "precoUnitario(...)".
+const {
+  produtos,
+  produtosVisiveis,
+  precoUnitario: calcularPrecoUnitario,
+  totalNoGrupoAtacado,
+  estaEsgotada,
+} = require('./data/produtos');
 const { extrairDadosPedido, formatarReal, EMAIL_DESTINO_PADRAO } = require('./pedido-email');
 const { cpfValido, telefoneValido, nomeCompletoValido, separarNome, soDigitos, normalizarTelefone } = require('./documentos');
 // Envio dos avisos de pedido pago (e-mail + Telegram, isolados entre si).
@@ -587,9 +601,15 @@ app.post('/api/checkout', async (req, res) => {
   //   - cerâmica é peça ÚNICA (estoque 1, CLAUDE.md): quantidade
   //     sempre 1, mesmo que o carrinho antigo mande mais; o resto
   //     (crochê, no futuro) limitado a QTD_MAX_OUTRAS;
-  //   - peça "disponivel: false" (já vendida) recusa o pedido com o
-  //     nome dela, pra a pessoa tirar do carrinho — cobrar seria vender
-  //     algo que não existe mais.
+  //   - EXCEÇÃO: peça com "permiteQuantidade" (hoje, só os Anjos de
+  //     Luz) usa a quantidade pedida de verdade, até o limite de
+  //     "maxPorPedido" (o estoque do modelo) — acima disso o pedido é
+  //     recusado (ver "acimaDoEstoque", mais abaixo), nunca cortado
+  //     silenciosamente;
+  //   - peça "disponivel: false" (já vendida) ou esgotada (estoque
+  //     zerado de um Anjo de Luz) recusa o pedido com o nome dela, pra
+  //     a pessoa tirar do carrinho — cobrar seria vender algo que não
+  //     existe mais.
   const MAX_ITENS_CARRINHO = 50;
   const QTD_MAX_OUTRAS = 10;
   if (itens.length > MAX_ITENS_CARRINHO) {
@@ -605,25 +625,76 @@ app.post('/api/checkout', async (req, res) => {
     porId.set(produto.id, { produto, quantidade: (porId.get(produto.id)?.quantidade || 0) + quantidade });
   }
 
-  const vendidas = [...porId.values()].filter(({ produto }) => produto.disponivel === false);
+  // "Fora de compra": peça única vendida (disponivel: false) OU Anjo
+  // de Luz com estoque zerado (estaEsgotada — ver produtos.js). Os dois
+  // bloqueiam o pedido do mesmo jeito (409, mesmo "codigo"), mas a
+  // FRASE distingue os dois motivos — "vendida" nunca repõe, "esgotada"
+  // é um estoque temporário que a Anasor reabastece numa fornada nova.
+  const indisponiveis = [...porId.values()].filter(
+    ({ produto }) => produto.disponivel === false || estaEsgotada(produto)
+  );
   // 409 (conflito com o estado do catálogo), não 400: o pedido estava
   // bem formado, a peça é que deixou de estar à venda. O "codigo" deixa
   // o front tratar o caso sem depender do texto da mensagem.
-  if (vendidas.length > 0) {
+  if (indisponiveis.length > 0) {
+    const soVendidas = indisponiveis.every(({ produto }) => produto.disponivel === false);
+    const erro = soVendidas
+      ? `Esta peça já foi vendida: ${indisponiveis.map(({ produto }) => produto.nome).join(', ')}. Tire do carrinho para continuar.`
+      : `Esta peça não está disponível agora: ${indisponiveis
+          .map(({ produto }) => `${produto.nome} (${produto.disponivel === false ? 'vendida' : 'esgotada'})`)
+          .join(', ')}. Tire do carrinho para continuar.`;
+    return res.status(409).json({ codigo: 'peca_vendida', erro });
+  }
+
+  // ANJOS DE LUZ (permiteQuantidade): a quantidade pedida NUNCA pode
+  // passar do estoque do modelo (maxPorPedido, ver produtos.js) — isso
+  // é PRONTO, acima disso só por encomenda (WhatsApp). Recusa com um
+  // erro claro em vez de simplesmente cortar na maior quantidade
+  // disponível: cortar silenciosamente cobraria um valor diferente do
+  // que o cliente via no carrinho, sem avisar por quê.
+  const acimaDoEstoque = [...porId.values()].filter(
+    ({ produto, quantidade }) => produto.permiteQuantidade && quantidade > Number(produto.maxPorPedido)
+  );
+  if (acimaDoEstoque.length > 0) {
     return res.status(409).json({
-      codigo: 'peca_vendida',
-      erro: `Esta peça já foi vendida: ${vendidas.map(({ produto }) => produto.nome).join(', ')}. Tire do carrinho para continuar.`,
+      codigo: 'estoque_insuficiente',
+      erro:
+        `Estoque insuficiente: ${acimaDoEstoque
+          .map(({ produto }) => `"${produto.nome}" (temos ${produto.maxPorPedido} prontos agora)`)
+          .join(', ')}. Ajuste a quantidade no carrinho ou fale no WhatsApp para encomendar em quantidade maior.`,
     });
   }
 
-  const itensResolvidos = [...porId.values()].map(({ produto, quantidade: pedida }) => {
-    const quantidade = produto.categoria === 'ceramica' ? 1 : Math.min(pedida, QTD_MAX_OUTRAS);
+  // Quantidade FINAL de cada linha: Anjo de Luz usa a quantidade pedida
+  // (já validada acima, nunca passa do estoque); cerâmica comum
+  // continua travada em 1 (peça única); o resto (crochê, futuro) segue
+  // limitado a QTD_MAX_OUTRAS — exatamente as regras de sempre, só que
+  // agora com UMA exceção (permiteQuantidade) em vez de duas.
+  const entradas = [...porId.values()].map(({ produto, quantidade: pedida }) => {
+    const quantidade = produto.permiteQuantidade
+      ? pedida
+      : produto.categoria === 'ceramica'
+      ? 1
+      : Math.min(pedida, QTD_MAX_OUTRAS);
+    return { produto, quantidade };
+  });
+
+  // Lista enxuta {id, quantidade} pra alimentar totalNoGrupoAtacado —
+  // ela precisa enxergar TODAS as linhas do pedido pra somar o grupo
+  // "anjos-de-luz" entre modelos diferentes (Grande + Médio + Silhueta).
+  const itensParaGrupo = entradas.map(({ produto, quantidade }) => ({ id: produto.id, quantidade }));
+
+  const itensResolvidos = entradas.map(({ produto, quantidade }) => {
+    // calcularPrecoUnitario/totalNoGrupoAtacado: A MESMA regra do front
+    // (ver js/produtos.js) — nunca confia em preço vindo do body.
+    const totalDoGrupo = totalNoGrupoAtacado(itensParaGrupo, produto);
+    const precoPorUnidade = calcularPrecoUnitario(produto, totalDoGrupo);
     return {
       id: produto.id,
       nome: produto.nome,
-      precoUnitario: produto.preco, // <- do catálogo, NUNCA do body
+      precoUnitario: precoPorUnidade, // <- do catálogo, NUNCA do body
       quantidade,
-      subtotal: produto.preco * quantidade,
+      subtotal: precoPorUnidade * quantidade,
     };
   });
 

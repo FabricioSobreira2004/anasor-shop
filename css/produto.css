@@ -61,6 +61,21 @@
      Este seletor cuida só do tamanho/encaixe da foto. */
 }
 
+/* MOLDURA 4:5 (em pé) — ver o comentário grande em galeriaHTML()
+   (js/main.js) sobre por que isto é uma classe EXTRA opcional
+   (".galeria__principal--4x5"), não o padrão de ".galeria__principal":
+   cover CORTA a foto pra caber na proporção, e só é seguro ligar onde a
+   1ª foto já é garantidamente vertical. object-position (a "foco" da
+   função) pode vir inline por produto; o padrão aqui é "um pouco acima
+   do meio" — melhor pra retratos de objeto (anjo, rosto da peça) que
+   centralizar exatamente no meio. */
+.galeria__principal--4x5 {
+  aspect-ratio: 4 / 5;
+  max-height: none;
+  object-fit: cover;
+  object-position: center 40%;
+}
+
 /* Setas, dots e miniaturas (.galeria__*) moram em style.css: o mesmo
    componente serve a "Escolha do Ateliê" da Home. */
 
@@ -206,6 +221,116 @@
 .produto-detalhe__preco.preco--promo {
   justify-content: flex-start;
   gap: 0.6rem;
+}
+
+/* Preço por quantidade (Anjo de Luz, .preco-quantidade em style.css):
+   mesmo alinhamento à esquerda da coluna de informações. */
+.produto-detalhe__preco.preco-quantidade {
+  text-align: left;
+}
+
+/* ============================================
+   SELETOR DE QUANTIDADE (+/-) — só Anjo de Luz, produto.js
+   ============================================ */
+.seletor-quantidade {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.8rem;
+  margin-bottom: 0.9rem;
+}
+
+.seletor-quantidade__passo {
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  border: 1.5px solid var(--cor-destaque);
+  background: var(--cor-card);
+  color: var(--cor-destaque);
+  font-size: 1.3rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.seletor-quantidade__passo:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.seletor-quantidade__passo:not(:disabled):hover {
+  background: var(--cor-destaque);
+  color: #FFF;
+}
+
+.seletor-quantidade__valor {
+  min-width: 1.6em;
+  text-align: center;
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.seletor-quantidade__aviso {
+  font-size: 0.85rem;
+  color: var(--cor-secundaria-escuro);
+  background: var(--cor-fundo-alt);
+  border-radius: 8px;
+  padding: 0.6rem 0.8rem;
+  margin: -0.3rem 0 0.9rem;
+}
+
+.seletor-quantidade__aviso a {
+  color: var(--cor-destaque-escuro);
+  font-weight: 600;
+}
+
+/* ============================================
+   FAIXA "DO BARRO À LUZ" (só páginas de Anjo de Luz, produto.js)
+   Filho DIRETO de #produto-detalhe (o grid de 2 colunas): precisa de
+   grid-column:1/-1 pra quebrar as colunas e ocupar a largura toda —
+   senão cairia espremida dentro da 1ª coluna (1fr), como mais um item
+   do grid.
+   ============================================ */
+.produto-detalhe__barro-a-luz {
+  grid-column: 1 / -1;
+  margin-top: 1rem;
+  padding-top: 2rem;
+  border-top: 1px solid var(--cor-fundo-alt);
+}
+
+.barro-a-luz__titulo {
+  text-align: center;
+  font-family: var(--fonte-titulo);
+  margin-bottom: 1.5rem;
+}
+
+.barro-a-luz__grade {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 1rem;
+}
+
+.barro-a-luz__passo {
+  margin: 0;
+  text-align: center;
+}
+
+.barro-a-luz__passo img {
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  object-fit: cover;
+  border-radius: 10px;
+  margin-bottom: 0.5rem;
+}
+
+.barro-a-luz__passo figcaption {
+  font-size: 0.78rem;
+  color: var(--cor-secundaria);
+  line-height: 1.3;
+}
+
+@media (max-width: 768px) {
+  .barro-a-luz__grade {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 /* O SELO DE ESCASSEZ (.selo-escassez, "Peça única — quando vender...")

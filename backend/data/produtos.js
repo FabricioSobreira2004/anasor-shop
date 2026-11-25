@@ -50,15 +50,18 @@ function carregarProdutosDoFront() {
   // objeto com os dois, essa expressão vira o valor de retorno. A
   // função vem junto (em vez de reescrever o filtro aqui) pra a regra
   // de "o que é oculto" continuar morando num lugar só: js/produtos.js.
-  return vm.runInContext(codigo + '\n({ produtos, produtosVisiveis });', sandbox, {
-    filename: caminhoArquivoFront,
-  });
+  return vm.runInContext(
+    codigo + '\n({ produtos, produtosVisiveis, precoUnitario, totalNoGrupoAtacado, estaEsgotada });',
+    sandbox,
+    { filename: caminhoArquivoFront }
+  );
 }
 
 // Lê UMA vez, quando o servidor sobe (o arquivo não muda em runtime).
 // Se der erro de leitura/parse, é melhor o servidor NEM subir do que
 // subir servindo um catálogo vazio silenciosamente.
-const { produtos, produtosVisiveis } = carregarProdutosDoFront();
+const { produtos, produtosVisiveis, precoUnitario, totalNoGrupoAtacado, estaEsgotada } =
+  carregarProdutosDoFront();
 
 if (!Array.isArray(produtos) || produtos.length === 0) {
   throw new Error(
@@ -70,4 +73,9 @@ if (!Array.isArray(produtos) || produtos.length === 0) {
 // produtos: catálogo COMPLETO (inclui peças ocultas) — pra achar uma
 //   peça pelo id (GET /api/produtos/:id e o cálculo do checkout).
 // produtosVisiveis: filtro das LISTAGENS públicas (GET /api/produtos).
-module.exports = { produtos, produtosVisiveis };
+// precoUnitario/totalNoGrupoAtacado: regra de preço por quantidade dos
+//   Anjos de Luz (ver js/produtos.js) — o CHECKOUT usa as MESMAS duas
+//   funções do front, pra nunca cobrar diferente do que o cliente viu.
+// estaEsgotada: estoque zerado (permiteQuantidade) — bloqueia o pedido
+//   igual a uma peça vendida, mas sem marcar "disponivel: false".
+module.exports = { produtos, produtosVisiveis, precoUnitario, totalNoGrupoAtacado, estaEsgotada };

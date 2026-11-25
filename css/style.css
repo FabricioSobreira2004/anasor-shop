@@ -3897,6 +3897,32 @@ nav {
   border-radius: 20px;
 }
 
+/* ============================================
+   PREÇO POR QUANTIDADE (Anjo de Luz, ver renderPrecoQuantidade em
+   main.js) — SEMPRE as duas faixas ("R$ X a unidade" + "a partir de N,
+   R$ Y cada"), nunca um valor fixo riscado: o preço real só se decide
+   no carrinho (ver precoUnitario, produtos.js). Mesmo espaço vertical
+   de .preco (margin-bottom) pra não pular o layout do card/página.
+   ============================================ */
+.preco-quantidade {
+  margin-bottom: 1rem;
+  text-align: center;
+  /* .produto-detalhe__preco (produto.css) vira text-align:left lá,
+     igual já faz com .preco/.preco--promo */
+}
+
+.preco-quantidade__unidade {
+  color: var(--cor-destaque);
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.preco-quantidade__atacado {
+  font-size: 0.85rem;
+  color: var(--cor-secundaria-escuro);
+  margin-top: 0.15rem;
+}
+
 .btn-comprar,
 .btn-comprar-agora {
   align-self: center;
@@ -4805,6 +4831,59 @@ nav {
 
 .mini-item__preco strong {
   color: var(--cor-destaque);
+}
+
+/* Seletor +/- do item no mini-carrinho (só Anjo de Luz, ver
+   renderMiniCarrinho em main.js) — mesma linha do preço, inline, bem
+   pequeno: aqui é um AJUSTE rápido, não o seletor principal (esse mora
+   na página do produto, maior e com o aviso de estoque). */
+.mini-item__stepper {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-right: 0.4rem;
+  vertical-align: middle;
+}
+
+.mini-item__passo {
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--cor-secundaria);
+  border-radius: 999px;
+  background: none;
+  color: var(--cor-secundaria);
+  font-size: 0.9rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.mini-item__passo:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.mini-item__passo:not(:disabled):hover {
+  color: var(--cor-destaque-escuro);
+  border-color: var(--cor-destaque-escuro);
+}
+
+.mini-item__qtd {
+  min-width: 1.2em;
+  text-align: center;
+  font-weight: 600;
+}
+
+.mini-item__qtd-fixa {
+  margin-right: 0.3rem;
+}
+
+.mini-item__atacado {
+  font-size: 0.75rem;
+  color: var(--cor-secundaria-escuro);
+  margin-top: 0.15rem;
 }
 
 .mini-item__remover {
@@ -6542,6 +6621,26 @@ footer {
   color: var(--cor-texto);
 }
 
+/* Lembrança de Batizado/1ª Eucaristia (só os Anjos de Luz, ver
+   produtos.js) — dourado sobre creme com anel, mesmo padrão de
+   "queridinho" (cor diferente: ouro, não terracota) — contraste do
+   --cor-ouro-escuro sobre --cor-fundo é bem alto (texto escuro sobre
+   quase-branco), passa AA com folga. */
+.selo-peca--lembranca-batizado {
+  background-color: var(--cor-fundo);
+  color: var(--cor-ouro-escuro);
+  --selo-anel: inset 0 0 0 1px var(--cor-ouro-escuro);
+}
+
+/* Esgotado (estoque zerado, temporário — ver estaEsgotada em
+   produtos.js): mesmo peso visual de "Vendido", mas em oliva escuro —
+   cor diferente avisa que não é a MESMA situação (peça vendida nunca
+   repõe; esgotado é só até a próxima fornada). */
+.selo-peca--esgotado {
+  background-color: var(--cor-secundaria-escuro); /* branco sobre oliva escuro: 7,7:1 */
+  color: #FFF;
+}
+
 /* triângulo de "play": diz "vídeo" antes de ler o texto */
 .selo-peca--com-video::before {
   content: "\25B6\FE0E";
@@ -6569,6 +6668,14 @@ footer {
 .produto-card--vendida img {
   filter: grayscale(0.7);
   opacity: 0.75;
+}
+
+/* Esgotada (Anjo de Luz sem estoque, ver estaEsgotada em produtos.js):
+   MESMO esmaecido da peça vendida — menos intenso, porque é um estoque
+   TEMPORÁRIO (a Anasor reabastece numa fornada nova), não "nunca mais". */
+.produto-card--esgotada img {
+  filter: grayscale(0.4);
+  opacity: 0.85;
 }
 
 .preco--vendida {
@@ -6950,5 +7057,193 @@ footer {
   }
   .pizza-video-card {
     width: 168px;
+  }
+}
+
+/* ============================================================
+   ANJOS DE LUZ — DESTAQUE DA HOME (index.html #anjos-destaque,
+   montado por montarAnjosDestaque em js/main.js)
+   Tema "noite dourada": fundo marrom bem escuro + brilho de vela
+   dourado (--cor-ouro-claro em degradê radial) — DIFERENTE do marrom
+   chapado de .edicao-surpresa, pra esta seção não parecer uma cópia
+   dela logo depois do banner.
+   ============================================================ */
+.anjos-destaque {
+  padding: var(--espaco-secao) 5%;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  background-image:
+    radial-gradient(ellipse 70% 60% at 50% 0%, rgba(212, 165, 116, 0.22), transparent 70%),
+    linear-gradient(165deg, #2b1f17 0%, var(--cor-texto) 100%);
+}
+
+.anjos-destaque__conteudo {
+  max-width: 1100px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 1;
+}
+
+.anjos-destaque__eyebrow {
+  display: inline-block;
+  font-family: var(--fonte-texto);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--cor-ouro-claro);
+  background-color: rgba(212, 165, 116, 0.12);
+  border: 1px solid rgba(212, 165, 116, 0.45);
+  border-radius: 999px;
+  padding: 0.45rem 1.1rem;
+  margin-bottom: 1.1rem;
+}
+
+.anjos-destaque__titulo {
+  color: var(--cor-fundo);
+  font-size: 2rem;
+  max-width: 680px;
+  margin: 0 auto 1rem;
+  text-wrap: balance;
+}
+
+.anjos-destaque__texto {
+  max-width: 560px;
+  margin: 0 auto 2.2rem;
+  color: rgba(251, 246, 239, 0.82);
+  line-height: 1.6;
+}
+
+.anjos-destaque__grid {
+  display: grid;
+  grid-template-columns: 0.9fr 1.1fr;
+  gap: 2.2rem;
+  align-items: center;
+  text-align: left;
+  margin-bottom: 1.3rem;
+}
+
+.anjos-destaque__foto {
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  object-fit: cover;
+  object-position: center 35%;
+  border-radius: 16px;
+  box-shadow: 0 24px 55px rgba(0, 0, 0, 0.45);
+}
+
+.anjos-destaque__cards {
+  display: grid;
+  /* largura FIXA de cada card (pedido explícito): minmax trava um
+     piso, 1fr deixa os 3 dividirem o espaço sobrando igualmente —
+     nunca "esticam" de formas diferentes entre si. */
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.9rem;
+}
+
+.anjos-destaque__card {
+  display: block;
+  position: relative;
+  background-color: rgba(251, 246, 239, 0.07);
+  border: 1px solid rgba(212, 165, 116, 0.3);
+  border-radius: 14px;
+  padding: 0.8rem;
+  text-align: center;
+  text-decoration: none;
+  transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .anjos-destaque__card:hover {
+    transform: translateY(-4px);
+    background-color: rgba(251, 246, 239, 0.12);
+  }
+}
+
+.anjos-destaque__card img {
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  object-fit: cover;
+  border-radius: 10px;
+  margin-bottom: 0.55rem;
+}
+
+.anjos-destaque__card h3 {
+  font-size: 0.82rem;
+  color: var(--cor-fundo);
+  margin: 0 0 0.2rem;
+}
+
+.anjos-destaque__card-preco {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--cor-ouro-claro);
+  margin: 0;
+}
+
+.anjos-destaque__card-esgotado {
+  position: absolute;
+  top: 0.5rem;
+  left: 0.5rem;
+  background-color: var(--cor-secundaria-escuro);
+  color: #FFF;
+  font-size: 0.65rem;
+  font-weight: 600;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+}
+
+.anjos-destaque__atacado {
+  font-size: 0.85rem;
+  color: rgba(251, 246, 239, 0.7);
+  margin-bottom: 1.8rem;
+}
+
+.anjos-destaque__acoes {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+/* .btn-fantasma padrão usa --cor-secundaria (oliva) — baixo contraste
+   sobre este fundo escuro. Variante dourada só aqui dentro. */
+.anjos-destaque .btn-fantasma {
+  border-color: var(--cor-ouro-claro);
+  color: var(--cor-ouro-claro);
+}
+
+.anjos-destaque .btn-fantasma:hover {
+  background-color: var(--cor-ouro-claro);
+  color: var(--cor-texto);
+}
+
+@media (max-width: 768px) {
+  .anjos-destaque {
+    padding: var(--espaco-secao-mobile) 6%;
+  }
+  .anjos-destaque__titulo {
+    font-size: 1.5rem;
+  }
+  .anjos-destaque__grid {
+    grid-template-columns: 1fr;
+    gap: 1.3rem;
+  }
+  .anjos-destaque__foto {
+    max-width: 280px;
+    margin: 0 auto;
+  }
+  .anjos-destaque__cards {
+    gap: 0.6rem;
+  }
+  .anjos-destaque__card {
+    padding: 0.5rem;
+  }
+  .anjos-destaque__card h3 {
+    font-size: 0.72rem;
+  }
+  .anjos-destaque__card-preco {
+    font-size: 0.7rem;
   }
 }

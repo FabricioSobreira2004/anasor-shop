@@ -296,6 +296,7 @@ if (barraTexto) {
     '🚚 Frete Grátis para todo o Brasil',
     '🔒 Pagamento 100% Seguro',
     '✋ Peças Únicas, Feitas à Mão no Ateliê',
+    '🕯️ Anjos de Luz: lembrança de Batizado e 1ª Eucaristia',
   ];
   let indiceMensagem = 0;
 
@@ -396,6 +397,53 @@ function linkEncomendaWhatsApp(produto, { indisponivel = false } = {}) {
   return `https://wa.me/${WHATSAPP_NUMERO}?text=${encodeURIComponent(msg)}`;
 }
 
+// Peça fora de compra (vendida OU esgotada): nos dois casos o card/página
+// esconde o botão normal de compra e mostra um convite no lugar. Ficam
+// SEPARADOS de estaVendida() nas listagens (ceramica.js) de propósito —
+// o carrinho/estoque esgotado é algo TEMPORÁRIO (a Anasor reabastece numa
+// fornada nova, ver scripts/estoque.js), diferente da peça única vendida
+// (que nunca repõe) — por isso não entra na seção "Peças já vendidas".
+function foraDeCompra(produto) {
+  return estaVendida(produto) || estaEsgotada(produto);
+}
+
+// Link de WhatsApp pra encomendar os Anjos de Luz EM QUANTIDADE (batizado,
+// Primeira Eucaristia, lembrancinhas) — usado pelo botão fixo da página
+// do anjo, pelo aviso de "acima do estoque" e pelo card esgotado.
+// "quantidadeDesejada" é OPCIONAL: sem ela, o convite é genérico (card/
+// botão fixo); com ela, o texto já leva o modelo e o número pedido
+// (preenchido pelo seletor de quantidade, ver produto.js).
+function linkEncomendaQuantidadeWhatsApp(produto, quantidadeDesejada) {
+  const urlPagina = new URL(`produto.html?id=${produto.id}`, window.location.href).href;
+  const qtdTexto = quantidadeDesejada ? ` — ${quantidadeDesejada} unidades` : '';
+  const msg =
+    `Olá, Anasor! Quero encomendar o "${produto.nome}"${qtdTexto} em quantidade, para batizado, ` +
+    `Primeira Eucaristia ou lembrancinhas. Podemos conversar sobre valores e prazo? ${urlPagina}`;
+  return `https://wa.me/${WHATSAPP_NUMERO}?text=${encodeURIComponent(msg)}`;
+}
+
+// ------------------------------------------------------------------
+//  PREÇO POR QUANTIDADE NA TELA (card + página do anjo)
+// ------------------------------------------------------------------
+// Peça com permiteQuantidade (hoje, só os Anjos de Luz) não tem UM preço
+// fixo — o valor de cada unidade depende de quantas estão no MESMO
+// grupoAtacado dentro do carrinho (ver precoUnitario/totalNoGrupoAtacado,
+// js/produtos.js). Por isso o bloco de preço aqui é sempre as DUAS
+// faixas ("R$ 35,00 a unidade" + "a partir de 3, R$ 30,00 cada"), nunca
+// um valor só — o valor "certo" só existe quando sabemos a composição
+// do carrinho inteiro, o que o card/a página isolados não sabem.
+function renderPrecoQuantidade(produto, { classeExtra = '' } = {}) {
+  const atacadoHTML =
+    typeof produto.precoAtacado === 'number'
+      ? `<p class="preco-quantidade__atacado">a partir de ${produto.minAtacado} anjos, <strong>${formatarPreco(produto.precoAtacado)}</strong> cada</p>`
+      : '';
+  return `
+    <div class="preco-quantidade ${classeExtra}">
+      <p class="preco-quantidade__unidade"><strong>${formatarPreco(produto.preco)}</strong> a unidade</p>
+      ${atacadoHTML}
+    </div>`;
+}
+
 // ------------------------------------------------------------------
 //  SELOS DA PEÇA (campo "selo" em produtos.js)
 // ------------------------------------------------------------------
@@ -405,8 +453,10 @@ function linkEncomendaWhatsApp(produto, { indisponivel = false } = {}) {
 // vídeo) ficam por último, só aparecem quando não há outro motivo.
 const SELOS_PECA = {
   vendido: 'Vendido',
+  esgotado: 'Esgotado',
   'mais-vendido': 'Mais Vendido',
   assinada: 'Peça Assinada',
+  'lembranca-batizado': 'Lembrança de Batizado',
   'edicao-limitada': 'Edição Limitada',
   queridinho: 'Queridinha do Ateliê',
   novidade: 'Novidade',
@@ -418,8 +468,9 @@ const SELOS_PECA = {
 
 function seloDaPeca(produto) {
   const selos = new Set([].concat(produto.selo || []));
-  // vendido e vídeo saem dos próprios dados: nunca ficam desatualizados
+  // vendido/esgotado e vídeo saem dos próprios dados: nunca ficam desatualizados
   if (estaVendida(produto)) selos.add('vendido');
+  if (estaEsgotada(produto)) selos.add('esgotado');
   if (produto.videoUrl) selos.add('com-video');
   return Object.keys(SELOS_PECA).find((chave) => selos.has(chave)) || null;
 }
@@ -493,6 +544,20 @@ function renderSeloEscassez() {
   `;
 }
 
+// Variante dos Anjos de Luz (permiteQuantidade, ver produtos.js): eles
+// SÃO feitos em quantidade — "quando vender, não haverá outra igual"
+// seria falso pra eles. Mesmo visual (.selo-escassez), recado honesto
+// diferente: cada um ainda é modelado à mão, um a um, então pode variar
+// um pouquinho — não é o mesmo tipo de escassez da peça única.
+function renderSeloFeitoAMao() {
+  return `
+    <p class="selo-escassez" role="note">
+      <span class="selo-escassez__icone" aria-hidden="true">&#128293;</span>
+      <span><strong>Feito à mão, um a um</strong> &mdash; cada anjo pode ter pequenas variações.</span>
+    </p>
+  `;
+}
+
 // ============================================================
 //  GALERIA DE FOTOS (reutilizável) — trocar a foto grande
 // ============================================================
@@ -504,16 +569,28 @@ function renderSeloEscassez() {
 // "Escolha do Ateliê", para as duas nunca divergirem. Devolve só o
 // miolo: quem chama decide o contêiner (a página da peça põe o vídeo
 // junto). Com 1 foto, só a foto: não há o que navegar.
-function galeriaHTML(imagens, nome, { eager = false } = {}) {
+// "molduraFixa"/"foco": moldura 4:5 (em pé) com object-fit:cover, pedida
+// pro site todo — mas só LIGADA por enquanto onde a 1ª foto já é
+// garantidamente vertical (os Anjos de Luz, ver produto.js), porque
+// cover CORTA a imagem pra caber na proporção. Ligar isso pro catálogo
+// inteiro antes de toda peça ter a 1ª foto vertical cortaria produto em
+// peças com foto principal horizontal (ex.: Hora da Pizza) — essa
+// conversão é um passo à parte (ver CLAUDE.md, "primeira foto sempre em
+// pé"). "foco" é o object-position opcional (produto.focoPrincipal em
+// produtos.js), padrão "center 40%" (um pouco acima do meio) na classe
+// --4x5 em produto.css.
+function galeriaHTML(imagens, nome, { eager = false, molduraFixa = false, foco } = {}) {
   const varias = imagens.length > 1;
   const rotulo = (i) => `Ver foto ${i + 1} de ${imagens.length}`;
   const seta = (direcao, path, texto) => `
     <button type="button" class="galeria__seta galeria__seta--${direcao}" aria-label="${texto}">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${path}"/></svg>
     </button>`;
+  const classeMoldura = molduraFixa ? ' galeria__principal--4x5' : '';
+  const estiloFoco = molduraFixa && foco ? ` style="object-position:${foco}"` : '';
   return `
     <div class="galeria__principal-wrap">
-      <img class="galeria__principal foto-emoldurada" src="${imagens[0]}" alt="${nome}" loading="${eager ? 'eager' : 'lazy'}">
+      <img class="galeria__principal foto-emoldurada${classeMoldura}" src="${imagens[0]}" alt="${nome}" loading="${eager ? 'eager' : 'lazy'}"${estiloFoco}>
       ${varias ? seta('anterior', 'm15 18-6-6 6-6', 'Foto anterior') + seta('proxima', 'm9 18 6-6-6-6', 'Próxima foto') : ''}
     </div>
     ${varias ? `<div class="galeria__dots" role="group" aria-label="Selecionar foto">${imagens
@@ -680,6 +757,7 @@ function ativarGaleriaDeFotos(container, imagens) {
 // mais rápido e gasta menos dados de quem não rola até lá.
 function criarCardProduto(produto) {
   const vendida = estaVendida(produto);
+  const esgotada = estaEsgotada(produto);
 
   // Vendida: um botão só, para encomendar. É <a> (não <button>), então
   // o listener do carrinho, que escuta button.btn-comprar, nunca pega.
@@ -706,11 +784,22 @@ function criarCardProduto(produto) {
            target="_blank" rel="noopener noreferrer"
            aria-label="Encomendar uma peça parecida com ${produto.nome} pelo WhatsApp">Encomendar peça parecida&nbsp;🤎</a>
       </div>`
+    // Esgotada (estoque zerado, ver estaEsgotada): MESMO visual de
+    // "card sem botão normal", mas o recado é diferente — o estoque é
+    // temporário (reabastece numa fornada nova), então o convite é
+    // "encomende o seu" (em quantidade), não "parecida".
+    : esgotada
+    ? `<div class="produto-card__acoes-vendida">
+        <p class="produto-card__status-vendida">Esta fornada esgotou.</p>
+        <a class="btn-comprar btn-encomendar" href="${linkEncomendaQuantidadeWhatsApp(produto)}"
+           target="_blank" rel="noopener noreferrer"
+           aria-label="Encomendar ${produto.nome} pelo WhatsApp">Encomende o seu&nbsp;🤎</a>
+      </div>`
     : `<button class="btn-comprar">${estaNoCarrinho(produto.id) ? TEXTO_NO_CARRINHO : 'Adicionar ao Carrinho'}</button>
       <button class="btn-comprar-agora">Comprar Agora</button>`;
 
   return `
-    <div class="produto-card reveal ${vendida ? 'produto-card--vendida' : ''}"
+    <div class="produto-card reveal ${vendida ? 'produto-card--vendida' : ''} ${esgotada ? 'produto-card--esgotada' : ''}"
          data-id="${produto.id}"
          data-nome="${produto.nome}"
          data-preco="${produto.preco}"
@@ -719,7 +808,7 @@ function criarCardProduto(produto) {
         ${renderSeloPeca(produto, 'selo-peca--card')}
         <img src="${produto.imagem}" alt="${produto.nome}" loading="lazy">
         <h3>${produto.nome}</h3>
-        ${renderBlocoPreco(produto, { comSelo: true })}
+        ${produto.permiteQuantidade ? renderPrecoQuantidade(produto) : renderBlocoPreco(produto, { comSelo: true })}
       </a>
       ${acoesHTML}
     </div>
@@ -874,10 +963,21 @@ function slugificar(txt) {
 // produtos.js — nenhuma lista de nomes nem contagem escrita à mão em
 // lugar nenhum: tudo nasce dos dados.
 //
-// subcategoriasCeramica(): só os NOMES, na ordem em que aparecem em
+// SUBCATEGORIAS EM DESTAQUE: aparecem SEMPRE primeiro no carrossel de
+// subcategorias (ceramica.html e "Explore Nossas Coleções" da Home),
+// na ordem desta lista — antes de qualquer outra, que segue na ordem
+// natural (1ª aparição em produtos.js, como já era). Regra simples de
+// propósito: uma lista pequena aqui, em vez de um campo novo em cada
+// produto — hoje só "Artigos Religiosos" (Anjos de Luz, prioridade da
+// campanha de Natal), mas qualquer subcategoria futura entra só
+// acrescentando o nome dela aqui.
+const SUBCATEGORIAS_DESTAQUE = ['Artigos Religiosos'];
+
+// subcategoriasCeramica(): só os NOMES, com as de SUBCATEGORIAS_DESTAQUE
+// primeiro (na ordem delas) e o resto na ordem em que aparece em
 // produtos.js (new Set tira duplicatas preservando a 1ª ocorrência).
 function subcategoriasCeramica() {
-  return [
+  const todas = [
     ...new Set(
       // produtosVisiveis(): peça oculta não pode criar bloco/card de
       // subcategoria nem entrar nas contagens "N peças disponíveis"
@@ -886,6 +986,9 @@ function subcategoriasCeramica() {
         .map((p) => p.subcategoria)
     ),
   ];
+  const destaque = SUBCATEGORIAS_DESTAQUE.filter((sub) => todas.includes(sub));
+  const resto = todas.filter((sub) => !SUBCATEGORIAS_DESTAQUE.includes(sub));
+  return [...destaque, ...resto];
 }
 
 // dadosCardsSubcategoriaCeramica(): para cada subcategoria, os dados
@@ -1790,23 +1893,42 @@ function atualizarContadorCarrinho() {
 // caindo no placeholder. Gravar a imagem JUNTO com o item, direto no
 // localStorage, remove essa dependência: o carrinho passa a guardar
 // tudo que precisa pra se desenhar sozinho, sem religar no catálogo.
+// "card.dataset.quantidade" é OPCIONAL: só a página do anjo (produto.js,
+// seletor +/-) e a barra de compra flutuante o mantêm atualizado,
+// espelhando a quantidade escolhida ali. Um card de grade NUNCA o
+// declara -> Number(undefined) || 1 cai em 1, igual ao comportamento de
+// sempre. "permiteQuantidade": exceção de "peça única = 1 unidade" (ver
+// produtos.js) — só ela lê essa quantidade; todo o resto continua preso
+// em 1 unidade por clique.
 function adicionarAoCarrinho(card, botao) {
+  const produtoCatalogo = produtos.find((p) => String(p.id) === String(card.dataset.id));
+  const podeQuantidade = produtoCatalogo?.permiteQuantidade === true;
+  const limite = Number(produtoCatalogo?.maxPorPedido) || 1;
+  const pedida = Math.trunc(Number(card.dataset.quantidade)) || 1;
+  const quantidade = podeQuantidade ? Math.min(Math.max(1, pedida), limite) : 1;
+
   const item = {
     id: card.dataset.id,
     nome: card.dataset.nome,
     preco: Number(card.dataset.preco),
     imagem: card.dataset.imagem || '',
-    quantidade: 1,
+    quantidade,
   };
 
   const carrinho = lerCarrinho();
   // compara como texto: dataset.id sempre vem string do HTML
   const existente = carrinho.find((produto) => String(produto.id) === item.id);
   if (existente) {
-    // Peça única (estoque 1, ver CLAUDE.md): tocar de novo em "comprar"
-    // não soma — antes virava "2x" no carrinho de uma peça que só
-    // existe uma (o backend também corrige, ver POST /api/checkout).
-    existente.quantidade = 1;
+    if (podeQuantidade) {
+      // Anjo de Luz: soma a quantidade pedida à que já estava no
+      // carrinho, sem nunca passar do estoque do modelo.
+      existente.quantidade = Math.min(existente.quantidade + quantidade, limite);
+    } else {
+      // Peça única (estoque 1, ver CLAUDE.md): tocar de novo em "comprar"
+      // não soma — antes virava "2x" no carrinho de uma peça que só
+      // existe uma (o backend também corrige, ver POST /api/checkout).
+      existente.quantidade = 1;
+    }
     // Backfill: item salvo ANTES desta correção (sem "imagem" no
     // localStorage) ganha a foto agora, na primeira vez que a peça é
     // comprada de novo — sem isso, quem já tinha o item no carrinho
@@ -1832,27 +1954,48 @@ function adicionarAoCarrinho(card, botao) {
   mostrarToast(`✓ ${item.nome} adicionado ao carrinho`);
 }
 
-// Peça vendida não entra no carrinho por nenhum caminho (card antigo
-// em cache, barra, HTML editado): a checagem é pelo catálogo, não pelo
-// botão. O servidor recusa de novo no checkout (defesa em profundidade).
+// Peça vendida (ou esgotada) não entra no carrinho por nenhum caminho
+// (card antigo em cache, barra, HTML editado): a checagem é pelo
+// catálogo, não pelo botão. O servidor recusa de novo no checkout
+// (defesa em profundidade).
 function pecaVendidaPorId(id) {
   const produto = produtos.find((p) => String(p.id) === String(id));
-  return Boolean(produto && estaVendida(produto));
+  return Boolean(produto && foraDeCompra(produto));
 }
 
-// Carrinho salvo antes da venda: tira a peça e avisa, em vez de deixar
-// o cliente descobrir só no pagamento.
+// Carrinho salvo antes da venda/esgotar: tira a peça e avisa, em vez de
+// deixar o cliente descobrir só no pagamento. Também CLAMPA pra baixo a
+// quantidade de um Anjo de Luz que ficou maior que o estoque atual
+// (ex.: a Anasor reduziu o estoque manualmente, ver scripts/estoque.js,
+// enquanto a peça já estava no carrinho de alguém) — sem isso, o
+// backend recusaria o pedido inteiro só por causa dessa única linha.
 function removerVendidasDoCarrinho() {
   const carrinho = lerCarrinho();
   const restantes = carrinho.filter((item) => !pecaVendidaPorId(item.id));
   const removidas = carrinho.length - restantes.length;
-  if (removidas === 0) return;
+
+  let clampadas = 0;
+  restantes.forEach((item) => {
+    const produto = produtos.find((p) => String(p.id) === String(item.id));
+    if (!produto?.permiteQuantidade) return;
+    const limite = Number(produto.maxPorPedido) || item.quantidade;
+    if (item.quantidade > limite) {
+      item.quantidade = limite;
+      clampadas += 1;
+    }
+  });
+
+  if (removidas === 0 && clampadas === 0) return;
   salvarCarrinho(restantes);
-  mostrarToast(
-    removidas === 1
-      ? 'Uma peça do seu carrinho foi vendida e saiu dele 🤎'
-      : `${removidas} peças do seu carrinho foram vendidas e saíram dele 🤎`
-  );
+  if (removidas > 0) {
+    mostrarToast(
+      removidas === 1
+        ? 'Uma peça do seu carrinho foi vendida e saiu dele 🤎'
+        : `${removidas} peças do seu carrinho foram vendidas e saíram dele 🤎`
+    );
+  } else {
+    mostrarToast('Ajustamos a quantidade de um item do seu carrinho ao estoque atual 🤎');
+  }
 }
 
 // DELEGAÇÃO DE EVENTO: em vez de dar addEventListener em cada botão
@@ -2019,6 +2162,11 @@ document.body.append(miniOverlay, miniCarrinho);
 function renderMiniCarrinho() {
   const itens = lerCarrinho();
 
+  // Preço de CADA linha recalculado na hora, pela MESMA regra do
+  // produto.js/backend (precoUnitario + totalNoGrupoAtacado, ver
+  // produtos.js): assim, 2 Anjos de Luz Grande + 1 Médio no carrinho
+  // somam 3 no grupo "anjos-de-luz" e as TRÊS linhas passam a usar
+  // precoAtacado sozinhas, sem precisar reabrir nenhuma página.
   const linhas = itens
     .map((item) => {
       // A imagem agora VEM DO PRÓPRIO ITEM salvo no carrinho (ver
@@ -2029,18 +2177,44 @@ function renderMiniCarrinho() {
       // não têm "imagem" no objeto); se o produto também tiver sumido
       // do catálogo nesse caso raro, a foto fica vazia mas o item
       // ainda aparece, pra poder ser removido.
-      const foto =
-        item.imagem || produtos.find((p) => String(p.id) === String(item.id))?.imagem || '';
-      const subtotal = item.preco * item.quantidade;
+      const produtoCatalogo = produtos.find((p) => String(p.id) === String(item.id));
+      const foto = item.imagem || produtoCatalogo?.imagem || '';
+
+      const podeQuantidade = produtoCatalogo?.permiteQuantidade === true;
+      const totalDoGrupo = produtoCatalogo ? totalNoGrupoAtacado(itens, produtoCatalogo) : 0;
+      const unitario = produtoCatalogo ? precoUnitario(produtoCatalogo, totalDoGrupo) : item.preco;
+      const atacadoAtivo = podeQuantidade && unitario === produtoCatalogo.precoAtacado;
+      const subtotal = unitario * item.quantidade;
+      const limite = Number(produtoCatalogo?.maxPorPedido) || item.quantidade;
+
+      // Seletor +/- SÓ pros Anjos de Luz — qualquer outra peça continua
+      // sendo "1 unidade, tira do carrinho pra remover" (ver botão
+      // .mini-item__remover, sempre presente).
+      const stepperHTML = podeQuantidade
+        ? `<div class="mini-item__stepper" role="group" aria-label="Quantidade de ${item.nome}">
+            <button type="button" class="mini-item__passo" data-passo="-1" data-id="${item.id}"
+                    aria-label="Diminuir quantidade" ${item.quantidade <= 1 ? 'disabled' : ''}>&minus;</button>
+            <span class="mini-item__qtd">${item.quantidade}</span>
+            <button type="button" class="mini-item__passo" data-passo="1" data-id="${item.id}"
+                    aria-label="Aumentar quantidade" ${item.quantidade >= limite ? 'disabled' : ''}>&plus;</button>
+          </div>`
+        : `<span class="mini-item__qtd-fixa">${item.quantidade}&times;</span>`;
+
       return `
         <li class="mini-item">
           <img class="mini-item__foto" src="${foto}" alt="" loading="lazy">
           <div class="mini-item__info">
             <p class="mini-item__nome">${item.nome}</p>
-            <p class="mini-item__preco">
-              ${item.quantidade} &times; ${formatarPreco(item.preco)}
+            <!-- DIV, não <p>: o seletor +/- (stepperHTML) é um <div>, e
+                 HTML não permite <div> dentro de <p> — o navegador
+                 fechava o <p> sozinho ANTES da div (auto-correção do
+                 parser), esvaziando o preço inteiro silenciosamente
+                 (nenhum erro no console: só um <p> vazio na tela). -->
+            <div class="mini-item__preco">
+              ${stepperHTML} ${formatarPreco(unitario)}
               = <strong>${formatarPreco(subtotal)}</strong>
-            </p>
+            </div>
+            ${atacadoAtivo ? '<p class="mini-item__atacado">✓ preço de atacado aplicado</p>' : ''}
           </div>
           <button class="mini-item__remover" type="button"
                   data-remover="${item.id}"
@@ -2049,7 +2223,14 @@ function renderMiniCarrinho() {
     })
     .join('');
 
-  const total = itens.reduce((s, i) => s + i.preco * i.quantidade, 0);
+  // Total também usa o preço UNITÁRIO recalculado (não o "item.preco"
+  // bruto do localStorage) — pelo mesmo motivo de cada linha acima.
+  const total = itens.reduce((soma, item) => {
+    const produtoCatalogo = produtos.find((p) => String(p.id) === String(item.id));
+    const totalDoGrupo = produtoCatalogo ? totalNoGrupoAtacado(itens, produtoCatalogo) : 0;
+    const unitario = produtoCatalogo ? precoUnitario(produtoCatalogo, totalDoGrupo) : item.preco;
+    return soma + unitario * item.quantidade;
+  }, 0);
 
   miniCarrinho.innerHTML = `
     <div class="mini-carrinho__topo">
@@ -2124,6 +2305,25 @@ miniCarrinho.addEventListener('click', (evento) => {
     const id = btnRemover.dataset.remover;
     const novo = lerCarrinho().filter((i) => String(i.id) !== String(id));
     salvarCarrinho(novo); // salva + atualiza contador + re-renderiza o painel
+    return;
+  }
+
+  // +/- de quantidade (só existe em itens com permiteQuantidade, ver
+  // renderMiniCarrinho): soma/subtrai 1, sempre entre 1 e o estoque do
+  // modelo (maxPorPedido) — os atributos disabled do próprio botão já
+  // impedem passar dos limites, isto aqui é cinto e suspensório.
+  const btnPasso = evento.target.closest('[data-passo]');
+  if (btnPasso) {
+    const id = btnPasso.dataset.id;
+    const delta = Number(btnPasso.dataset.passo);
+    const produtoCatalogo = produtos.find((p) => String(p.id) === String(id));
+    const limite = Number(produtoCatalogo?.maxPorPedido) || Infinity;
+    const carrinho = lerCarrinho();
+    const item = carrinho.find((i) => String(i.id) === String(id));
+    if (item) {
+      item.quantidade = Math.min(Math.max(1, item.quantidade + delta), limite);
+      salvarCarrinho(carrinho);
+    }
     return;
   }
   // "Finalizar Compra": leva pra checkout.html, que lê este MESMO
@@ -2373,6 +2573,21 @@ function escanearReveal() {
 // do banner NÃO é decorativa), então cada slide precisa do seu.
 const bannersHero = [
   {
+    // PRIMEIRA posição de propósito (pedido explícito, Natal + Batizado/
+    // 1ª Eucaristia são a prioridade máxima desta rodada). Foto: um dos
+    // Anjos de Luz aceso, luz de LED escapando pelos furinhos da saia.
+    imagem: 'img/banner-anjos-de-luz.jpg',
+    alt: 'Anjos de Luz acesos, cerâmica branca com terço dourado',
+    eyebrow: 'LEMBRANÇA DE BATIZADO E 1ª EUCARISTIA',
+    titulo: 'Anjos de Luz:',
+    tituloItalico: 'Do Barro à Luz',
+    subtitulo: 'Lembrancinha de Batizado, Primeira Eucaristia e presente de Natal',
+    categoriaContador: 'ceramica',
+    subcategoriaContador: 'Artigos Religiosos',
+    linkBotaoPrincipal: 'ceramica.html?sub=artigos-religiosos',
+    textoBotaoPrincipal: 'Ver os Anjos de Luz',
+  },
+  {
     imagem: 'img/banner-principal.jpeg',
     alt: 'Cerâmica Artesanal Anasor Sobreira',
     eyebrow: 'ATELIÊ ANASOR SOBREIRA',
@@ -2439,9 +2654,14 @@ if (bannerCarrossel) {
   // É um dos 4 pontos do sistema de acento --cor-ouro. O "+" fica
   // junto do número no span (lê melhor "+8" todo dourado que só "8").
   // Sem número (categoria ainda sem peças) -> frase simples, sem span.
-  function textoContadorPorCategoria(categoria) {
+  // "subcategoria" OPCIONAL: o slide dos Anjos de Luz conta só a
+  // subcategoria "Artigos Religiosos" (3 produtos), não a cerâmica
+  // inteira — contar o catálogo todo ali soaria estranho/impreciso.
+  function textoContadorPorCategoria(categoria, subcategoria) {
     // produtosVisiveis(): o contador não pode somar peça oculta
-    const total = produtosVisiveis().filter((p) => p.categoria === categoria).length;
+    const total = produtosVisiveis().filter(
+      (p) => p.categoria === categoria && (!subcategoria || p.subcategoria === subcategoria)
+    ).length;
     if (total === 0) return 'Novidades chegando em breve';
     const unidade = total === 1 ? 'peça exclusiva disponível' : 'peças exclusivas disponíveis';
     return `<span class="num-ouro">+${total}</span> ${unidade}`;
@@ -2462,7 +2682,7 @@ if (bannerCarrossel) {
       // innerHTML (não textContent): textoContadorPorCategoria devolve
       // um <span class="num-ouro"> ao redor do número. O conteúdo é
       // 100% gerado aqui (nada vem do usuário), então é seguro.
-      contadorEl.innerHTML = textoContadorPorCategoria(slide.categoriaContador);
+      contadorEl.innerHTML = textoContadorPorCategoria(slide.categoriaContador, slide.subcategoriaContador);
       botaoPrincipalEl.href = slide.linkBotaoPrincipal;
       botaoPrincipalEl.textContent = slide.textoBotaoPrincipal;
 
@@ -2898,6 +3118,66 @@ const ID_PRODUTO_DESTAQUE = 6; // 6 = "Vaso Escultórico Silhueta e Poesia"
 const secaoDestaque = document.querySelector('#produto-destaque');
 if (secaoDestaque) {
   montarProdutoDestaque(secaoDestaque);
+}
+
+// ============================================================
+//  ANJOS DE LUZ — DESTAQUE DA HOME (Natal + Batizado/1ª Eucaristia)
+// ============================================================
+// Monta #anjos-destaque com os 3 modelos (grupoAtacado "anjos-de-luz",
+// ver produtos.js). Card pequeno e enxuto (foto + nome + "a partir
+// de") — não o .produto-card cheio da vitrine: aqui é um TEASER que
+// leva pra página de cada anjo (a compra de verdade, com seletor de
+// quantidade, acontece lá). "anjos.length === 0" protege o dia em que
+// os 3 virarem oculto:true (ex.: fim da campanha) — a seção some
+// sozinha, sem deixar um bloco vazio na Home.
+function montarAnjosDestaque(secao) {
+  const anjos = produtosVisiveis().filter((p) => p.grupoAtacado === 'anjos-de-luz');
+  if (anjos.length === 0) return;
+
+  const cardsHTML = anjos
+    .map((anjo) => {
+      const esgotada = estaEsgotada(anjo);
+      // "a partir de" usa o preço de ATACADO quando existe (o menor
+      // valor possível por unidade) — é o número mais convidativo e
+      // ainda 100% real (basta levar 3 anjos pra valer).
+      const precoDestaque = typeof anjo.precoAtacado === 'number' ? anjo.precoAtacado : anjo.preco;
+      return `
+      <a class="anjos-destaque__card reveal" href="produto.html?id=${anjo.id}">
+        <img src="${anjo.imagem}" alt="${anjo.nome}" loading="lazy">
+        ${esgotada ? '<span class="anjos-destaque__card-esgotado">Esgotado</span>' : ''}
+        <h3>${anjo.nome}</h3>
+        <p class="anjos-destaque__card-preco">a partir de ${formatarPreco(precoDestaque)}</p>
+      </a>`;
+    })
+    .join('');
+
+  secao.innerHTML = `
+    <div class="anjos-destaque__conteudo">
+      <p class="anjos-destaque__eyebrow reveal">&#10022; Lembrança de Batizado &middot; 1&ordf; Eucaristia &middot; Natal</p>
+      <h2 class="anjos-destaque__titulo reveal">Anjos de Luz: lembrança de Batizado e Primeira Eucaristia</h2>
+      <p class="anjos-destaque__texto reveal">
+        Modelados à mão, com terço dourado e uma luz que escapa pelos
+        furinhos da saia &mdash; para presentear no Natal ou abençoar a
+        turma inteira de um batizado.
+      </p>
+      <div class="anjos-destaque__grid">
+        <img class="anjos-destaque__foto reveal" src="${anjos[0].imagem}" alt="Anjo de Luz aceso, com a luz escapando pelos furinhos da saia" loading="lazy">
+        <div class="anjos-destaque__cards">${cardsHTML}</div>
+      </div>
+      <p class="anjos-destaque__atacado reveal">A partir de 3 anjos no carrinho (pode misturar os modelos), o preço de cada um cai sozinho.</p>
+      <div class="anjos-destaque__acoes reveal">
+        <a class="btn-principal" href="ceramica.html?sub=artigos-religiosos">Ver os Anjos</a>
+        <a class="btn-fantasma" href="${linkEncomendaQuantidadeWhatsApp(anjos[0])}" target="_blank" rel="noopener noreferrer">Encomendar em quantidade</a>
+      </div>
+    </div>
+  `;
+  secao.hidden = false;
+  escanearReveal();
+}
+
+const secaoAnjos = document.querySelector('#anjos-destaque');
+if (secaoAnjos) {
+  montarAnjosDestaque(secaoAnjos);
 }
 
 // ============================================================

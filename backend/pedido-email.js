@@ -35,6 +35,11 @@
 
 const nodemailer = require('nodemailer');
 const { soDigitos, formatarCpf, formatarTelefone } = require('./documentos');
+// Catálogo (mesma fonte do checkout) só pra "sugestoesEstoqueAnjos",
+// abaixo — NÃO é usado pra calcular preço/total do e-mail (isso já vem
+// pronto do pagamento) nem muda o caráter "função pura" deste arquivo:
+// é só uma consulta de leitura ao mesmo catálogo estático.
+const { produtos } = require('./data/produtos');
 
 // ---------- FORMATAÇÃO ----------
 // Mesma formatação "R$ 149,90" do front (formatarPreco, js/main.js) —
@@ -45,6 +50,30 @@ const { soDigitos, formatarCpf, formatarTelefone } = require('./documentos');
 function formatarReal(valor) {
   const numero = Number(valor) || 0;
   return numero.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+}
+
+// ---------- SUGESTÃO DE ATUALIZAR ESTOQUE (Anjos de Luz) ----------
+// Não há banco de dados: o estoque de cada Anjo de Luz mora em
+// js/produtos.js e só desce com "node backend/scripts/estoque.js <id>
+// <novo>", à MÃO (ver o campo "estoque" em produtos.js). Este aviso é
+// só uma CONTA PRONTA pra quem lê o e-mail/Telegram não precisar fazer
+// de cabeça — "sugestão; confira" porque o pedido pode ter vindo de
+// mais de uma fonte (ex.: venda direta no WhatsApp) e o número real
+// pode já ter mudado. Casamento por NOME (não por id): o Mercado Pago
+// não garante devolver o id do item que mandamos na Preference, só
+// título/quantidade/preço (ver extrairDadosPedido, "itens", acima).
+function sugestoesEstoqueAnjos(itensPedido) {
+  if (!Array.isArray(itensPedido)) return [];
+  return itensPedido
+    .map((item) => {
+      const catalogo = produtos.find((p) => p.permiteQuantidade && p.nome === item.nome);
+      if (!catalogo) return null;
+      const estoqueAtual = Number(catalogo.estoque) || 0;
+      const quantidadeVendida = Number(item.quantidade) || 0;
+      const sugerido = Math.max(0, estoqueAtual - quantidadeVendida);
+      return `${catalogo.nome}: ${estoqueAtual} → ${sugerido} (sugestão; confira)`;
+    })
+    .filter(Boolean);
 }
 
 // Escapa os 5 caracteres que importam pra HTML — qualquer texto que
@@ -406,6 +435,11 @@ function montarEmailPedido(dadosPedido) {
         .join('\n')
     : itensResumoTexto || `${NAO_INFORMADO_TEXTO} (confira o pagamento no painel do Mercado Pago)`;
 
+  const sugestoesEstoque = sugestoesEstoqueAnjos(itens);
+  const blocoEstoqueTexto = sugestoesEstoque.length
+    ? `\nATUALIZAR ESTOQUE (Anjos de Luz)\n${sugestoesEstoque.join('\n')}\n`
+    : '';
+
   const texto = `NOVO PEDIDO PAGO — ${codigoPedido}
 
 ========== DADOS PARA NOTA FISCAL ==========
@@ -421,7 +455,7 @@ ${blocoTexto(blocoEndereco)}
 
 ITENS
 ${linhasItensTexto}
-
+${blocoEstoqueTexto}
 ${blocoTexto(blocoValores)}
 
 ============================================
@@ -452,6 +486,12 @@ Responda este e-mail ou chame o cliente pelo WhatsApp para combinar o envio.
         .join('')
     : `<tr><td style="padding:3px 0;">${itensResumoTexto ? escaparHtml(itensResumoTexto) : `${NAO_INFORMADO_HTML} (confira o pagamento no painel do Mercado Pago)`}</td></tr>`;
 
+  const blocoEstoqueHtml = sugestoesEstoque.length
+    ? `${tituloHtml('Atualizar estoque (Anjos de Luz)')}<table style="border-collapse:collapse;">${sugestoesEstoque
+        .map((linha) => `<tr><td style="padding:3px 0;">${escaparHtml(linha)}</td></tr>`)
+        .join('')}</table>`
+    : '';
+
   const linhaWhatsAppHtml = linkWhatsApp
     ? `<tr><td></td><td style="padding:3px 0;"><a href="${escaparHtml(linkWhatsApp)}">Abrir WhatsApp</a></td></tr>`
     : '';
@@ -469,6 +509,7 @@ Responda este e-mail ou chame o cliente pelo WhatsApp para combinar o envio.
     ${tabelaHtml(blocoEndereco)}
     ${tituloHtml('Itens')}
     <table style="border-collapse:collapse;">${linhasItensHtml}</table>
+    ${blocoEstoqueHtml}
     <div style="margin-top:10px;">${tabelaHtml(blocoValores)}</div>
   </div>
   <p style="margin:16px 0 0;">Responda este e-mail ou chame o cliente pelo WhatsApp para combinar o envio.</p>
@@ -562,4 +603,5 @@ module.exports = {
   montarLinkWhatsApp,
   criarTransportadorGmail,
   enviarEmailPedido,
+  sugestoesEstoqueAnjos,
 };

@@ -21,7 +21,7 @@
 //  backend/scripts/teste-telegram-pedido.js).
 // ============================================================
 
-const { formatarReal } = require('./pedido-email');
+const { formatarReal, sugestoesEstoqueAnjos } = require('./pedido-email');
 
 // 5 s: o webhook roda numa função serverless e espera os avisos antes
 // de responder ao Mercado Pago. Um Telegram lento não pode segurar a
@@ -81,9 +81,17 @@ function montarMensagemTelegram(dadosPedido) {
   const uf = linhaLimpa(dadosPedido.endereco?.estado, 2).toUpperCase();
   const local = [cidade, uf].filter(Boolean).join('/') || 'local no e-mail';
 
+  // Sugestão de estoque (Anjos de Luz): só entra quando o pedido tem
+  // pelo menos um (sugestoesEstoqueAnjos devolve [] pra qualquer outro
+  // pedido) — texto curto de propósito, o e-mail já traz o detalhe.
+  const sugestoes = sugestoesEstoqueAnjos(dadosPedido.itens);
+  const textoEstoque = sugestoes.length
+    ? ` · Atualizar estoque: ${sugestoes.map((s) => linhaLimpa(s, 80)).join('; ')}`
+    : '';
+
   const texto =
     `🤎 Nova venda paga! Pedido ${linhaLimpa(dadosPedido.codigoPedido, 40)} · ` +
-    `${textoItens(dadosPedido)} · Total ${formatarReal(dadosPedido.valorTotal)} · ${local}. ` +
+    `${textoItens(dadosPedido)} · Total ${formatarReal(dadosPedido.valorTotal)} · ${local}.${textoEstoque} ` +
     'Endereço completo e dados do cliente no e-mail.';
   return cortar(texto, LIMITE_MENSAGEM);
 }

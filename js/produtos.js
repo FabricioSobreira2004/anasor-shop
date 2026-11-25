@@ -73,6 +73,12 @@
 //                    HTML nem JS.
 //   imagem        -> caminho da FOTO PRINCIPAL, a partir da raiz do
 //                    site.
+//   focoPrincipal -> OPCIONAL, texto (valor CSS de object-position,
+//                    ex.: "center 30%"). Só tem efeito na moldura 4:5
+//                    com object-fit:cover (classe .galeria__principal
+//                    --4x5, ver galeriaHTML em main.js) — hoje só os
+//                    Anjos de Luz usam essa moldura; sem o campo, o
+//                    padrão é "center 40%" (um pouco acima do meio).
 //   imagensExtras -> ARRAY com os caminhos das outras fotos da MESMA
 //                    peça (outros ângulos), que ficam em
 //                    img/produtos/angulos-extras/. A página individual
@@ -101,19 +107,48 @@
 //                    bloco "Encomende uma peça parecida". Peça SEM este
 //                    campo é tratada como disponível (o padrão) — por
 //                    isso nenhum dos produtos abaixo precisa declará-lo.
+//                    EXCEÇÃO de "peça única = 1 unidade": os itens com
+//                    "permiteQuantidade" (ver logo abaixo) — hoje, só os
+//                    Anjos de Luz — têm preço por quantidade e estoque
+//                    próprio, em vez de "disponivel: false".
+//   permiteQuantidade -> OPCIONAL, boolean. true libera o seletor de
+//                    quantidade (+/-) na página da peça — sem ele,
+//                    TODA peça trava em 1 (estoque 1, regra padrão).
+//                    Vem sempre acompanhado de "estoque" e, quando há
+//                    preço de atacado, de "grupoAtacado"/"minAtacado"/
+//                    "precoAtacado". Ver precoUnitario(), mais abaixo
+//                    neste arquivo — é a função única que decide o
+//                    preço de 1 unidade, usada pelo front E pelo
+//                    backend (POST /api/checkout).
+//   estoque       -> quantas unidades EXISTEM HOJE deste modelo
+//                    (só em peças com permiteQuantidade). Controlado à
+//                    MÃO pela Anasor (não há banco de dados) via
+//                    "node backend/scripts/estoque.js <id> <novo>".
+//                    Acima disso é só por encomenda — nunca mostre
+//                    este número na tela (sem "restam X!"), ele só
+//                    limita a compra e aciona o convite de encomenda.
+//   maxPorPedido  -> quantas unidades do MESMO modelo um pedido pode
+//                    levar — hoje sempre igual a "estoque".
+//   grupoAtacado  -> "etiqueta" que soma quantidade ENTRE modelos
+//                    diferentes pro desconto de atacado (os 3 Anjos de
+//                    Luz somam juntos, mesmo sendo produtos distintos).
+//   minAtacado    -> quantidade do GRUPO (somada) que liga o atacado.
+//   precoAtacado  -> preço por unidade com o atacado ligado.
 //   selo          -> OPCIONAL. Texto ou lista. O card mostra UM selo
 //                    só, pela prioridade abaixo (SELOS_PECA, main.js).
 //                    Cada um exige um FATO; sem o fato, sem selo:
-//                      (vendido)         automático: disponivel: false
-//                      "mais-vendido"    vendas reais confirmadas (hoje: nenhuma)
-//                      "assinada"        a peça tem a assinatura da artesã
-//                      "edicao-limitada" só as 2 canecas Surpresa (19 e 20)
-//                      "queridinho"      escolha da Anasor
-//                      "novidade"        peça recém-chegada ao catálogo
-//                      "kit"             conjunto de peças vendidas juntas
-//                      "pintada-a-mao"   a descrição diz pintada/pintado à mão
-//                      "modelada-a-mao"  a descrição diz modelada/modelado à mão
-//                      (com-video)       automático: a peça tem videoUrl
+//                      (vendido)            automático: disponivel: false
+//                      (esgotado)           automático: estoque zerado (permiteQuantidade)
+//                      "mais-vendido"       vendas reais confirmadas (hoje: nenhuma)
+//                      "assinada"           a peça tem a assinatura da artesã
+//                      "lembranca-batizado" só os Anjos de Luz (lembrancinha de Batizado/1ª Eucaristia)
+//                      "edicao-limitada"    só as 2 canecas Surpresa (19 e 20)
+//                      "queridinho"         escolha da Anasor
+//                      "novidade"           peça recém-chegada ao catálogo
+//                      "kit"                conjunto de peças vendidas juntas
+//                      "pintada-a-mao"      a descrição diz pintada/pintado à mão
+//                      "modelada-a-mao"     a descrição diz modelada/modelado à mão
+//                      (com-video)          automático: a peça tem videoUrl
 //                    Liste todos os fatos verdadeiros da peça: se um
 //                    deixar de valer (ex.: "novidade"), o próximo aparece.
 //   oculto        -> OPCIONAL, boolean. "oculto: true" tira a peça de
@@ -1365,6 +1400,85 @@ const produtos = [
     oculto: false,
   },
 
+  // --- ANJOS DE LUZ (Artigos Religiosos) -----------------------
+  // Única exceção de "peça única, estoque 1" do catálogo: são feitos
+  // EM QUANTIDADE (ver permiteQuantidade/estoque/grupoAtacado/
+  // minAtacado/precoAtacado, explicados em precoUnitario() acima).
+  // Lembrancinha de Batizado/1ª Eucaristia e presente de Natal.
+  {
+    id: 53,
+    nome: "Anjo de Luz Grande",
+    descricao:
+      "Pensado para ser a <span class='realce'>lembrança de Batizado e Primeira Eucaristia</span> — ou aquele presente de Natal que ninguém esquece. Um anjo em cerâmica branca, <span class='realce'>modelado à mão</span>, com um terço dourado no pescoço e uma saia perfurada que deixa a luz escapar em pontinhos, um a um. Do barro à luz: cada anjo nasce modelado à mão, ganha uma noite no forno e sai esmaltado em branco, pronto para iluminar. Vem numa caixinha com laço e o cartão da Anasor — já pronta para presentear. Encomendas em quantidade para o batizado ou a Primeira Eucaristia de toda a turma? É só chamar no WhatsApp.",
+    preco: 35.0,
+    precoAtacado: 30.0,
+    permiteQuantidade: true,
+    estoque: 17,
+    maxPorPedido: 17,
+    grupoAtacado: "anjos-de-luz",
+    minAtacado: 3,
+    categoria: "ceramica",
+    subcategoria: "Artigos Religiosos",
+    selo: "lembranca-batizado",
+    imagem: "img/produtos/anjo-de-luz-grande.webp",
+    imagensExtras: [
+      "img/produtos/angulos-extras/anjo-de-luz-grande-2.webp",
+      "img/produtos/angulos-extras/anjo-de-luz-grande-3.webp",
+      "img/produtos/angulos-extras/anjo-de-luz-grande-4.webp",
+    ],
+    videoUrl: "img/produtos/videos/anjo-de-luz-grande.mp4",
+    dimensoes: "A definir",
+    cuidados: "A definir",
+  },
+  {
+    id: 54,
+    nome: "Anjo de Luz Médio",
+    descricao:
+      "O tamanho certo para quem quer um <span class='realce'>anjo de luz</span> em cada lembrancinha de Batizado ou Primeira Eucaristia, sem pesar na mesa nem no bolso — e ainda sobra charme para o Natal. Cerâmica branca <span class='realce'>modelada à mão</span>, terço dourado e uma saia cheia de furinhos por onde a luz escapa, uma lasca dourada de cada vez. Do barro à luz: modelado à mão, uma noite no forno, esmalte branco — e pronto para acender. Embalado numa caixinha com laço e o cartão da Anasor, já pronto para presentear. Para encomendas grandes (turma de batizado, Primeira Eucaristia), fale com a Anasor pelo WhatsApp.",
+    preco: 28.0,
+    precoAtacado: 23.0,
+    permiteQuantidade: true,
+    estoque: 17,
+    maxPorPedido: 17,
+    grupoAtacado: "anjos-de-luz",
+    minAtacado: 3,
+    categoria: "ceramica",
+    subcategoria: "Artigos Religiosos",
+    selo: "lembranca-batizado",
+    imagem: "img/produtos/anjo-de-luz-medio.webp",
+    imagensExtras: [
+      "img/produtos/angulos-extras/anjo-de-luz-medio-2.webp",
+      "img/produtos/angulos-extras/anjo-de-luz-medio-3.webp",
+    ],
+    videoUrl: "img/produtos/videos/anjo-de-luz-medio.mp4",
+    dimensoes: "A definir",
+    cuidados: "A definir",
+  },
+  {
+    id: 55,
+    nome: "Anjo de Luz Silhueta",
+    descricao:
+      "Um anjo fino, em formato de plaquinha, para quem gosta de um presente mais discreto — e ainda assim cheio de significado para o Batizado, a Primeira Eucaristia ou o Natal. Cerâmica branca <span class='realce'>modelada à mão</span>, com terço dourado e um pequeno colo onde se acende uma luz, projetando um brilho suave por trás da silhueta. Do barro à luz: modelado à mão, uma noite no forno, esmalte branco — e pronto para acender. Vem numa caixinha com laço e o cartão da Anasor, pronta para presentear. Precisa de muitas unidades para a turma toda do Batizado ou da Primeira Eucaristia? Fale com a Anasor pelo WhatsApp.",
+    preco: 26.0,
+    precoAtacado: 21.0,
+    permiteQuantidade: true,
+    estoque: 16,
+    maxPorPedido: 16,
+    grupoAtacado: "anjos-de-luz",
+    minAtacado: 3,
+    categoria: "ceramica",
+    subcategoria: "Artigos Religiosos",
+    selo: "lembranca-batizado",
+    imagem: "img/produtos/anjo-de-luz-silhueta.webp",
+    imagensExtras: [
+      "img/produtos/angulos-extras/anjo-de-luz-silhueta-2.webp",
+      "img/produtos/angulos-extras/anjo-de-luz-silhueta-3.webp",
+    ],
+    videoUrl: "img/produtos/videos/anjo-de-luz-silhueta.mp4",
+    dimensoes: "A definir",
+    cuidados: "A definir",
+  },
+
   // --- CROCHÊ -------------------------------------------------
   // Sem fotos ainda. Modelo para quando houver peças (copie o
   // bloco, troque os valores e some as fotos extras que tiver):
@@ -1399,4 +1513,71 @@ const produtos = [
 // mas aceita outra lista caso alguém já tenha uma em mãos.
 function produtosVisiveis(lista = produtos) {
   return lista.filter((p) => !p.oculto);
+}
+
+// ------------------------------------------------------------
+//  PREÇO POR QUANTIDADE (exceção dos Anjos de Luz, ver "permiteQuantidade")
+// ------------------------------------------------------------
+// Regra do catálogo: cada peça de cerâmica é única (estoque 1). Os
+// "Anjos de Luz" (Grande/Médio/Silhueta) são a ÚNICA exceção — são
+// feitos em quantidade para lembrancinhas de batizado/1ª Eucaristia —
+// e por isso têm campos extras opcionais:
+//   permiteQuantidade -> true libera o seletor de quantidade (em vez
+//                         de travar em 1, como toda peça única).
+//   estoque           -> quantas unidades existem HOJE deste modelo
+//                         (controlado manualmente, ver scripts/estoque.js).
+//                         Acima disso é só por encomenda.
+//   grupoAtacado      -> uma "etiqueta" que agrupa modelos que somam
+//                         quantidade juntos pro desconto de atacado
+//                         (os 3 anjos somam entre si, mesmo sendo
+//                         produtos DIFERENTES — por isso o agrupamento
+//                         não pode ser "por produto", precisa ser por
+//                         este campo).
+//   minAtacado        -> quantas unidades do GRUPO (somadas) ativam o
+//                         preço de atacado.
+//   precoAtacado      -> preço por unidade quando o atacado está ativo.
+//
+// precoUnitario() é A ÚNICA função que decide "quanto custa 1 unidade
+// desta peça" — usada pelo card, pela página do produto, pelo
+// mini-carrinho E pelo backend (POST /api/checkout, que lê este mesmo
+// arquivo via backend/data/produtos.js). Um lugar só pra essa conta
+// nunca ficar dessincronizada entre o que o cliente vê e o que é
+// cobrado de verdade.
+// "totalDoGrupo" é a quantidade JÁ SOMADA de todas as unidades do
+// mesmo grupoAtacado presentes no carrinho/pedido (ver
+// totalNoGrupoAtacado, logo abaixo) — quem chama é quem sabe montar
+// essa soma, porque ela depende do CONJUNTO de itens (carrinho ou
+// pedido), não só desta peça.
+function precoUnitario(produto, totalDoGrupo = 1) {
+  const atacadoAtivo =
+    Boolean(produto.grupoAtacado) &&
+    typeof produto.precoAtacado === 'number' &&
+    typeof produto.minAtacado === 'number' &&
+    totalDoGrupo >= produto.minAtacado;
+  return atacadoAtivo ? produto.precoAtacado : produto.preco;
+}
+
+// Soma as quantidades de todos os itens que pertencem ao MESMO
+// grupoAtacado de "produto" — é esse total (não a quantidade de UM
+// modelo só) que decide se o atacado liga. "itens" é uma lista de
+// objetos com pelo menos {id, quantidade}: serve tanto pro carrinho do
+// front (localStorage) quanto pros itens já validados no backend,
+// desde que tenham essas duas chaves.
+function totalNoGrupoAtacado(itens, produto) {
+  if (!produto.grupoAtacado) return 0;
+  return itens.reduce((soma, item) => {
+    const doCatalogo = produtos.find((p) => String(p.id) === String(item.id));
+    if (!doCatalogo || doCatalogo.grupoAtacado !== produto.grupoAtacado) return soma;
+    const quantidade = Number(item.quantidade) || 0;
+    return soma + quantidade;
+  }, 0);
+}
+
+// Peça "esgotada": exceção dos itens com permiteQuantidade (hoje, só os
+// Anjos de Luz). Diferente de "disponivel: false" (peça única vendida,
+// que NUNCA repõe), aqui o estoque é um CONTADOR manual (ver
+// scripts/estoque.js) que pode voltar a subir numa fornada nova — por
+// isso o selo e a mensagem são "Esgotado" (temporário), não "Vendido".
+function estaEsgotada(produto) {
+  return produto.permiteQuantidade === true && Number(produto.estoque) <= 0;
 }

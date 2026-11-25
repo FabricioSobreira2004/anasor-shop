@@ -38,6 +38,27 @@ const idProcurado = Number(params.get('id'));
 // arquivo). find() devolve o primeiro item que casar, ou undefined.
 const produto = produtos.find((p) => p.id === idProcurado);
 
+// ---------- ESTADO DO SELETOR DE QUANTIDADE (só Anjos de Luz) ----------
+// "permiteQuantidade" (ver produtos.js) é a ÚNICA exceção de "peça
+// única, 1 por pedido" do catálogo. O seletor +/- vive dentro de
+// montarDetalhe(); a barra de compra flutuante (montarBarraCompraFlutuante,
+// mais abaixo) é um elemento SEPARADO, criado depois — as duas
+// precisam concordar em QUAL quantidade vai pro carrinho quando a
+// pessoa clica em "Adicionar"/"Comprar Agora" em qualquer uma delas.
+// "elementosComQuantidade" guarda todo elemento com [data-id] desta
+// página (o container principal e, se existir, a barra flutuante);
+// sincronizarQuantidade() escreve o MESMO valor no dataset dos dois de
+// uma vez, então o clique em qualquer botão de compra lê o valor certo
+// (ver adicionarAoCarrinho, js/main.js, que lê card.dataset.quantidade).
+let quantidadeEscolhida = 1;
+const elementosComQuantidade = [];
+function sincronizarQuantidade(novaQuantidade) {
+  quantidadeEscolhida = novaQuantidade;
+  elementosComQuantidade.forEach((el) => {
+    el.dataset.quantidade = String(novaQuantidade);
+  });
+}
+
 
 // ---------- 3) REFERÊNCIAS AOS BLOCOS DA PÁGINA ----------
 const breadcrumb = document.querySelector('#breadcrumb');
@@ -149,6 +170,36 @@ function renderSelosConfianca() {
 // a seção "Peça em Destaque" da Home também usa este selo, e main.js
 // é o único arquivo carregado nas duas páginas. O CSS dele
 // (.selo-escassez) fez a mesma mudança, pra style.css.
+
+
+// ---------- FAIXA "DO BARRO À LUZ" (só páginas de Anjo de Luz) ----------
+// 5 fotos do processo real (barro cru -> forno -> biscoito -> esmaltado
+// -> embalagem), SEM o rosto da Anasor (regra do pedido — fotos
+// recortadas/trocadas por ângulos sem rosto). Full-width: quebra as 2
+// colunas do grid (.produto-detalhe) com grid-column:1/-1 (ver
+// produto.css) — por isso é montada como filho DIRETO de #produto-
+// detalhe (ver montarDetalhe), não dentro de .produto-detalhe__info.
+const ETAPAS_BARRO_A_LUZ = [
+  { foto: 'img/anjos/do-barro-a-luz-1-barro.webp', legenda: 'Modelado à mão, no barro' },
+  { foto: 'img/anjos/do-barro-a-luz-2-forno.webp', legenda: 'Uma noite no forno a gás' },
+  { foto: 'img/anjos/do-barro-a-luz-3-biscoito.webp', legenda: 'Sai do forno, biscoitado' },
+  { foto: 'img/anjos/do-barro-a-luz-4-esmaltado.webp', legenda: 'Esmaltado em branco, com o terço dourado' },
+  { foto: 'img/anjos/do-barro-a-luz-5-embalagem.webp', legenda: 'Embalado com laço e cartão, pronto pra presentear' },
+];
+function barraDoBarroALuzHTML() {
+  const figuras = ETAPAS_BARRO_A_LUZ.map(
+    ({ foto, legenda }, i) => `
+      <figure class="barro-a-luz__passo reveal">
+        <img src="${foto}" alt="${legenda}" loading="lazy">
+        <figcaption>${i + 1}. ${legenda}</figcaption>
+      </figure>`
+  ).join('');
+  return `
+    <div class="produto-detalhe__barro-a-luz">
+      <h2 class="barro-a-luz__titulo reveal">Do barro à luz</h2>
+      <div class="barro-a-luz__grade">${figuras}</div>
+    </div>`;
+}
 
 
 // ---------- 4) DECIDIR O QUE MOSTRAR ----------
@@ -264,6 +315,18 @@ function montarDetalhe(produto) {
   const linkEncomenda = linkEncomendaWhatsApp(produto);
   const linkEncomendaIndisponivel = linkEncomendaWhatsApp(produto, { indisponivel: true });
 
+  // ANJOS DE LUZ (permiteQuantidade, ver produtos.js): única exceção de
+  // "peça única" do catálogo. "esgotada" é um motivo A MAIS pra não
+  // poder comprar, diferente de "vendida" — o estoque é temporário
+  // (volta numa fornada nova), então tem CTA e texto próprios.
+  // "podeComprar" é o gate único que decide se mostra preço/seletor/
+  // botão de compra — junta os dois motivos sem espalhar "||" por toda
+  // a função.
+  const anjoDeLuz = produto.grupoAtacado === 'anjos-de-luz';
+  const esgotada = estaEsgotada(produto);
+  const podeComprar = produtoDisponivel && !esgotada;
+  sincronizarQuantidade(1); // reinicia o seletor sempre que a peça muda
+
   // Bloco HTML do convite — MUDA de visual conforme a disponibilidade:
   // disponível = discreto, .btn-fantasma (contorno), abaixo dos botões
   // de compra, pra não competir com "Adicionar ao Carrinho";
@@ -272,25 +335,10 @@ function montarDetalhe(produto) {
   // comprar nesta página. aria-label no link entrega o contexto
   // completo (nome da peça) pra quem usa leitor de tela, mesmo o
   // texto visível do botão sendo genérico ("pelo WhatsApp").
-  const encomendaHTML = produtoDisponivel
-    ? `
-      <div class="produto-encomenda">
-        <p class="produto-encomenda__texto">
-          Cada peça é feita à mão e é única. Gostou deste modelo?
-          A Anasor pode fazer uma peça parecida só para você.
-        </p>
-        <a
-          class="btn-fantasma produto-encomenda__btn"
-          href="${linkEncomenda}"
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label="Pedir orçamento de uma peça parecida com ${produto.nome} pelo WhatsApp">
-          Pedir orçamento pelo WhatsApp
-        </a>
-      </div>`
+  const encomendaHTML = !produtoDisponivel
     // Vendida: o bloco vira a ação principal da página, logo abaixo da
     // descrição (ver template). Botão gummy grande, sem prazo nem preço.
-    : `
+    ? `
       <div class="produto-encomenda produto-encomenda--indisponivel">
         <p class="produto-encomenda__status">Esta peça já encontrou um lar 🤎</p>
         <p class="produto-encomenda__texto">
@@ -303,6 +351,41 @@ function montarDetalhe(produto) {
           rel="noopener noreferrer"
           aria-label="Encomendar uma peça como ${produto.nome} pelo WhatsApp">
           Encomendar uma peça assim
+        </a>
+      </div>`
+    // Esgotada (estoque zerado, só Anjos de Luz): estoque TEMPORÁRIO —
+    // a fornada nova repõe — por isso o recado e o link mudam (convite
+    // de quantidade, não "peça parecida").
+    : esgotada
+    ? `
+      <div class="produto-encomenda produto-encomenda--indisponivel">
+        <p class="produto-encomenda__status">Esta fornada esgotou 🤎</p>
+        <p class="produto-encomenda__texto">
+          Em breve tem fornada nova. Quer encomendar em quantidade, para
+          batizado ou Primeira Eucaristia? Fale com a Anasor.
+        </p>
+        <a
+          class="btn-comprar-agora produto-encomenda__btn produto-encomenda__btn--grande"
+          href="${linkEncomendaQuantidadeWhatsApp(produto)}"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Encomendar ${produto.nome} pelo WhatsApp">
+          Encomende o seu
+        </a>
+      </div>`
+    : `
+      <div class="produto-encomenda">
+        <p class="produto-encomenda__texto">
+          Cada peça é feita à mão e é única. Gostou deste modelo?
+          A Anasor pode fazer uma peça parecida só para você.
+        </p>
+        <a
+          class="btn-fantasma produto-encomenda__btn"
+          href="${linkEncomenda}"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Pedir orçamento de uma peça parecida com ${produto.nome} pelo WhatsApp">
+          Pedir orçamento pelo WhatsApp
         </a>
       </div>`;
 
@@ -368,7 +451,7 @@ function montarDetalhe(produto) {
       <div class="galeria">
         <!-- foto grande (eager: é a 1ª coisa visível), setas, dots e
              miniaturas: o mesmo molde da Home, ver galeriaHTML (main.js) -->
-        ${galeriaHTML(imagens, produto.nome, { eager: true })}
+        ${galeriaHTML(imagens, produto.nome, { eager: true, molduraFixa: anjoDeLuz, foco: produto.focoPrincipal })}
 
         <!-- VÍDEO DA PEÇA (campo opcional produto.videoUrl). DECISÃO DE
              DESIGN: em vez de misturar o vídeo como mais um "slide"
@@ -427,10 +510,13 @@ function montarDetalhe(produto) {
     </div>
 
     <div class="produto-detalhe__info">
-      <!-- SELO "PEÇA ÚNICA": badge com ícone de mão (✋). -->
+      <!-- SELO "PEÇA ÚNICA": badge com ícone de mão (✋). Anjos de Luz
+           (permiteQuantidade) são a ÚNICA exceção de "peça única" do
+           catálogo — "Peça Única" seria falso bem ao lado do seletor
+           de quantidade, por isso o texto muda pra eles. -->
       <p class="selo-unica">
         <span class="selo-unica__icone" aria-hidden="true">&#9995;</span>
-        Peça Única &mdash; Feita à Mão
+        ${anjoDeLuz ? 'Feito à Mão, um a um' : 'Peça Única &mdash; Feita à Mão'}
       </p>
 
       <!-- Selo da peça (Vendido, Peça Assinada...) ao lado do título,
@@ -445,18 +531,24 @@ function montarDetalhe(produto) {
            aviso — comum em lojas artesanais — de que variações são
            esperadas e não são defeito. -->
       <p class="produto-detalhe__nuance">
-        Peça única, modelada e pintada à mão no ateliê. Por ser
-        artesanal, pode trazer pequenas variações de cor, textura e
-        formato em relação às fotos &mdash; cada diferença dessas é
-        marca do feito à mão, não um defeito, e é o que torna a sua
-        peça a única igual a ela no mundo.
+        ${anjoDeLuz
+          ? `Modelado à mão no ateliê, um a um. Por ser artesanal, pode
+             trazer pequenas variações de cor, textura e formato em
+             relação às fotos &mdash; cada diferença dessas é marca do
+             feito à mão, não um defeito.`
+          : `Peça única, modelada e pintada à mão no ateliê. Por ser
+             artesanal, pode trazer pequenas variações de cor, textura e
+             formato em relação às fotos &mdash; cada diferença dessas é
+             marca do feito à mão, não um defeito, e é o que torna a sua
+             peça a única igual a ela no mundo.`}
       </p>
 
       <p class="produto-detalhe__descricao">${produto.descricao}</p>
 
-      <!-- Vendida: o convite para encomendar sobe para logo depois da
-           descrição, porque é a única ação possível com esta peça -->
-      ${produtoDisponivel ? '' : encomendaHTML}
+      <!-- Vendida OU esgotada: o convite para encomendar sobe para logo
+           depois da descrição, porque é a única ação possível com esta
+           peça (ver podeComprar, mais acima). -->
+      ${podeComprar ? '' : encomendaHTML}
 
       <!-- MINI-VITRINE: 2-3 fotos extras da peça (outros ângulos),
            logo abaixo do texto, cada uma na moldura de quadro
@@ -479,24 +571,33 @@ function montarDetalhe(produto) {
           : ''
       }
 
-      <!-- PREÇO: reaproveita renderBlocoPreco() do main.js — a MESMA
-           função que monta o "de/por" nos cards — pra a formatação do
-           preço promocional (riscado + valor com desconto) existir num
-           lugar só. comSelo:false: o selo "X% OFF" é coisa do card
-           (grade), aqui na página da peça o "de/por" já basta. -->
-      ${produtoDisponivel ? renderBlocoPreco(produto, { classeExtra: 'produto-detalhe__preco' }) : ''}
-      ${produtoDisponivel ? renderSeloEscassez() : ''}
+      <!-- PREÇO: Anjo de Luz usa renderPrecoQuantidade() (as DUAS
+           faixas, unidade + atacado) em vez do "de/por" comum — o
+           preço dele depende de quantos estão no carrinho, nunca é um
+           valor fixo (ver precoUnitario, produtos.js). Os outros
+           produtos continuam com renderBlocoPreco() de sempre. -->
+      ${podeComprar ? (anjoDeLuz ? renderPrecoQuantidade(produto, { classeExtra: 'produto-detalhe__preco' }) : renderBlocoPreco(produto, { classeExtra: 'produto-detalhe__preco' })) : ''}
+      ${podeComprar ? (anjoDeLuz ? renderSeloFeitoAMao() : renderSeloEscassez()) : ''}
 
-      <!-- AÇÕES: sem seletor de quantidade de propósito — cada peça é
-           única, o estoque é sempre 1. "Adicionar ao Carrinho" só
-           aparece pra peça DISPONÍVEL — peça vendida (disponivel:
-           false) não tem o que comprar, então o botão some e o bloco
-           "Encomende sua peça única" (logo abaixo) vira a ação
-           principal da página (ver encomendaHTML, mais acima). -->
-      <!-- Vendida: sem bloco de ações. A mensagem de "Tirar dúvidas"
-           cita o preço, e a única ação é a encomenda, que já está acima. -->
-      ${produtoDisponivel ? `
+      <!-- AÇÕES: cada peça comum é única (estoque sempre 1), sem
+           seletor de quantidade. Anjo de Luz é a ÚNICA exceção
+           (permiteQuantidade) — ganha o seletor +/-, travado entre 1 e
+           o estoque do modelo (produto.estoque), e o botão fixo de
+           encomenda em quantidade (batizado/Primeira Eucaristia), que
+           o pedido pede sempre visível nesta página. "Adicionar ao
+           Carrinho" só aparece quando podeComprar (nem vendida, nem
+           esgotada) — do contrário o bloco "Encomende"
+           (encomendaHTML, mais acima/abaixo) vira a ação principal. -->
+      ${podeComprar ? `
       <div class="produto-detalhe__acoes">
+        ${anjoDeLuz ? `
+        <div class="seletor-quantidade" role="group" aria-label="Quantidade de ${produto.nome}">
+          <button type="button" class="seletor-quantidade__passo" data-passo="-1" aria-label="Diminuir quantidade">&minus;</button>
+          <span class="seletor-quantidade__valor" data-quantidade-valor>1</span>
+          <button type="button" class="seletor-quantidade__passo" data-passo="1" aria-label="Aumentar quantidade">&plus;</button>
+        </div>
+        <p class="seletor-quantidade__aviso" data-quantidade-aviso hidden></p>` : ''}
+
         <button class="btn-comprar">${estaNoCarrinho(produto.id) ? TEXTO_NO_CARRINHO : 'Adicionar ao Carrinho'}</button>
 
         <!-- Botão WhatsApp: target="_blank" abre em nova aba;
@@ -506,12 +607,19 @@ function montarDetalhe(produto) {
           <span aria-hidden="true">&#128172;</span>
           Tirar dúvidas sobre esta peça
         </a>
+
+        ${anjoDeLuz ? `
+        <a class="btn-fantasma produto-encomenda__btn" href="${linkEncomendaQuantidadeWhatsApp(produto)}"
+           target="_blank" rel="noopener noreferrer"
+           aria-label="Encomendar ${produto.nome} em quantidade pelo WhatsApp">
+          Encomendar em quantidade (batizado, Primeira Eucaristia, lembranças)
+        </a>` : ''}
       </div>` : ''}
 
       <!-- "ENCOMENDE SUA PEÇA ÚNICA" (ideia da mãe da Anasor, pedido
            explícito): na peça disponível fica aqui; na vendida já
            apareceu logo depois da descrição. -->
-      ${produtoDisponivel ? encomendaHTML : ''}
+      ${podeComprar ? encomendaHTML : ''}
 
       <!-- SELOS DE CONFIANÇA: logo ABAIXO do botão de compra (pedido) —
            é onde o "posso confiar nessa compra?" bate mais forte. HTML
@@ -558,6 +666,8 @@ function montarDetalhe(produto) {
         </a>
       </div>
     </div>
+
+    ${anjoDeLuz ? barraDoBarroALuzHTML() : ''}
   `;
 
   // Dados que o carrinho (main.js) lê do ancestral [data-id] do
@@ -582,6 +692,53 @@ function montarDetalhe(produto) {
   // mudar aqui muda as duas galerias. "imagens" já foi montado lá em
   // cima (principal + imagensExtras).
   ativarGaleriaDeFotos(container, imagens);
+
+  // ---------- SELETOR DE QUANTIDADE (só Anjo de Luz, ver anjoDeLuz) ----------
+  // Registra "container" em elementosComQuantidade (declarado no topo do
+  // arquivo) pra adicionarAoCarrinho (main.js) ler a quantidade certa
+  // do data-id mais próximo do botão clicado — tanto faz se o clique
+  // veio do bloco de ações daqui ou da barra flutuante (mais abaixo),
+  // as duas compartilham "quantidadeEscolhida".
+  if (anjoDeLuz && podeComprar) {
+    elementosComQuantidade.push(container);
+    container.dataset.quantidade = '1';
+
+    const valorEl = container.querySelector('[data-quantidade-valor]');
+    const avisoEl = container.querySelector('[data-quantidade-aviso]');
+    const btnMenos = container.querySelector('.seletor-quantidade__passo[data-passo="-1"]');
+    const btnMais = container.querySelector('.seletor-quantidade__passo[data-passo="1"]');
+    const limite = Number(produto.maxPorPedido) || 1;
+
+    // Aviso só aparece ao ESBARRAR no teto (nunca "restam X" solto na
+    // tela, ver regra do pedido) — e aí sim mostra o número real,
+    // porque virou uma informação FUNCIONAL ("por que o botão + travou
+    // aqui?"), não uma urgência fabricada.
+    function atualizarSeletor() {
+      valorEl.textContent = String(quantidadeEscolhida);
+      btnMenos.disabled = quantidadeEscolhida <= 1;
+      btnMais.disabled = quantidadeEscolhida >= limite;
+      if (quantidadeEscolhida >= limite) {
+        avisoEl.hidden = false;
+        avisoEl.innerHTML =
+          `Temos ${limite} unidades deste modelo prontas; para mais que isso, é por encomenda. ` +
+          `<a href="${linkEncomendaQuantidadeWhatsApp(produto, limite)}" target="_blank" rel="noopener noreferrer">Encomendar em quantidade</a>`;
+      } else {
+        avisoEl.hidden = true;
+        avisoEl.textContent = '';
+      }
+    }
+
+    btnMenos.addEventListener('click', () => {
+      sincronizarQuantidade(Math.max(1, quantidadeEscolhida - 1));
+      atualizarSeletor();
+    });
+    btnMais.addEventListener('click', () => {
+      sincronizarQuantidade(Math.min(limite, quantidadeEscolhida + 1));
+      atualizarSeletor();
+    });
+
+    atualizarSeletor();
+  }
 }
 
 
@@ -829,7 +986,12 @@ function animarSelosConfianca() {
 // toast (ambos ancorados no rodapé da tela), pra nada ficar escondido
 // atrás da barra.
 function montarBarraCompraFlutuante(produto) {
-  const disponivel = produto.disponivel !== false;
+  // Esgotada (estoque zerado, só Anjo de Luz) entra no MESMO ramo
+  // "indisponível" da barra — ela já sabia trocar o botão por um link
+  // de WhatsApp; só o texto do botão/preço muda conforme o motivo.
+  const vendida = produto.disponivel === false;
+  const esgotada = estaEsgotada(produto);
+  const disponivel = !vendida && !esgotada;
 
   const barra = document.createElement('div');
   // modificador ".barra-compra--indisponivel": só muda o botão (ver
@@ -849,9 +1011,11 @@ function montarBarraCompraFlutuante(produto) {
   // riscado + o atual; senão, só o preço. Reaproveita a mesma ideia
   // do renderBlocoPreco, mas aqui é uma versão enxuta pra caber na
   // barra estreita (sem selo, textos menores — ver .barra-compra__preco).
-  // Vendida: nada de preço na barra, só o estado da peça
-  const precoHTML = !disponivel
+  // Vendida/esgotada: nada de preço na barra, só o estado da peça.
+  const precoHTML = vendida
     ? '<strong>Peça vendida</strong>'
+    : esgotada
+    ? '<strong>Esgotado</strong>'
     : estaEmPromocao(produto)
     ? `<s>${formatarPreco(produto.precoOriginal)}</s>
        <strong>${formatarPreco(produto.preco)}</strong>`
@@ -878,6 +1042,8 @@ function montarBarraCompraFlutuante(produto) {
   //   SVG novo.
   const botaoHTML = disponivel
     ? `<button class="btn-comprar-agora" type="button" aria-label="Comprar ${produto.nome} agora">Comprar Agora 🤎</button>`
+    : esgotada
+    ? `<a class="btn-comprar-agora" href="${linkEncomendaQuantidadeWhatsApp(produto)}" target="_blank" rel="noopener noreferrer" aria-label="Encomendar ${produto.nome} pelo WhatsApp">Encomende o seu</a>`
     : `<a class="btn-comprar-agora" href="${linkEncomendaWhatsApp(produto, { indisponivel: true })}" target="_blank" rel="noopener noreferrer" aria-label="Encomendar uma peça parecida com ${produto.nome} pelo WhatsApp">Encomendar peça parecida</a>`;
 
   // BOTÃO COMPACTO "adicionar ao carrinho" — AVALIADO e DESCARTADO
@@ -910,6 +1076,15 @@ function montarBarraCompraFlutuante(produto) {
     ${botaoHTML}
   `;
   document.body.appendChild(barra);
+
+  // Anjo de Luz comprável por aqui: a barra entra na MESMA lista
+  // (elementosComQuantidade, topo do arquivo) que o seletor +/- da
+  // página usa — assim "Comprar Agora" nesta barra também leva a
+  // quantidade escolhida lá em cima, não sempre 1.
+  if (produto.grupoAtacado === 'anjos-de-luz' && disponivel) {
+    elementosComQuantidade.push(barra);
+    barra.dataset.quantidade = String(quantidadeEscolhida);
+  }
 
   // --- Mostrar/esconder conforme a rolagem ---
   // A barra só aparece quando AS DUAS coisas são verdade ao mesmo tempo:

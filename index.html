@@ -41,7 +41,7 @@
 <!-- Importa as duas fontes que vamos usar
  : Fraunces (títulos) e Jost (texto) -->
 
-   <link rel="stylesheet" href="css/style.css?v=48">
+   <link rel="stylesheet" href="css/style.css?v=49">
 
    <!-- Marca no <html> que o JS rodou logo no início. O CSS do
         "scroll reveal" só esconde os elementos (opacity 0) quando
@@ -311,6 +311,14 @@
              número real de slides. -->
         <div class="banner-indicadores" role="group" aria-label="Selecionar slide"></div>
         </div>
+
+    <!-- ===== ANJOS DE LUZ — DESTAQUE (Natal + Batizado/1ª Eucaristia) =====
+         Logo abaixo do topo, ANTES de "Explore Nossas Coleções" (pedido
+         explícito, prioridade máxima desta rodada). Montada por JS
+         (montarAnjosDestaque, js/main.js) pra preço/estoque nunca saírem
+         de sincronia com produtos.js — aqui só o esqueleto; "hidden" sai
+         se os 3 Anjos de Luz existirem no catálogo. -->
+    <section class="anjos-destaque reveal" id="anjos-destaque" hidden></section>
 
     <section class="categorias" id="categorias">
 
@@ -825,8 +833,8 @@
            main.js DEPOIS (usa essa lista para montar os cards). Os dois
            ficam no fim do <body> para o HTML já estar carregado quando
            o JavaScript rodar. -->
-      <script src="js/produtos.js?v=48"></script>
-      <script src="js/main.js?v=48"></script>
+      <script src="js/produtos.js?v=49"></script>
+      <script src="js/main.js?v=49"></script>
 
 </body>
 

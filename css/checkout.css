@@ -461,6 +461,14 @@
   font-weight: 600;
 }
 
+/* Anjo de Luz com o atacado ligado (3+ no grupo, ver checkout.js) —
+   mesmo aviso discreto do mini-carrinho (.mini-item__atacado, style.css). */
+.checkout-resumo__item-atacado {
+  font-size: 0.75rem;
+  color: var(--cor-secundaria-escuro);
+  margin: 0.15rem 0 0;
+}
+
 .checkout-resumo__linha {
   display: flex;
   justify-content: space-between;

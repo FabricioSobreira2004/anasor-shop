@@ -88,28 +88,37 @@ function montarResumo(itens) {
       const prod = produtos.find((p) => String(p.id) === String(item.id));
       const foto = item.imagem || prod?.imagem || '';
 
+      // ANJO DE LUZ (permiteQuantidade): o preço cobrado depende de
+      // quantas unidades do GRUPO (ver grupoAtacado/precoUnitario,
+      // produtos.js) estão no carrinho AGORA — "item.preco" é só o
+      // valor cheio, trancado no momento em que a peça entrou. Sem
+      // recalcular aqui, o resumo mostraria um total diferente do que
+      // o backend realmente cobra (ver POST /api/checkout), que usa a
+      // MESMA conta. Pra qualquer outra peça (sem grupoAtacado),
+      // "unitario" cai no "item.preco" de sempre — nada muda.
+      const totalDoGrupo = prod ? totalNoGrupoAtacado(itens, prod) : 0;
+      const unitario = prod ? precoUnitario(prod, totalDoGrupo) : item.preco;
+      const atacadoAtivo = prod?.permiteQuantidade && unitario === prod.precoAtacado;
+
       // DESCONTO (pedido item 4: "se o produto tiver precoOriginal,
       // mostre preço riscado + selo"). Comparo prod.precoOriginal com
-      // item.preco (o valor REALMENTE cobrado, travado no momento em
-      // que a peça entrou no carrinho) — de propósito NÃO reaproveito
-      // estaEmPromocao()/descontoPercentual() (main.js) como estão,
-      // porque aquelas comparam com prod.preco, o preço ATUAL do
+      // "unitario" (o valor REALMENTE cobrado agora) — de propósito NÃO
+      // reaproveito estaEmPromocao()/descontoPercentual() (main.js) como
+      // estão, porque aquelas comparam com prod.preco, o preço ATUAL do
       // catálogo. Se a promoção tiver mudado (ou terminado) entre o
       // item entrar no carrinho e a pessoa chegar no checkout, prod.preco
       // já não seria mais igual a item.preco, e o desconto mostrado
-      // aqui ficaria errado. Calculando em cima de item.preco, o "de/
-      // por" exibido é sempre fiel ao que a pessoa efetivamente vai
-      // pagar por ESTE pedido, não ao estado atual (possivelmente
-      // diferente) do catálogo.
+      // aqui ficaria errado. Calculando em cima do preço efetivamente
+      // cobrado, o "de/por" exibido é sempre fiel a ESTE pedido.
       const precoOriginal =
-        prod && typeof prod.precoOriginal === 'number' && prod.precoOriginal > item.preco
+        prod && typeof prod.precoOriginal === 'number' && prod.precoOriginal > unitario
           ? prod.precoOriginal
           : null;
       const percentualOff = precoOriginal
-        ? Math.round((1 - item.preco / precoOriginal) * 100)
+        ? Math.round((1 - unitario / precoOriginal) * 100)
         : null;
 
-      const subtotalItem = item.preco * item.quantidade;
+      const subtotalItem = unitario * item.quantidade;
       return `
         <li class="checkout-resumo__item">
           <img src="${foto}" alt="" loading="lazy">
@@ -118,16 +127,24 @@ function montarResumo(itens) {
             <p class="checkout-resumo__item-qtd">
               ${item.quantidade} &times;
               ${precoOriginal ? `<s class="checkout-resumo__item-preco-original">${formatarPreco(precoOriginal)}</s>` : ''}
-              ${formatarPreco(item.preco)}
+              ${formatarPreco(unitario)}
               ${precoOriginal ? `<span class="checkout-resumo__item-off">${percentualOff}% OFF</span>` : ''}
             </p>
+            ${atacadoAtivo ? '<p class="checkout-resumo__item-atacado">✓ preço de atacado aplicado</p>' : ''}
           </div>
           <strong>${formatarPreco(subtotalItem)}</strong>
         </li>`;
     })
     .join('');
 
-  const subtotal = itens.reduce((soma, i) => soma + i.preco * i.quantidade, 0);
+  // Mesma conta de cada linha acima, agora somada — nunca "item.preco"
+  // bruto (ver comentário grande logo ali em cima).
+  const subtotal = itens.reduce((soma, item) => {
+    const prod = produtos.find((p) => String(p.id) === String(item.id));
+    const totalDoGrupo = prod ? totalNoGrupoAtacado(itens, prod) : 0;
+    const unitario = prod ? precoUnitario(prod, totalDoGrupo) : item.preco;
+    return soma + unitario * item.quantidade;
+  }, 0);
 
   document.querySelector('#checkout-subtotal').textContent = formatarPreco(subtotal);
 
