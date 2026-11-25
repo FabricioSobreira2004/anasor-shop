@@ -2589,21 +2589,6 @@ function escanearReveal() {
 // do banner NÃO é decorativa), então cada slide precisa do seu.
 const bannersHero = [
   {
-    // PRIMEIRA posição de propósito (pedido explícito, Natal + Batizado/
-    // 1ª Eucaristia são a prioridade máxima desta rodada). Foto: um dos
-    // Anjos de Luz aceso, luz de LED escapando pelos furinhos da saia.
-    imagem: 'img/banner-anjos-de-luz.jpg',
-    alt: 'Anjos de Luz acesos, cerâmica branca com terço dourado',
-    eyebrow: 'LEMBRANÇA DE BATIZADO E 1ª EUCARISTIA',
-    titulo: 'Anjos de Luz:',
-    tituloItalico: 'Do Barro à Luz',
-    subtitulo: 'Lembrancinha de Batizado, Primeira Eucaristia e presente de Natal',
-    categoriaContador: 'ceramica',
-    subcategoriaContador: 'Artigos Religiosos',
-    linkBotaoPrincipal: 'ceramica.html?sub=artigos-religiosos',
-    textoBotaoPrincipal: 'Ver os Anjos de Luz',
-  },
-  {
     imagem: 'img/banner-principal.jpeg',
     alt: 'Cerâmica Artesanal Anasor Sobreira',
     eyebrow: 'ATELIÊ ANASOR SOBREIRA',
@@ -2670,14 +2655,9 @@ if (bannerCarrossel) {
   // É um dos 4 pontos do sistema de acento --cor-ouro. O "+" fica
   // junto do número no span (lê melhor "+8" todo dourado que só "8").
   // Sem número (categoria ainda sem peças) -> frase simples, sem span.
-  // "subcategoria" OPCIONAL: o slide dos Anjos de Luz conta só a
-  // subcategoria "Artigos Religiosos" (3 produtos), não a cerâmica
-  // inteira — contar o catálogo todo ali soaria estranho/impreciso.
-  function textoContadorPorCategoria(categoria, subcategoria) {
+  function textoContadorPorCategoria(categoria) {
     // produtosVisiveis(): o contador não pode somar peça oculta
-    const total = produtosVisiveis().filter(
-      (p) => p.categoria === categoria && (!subcategoria || p.subcategoria === subcategoria)
-    ).length;
+    const total = produtosVisiveis().filter((p) => p.categoria === categoria).length;
     if (total === 0) return 'Novidades chegando em breve';
     const unidade = total === 1 ? 'peça exclusiva disponível' : 'peças exclusivas disponíveis';
     return `<span class="num-ouro">+${total}</span> ${unidade}`;
@@ -2698,7 +2678,7 @@ if (bannerCarrossel) {
       // innerHTML (não textContent): textoContadorPorCategoria devolve
       // um <span class="num-ouro"> ao redor do número. O conteúdo é
       // 100% gerado aqui (nada vem do usuário), então é seguro.
-      contadorEl.innerHTML = textoContadorPorCategoria(slide.categoriaContador, slide.subcategoriaContador);
+      contadorEl.innerHTML = textoContadorPorCategoria(slide.categoriaContador);
       botaoPrincipalEl.href = slide.linkBotaoPrincipal;
       botaoPrincipalEl.textContent = slide.textoBotaoPrincipal;
 
